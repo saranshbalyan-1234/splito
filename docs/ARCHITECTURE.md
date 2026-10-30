@@ -1831,7 +1831,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   Settle plan, search and Ask results, recent people, requests and invites, the right column. Me opens Profile; a
   removed or unknown person opens their read-only page or "Not on this device yet", never nothing. One shared
   `PersonLink` (Bluesky's profile-link pattern: `UserAvatar` + name as a link with hover underline on web, 44 px
-  target) does it, so no screen wires its own; where the whole row already opens something else (an expense row),
+  target) does it, so no screen wires its own [Built, F-261, web; native unverified: `components/PersonLink.tsx`, `personHref`; People rows, Members and requests reuse it, `isInsideLink` where the whole row already opens the person, `nested` inside a row that opens something else; the architecture rule `personAvatarOutsideLink` fails a new `<UserAvatar` outside it, and its baseline lists only what is not a link to a person: own avatars, selection rows and dialogs, an invitee who is not a person yet]; where the whole row already opens something else (an expense row),
   the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
   *Why:* "clicking on avatar or name anywhere on the website should open that friend's details"; repeated
   2026-10-31: "on click of others avatar, it should open up them as people" (own avatar opens Profile, owner 206).

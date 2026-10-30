@@ -23,6 +23,7 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
 import {TimeElapsed} from '#/view/com/util/TimeElapsed'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {hexToRgb, rgbToHex} from '#/alf/util/colorGeneration'
 import {Button, ButtonIcon} from '#/components/Button'
@@ -342,6 +343,7 @@ export function ActivityItem({
           ]}>
           <SubtleHover hover={isHovered} />
           <Avatar
+            id={avatarPersonId(event, snapshot)}
             name={content.avatarName}
             icon={content.icon}
             tone={content.tone}
@@ -493,6 +495,15 @@ const DELETED_KINDS = new Set<ActivityEvent['kind']>([
   'group.deleted',
   'person.removed',
 ])
+
+/** Who the row's avatar is (it shows who made the change, owner rule 6; a friend request shows the friend). */
+function avatarPersonId(event: ActivityEvent, snapshot: ActivitySnapshot): string | undefined {
+  if (event.entityType === 'friendRequest' && (event.kind === 'friendRequest.received' || event.kind === 'friendRequest.accepted'))
+    return (snapshot.requests.get(event.entityId)?.data ?? event.data).personId ?? undefined
+  if (event.entityType === 'dispute' && !(event.kind === 'dispute.accepted' || event.kind === 'dispute.rejected' || event.kind === 'dispute.released'))
+    return event.data.raisedBy
+  return event.actor
+}
 
 /** Everything that differs by kind: the badge, the sentence, the money line, where it goes. */
 function useDescribe(
@@ -838,11 +849,13 @@ function useDescribe(
           ) : event.kind === 'group.created' ? (
             <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_2xs]}>
               {members.slice(0, MAX_PREVIEW_AVATARS).map(m => (
-                <UserAvatar
+                <PersonLink
                   key={m.personId}
-                  type="user"
-                  size={PREVIEW_AVATAR_SIZE}
+                  id={m.personId}
                   name={nameOf(m.personId)}
+                  show="avatar"
+                  size={PREVIEW_AVATAR_SIZE}
+                  nested
                 />
               ))}
               {members.length > MAX_PREVIEW_AVATARS ? (
@@ -1275,11 +1288,14 @@ function formatTimeAgo(i18n: I18n, timestamp: string) {
  * its bottom-end corner that says what kind of change it is.
  */
 function Avatar({
+  id,
   name,
   icon: Icon,
   tone,
   ringColor,
 }: {
+  /** Who the avatar is; it opens them (owner 178). Undefined for an invitee who is not a person yet. */
+  id: string | undefined
   name: string | undefined
   icon: React.ComponentType<SVGIconProps>
   tone: BadgeTone
@@ -1288,7 +1304,12 @@ function Avatar({
   const t = useTheme()
   return (
     <View style={SLOT_SIZE}>
-      <UserAvatar type="user" size={AVATAR_SIZE} name={name} />
+      {/* Its own press target inside a row that opens what changed (owner 178). */}
+      {id ? (
+        <PersonLink id={id} name={name ?? ''} show="avatar" size={AVATAR_SIZE} nested />
+      ) : (
+        <UserAvatar type="user" size={AVATAR_SIZE} name={name} />
+      )}
       {/*
        * The ring is a padded circle behind the badge rather than a border on
        * it, so the badge's anti-aliased edge doesn't show the ring through.

@@ -121,6 +121,7 @@ export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
   return (
     <RequestRow
       testID={`request-${name}`}
+      personId={request.data.personId}
       name={name}
       sync={request}
       detail={
@@ -178,6 +179,7 @@ export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
   return (
     <RequestRow
       testID={`invite-sent-${requestName(r)}`}
+      personId={r.personId}
       name={requestName(r)}
       sync={request}
       detail={detail}>

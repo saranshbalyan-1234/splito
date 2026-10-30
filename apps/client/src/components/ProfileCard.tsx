@@ -6,7 +6,6 @@ import {
   type ViewStyle,
 } from 'react-native'
 
-import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme, type ViewStyleProp} from '#/alf'
 import {Text} from '#/components/Typography'
 
@@ -31,16 +30,6 @@ export function Header({
   children: React.ReactNode | React.ReactNode[]
 }) {
   return <View style={[a.flex_row, a.align_center, a.gap_sm]}>{children}</View>
-}
-
-export function Avatar({
-  profile,
-  size = 40,
-}: {
-  profile: Profile
-  size?: number
-}) {
-  return <UserAvatar size={size} name={profile.name} type="user" />
 }
 
 export function AvatarPlaceholder({size = 40}: {size?: number}) {

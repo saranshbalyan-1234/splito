@@ -26,7 +26,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay} from '#/locale/useDates'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {GroupBalanceCards} from '#/screens/Group/components/GroupBalanceCards'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
@@ -425,15 +425,12 @@ export function GroupScreen() {
                         zIndex: AVATAR_STACK - i,
                       },
                     ]}>
-                    <UserAvatar
+                    <PersonLink
+                      id={m.personId}
+                      name={names.get(m.personId) ?? l`Someone`}
+                      avatarName={m.personId === me?.id ? me.data.name : undefined}
+                      show="avatar"
                       size={32}
-                      name={
-                        m.personId === me?.id
-                          ? me.data.name
-                          : names.get(m.personId)
-                      }
-                      type="user"
-                      noBorder
                     />
                   </View>
                 ))}
@@ -709,6 +706,7 @@ export function GroupScreen() {
               case 'net':
                 return (
                   <MemberBalanceRow
+                    personId={item.personId}
                     name={names.get(item.personId) ?? l`Someone`}
                     avatarName={
                       item.personId === me?.id ? me.data.name : undefined
@@ -773,6 +771,7 @@ export function GroupScreen() {
                 return (
                   <OweRow
                     testID={`group-owe-${from}-${to}`}
+                    personId={item.from}
                     sentence={
                       item.from === me?.id
                         ? l`You owe ${to}`

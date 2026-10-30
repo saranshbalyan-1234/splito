@@ -588,7 +588,7 @@ Original animated illustrations (light and dark) for every empty state: search n
 
 One shared PersonLink (avatar + name) used on every screen; tapping either opens /people/:id (Me -> Profile).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (next free slot, with F-1213 / F-259) · **Deps** F-256
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (web, `c-personlink`; native unverified), Wave C · **Deps** F-256
 - **Prefs** -
 - **Acceptance**
   1. Every avatar or name of a person (expense/payment detail, items, Activity actor, comments, Members, Balances, Settle plan, search/Ask results, recent people, requests/invites, right column) opens that person; Me opens Profile; removed/unknown open the read-only page or "Not on this device yet".

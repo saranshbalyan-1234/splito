@@ -43,7 +43,7 @@ import {markOf, useDisputeEvents, useOpenDisputes} from '#/state/disputes'
 import {DisputeBadge} from '#/components/disputes/DisputeBadge'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useBreakpoints, useTheme, utils} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {
@@ -456,6 +456,7 @@ function Detail({
       {payers.map(id => (
         <PersonAmount
           key={id}
+          id={id}
           avatar={avatarName(id)}
           name={name(id)}
           amount={fmt(e.payers[id]!)}
@@ -467,6 +468,7 @@ function Detail({
       {people.map(id => (
         <PersonAmount
           key={id}
+          id={id}
           avatar={avatarName(id)}
           name={name(id)}
           amount={fmt(e.shares[id]!)}
@@ -678,6 +680,7 @@ function shareDetail(
 }
 
 function PersonAmount({
+  id,
   avatar,
   name,
   amount,
@@ -685,6 +688,7 @@ function PersonAmount({
   isMe = false,
   testID,
 }: {
+  id: string
   avatar: string
   name: string
   amount: string
@@ -708,11 +712,9 @@ function PersonAmount({
           ? [a.mx_sm, a.px_md, a.rounded_md, t.atoms.bg_contrast_25]
           : a.px_lg,
       ]}>
-      <UserAvatar size={36} name={avatar} type="user" />
+      <PersonLink id={id} name={name} avatarName={avatar} show="avatar" size={36} />
       <View style={[a.flex_1]}>
-        <Text style={[a.text_md, a.font_medium]} numberOfLines={1}>
-          {name}
-        </Text>
+        <PersonLink id={id} name={name} show="name" textStyle={a.font_medium} style={a.self_start} />
         {detail ? (
           <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
             {detail}

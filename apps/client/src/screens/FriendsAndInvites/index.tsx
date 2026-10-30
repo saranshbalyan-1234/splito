@@ -259,7 +259,7 @@ function FriendRow({person, onRemove}: {person: Entity<Person>; onRemove: () => 
       <Plural value={open.length} one="Open in # currency" other="Open in # currencies" />
     )
   return (
-    <RequestRow testID={`hub-friend-${name}`} name={name} sync={person} detail={detail}>
+    <RequestRow testID={`hub-friend-${name}`} personId={person.id} name={name} sync={person} detail={detail}>
       <Button
         testID="hub-friend-open"
         label={l`Open ${name}`}
@@ -309,7 +309,7 @@ function RemovedRow({person}: {person: Entity<Person>}) {
   const haptics = useHaptics()
   const name = person.data.name
   return (
-    <RequestRow testID={`hub-removed-${name}`} name={name} detail={<Trans>Removed · history kept</Trans>}>
+    <RequestRow testID={`hub-removed-${name}`} personId={person.id} name={name} detail={<Trans>Removed · history kept</Trans>}>
       <RequestAction
         testID="hub-removed-add-back"
         label={l`Add ${name} back`}

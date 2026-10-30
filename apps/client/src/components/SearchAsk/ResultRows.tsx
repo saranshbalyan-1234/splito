@@ -16,7 +16,7 @@ import {
 } from '@splito/sync'
 
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, type TextStyleProp, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
@@ -321,7 +321,7 @@ export function PersonResult({
       isActive={isActive}
       syncStatus={person.syncStatus}
       onPress={onPress}>
-      <UserAvatar size={42} name={person.data.name} type="user" />
+      <PersonLink id={person.id} name={person.data.name} show="avatar" size={42} isInsideLink />
       <View style={[a.flex_1, a.gap_2xs]}>
         <Highlight
           text={person.data.name}
