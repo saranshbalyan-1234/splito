@@ -1974,7 +1974,7 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
 - **Contents, the same as the desktop sidebar (§ 26.3):** a profile header (avatar with the sync-status dot,
   the person's real name; tapping it opens Profile; no "Me" label and no "Saved on this device" text); the
   shared nav items (§ 26.3); the shared footer links Feedback ·
-  Help · Privacy · About; "Sign in" or "Log out" (§ 26.15). No separate Profile item and no theme toggle
+  Help · Privacy · About (no Log out, owner 202). No separate Profile item and no theme toggle
   (Appearance lives in Settings). *Why:* "remove me from drawer profile"; "removed the other saved on device and
   me"; "make them same".
 - **Sync-status dot on the user's avatar** (drawer header and the header avatar at every width): **green** =
@@ -2523,7 +2523,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   production until the auth HTTP client exists (§ 26.22); the review site is the `preview` kind.
 - **One database per account; device keys too.** Search history, Ask chat, drafts, reminder bookkeeping and the
   first-frame preference copies are under `acct:<id>:` (`setStorageScope`), demo mode keeps `demo:`. Log out
-  (`data/account.ts logOut`, the `LogOutHost` prompt from Settings and the drawer footer) always erases (owner 186): the app
+  (`data/account.ts logOut`, the `LogOutHost` prompt from Profile, owner 202) always erases (owner 186): the app
   shows `LoggingOut` (which unmounts the provider, closing the database), then `eraseAccountData` deletes the database, the
   demo database, the account's and demo's device keys, its "me" id and the service worker's data caches, and only then does the
   session end; the device's language and theme are copied out first and stay.
@@ -2572,7 +2572,11 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   "Sign-in arrives with sync" and only the dev/e2e "Continue with a dev account" works; no fake success, no fake
   account. *Why:* "there is signin page already there in bluesky, use that"; "basically no signup needed".
 - **Signed in (only once the backend exists):** an account row (avatar, name, email/phone, sync status) and
-  a destructive "Log out" row opening a prompt "Log out?". **Log out erases everything this account left on the
+  a destructive "Log out" row opening a prompt "Log out?". **Log out lives on Profile** (owner 202): the "Log out"
+  row is the last row of Profile (`/settings/profile`) and nowhere else (not in the Settings list, the drawer footer
+  or the sidebar); the blocking add-contact step keeps its own Log out. **Profile holds only the person** (owner
+  203): avatar, name, contact details, stats and Log out; no "Settings" row on it (Back already goes to Settings).
+  *Why:* "move the logout button inside profile"; "remove settings from profile". **Log out erases everything this account left on the
   device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
   database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
   caches, search index); device-level choices (language, theme) stay so the logged-out flow still speaks the
@@ -2581,7 +2585,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   the count ("N changes haven't synced yet and will be lost"), so nothing unsynced is deleted silently (§ 11).
   The erase finishes before the logged-out flow shows; a failure is reported and retried, never left half-done.
   *Why:* "when logout, it should remove all data from db".
-- **"Log out" also appears in the drawer footer** (§ 26.7; there is no "Sign in" while sign-in is required).
+- **Log out is not in the drawer footer or the Settings list** (owner 202; it is on Profile only).
 - **Auth state comes from one `useSession()`** (Bluesky pattern, `src/state/session`), signed out until the
   backend lands.
 - **Feedback** ("add one feedback section as well"). Placement copied from Bluesky: a "Feedback" item in the
@@ -3202,6 +3206,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 199 | "add sort filter people and group, default sort by last active" | Sort is its own button beside Filters on People and Groups: Last active (default), Name, Amount, Newest; remembered per list and in the URL | § 26.12 | Sort inside the Filters sheet; People defaulted to Amount |
 | 200 | "ask splito is not a tab" | Ask Splito is reached only from the header Search & Ask icon and "/" / Cmd+K; never a sidebar, drawer, bottom-bar or Settings > Navigation item; saved `ask` tab migrated away | § 26.19, § 26.3 | "Ask Splito" item in the shared nav list (57, 155) |
 | 201 | "on click of avatar, now open profile inside settings" | The header avatar opens Profile at every width; Profile lives at /settings/profile with Back to Settings (old /profile redirects); the phone drawer opens by edge swipe | § 26.4, § 26.7 | Avatar opened the drawer on phone and rail |
+| 202 | "move the logout button inside profile" | Log out is the last row of Profile only; removed from Settings, the drawer footer and the sidebar (the add-contact step keeps its own) | § 26.15 | Log out in Settings > Account and the drawer footer |
+| 203 | "remove settings from profile" | Profile holds only the person (avatar, name, contact, stats, Log out); its "Settings" row is removed | § 26.15 | Profile had a Settings row |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
