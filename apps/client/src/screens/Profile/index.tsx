@@ -110,7 +110,7 @@ function ProfileBody({me}: {me: Entity<Person>}) {
   return (
     <>
       <ProfileStats me={me} />
-      <ProfileBalance />
+      <ProfileCards />
       <PaymentDetails me={me} />
       <AddMe />
       <RecentActivity />
@@ -337,7 +337,7 @@ function ProfileStats({me}: {me: Entity<Person>}) {
 }
 
 /** Your balance: what everyone owes you or you owe, per currency, in the Overview's card style (owner 161). */
-function ProfileBalance() {
+function ProfileCards() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const [width, setWidth] = useState(0)
@@ -354,11 +354,11 @@ function ProfileBalance() {
   const columns = overviewColumns(width, totals.length)
   const cardWidth = width > 0 ? Math.floor((width - 8 * (columns - 1)) / columns) : undefined
   return (
-    <View testID="profile-balance">
+    <View testID="profile-cards">
       <SectionHeader
         title={l`Your balance`}
         action={
-          <SectionLink testID="profile-balance-analytics" href={analyticsHref('all')} label={l`Open Analytics`}>
+          <SectionLink testID="profile-cards-analytics" href={analyticsHref('all')} label={l`Open Analytics`}>
             <Trans>Analytics</Trans>
           </SectionLink>
         }

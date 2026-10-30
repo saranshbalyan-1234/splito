@@ -16,7 +16,6 @@ import {
   ArrowBottom_Stroke2_Corner0_Rounded as ArrowDownIcon,
   ArrowTop_Stroke2_Corner0_Rounded as ArrowUpIcon,
 } from '#/components/icons/Arrow'
-import {usePref} from '#/data/hooks'
 import {PrefSection, usePrefControl} from '#/components/settings/PrefSection'
 import {TabsIcon} from '#/components/settings/icons'
 import {GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
@@ -71,7 +70,7 @@ export function NavigationEditor() {
   const t = useTheme()
   const {t: l} = useLingui()
   const pref = usePrefControl('tabs')
-  const [startTab = 'people'] = usePref('startTab')
+  const startTab = usePrefControl('startTab').value ?? 'people'
   const haptics = useHaptics()
   const {screenReaderEnabled} = useA11y()
   const {gtMobile} = useBreakpoints()

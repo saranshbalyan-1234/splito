@@ -49,7 +49,7 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/components/Fill.tsx` | `src/components/Fill.tsx` | - |
 | `src/components/MediaInsetBorder.tsx` | `src/components/MediaInsetBorder.tsx` | - |
 | `src/components/SubtleHover.tsx` | `src/components/SubtleHover.tsx` | - |
-| `src/screens/Profile.tsx` | `src/screens/Settings/Settings.tsx` | Profile page, opened from the drawer (back button header): account block, what I have in Splito, Settings / About rows, a plain note that sign-in arrives with sync |
+| `src/screens/Profile/index.tsx` | `src/screens/Settings/Settings.tsx`, `src/screens/Profile/Header` | Profile page (owners 201, 206, 209), opened from the header avatar (back button header): header, stat row, balance cards, payment details, Add me, recent activity, Log out |
 | `src/screens/Settings/components/SettingsList.tsx` | `src/screens/Settings/components/SettingsList.tsx` | `LinkItem` built on `#/view/com/util/Link` |
 | `src/view/com/util/EmptyState.tsx` | `src/view/com/util/EmptyState.tsx` | Optional animated `Illustration` in place of the icon |
 | `src/view/com/util/Link.tsx` | `src/view/com/util/Link.tsx` | App routes only |

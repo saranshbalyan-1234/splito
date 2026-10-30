@@ -54,7 +54,7 @@ for (const [label, viewport] of VIEWPORTS) {
       const ids = await profile
         .locator('[data-testid^="profile-"]')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid')!))
-      const order = ['profile-stats', 'profile-balance', 'profile-payment', 'profile-recent', 'profile-sync-note', 'profile-log-out']
+      const order = ['profile-stats', 'profile-cards', 'profile-payment', 'profile-recent', 'profile-sync-note', 'profile-log-out']
       const at = order.map(id => ids.indexOf(id))
       expect(at.every(i => i >= 0), ids.join()).toBe(true)
       expect(at).toEqual([...at].sort((x, y) => x - y))
@@ -79,7 +79,7 @@ for (const [label, viewport] of VIEWPORTS) {
     })
 
     test('Your balance shows a card per currency and opens Analytics in it', async ({page}) => {
-      const balance = page.getByTestId('profile-balance')
+      const balance = page.getByTestId('profile-cards')
       await expect(balance).toBeVisible()
       const card = balance.locator('[data-testid^="summary-"][data-testid$="-card"]').first()
       const currency = (await card.getAttribute('data-testid'))!.split('-')[1]!
@@ -87,7 +87,7 @@ for (const [label, viewport] of VIEWPORTS) {
       await expect(page.getByTestId('screen-analytics')).toBeVisible()
       expect(here(page)).toContain(`currency=${currency}`)
       await page.goBack()
-      await balance.getByTestId('profile-balance-analytics').click()
+      await balance.getByTestId('profile-cards-analytics').click()
       await expect(page.getByTestId('screen-analytics')).toBeVisible()
     })
 
