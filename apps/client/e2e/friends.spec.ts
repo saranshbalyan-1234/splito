@@ -82,8 +82,9 @@ test('incoming requests: People > Requests and Activity, Accept makes a friend',
   const activityRow = page.getByTestId('activity-friendRequest.received').filter({hasText: 'Sara Ali'})
   await expect(activityRow).toContainText('sent you a friend request')
   await expect(activityRow.getByTestId('activity-unread-dot')).toBeVisible()
-  await page.getByTestId('tab-home').click()
-  await page.getByTestId('request-Ishaan Verma').getByTestId('request-accept').click()
+  // Both tabs stay mounted (owner 166): ask the People screen, not the page.
+  await page.getByTestId('tab-people').click()
+  await page.getByTestId('screen-people').getByTestId('request-Ishaan Verma').getByTestId('request-accept').click()
   await expect(page.getByTestId('person-name')).toHaveText(/^Ishaan Verma( - Demo)?$/)
 })
 
