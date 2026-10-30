@@ -285,21 +285,22 @@ describe('CSV', () => {
   test('rows join with CRLF', () => expect(toCsv([['a', 'b'], ['1', '2']])).toBe('a,b\r\n1,2\r\n'))
   test('report rows: exact decimals in the currency’s scale, a currency column, names from the caller', () => {
     const rows = reportCsv([cab, {...lunch, title: '=1+1'}], 'me', {
-      header: ['Date', 'Description', 'Category', 'Group', 'Currency', 'Total', 'You paid', 'Your share'],
+      header: ['Date', 'Description', 'Category', 'Group', 'Currency', 'Total', 'You paid', 'Your share', 'Location'],
       categoryName: id => (id === 'food' ? 'Food' : 'Transport'),
       groupName: id => (id === 'trip' ? 'Goa, trip' : ''),
+      groupLocation: id => (id === 'trip' ? 'Goa' : ''),
     })
     expect(rows).toBe(
-      'Date,Description,Category,Group,Currency,Total,You paid,Your share\r\n' +
-        '2026-01-20,Lunch,Transport,"Goa, trip",INR,2.00,0.00,1.00\r\n' +
-        "2026-01-10,'=1+1,Food,,INR,3.00,3.00,1.00\r\n",
+      'Date,Description,Category,Group,Currency,Total,You paid,Your share,Location\r\n' +
+        '2026-01-20,Lunch,Transport,"Goa, trip",INR,2.00,0.00,1.00,Goa\r\n' +
+        "2026-01-10,'=1+1,Food,,INR,3.00,3.00,1.00,\r\n",
     )
   })
   test('zero-decimal and three-decimal currencies keep their scale', () => {
     const yen = exp({id: 'y', currency: 'JPY', total: 1200n, payers: {me: 1200n}, shares: {me: 600n, a: 600n}})
     const kwd = exp({id: 'k', currency: 'KWD', total: 1500n, payers: {a: 1500n}, shares: {me: 1500n}})
     const csv = (e: ReportExpense) =>
-      reportCsv([e], 'me', {header: [], categoryName: () => '', groupName: () => ''}).split('\r\n')[1]!.split(',').slice(4)
+      reportCsv([e], 'me', {header: [], categoryName: () => '', groupName: () => '', groupLocation: () => ''}).split('\r\n')[1]!.split(',').slice(4, 8)
     expect(csv(yen)).toEqual(['JPY', '1200', '1200', '600'])
     expect(csv(kwd)).toEqual(['KWD', '1.500', '0.000', '1.500'])
   })
