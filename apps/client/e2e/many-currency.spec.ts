@@ -117,7 +117,9 @@ test('M5: picking a group after typing an amount keeps the currency; a picked cu
 }) => {
   await page.setViewportSize(DESKTOP)
   await openDemo(page)
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
+  /* The start page lists only recently active people; the full list is on People. */
+  await page.goto('/people')
+  await expect(page.getByTestId('screen-people').getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await expect(page.getByTestId('amount-currency')).toContainText('INR')
   await page.getByTestId('amount-input').fill('45')
@@ -134,7 +136,9 @@ test('M5: an empty new expense still takes the group home currency, until one is
 }) => {
   await page.setViewportSize(DESKTOP)
   await openDemo(page)
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
+  /* The start page lists only recently active people; the full list is on People. */
+  await page.goto('/people')
+  await expect(page.getByTestId('screen-people').getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await page.getByTestId('expense-group').click()
   await page.getByTestId('group-option-Lisbon').click()
