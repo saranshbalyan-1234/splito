@@ -9080,3 +9080,7 @@ msgstr "Your UPI ID (optional)"
 #: src/screens/Welcome/index.tsx:53
 msgid "Yours, and works offline"
 msgstr "Yours, and works offline"
+
+#: src/components/split/pickers.tsx:155
+msgid "{n} members"
+msgstr "{n} members"
