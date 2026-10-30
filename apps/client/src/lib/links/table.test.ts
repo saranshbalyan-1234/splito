@@ -86,5 +86,6 @@ const ADDRESSABLE: Record<string, string> = {
   'timezone-dialog': 'timezone',
   'friends-filters-sheet': 'filters',
   'groups-filters-sheet': 'filters',
+  'activity-filters-sheet': 'filters',
   'call-even-sheet': 'call-it-even',
 }

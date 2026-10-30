@@ -47,7 +47,7 @@ test('Home at 390: the sections in order, each at most 5 rows, no friends list, 
   await expect(home.getByTestId('header-search-ask')).toBeVisible()
   await expect(home.getByTestId('people-add-friend')).toHaveCount(0)
   // The See all links go where they say.
-  await expect(home.getByTestId('home-recent-transactions-all')).toHaveAttribute('href', '/activity?type=transactions')
+  await expect(home.getByTestId('home-recent-transactions-all')).toHaveAttribute('href', '/activity?tab=all&type=transactions')
   await expect(home.getByTestId('home-recent-people-all')).toHaveAttribute('href', '/people')
   await expect(home.getByTestId('home-recent-groups-all')).toHaveAttribute('href', '/groups')
   await home.getByTestId('home-recent-people-all').click()
@@ -507,7 +507,7 @@ test('a pushed Activity copy keeps its Back after a refresh, and tapping the tab
     await page.setViewportSize(size)
     await openDemo(page)
     await page.getByTestId('screen-home').getByTestId('home-recent-transactions-all').click()
-    await expect(page).toHaveURL(/\/activity\?from=home&type=transactions$/)
+    await expect(page).toHaveURL(/\/activity\/all\?from=home&type=transactions$/)
     await expect(page.getByTestId('screen-activity').last().getByTestId('header-back')).toBeVisible()
     await page.reload()
     const copy = page.getByTestId('screen-activity').last()

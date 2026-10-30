@@ -11,7 +11,8 @@ import {describe, expect, test} from 'bun:test'
 
 import {ACTIVITY_PAGE, activityTracker, loadActivity} from '../src/activity'
 import {openIdbStore} from '../src/idbStore'
-import {createExpense, createPerson, type ExpenseDraft, ensureMe, updateExpense, updatePerson} from '../src/mutations'
+import {createComment} from '../src/comments'
+import {createExpense, createGroup, createPerson, createRepayment, type ExpenseDraft, ensureMe, updateExpense, updatePerson} from '../src/mutations'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {type MutationCtx} from '../src/types'
@@ -95,6 +96,34 @@ for (const [name, make] of ENGINES) {
       const part = await activityTracker(s, () => 10)('unknown')
       expect(part.events).toEqual(full.slice(0, 10))
       expect(part.isDone).toBe(false)
+      await s.close()
+    })
+
+    test('comments are events; the window names what each is on (an expense, a payment) and a grown window equals the full load', async () => {
+      const {s, ctx, riya} = await open(make)
+      const g = await createGroup(s, ctx, {name: 'Goa', kind: 'trip', currency: 'INR', startDate: null, endDate: null, memberIds: [riya.id]})
+      const e = await createExpense(s, ctx, draft(riya.id, {groupId: g.id}))
+      const pay = await createRepayment(s, ctx, {groupId: g.id, currency: 'INR', from: riya.id, to: 'me', amount: 40n, date: '2026-10-26', tz: 'Asia/Kolkata', note: ''})
+      await createComment(s, ctx, {targetType: 'expense', targetId: e.id, body: 'on the dinner'})
+      await createComment(s, ctx, {targetType: 'repayment', targetId: pay.id, body: 'on the payment'})
+      for (let i = 0; i < 130; i++) await createExpense(s, ctx, draft(riya.id, {title: `E ${i}`}))
+
+      const full = await loadActivity(s)
+      expect(full.filter(x => x.kind === 'comment.added')).toHaveLength(2)
+      let size = ACTIVITY_PAGE
+      const track = activityTracker(s, () => size)
+      const small = await track('unknown')
+      expect(small.events.some(x => x.kind === 'comment.added')).toBe(false)
+      // Growing with an empty notice keeps the pool and reads on; the result equals the full load.
+      size = 500
+      const grown = await track({})
+      expect(grown.events).toEqual(full)
+      expect(grown.entities.expense.map(x => x.id)).toContain(e.id)
+      expect(grown.entities.repayment.map(x => x.id)).toEqual([pay.id])
+      // A comment written afterwards arrives through its change notice.
+      const c = await createComment(s, ctx, {targetType: 'expense', targetId: e.id, body: 'later'})
+      const after = await track({comment: new Set([c.id])})
+      expect(after.events[0]).toMatchObject({kind: 'comment.added', entityId: c.id})
       await s.close()
     })
   })

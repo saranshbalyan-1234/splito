@@ -144,11 +144,11 @@ test('every row pictures who made the change, never who it is about', async ({
   ).toHaveText('RS')
 })
 
-test('"From others" leaves out your own changes', async ({page}) => {
+test('"Others" leaves out your own changes', async ({page}) => {
   await page.setViewportSize(DESKTOP)
   await openActivity(page)
   await expect(row(page, 'expense.restored', 'Groceries')).toBeVisible()
-  await screen(page).getByTestId('activity-tabs-selector-1').click()
+  await screen(page).getByTestId('activity-tabs-selector-2').click()
   await expect(row(page, 'expense.edited', 'Dinner at Thalassa')).toBeVisible()
   await expect(row(page, 'expense.restored', 'Groceries')).toHaveCount(0)
   await screen(page).getByTestId('activity-tabs-selector-0').click()

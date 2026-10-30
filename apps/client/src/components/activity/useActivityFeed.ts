@@ -1,7 +1,9 @@
-import {useMemo} from 'react'
+import {useEffect, useMemo} from 'react'
 import {plural} from '@lingui/core/macro'
 import {
+  ACTIVITY_PAGE,
   type ActivityEvent,
+  type ActivityTypeId,
   type ActivityState,
   type Entity,
   type Expense,
@@ -16,9 +18,10 @@ import {useTimeZone} from '#/locale/useDates'
 import {useActivityState, useMutationCtx} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {
+  ALL_ACTIVITY,
   buildRows,
   EMPTY_FEED_STATE,
-  type FeedFilter,
+  type ActivityTab,
   type FeedState,
 } from './feed'
 
@@ -28,7 +31,7 @@ export type ActivitySnapshot = {
   people: Map<string, Entity<Person>>
   groups: Map<string, Entity<Group>>
   expenses: Map<string, Entity<Expense>>
-  /** Payments and write-offs the events name (a dispute row is about one), by id. */
+  /** Payments and write-offs the events name (a dispute row is about one; so is a comment on a payment), by id. */
   transfers: Map<string, Entity<Repayment | WriteOff>>
   /** Friend requests by id, for their current state (a request row shows Accept until answered). */
   requests: Map<string, Entity<FriendRequest>>
@@ -77,7 +80,11 @@ const FEED_KEY: ['activityFeed'] = ['activityFeed']
  * until the first load. `update` changes the marks from their latest stored
  * value, so quick successive actions never overwrite each other.
  */
-export function useActivityFeed(filter: FeedFilter = 'all') {
+export function useActivityFeed(
+  tab: ActivityTab = ALL_ACTIVITY.tab,
+  types: readonly ActivityTypeId[] = ALL_ACTIVITY.types,
+  group?: string,
+) {
   const {actor: me} = useMutationCtx()
   const tz = useTimeZone()
   const loaded = useActivityState()
@@ -87,9 +94,18 @@ export function useActivityFeed(filter: FeedFilter = 'all') {
   const update = (fn: (s: FeedState) => FeedState) =>
     setStored(fn(device.get(FEED_KEY) ?? EMPTY_FEED_STATE))
   const events = snapshot?.events ?? NO_EVENTS
+  /* The parts are primitives or a memoized list, so the result stays one object between renders (the rows' actions depend on it, 17). */
   const feed = useMemo(
-    () => buildRows(events, state, me, filter, tz),
-    [events, state, me, filter, tz],
+    () =>
+      buildRows(
+        events,
+        state,
+        me,
+        {tab, types, group},
+        tz,
+        (type, id) => (type === 'expense' ? snapshot?.expenses : snapshot?.transfers)?.get(id)?.data.groupId,
+      ),
+    [events, state, me, tab, types, group, tz, snapshot],
   )
   return {
     me,
@@ -99,17 +115,40 @@ export function useActivityFeed(filter: FeedFilter = 'all') {
     /** Reads the next page of older history (a no-op once there is none). */
     loadMore: loaded?.loadMore,
     isDone: loaded?.isDone ?? false,
+    /** A type or group narrows the list: "Mark all read" then marks only what is listed. */
+    isNarrowed: types.length > 0 || !!group,
     ...feed,
   }
 }
 
+/** The badge reads at most this many changes back looking for unread ones (about ten pages). */
+const BADGE_SCAN_MAX = 1000
+
 /**
  * The Activity nav item's badge, as Bluesky badges Notifications: unread
  * changes by other people, capped at "30+" as upstream's
- * `useUnreadNotifications`; empty when there's nothing new.
+ * `useUnreadNotifications`; empty when there's nothing new. Everything unread
+ * is newer than the stored read mark, so the count is exact once the window
+ * reaches that mark: while it holds fewer than 30 unread and has not reached
+ * the mark, the badge widens the window itself (a page at a time, bounded), so
+ * it never reads a stale newest page and never depends on the tab or filter the
+ * screen shows.
  */
 export function useActivityBadge() {
-  const {unreadFromOthers: n} = useActivityFeed()
+  const {actor: me} = useMutationCtx()
+  const tz = useTimeZone()
+  const loaded = useActivityState()
+  const [stored] = useStorage(device, FEED_KEY)
+  const state = stored ?? EMPTY_FEED_STATE
+  const events = loaded?.events
+  const n = useMemo(() => (events ? buildRows(events, state, me, ALL_ACTIVITY, tz).unreadCount : 0), [events, state, me, tz])
+  const oldest = events?.at(-1)?.at
+  const needsMore = !!loaded && !loaded.isDone && n < 30 && oldest !== undefined && oldest > state.readUpTo && (events?.length ?? 0) < BADGE_SCAN_MAX
+  const ensureWindow = loaded?.ensureWindow
+  const size = events?.length ?? 0
+  useEffect(() => {
+    if (needsMore) ensureWindow?.(size + ACTIVITY_PAGE)
+  }, [needsMore, ensureWindow, size])
   return n >= 30 ? '30+' : n > 0 ? String(n) : ''
 }
 

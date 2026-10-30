@@ -69,6 +69,10 @@ export const DEFAULT_CATEGORIES: Category[] = [
 const TAB_IDS: TabId[] = ['home', 'people', 'groups', 'analytics', 'activity']
 /** The shared list's order: Home, People, Groups, Analytics, Ask Splito, Activity, Settings. */
 export const NAV_ITEM_IDS: readonly NavItemId[] = ['home', 'people', 'groups', 'analytics', 'ask', 'activity', 'settings']
+/** What Activity can be filtered by (owner 173): "transactions" in an address is `expenses` and `payments` together. */
+export const ACTIVITY_TYPE_IDS = ['expenses', 'payments', 'comments', 'groups', 'friends', 'reminders', 'disputes'] as const
+export type ActivityTypeId = (typeof ACTIVITY_TYPE_IDS)[number]
+
 /** The bottom bar holds any number of tabs, from Home alone to every item (decision 84). */
 export const MIN_TABS = 1
 export const MAX_TABS = NAV_ITEM_IDS.length
@@ -229,6 +233,10 @@ export const PREFS = {
   /** The Groups filter's sort, saved on Apply so it survives a reload (owner 128, decision 90). */
   'groups.sort': def('groups.sort', 'lists', 'account', 'Sort groups by', 'recent', oneOf('recent', 'name', 'amount')),
   'groups.showSettled': def('groups.showSettled', 'lists', 'account', 'Show settled groups', false, isBool),
+  /** Activity's tab, All / Me / Others (owner 92, decision 90); saved on a tap, an address that names a tab wins. */
+  'activity.tab': def('activity.tab', 'lists', 'account', 'Activity tab', 'all', oneOf('all', 'me', 'others')),
+  /** Activity's Type filter (owner 173): the types shown; empty is every type. Saved on Apply, an address that names `type` wins. */
+  'activity.type': def<ActivityTypeId[]>('activity.type', 'lists', 'account', 'Activity types', [], (v): v is ActivityTypeId[] => Array.isArray(v) && new Set(v).size === v.length && v.every(x => (ACTIVITY_TYPE_IDS as readonly unknown[]).includes(x))),
   /** One switch for "someone adds an expense with you or records a payment to or from you"; an old `notify.expense` of off still reads as off. */
   'notify.payment': def('notify.payment', 'notifications', 'account', 'Payments', true, isBool),
   'notify.comments': def('notify.comments', 'notifications', 'account', 'Comments and mentions', true, isBool),

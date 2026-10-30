@@ -312,7 +312,7 @@ for (const [label, size] of SIZES) {
       await expect(page.getByTestId(`history-${lunch}`)).toBeVisible()
       await expect(page.getByTestId(`history-${dinner}`)).toHaveCount(0)
       // Activity.
-      await page.goto('/activity/disputed')
+      await page.goto('/activity?tab=all&type=disputes')
       await expect(page.getByText('Bob Mehta disputed Lunch').first()).toBeVisible()
       await expect(page.getByText('added Dinner')).toHaveCount(0)
       // Search: `status: disputed` keeps the disputed expenses; with words, the matches among them.

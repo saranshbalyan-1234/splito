@@ -8,6 +8,7 @@ import {useGroupActivity, useAllEntities, useMyGroupBalances, useOpenGroups, use
 import {useHiddenGroups} from '#/data/groupVisibility'
 import {type RecentRow, useRecentRows} from '#/data/recentTransactionRows'
 import {useFormatDay} from '#/locale/useDates'
+import {seeAllTransactionsPath} from '#/lib/links/make'
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
 import {EntryIcon} from '#/components/people/EntryIcon'
@@ -42,8 +43,7 @@ export function RecentTransactions({locale}: {locale: string}) {
         testID="home-recent-transactions-title"
         title={l`Recent transactions`}
         action={
-          /* TODO(F-259): Activity reads `type` once its type filter lands; until then this opens the whole feed. */
-          <SectionLink testID="home-recent-transactions-all" href="/activity?type=transactions" label={l`See all activity`}>
+          <SectionLink testID="home-recent-transactions-all" href={seeAllTransactionsPath()} label={l`See all transactions`}>
             <Trans>See all</Trans>
           </SectionLink>
         }

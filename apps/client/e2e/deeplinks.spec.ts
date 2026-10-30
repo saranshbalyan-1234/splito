@@ -113,7 +113,7 @@ const SAMPLES: Sample[] = [
     name: 'an Activity tab',
     path: () => '/activity/others',
     isOpen: async page => {
-      await expect(page.getByTestId('activity-tabs').getByRole('tab').nth(1)).toHaveAttribute('aria-selected', 'true')
+      await expect(page.getByTestId('activity-tabs').getByRole('tab').nth(2)).toHaveAttribute('aria-selected', 'true')
     },
     parent: () => '/',
   },
@@ -185,7 +185,9 @@ for (const [label, viewport] of [
         const before = here(page)
         await openLink(page, `https://splito.app${path}`)
         await sample.isOpen(page)
-        await expect.poll(() => here(page)).toBe(path)
+        /* A link to a main screen opens its pushed copy, which names where it was opened from (owner 184): the address is the link's plus `from=home`. */
+        const withoutFrom = () => here(page).replace(/([?&])from=home&?/, '$1').replace(/[?&]$/, '')
+        await expect.poll(withoutFrom).toBe(path)
         await page.goBack()
         await expect.poll(() => here(page)).toBe(before)
       })
@@ -392,6 +394,7 @@ const PAGE_PATHS: Record<string, (ids: Ids, section?: string) => string> = {
   People: () => '/people',
   Groups: () => '/groups',
   Analytics: () => '/analytics',
+  Activity: () => '/activity',
   Person: ({person}) => `/people/${person}`,
   Group: ({group}) => `/groups/${group}`,
   Profile: () => '/profile',

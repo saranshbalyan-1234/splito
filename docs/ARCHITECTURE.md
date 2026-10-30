@@ -368,7 +368,7 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
   motion. A test fails on any `EmptyState` without an illustration. *Why:* "make the home empty screen animation
   like other screens"; "why there is no animation here"; "empty screen animations should be there always, and
   related to those screens only, and design/structure should be same".
-- **Every list has a type filter where items have types; Activity filters by type** (owner 173; F-259, Wave C):
+- **Every list has a type filter where items have types; Activity filters by type** (owner 173; F-259, built for Activity, Home's "See all" follows with Home):
   Activity's Filters offer the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes)
   besides All / Me / Others (owner 92), remembered (decision 90) and in the URL (`/activity?type=transactions`).
   Every "See all" of Recent transactions (Home, right column, Group) lands on Activity with the transactions type
@@ -821,9 +821,9 @@ call it; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab 
   URL; sheets that need a target (Remind, Leave group, a payment's peek, Call it even on one transfer) are listed
   with the reason in `lib/links/table.test.ts`.
 - **List state is the address, written on Apply or a tap.** `/groups?sort=name&show=owe&currency=EUR&settled=1`,
-  `/?show=owesYou&groups=0`, `/people/:id?groups=0`, `/analytics?period=month&offset=-1&currency=EUR&scope=0:g1,g2`;
+  `/?show=owesYou&groups=0`, `/people/:id?groups=0`, `/analytics?period=month&offset=-1&currency=EUR&scope=0:g1,g2`, `/activity/me?type=transactions&group=<id>`;
   a param that is present wins over the saved preference (F-1413), an absent one falls back to it. In-page tabs are
-  path segments (`/groups/:id/balances`, `/activity/others`) and replace the entry instead of pushing, so the page
+  path segments (`/groups/:id/balances`, `/activity/me`, `/activity/others`) and replace the entry instead of pushing, so the page
   is not mounted twice.
 - **One resolver** handles https, the custom scheme and notification URLs. Hosts live in one JSON
   (`apps/client/link-hosts.json`) shared with the app config. Invite, QR, reminder, share, Ask and Search links are
@@ -1056,6 +1056,14 @@ are written; nothing records them automatically (A-037).
 ### 17.1 Performance rules learned (self-updating, owner 191)
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
+
+- **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
+  Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
+  72 ms per new expense); it now keeps its pool, cursor and sorted events and merges each page in (0.35 s SQLite /
+  1.2 s IndexedDB, 8 / 13 ms per later change; `activityScale.test`). Bound any automatic search in the screen
+  (about ten pages) and let the person ask for more. The renders baseline (`RENDERS_BASELINE=write`) is the median of
+  three runs taken after the demo data has loaded and on a quiet machine, never the larger of two files and never a
+  single low sample: one sample read 4,178 tab updates against 4,418 and made the next run fail on noise.
 
 - **Measure on the slowest target, on a quiet machine.** Desktop Chrome at 1x hid a 600 ms tab switch that an
   iPhone felt as 2 s; measure in WebKit (iPhone simulator Safari or Playwright WebKit) and Chrome at 6x CPU, and
@@ -1361,6 +1369,18 @@ Splito lessons (add newest last, dated, with PR):
   `PushedTabFlag`, whose `children` element is made once by `TabScreen`, so React skips the screen; only the tiny provider
   re-renders (one `PushedTabFlag` x1 "wasted" line in `e2e-renders/baseline.json`, recorded on purpose). The gate's tab sweep
   also mounts about 13% more now (`tabs` 21383 -> 24183) because it visits Home and People as well as the old tabs.
+
+- 2026-10-30, F-1213 / F-259 (Activity): four things that cost a rebuild each. (1) **`Link` matches bare route patterns
+  only** (`router.matchPath('/activity/all?...')` is NotFound: the pattern ends at `/activity`), so an `href` that
+  `Link` pushes must carry a tab as `?tab=`; the resolver and `buildPath` still print `/activity/all`. (2) **A bare
+  path that means "the saved tab" needs an explicit segment for the first tab** (`PREF_TABS`), or a link meant for
+  All lands on a remembered Others. (3) **A projection's `isTouchedBy` must list every entity type the feed reads**:
+  comments and reminders were in `FEED_TYPES` (or are now) but not in `activityQuery`, so new ones did not show
+  until something else changed. (4) **A filtered list over a paged window can be empty while older pages match**:
+  read older pages until a screenful is listed or the history ends, and show the skeleton, not "nothing matches",
+  meanwhile. Also: a main screen that is pushed from a link must be told apart from its tab by a param
+  (`from=<tab>`, owner 184, in the address so a refresh keeps Back), not by stack depth (a deep link puts People
+  under every page).
 
 ---
 
@@ -1779,7 +1799,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   the avatar; the only difference from the tab, owner 190) reads `PushedTabContext`, which the tab screen sets; the FAB does not. Web pushes the tab route with
   a `from` param naming the tab it was opened from (it is in the address, owner 184); native pushes `Pushed<Tab>`
   twins registered in the root stack. A pushed copy is never the current tab: pressing its own tab replaces it with
-  the plain tab, without `from`. A cold page load of a plain address is the plain tab. e2e `homeTabs.spec.ts`.
+  the plain tab, without `from`. A cold page load of a plain address is the plain tab. e2e `homeTabs.spec.ts`. Every "See all" of Recent transactions (Home, the right column, a Group page) uses `seeAllTransactionsPath(groupId?)` (`lib/links/make.ts`): `/activity?tab=all&type=transactions[&group=<id>]` (the tab is a query there because `Link` matches bare route patterns; the address bar prints `/activity/all?from=<origin>&type=transactions`), All so a saved Me or Others never narrows it.
 - **Every page has a fixed parent, so Back always goes somewhere specific** (owner 184): with history, Back
   returns to the page you came from; with none (a refresh, a pasted address, a notification, a new tab), Back
   goes to the page's parent and the parents are stacked under it, so a second Back keeps climbing. The parents:
@@ -1964,10 +1984,10 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
 ### 26.9 Tabs and pager
 
 - **In-page tabs are Bluesky's Pager, never a segmented control,** and every set looks like Activity's "All /
-  From others": one shared component copied from Bluesky `src/view/com/pager/` (Pager on
+  Me / Others": one shared component copied from Bluesky `src/view/com/pager/` (Pager on
   react-native-pager-view with swipe between pages, TabBar with the animated sliding underline,
   scroll-to-selected, haptic selection tick, `PagerWithHeader` where a header block sits above the tabs); web
-  uses Bluesky's web pager. Group: Expenses / Balances / Members; Activity: All / From others; Analytics,
+  uses Bluesky's web pager. Group: Expenses / Balances / Members; Activity: All / Me / Others; Analytics,
   Person and Settings if tabbed. *Why:* "there is no animation when switching tabs, but it's there in Bluesky,
   why it's not there". *Where:* `components/TabBar.tsx` (Pager not copied yet, § 1 table).
 - **Every tap reflects immediately; heavy rendering is deferred** (owner 151, extends 150 to the whole app):
@@ -2338,11 +2358,47 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 - **Activity is a navigation destination, not a header bell** (§ 26.3): Lucide `Activity` (pulse) icon,
   Bluesky's unread badge on the nav item (bottom bar, sidebar), counting unread items from others. testIDs
   `tab-activity`, `screen-activity`.
-- **Header:** avatar | "Activity" | "Mark all read".
-- **Body keeps Bluesky's notification list:** Pager tabs "All" / "Me" / "Others" (owner 92: Me = what I did,
-  Others = what other people did; the tab choice is remembered per decision 90; F-1213, not built yet), day section headers (Today /
-  Yesterday / weekday / date), read/unread tint, row menu (mark read, hide, delete expense), swipe actions,
-  hide and undo.
+- **Header:** avatar (Back on a pushed copy, § 26.3) | "Activity" | Search & Ask | Filters | "Mark all read".
+- **Body keeps Bluesky's notification list:** day section headers (Today / Yesterday / weekday / date), read/unread
+  tint, row menu (mark read, hide, delete expense), swipe actions, hide and undo.
+- **Tabs All / Me / Others** (owner 92; F-1213, built): the shared TabBar; Me = what I did, Others = what other
+  people did. The choice is remembered (`activity.tab`, decision 90) and is the address: `/activity` is the saved
+  tab, `/activity/all`, `/activity/me`, `/activity/others` name one (`PREF_TABS` in `lib/links/table.ts`: a bare
+  path means the saved tab, so All needs a segment of its own); a tap writes the segment by the one list-state rule
+  (`param`) and saves the choice. **My own changes are never unread**: the nav badge, "Mark all read" and a tab's
+  unread count only ever count other people's changes, so Me has nothing to mark (Mark all read is disabled
+  there) and a row of mine has no "Mark as unread". "Mark all read" marks everything on All and Others and only the
+  listed rows when a type or group narrows the list (the rest stays unread). The nav badge is always the whole
+  feed's, whatever tab or filter is showing.
+- **Filters sheet with Type** (owner 173; F-259, built): the header's Filters button (testID `activity-filters`, a
+  dot while a type is chosen) opens a sheet with Cancel + Apply and one multi-select, **Type**: Expenses, Payments,
+  Comments, Groups, Friends and invites, Reminders, Disputes (none chosen = all; an event's type is read from its
+  kind in `activityTypeOf`, so the disputes kinds count without a change here). Remembered on Apply
+  (`activity.type`), and the address: `?type=transactions` (expenses + payments, the owner's word for what every
+  "See all" means), `?type=comments,groups`, `?type=all` (clears a saved choice); `/activity/filters` is the sheet.
+  `?group=<id>` scopes the list to one group (changes of that group, a comment by its expense's group) and shows a
+  chip that clears it. The empty state follows the tab and the filter (§ 7: animated, with "Show every type" when
+  narrowed; "Show every type" clears only the type and keeps a group, "Show everything" clears a group); a list
+  narrowed by a type or a group that holds fewer than a screenful searches back **at most about ten pages (1,000
+  changes) by itself**, five pages a step, under a same-size skeleton and never "nothing matches"; past that the
+  empty state says "Nothing matches in the latest changes" with **"Look further back"** (five more pages a tap), and
+  scrolling (`onEndReached`) keeps reading. A tab alone (Me, Others) never searches by itself. **Disputes get no tab
+  of their own** (ruling 2026-10-31): the tabs stay All / Me / Others, Disputes is a Type, and its empty text is the
+  disputes copy ("No disputes or holds..."). The window grows **incrementally**: `activityTracker` keeps its pool,
+  cursor and a sorted event list when `want()` grows (`loadMore` reloads with an empty notice, never `'unknown'`) and
+  rebuilds only the entities a read names; 10,000 expenses walk to a 10,000-event window in 0.35 s (SQLite) / 1.2 s
+  (IndexedDB), a new expense then costs 8 / 13 ms (`activityScale.test`; it was 23.6 s and 72 ms per expense with
+  a rebuild per page). The nav badge counts the newest page only (everything unread is newer than the read mark),
+  so it never depends on the tab, filter or window. Comments are Activity events (`comment.added`,
+  written once; editing or deleting one is housekeeping, and the row never repeats the text).
+  *Assistant rulings, 2026-10-30 (not yet seen by the owner):* my own changes cannot be unread; "Mark all read" on a
+  narrowed list marks only the unread rows it lists ("Marked these as read"); the Group page has no Recent transactions section yet, so its "See all" is only the helper
+  `seeAllTransactionsPath(groupId)`, ready for when the section lands. *Reads/writes:* the Activity projection
+  (now also refreshed by comments and reminders), prefs `activity.tab`, `activity.type`. *Cost:* one pref write
+  per tab tap or Apply; the feed filters in `buildRows` (2.8 ms for 1,000 events, bench test); older pages are
+  read only while a narrowed list is short. *Telemetry:* none. *Checks:* `feed.test`, `urlState.test`,
+  `resolve.test`, `linkNavigation.test`, `demoCoverage.test`, sync `activity.test`; e2e `activityFilters.spec`
+  at 390 and 1440, `activity`, `shell`, `tabTaps`, `deeplinks` specs updated for three tabs.
 - **A row shows who did it and what it means for you:** the avatar is the ACTOR (who added, edited or
   deleted), never the participants; the line carries the amount and your effect ("you lent EUR 9" in the
   positive colour, "you borrowed INR 450" in the negative colour) and the group name.
@@ -2777,7 +2833,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     balances ("of which ₹400 disputed", per currency, pointing the way the balance does and never above it), Settle up (disputed
     and held amounts left out by default with the amount stated, "Include disputed" remembered per group in
     `group:settleIncludeDisputed`, a new plan hash on every raise, accept and release), the edit prompt "Does this resolve
-    <name>'s dispute?", Activity (a Disputed tab, `/activity/disputed`, and rows for raised, held, answered, reopened, released,
+    <name>'s dispute?", Activity (a Disputes type on Activity's Filters, and rows for raised, held, answered, reopened, released,
     withdrawn; Gone is the delete's own row), "Disputed only" in the Group and Person filter sheets (the page's own choice,
     not in the address yet), Search (`status: disputed`, alone or with words), and a Dispute column in the CSV statement.
   - **Not built (why):** the For you card's "Needs your answer" and its 3-day nudge (the card, F-230, is not built and Home is

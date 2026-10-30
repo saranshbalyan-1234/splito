@@ -566,7 +566,7 @@ Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Gr
 
 Activity Filters gain the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes), remembered and in the URL; every Recent transactions "See all" opens Activity with type=transactions (group-scoped from a Group page).
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo, Wave C (with F-1213 All/Me/Others) · **Deps** F-1213, F-256
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** built on feat/wC-F1213-F259-activity (Activity filter, `seeAllTransactionsPath`, right column wired; the Group page has no Recent transactions section yet and Home's "See all" is on the Home branch: both only call `seeAllTransactionsPath(groupId?)` with `navigationAction="push"`) · **Deps** F-1213, F-256
 - **Prefs** `activity.type` (account)
 - **Acceptance**
   1. Filters sheet on Activity has Type (multi-select) besides All/Me/Others; badge and empty state follow it; remembered after reload; `/activity?type=transactions` deep-links it.
@@ -2722,9 +2722,9 @@ Exact numbers from the ledger, never illustrative.
 
 ### F-1213 Activity tabs All / Me / Others `spec: owner § 26.14 (decision 92)`
 
-Replace Activity's "All" / "From others" tabs with "All" / "Me" / "Others". Queued by the owner; build only when the owner says so.
+Replace Activity's "All" / "From others" tabs with "All" / "Me" / "Others".
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1201
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** built on feat/wC-F1213-F259-activity (owner 92; `activity.tabs` order not built, the three tabs are fixed) · **Deps** F-1201
 - **Prefs** `activity.tab` (account, default All; remembered per decision 90), `activity.tabs` (which of the three show and their order)
 - **Acceptance**
   1. Bluesky Pager tabs All / Me / Others on Activity; Me lists only items whose actor is me, Others only items by other people, All both; each paged by cursor (§ 9.8).

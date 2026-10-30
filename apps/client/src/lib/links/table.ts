@@ -9,8 +9,14 @@ import {ROUTE_PATHS, type RouteName} from '#/routes'
 /** In-page tabs: the path segment after the page (`/groups/:id/balances`); the first is the default and prints no segment. */
 export const PAGE_TABS = {
   Group: ['expenses', 'balances', 'members'],
-  Activity: ['all', 'others', 'disputed'],
+  Activity: ['all', 'me', 'others'],
 } as const satisfies Partial<Record<RouteName, readonly string[]>>
+
+/**
+ * Pages whose bare path means "the tab I last used" (a saved preference, F-1213), so the first tab has a segment of
+ * its own (`/activity/all`) that is written whenever it is named; Group's first tab is simply the default.
+ */
+export const PREF_TABS: readonly string[] = ['Activity']
 
 export type TabbedPage = keyof typeof PAGE_TABS
 
@@ -22,6 +28,7 @@ export const SHEETS = {
   People: ['filters'],
   Groups: ['filters'],
   Analytics: ['scope', 'range'],
+  Activity: ['filters'],
   Person: [
     'filters',
     'record-payment',
@@ -110,10 +117,10 @@ export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
   Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden', 'from'],
   Person: ['groups'],
   Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope'],
+  /* `type=transactions` (Recent transactions' "See all", owners 173, 179), `group=<id>` from a Group's "See all" (F-259); `from` is the tab a pushed copy opened from. */
+  Activity: ['type', 'group', 'from'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
   Settings: ['note'],
-  /* `type=transactions`: Recent transactions' "See all" (owner 173). The type filter itself is F-259; until then Activity ignores it. */
-  Activity: ['type', 'from'],
   FriendsAndInvites: ['section'],
   CreateInvite: ['kind', 'groupId'],
 }
@@ -137,7 +144,7 @@ export function isValidPathParam(key: string, value: string): boolean {
 }
 
 /** Query keys that carry an entity id; checked like a path param. */
-export const ENTITY_QUERY_KEYS = ['personId', 'groupId'] as const
+export const ENTITY_QUERY_KEYS = ['personId', 'groupId', 'group'] as const
 
 /** Pages that are formSheet / modal routes on a phone: nothing opens over them from a link (ARCHITECTURE 4, one native modal). */
 const COMPOSER_PAGES: readonly string[] = ['AddExpense', 'EditExpense', 'CreateGroup']

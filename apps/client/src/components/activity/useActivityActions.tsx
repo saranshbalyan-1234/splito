@@ -6,7 +6,7 @@ import {useTheme} from '#/alf'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import * as Toast from '#/components/Toast'
 import {useAnswerFriendRequest, useMutationCtx, useStore} from '#/data/hooks'
-import {markAllRead, setHidden, setRead} from './feed'
+import {markAllRead, markRows, setHidden, setRead} from './feed'
 import {DeleteIcon, HideIcon, MarkReadIcon, MarkUnreadIcon} from './icons'
 import {type useActivityFeed} from './useActivityFeed'
 
@@ -37,6 +37,8 @@ export function useActivityActions(feed: ReturnType<typeof useActivityFeed>) {
   const answerRequest = useAnswerFriendRequest()
 
   const isAvailable = (action: RowAction, event: ActivityEvent) => {
+    /* My own changes are never unread (owner 92), so there is nothing to mark. */
+    if (action === 'markRead') return event.actor !== feed.me
     if (action !== 'delete') return true
     const expense =
       event.entityType === 'expense'
@@ -107,8 +109,10 @@ export function useActivityActions(feed: ReturnType<typeof useActivityFeed>) {
 
   const markEverythingRead = () => {
     const before = feed.state
-    update(s => markAllRead(s, snapshot?.events ?? []))
-    showUndo(<Trans>Marked everything as read</Trans>, () =>
+    /* A narrowed list (a type, a group) marks only the unread rows it lists; the rest stays unread. */
+    const listed = feed.rows.flatMap(r => (r.type === 'event' && !r.isRead ? [r.event] : []))
+    update(s => (feed.isNarrowed ? markRows(s, listed) : markAllRead(s, snapshot?.events ?? [])))
+    showUndo(feed.isNarrowed ? <Trans>Marked these as read</Trans> : <Trans>Marked everything as read</Trans>, () =>
       update(s => ({
         ...s,
         readUpTo: before.readUpTo,

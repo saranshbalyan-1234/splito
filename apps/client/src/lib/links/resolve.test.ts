@@ -167,3 +167,34 @@ test('Home is "/" and takes only its Overview scope; the old Home list state and
   expect(resolveLink('/?groups=0&settled=1').target).toMatchObject({name: 'People', params: {groups: '0', settled: '1'}})
   expect(resolveLink('/filters').target).toMatchObject({name: 'People', sheets: ['filters']})
 })
+
+describe('Activity (F-1213, F-259): tab, types and one group in the address', () => {
+  test('/activity/me and /activity/others are tabs; /activity/all is named explicitly (the bare path is the saved tab)', () => {
+    for (const tab of ['all', 'me', 'others']) {
+      const r = resolveLink(`/activity/${tab}`)
+      expect(r.target).toMatchObject({name: 'Activity', params: {tab}})
+      expect(buildPath(r.target)).toBe(`/activity/${tab}`)
+    }
+    expect(buildPath(resolveLink('/activity').target)).toBe('/activity')
+  })
+
+  test('?type=, ?group= and ?from= (the tab a pushed copy opened from) survive; a bad group id and unknown keys are dropped', () => {
+    const r = resolveLink(`/activity/all?type=transactions&group=${ID}&from=home&x=1`)
+    expect(r.target.params).toEqual({tab: 'all', type: 'transactions', group: ID, from: 'home'})
+    expect(buildPath(r.target)).toBe(`/activity/all?from=home&group=${ID}&type=transactions`)
+    expect(resolveLink('/activity?group=nope').target.params).toEqual({})
+  })
+
+  test('the Filters sheet is /activity/filters, with a tab before it', () => {
+    expect(resolveLink('/activity/filters').target).toMatchObject({name: 'Activity', sheets: ['filters']})
+    expect(resolveLink('/activity/others/filters?type=comments').target).toMatchObject({name: 'Activity', params: {tab: 'others', type: 'comments'}, sheets: ['filters']})
+  })
+})
+
+test('every "See all" of Recent transactions is one path: Activity, All, transactions, scoped to a group from a Group page', async () => {
+  const {seeAllTransactionsPath} = await import('./make')
+  expect(seeAllTransactionsPath()).toBe('/activity?tab=all&type=transactions')
+  expect(seeAllTransactionsPath(ID)).toBe(`/activity?tab=all&type=transactions&group=${ID}`)
+  expect(buildPath(resolveLink(seeAllTransactionsPath(ID)).target)).toBe(`/activity/all?group=${ID}&type=transactions`)
+  expect(resolveLink(seeAllTransactionsPath(ID)).target.params).toEqual({tab: 'all', type: 'transactions', group: ID})
+})

@@ -6,6 +6,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useRecentRows} from '#/data/recentTransactionRows'
+import {seeAllTransactionsPath} from '#/lib/links/make'
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
@@ -114,9 +115,9 @@ export function RecentTransactions() {
       })}
       <Link
         testID="sidebar-transactions-all"
-        href="/activity"
-        navigationAction="navigate"
-        accessibilityLabel={l`See all activity`}
+        href={seeAllTransactionsPath()}
+        navigationAction="push"
+        accessibilityLabel={l`See all transactions`}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
         style={[

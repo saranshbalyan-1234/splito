@@ -588,6 +588,9 @@ export const PREF_CONTROLS = {
   'people.showSettled': null,
   'groups.showSettled': null,
   'groups.sort': null,
+  // Saved by tapping Activity's tabs and applying its Filters, where their effect shows; Reset all resets them.
+  'activity.tab': null,
+  'activity.type': null,
   'notify.payment': NotifyPaymentPref,
   'notify.comments': NotifyCommentsPref,
   'notify.invite': NotifyInvitePref,
