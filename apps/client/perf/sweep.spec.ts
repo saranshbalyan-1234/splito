@@ -337,6 +337,13 @@ const link = (url: string | ((c: Ctx) => string)) => async (c: Ctx) =>
     u => (window as unknown as {__splitoTest: {openLink(u: string): void}}).__splitoTest.openLink(u),
     typeof url === 'string' ? url : url(c),
   ))
+/** A tap that is not measured (opening what the next step acts on). */
+async function tapQuietly(c: Ctx, id: string) {
+  const target = c.page.locator(`${T(id)}:visible`).first()
+  const b = await aim(c.page, target)
+  await c.page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2)
+  if (process.env.SWEEP_DEBUG) console.log('tapQuietly', id, JSON.stringify(b), await c.page.evaluate(([x, y]) => document.elementFromPoint(x!, y!)?.outerHTML.slice(0, 200), [b.x + b.width / 2, b.y + b.height / 2]))
+}
 const press = (key: string) => async (c: Ctx) => void (await c.page.keyboard.press(key))
 const settled = async (c: Ctx, ms = 700) => void (await c.page.waitForTimeout(ms))
 
@@ -421,7 +428,7 @@ function typing(screen: string, start: Flow['start'], row: string, open: (c: Ctx
   }
 }
 
-/** Scrolling a screen's list down and back up with the wheel: the worst frame gap and the longest block. */
+/** Scrolling a screen's list down and back up: the worst frame gap and the longest block. */
 function scrolling(screen: string, start: Flow['start']): Flow {
   return {
     name: `Scroll: ${screen}`,
@@ -431,15 +438,22 @@ function scrolling(screen: string, start: Flow['start']): Flow {
         screen,
         action: 'scroll',
         kind: 'scroll',
-        prepare: async c => void (await c.page.mouse.move(195, 450)),
-        act: async c => {
-          for (const dir of [1, -1]) {
-            for (let i = 0; i < 8; i++) {
-              await c.page.mouse.wheel(0, dir * 420)
-              await c.page.waitForTimeout(50)
-            }
-          }
-        },
+        act: async c =>
+          /* A fling: 40 px a frame for 30 frames down and back. (Playwright has no wheel in mobile WebKit and no swipe.) */
+          void (await c.page.evaluate(async () => {
+            const run = (n: number, d: number) =>
+              new Promise<void>(done => {
+                let i = 0
+                const frame = () => {
+                  window.scrollBy(0, d)
+                  if (++i < n) requestAnimationFrame(frame)
+                  else done()
+                }
+                requestAnimationFrame(frame)
+              })
+            await run(30, 40)
+            await run(30, -40)
+          })),
         fb: {visible: 'body'},
         settle: 500,
       },
@@ -626,11 +640,9 @@ const FLOWS: Flow[] = [
         ct: {visible: T('list-filters-dot')},
         settle: 900,
       },
-      /* Back to unfiltered for the next lap: the same three taps again, all measured. */
-      {screen: 'Groups', action: 'filters: reopen', tap: tid('list-filters'), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900},
-      {screen: 'Groups', action: 'filter chip off', tap: tid('filter-show-owed'), fb: {flips: [T('filter-show-owed'), 'aria-checked']}, settle: 500},
-      {screen: 'Groups', action: 'filter clear', tap: tid('sheet-save'), fb: {moves: DIALOG}, ct: {gone: T('list-filters-dot')}, settle: 900},
     ],
+    /* The filter sticks in the page's address, so a second lap would start filtered: one sample, from a fresh load. */
+    laps: 1,
   },
   {
     name: 'Filters: Activity',
@@ -694,16 +706,20 @@ const FLOWS: Flow[] = [
   ),
   /* ---- typing */
   typing('People search', '/', 'People', async c => {
-    await c.page.locator(`${T('list-search')}:visible`).first().tap()
-    await c.page.waitForTimeout(700)
+    if (!(await c.page.locator(`${T('list-search-input')}:visible`).count())) {
+      await tapQuietly(c, 'list-search')
+      await c.page.waitForTimeout(700)
+    }
   }, 'list-search-input'),
   typing('Groups search', '/groups', 'Groups', async c => {
-    await c.page.locator(`${T('list-search')}:visible`).first().tap()
-    await c.page.waitForTimeout(700)
+    if (!(await c.page.locator(`${T('list-search-input')}:visible`).count())) {
+      await tapQuietly(c, 'list-search')
+      await c.page.waitForTimeout(700)
+    }
   }, 'list-search-input'),
   typing('Search & Ask', '/', 'Search & Ask', async c => {
     if (!(await c.page.locator(`${DIALOG}:visible`).count())) {
-      await c.page.locator(`${T('header-search-ask')}:visible`).first().tap()
+      await tapQuietly(c, 'header-search-ask')
       await c.page.waitForTimeout(900)
     }
   }, 'search-input'),
@@ -867,11 +883,16 @@ function misses(s: Sample, step: {leaving?: boolean; info?: boolean}, label: str
 /** Finds the element, scrolls it in and waits until it holds still: the clock must not include any of that. */
 async function aim(page: Page, target: Locator) {
   await expect(target).toBeVisible({timeout: 30_000})
-  for (let i = 0; i < 5; i++) {
-    await target.scrollIntoViewIfNeeded()
-    await page.waitForTimeout(500)
+  /* Rows still arriving (the demo loads history in the background) move things: wait for two equal boxes in view. */
+  let last = ''
+  for (let i = 0; i < 12; i++) {
+    /* Centred, not at the edge: the header and the bottom bar and FAB cover the ends of the page. */
+    await target.evaluate(e => e.scrollIntoView({block: 'center', inline: 'center'}))
+    await page.waitForTimeout(350)
     const b = (await target.boundingBox())!
-    if (b.y >= 0 && b.y + b.height <= PHONE.height) return b
+    const key = JSON.stringify(b)
+    if (key === last && b.y >= 0 && b.y + b.height <= PHONE.height) return b
+    last = key
   }
   return (await target.boundingBox())!
 }
