@@ -168,7 +168,7 @@ test('M8: Record payment on a settled friend offers every currency, starting on 
   await expect(page.getByTestId('record-payment-sheet')).toContainText('JPY')
   await page.getByTestId('payment-amount').fill('500')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
   await expect(page.getByTestId('person-total-JPY')).toHaveText('¥500')
 })
 

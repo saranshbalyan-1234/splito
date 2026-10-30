@@ -1071,11 +1071,15 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   as `FIRSTVISIT` without gating it, and gates the second round, where every tab is mounted and parked
   (69 mounts + 468 updates in 4 of 4 runs). Median of three, taken on a quiet machine, as below.
 
+- **An animated icon swaps and pops; it never keeps two glyphs mounted.** Cross-fading an outline and a filled glyph doubled the
+  icons on every tab bar, sidebar and drawer (tab-round updates 468 -> 624, one new wasted-render report); one glyph in use plus a
+  180 ms scale-and-opacity pop on change gives 500, recorded in `e2e-renders/baseline.json` with its reasons in `docs/COMPLETION_MATRIX.md`.
+
 - **Load animation assets and their player on first use, and read a module-level cache through state.** The
   start-up bundle held `lottie-web` (168 KB) and, through `require()` in a registry object, every animation JSON
   (inline requires do not help when the registry object is built at import); each is now a dynamic `import()`
-  behind `useIllustrationSource`, so the web first-load JS fell from 7,305,880 B to 7,029,015 B (gzip 1,545,216 to
-  1,497,558 B) while 19 new pieces of art (with loading and success, about 415 KB raw in 53 lazy chunks) were added. Measure the entry
+  behind `useIllustrationSource`, so the web first-load JS fell from 7,305,880 B to 7,021,333 B (gzip 1,545,216 to
+  1,495,320 B) while 19 new pieces of art (with loading and success, about 415 KB raw in 53 lazy chunks) were added. Measure the entry
   chunks of `expo export` (the `index`, `__common` and runtime scripts in `index.html`) before and after, never the
   folder total. A hook that reads a module-level `Map` during render must also hold what it read in state: the
   React Compiler caches a bare `loaded.get(key)` on `key` alone, so the art never appeared after its chunk
@@ -1447,10 +1451,15 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-30, F-1210 e2e: **never `goto` right after a click that writes.** The write is a transaction still in flight; the reload drops it and the next assertion fails (it looked like a missing feature). Wait for the sheet to close or the toast first. A search drawer input also needs `toBeEditable()` before `fill` under load.
 - 2026-10-30, F-1210 review: **a derived adjustment must stay between zero and the thing it adjusts.** The first "leave disputed out of the plan" subtracted the disputed part from every net, which flipped signs on a settled or part-repaid group and asked someone to pay twice for a disputed "payment not received". `withoutDisputed` now shrinks each net toward zero only and rebalances with `allocate`, with a property test (sums to zero, never flips, never grows). Likewise a stored pointer into a list (an item's position) must be the item's own id: reorders and edits moved the dispute onto the wrong item.
 - 2026-10-30, F-1210 review: **an "apply the suggestion" action must never change the shape of the record to fit it.** Converting an itemised or percent split to exact amounts to apply an amount fix lost the items. One tap applies a fix only when the split mode survives it (`fixApplies`); otherwise it is an edit by hand, and the panel says why.
+- 2026-10-31, F-1713 (c-anim): **an icon that animates a state change mounts only the glyph in use.** The first `MorphIcon`
+  kept the outline and the filled glyph both mounted and cross-faded their opacity: tab-round updates went from 468 to 624 (+33 %)
+  and a wasted `Rect` report appeared (the old Groups glyph re-rendering with equal props), against a budget of +10 %. Rendering one
+  glyph and popping it in on a change (scale and opacity on the UI thread, 180 ms) costs 500 updates, and the baseline records
+  that reviewed increase. Rule of thumb: any "morph" is a swap plus a pop, never two live copies.
 - 2026-10-31, F-260 / F-1713 (c-anim): **lazy art needs the player lazy too, and a compiled hook must not read a
   module cache without state.** Moving the animation JSON behind `import()` was not enough on its own; `lottie-web`
-  was also in the entry (now dynamic) and together they took 277 KB (3.8 %) off the web first-load JS (7,305,880 to
-  7,029,015 B; gzip 1,545,216 to 1,497,558), with 19 new empty-state pieces added as lazy chunks (53 with loading, success and lottie-web: 415 KB). The first
+  was also in the entry (now dynamic) and together they took 285 KB (3.9 %) off the web first-load JS (7,305,880 to
+  7,021,333 B; gzip 1,545,216 to 1,495,320), with 19 new empty-state pieces added as lazy chunks (53 with loading, success and lottie-web: 415 KB). The first
   version of `useIllustrationSource` drew nothing: the React Compiler memoised `loaded.get(key)` on `key`, so the
   re-render after the fetch returned the old `undefined`; the hook now keeps `{key, json}` in state. Also: an empty
   state plays once to a resting frame (`playSegments([0, staticFrame])`), so a looped file whose last frame equals

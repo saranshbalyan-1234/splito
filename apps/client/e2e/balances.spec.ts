@@ -78,7 +78,7 @@ test('M10 + m7 + m5: direct and group debts that net to zero stay open, and Call
   )
   await expect(page.getByTestId('call-even-amount')).toHaveCount(0)
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('call-even-done')).toBeVisible()
+  await expect(page.getByText(/^(All even|Written off)$/)).toBeVisible()
   await expect(page.getByTestId('person-settled')).toBeVisible()
 
   // Activity: told from who did it (me), with Bob.

@@ -25,7 +25,7 @@ async function splitWith(page: Page, names: string[]) {
 /** Saves, waits for the success check, and opens the new expense from the toast. Returns its id. */
 async function saveAndView(page: Page) {
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('expense-saved')).toBeVisible()
+  await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
   await page.getByRole('button', {name: 'View expense'}).click()
   await expect(page.getByTestId('screen-expense')).toBeVisible()
   return new URL(page.url()).pathname.split('/').pop()!

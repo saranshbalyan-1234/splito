@@ -102,7 +102,7 @@ test('Call it even clears the INR balance (direct and group), keeps EUR, shows i
   )
   await page.getByTestId('call-even-note').fill('Birthday treat')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('call-even-done')).toBeVisible()
+  await expect(page.getByText(/^(All even|Written off)$/)).toBeVisible()
   await expect(page.getByTestId('call-even-sheet')).toHaveCount(0)
 
   // INR is even; EUR is untouched; the write-off is in history, never as a payment.

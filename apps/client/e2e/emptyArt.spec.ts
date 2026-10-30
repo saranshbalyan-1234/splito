@@ -75,9 +75,11 @@ for (const size of SIZES) {
     test('Search no match and Ask with nothing yet show their own art', async ({page}) => {
       await page.goto('/search?q=zzzz')
       await expect(page.getByTestId('search-empty')).toBeVisible({timeout: 30_000})
+      await page.waitForTimeout(600) // the popup zooms in (0.96 -> 1): measure it at rest
       await expectArt(page, 'search-empty', 'empty-search', size.art, `${size.name}-empty-search-dialog`)
       await page.goto('/search?mode=ask')
       await expect(page.getByTestId('ask-empty')).toBeVisible({timeout: 30_000})
+      await page.waitForTimeout(600)
       await expectArt(page, 'ask-empty', 'empty-ask', size.art, `${size.name}-empty-ask`)
     })
 

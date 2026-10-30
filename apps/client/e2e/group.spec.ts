@@ -227,7 +227,7 @@ test('"Record this payment" records a part payment and the plan follows', async 
   await expect(page.getByTestId('payment-amount')).toHaveValue('100.00')
   await page.getByTestId('payment-amount').fill('60')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
 
   await expect(transfer.getByTestId('transfer-amount')).toHaveText('↗ ₹40.00')
   await expect(page.getByText('Balances or rules changed since this plan was made.')).toHaveCount(0)

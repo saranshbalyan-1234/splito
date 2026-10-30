@@ -335,7 +335,7 @@ for (const [label, size] of SIZES) {
       await page.getByTestId('sheet-save').click()
       await expect(page.getByText('Does this resolve Bob Mehta’s dispute?')).toBeVisible()
       await page.getByTestId('resolve-yes').click()
-      await expect(page.getByTestId('expense-saved')).toBeVisible()
+      await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
       await page.goto(`/expense/${dinner}`)
       await expect(page.getByTestId('expense-detail-amount')).toHaveText('₹1,000.00')
       await expect(page.getByTestId('dispute-badge-accepted')).toBeVisible()

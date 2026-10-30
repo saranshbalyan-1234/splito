@@ -146,7 +146,7 @@ test('recording a part payment moves the balance; deleting it is undoable', asyn
   await page.getByTestId('payment-amount').fill('40')
   await page.getByTestId('payment-note').fill('Cash')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹110.00')
 
   const row = page.getByRole('button', {name: 'Kavya Rao paid you'})
@@ -186,7 +186,7 @@ test('paying the whole balance from a friend’s page settles the group part too
     'Counts towards: Direct ₹100.00 · Pune trip ₹50.00',
   )
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
   await expect(page.getByTestId('person-settled')).toBeVisible()
 
   // The group agrees: nothing left to settle there (a settled group is hidden by default, so show it).

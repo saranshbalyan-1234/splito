@@ -304,11 +304,16 @@ Checks, 2026-10-30, machine load under 6 for the perf runs (e2e at load 5-135 fr
 
 ## Animated icons and empty-state art (F-1713, F-260; owners 96, 172, 210, 213; branch c-anim, web, measured 2026-10-31)
 
-- Web first-load JS (`expo export -p web`, e2e build; the `index`, `__common` and runtime scripts): 7,305,880 B before, 7,029,015 B after
-  (-276,865 B, -3.8 %); gzip 1,545,216 B before, 1,497,558 B after. Lazy: 415 KB raw in 53 chunks (`lottie-web` 168 KB plus 52 animation files: 19 empty
+- Web first-load JS (`expo export -p web`, e2e build; the `index`, `__common` and runtime scripts): 7,305,880 B before, 7,021,333 B after
+  (-284,547 B, -3.9 %); gzip 1,545,216 B before, 1,495,320 B after. Lazy: 415 KB raw in 53 chunks (`lottie-web` 168 KB plus 52 animation files: 19 empty
   states, the 5 intro slides, loading and success, light and dark).
 - Animations are UI-thread only (Reanimated shared values); each icon motion is 180-380 ms; the sync dot loops only while syncing and rests on blur or reduced motion.
 - Not profiled: the 1,000-row list scroll with animated icons visible (F-1713 acceptance 4). Native (iOS, Android) was not run for the art: the once-and-rest play on
   `lottie-react-native` (`play(0, staticFrame)`) and the lid/tick motion are untested on a device.
 - Tests: `e2e/emptyArt.spec.ts` (every empty state at 390 and 1440 shows its own art and a button; reduced motion holds one frame, light and dark; one art plays once and rests),
   `architecture/emptyStateArt.test.ts`, `activityEmptyArt` in `feed.test.ts`.
+- Renders gate (`e2e-renders/baseline.json`, re-recorded as the median of three runs, machine load about 75 so only counts are used): launch 2,090 -> 2,127 mounts, tabs 468 -> 500 updates
+  (mounts 69 -> 75), scroll 43,735 -> 43,740 mounts, ask 944 -> 957 updates, other phases unchanged. Reviewed causes: the new `MorphIcon` wrapper (7 icons mount, 8 update on the tab
+  round) and its `Animated.View` (+7 mounts, +8 updates), the Activity tick glyph (`AnimatedIcon`, `Layer`, `Nodes`, `AnimatedPath`: 3 mounts), and two `View`/`Circle` mounts
+  from the ContactRound and Users glyphs. No new wasted-render report. A first version that kept both the outline and filled glyph mounted cost 624 tab updates and one new
+  wasted `Rect` report, so only the glyph in use is mounted.

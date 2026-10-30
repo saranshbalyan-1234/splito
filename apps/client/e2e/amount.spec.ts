@@ -76,7 +76,7 @@ test('cash rounding: whole shares, the remainder shown on one person, saved with
   await expect(page.getByTestId('cash-remainder')).toContainText('₹0.50')
 
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('expense-saved')).toBeVisible()
+  await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
   await page.getByRole('button', {name: 'View expense'}).click()
   await expect(page.getByTestId('expense-cash-rounding')).toContainText(
     'Rounded to ₹10 for cash',

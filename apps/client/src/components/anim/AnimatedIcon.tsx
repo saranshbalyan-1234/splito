@@ -205,10 +205,9 @@ export function createAnimatedIcon(data: LucideIconData, options: AnimatedIconOp
 }
 
 /**
- * Cross-fades an outline glyph into its filled one when `isActive` turns on
- * (tab, drawer and sidebar icons), with a small pop. Both stay mounted so the
- * change is a UI-thread opacity move, never a remount. `playKey` reaches the
- * glyphs (the Activity tick).
+ * Swaps an outline glyph for its filled one when `isActive` turns on (tab, drawer and sidebar icons) and the new
+ * glyph pops in (scale and opacity, 180 ms, UI thread). Only one glyph is mounted at a time, as before, so a tab
+ * switch costs no extra render; `playKey` reaches the glyphs (the Activity tick).
  */
 export function MorphIcon({
   outline: Outline,
@@ -223,25 +222,25 @@ export function MorphIcon({
   playKey?: number
 }) {
   const isReduced = useShouldReduceMotion()
-  const progress = useSharedValue(isActive ? 1 : 0)
+  const progress = useSharedValue(1)
+  const isFirst = useRef(true)
   useEffect(() => {
-    if (isReduced) progress.set(Number(isActive))
-    else progress.set(withTiming(Number(isActive), {duration: 180}))
+    if (isFirst.current) {
+      isFirst.current = false
+      return
+    }
+    if (isReduced) return
+    progress.set(0)
+    progress.set(withTiming(1, {duration: 180, easing: Easing.out(Easing.cubic)}))
   }, [isActive, isReduced, progress])
-  const outlineStyle = useAnimatedStyle(() => ({opacity: 1 - progress.get()}))
-  const filledStyle = useAnimatedStyle(() => ({
-    opacity: progress.get(),
-    transform: [{scale: 0.82 + 0.18 * progress.get()}],
+  const popStyle = useAnimatedStyle(() => ({
+    opacity: 0.35 + 0.65 * progress.get(),
+    transform: [{scale: 0.8 + 0.2 * progress.get()}],
   }))
-  const size = Number(props.width ?? 24)
+  const Glyph = isActive ? Filled : Outline
   return (
-    <View style={[{width: size, height: size}, props.style as object]}>
-      <Animated.View style={outlineStyle}>
-        <Outline {...props} {...(playKey === undefined ? {} : {playKey})} />
-      </Animated.View>
-      <Animated.View style={[{position: 'absolute', left: 0, top: 0}, filledStyle]}>
-        <Filled {...props} {...(playKey === undefined ? {} : {playKey})} />
-      </Animated.View>
-    </View>
+    <Animated.View style={[popStyle, props.style as object]}>
+      <Glyph {...props} {...(playKey === undefined ? {} : {playKey})} />
+    </Animated.View>
   )
 }
