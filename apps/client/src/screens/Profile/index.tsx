@@ -87,7 +87,7 @@ export function ProfileScreen() {
         </Layout.Header.Content>
         <Layout.Header.Slot />
       </Layout.Header.Outer>
-      <Layout.Content>
+      <Layout.Content contentContainerStyle={[a.pb_5xl]}>
         <View style={[a.w_full, a.self_center, {maxWidth: PAGE_WIDTH}]}>
           <View style={[a.px_xl, a.pt_md, a.pb_md, a.w_full, a.gap_2xs, a.align_center, {minHeight: 160}]}>
             {me ? <ProfilePreview me={me} /> : <ProfilePreviewPlaceholder />}
