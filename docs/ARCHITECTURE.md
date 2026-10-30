@@ -1970,7 +1970,7 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   hamburger".
 - **Opened by** a swipe from the left edge on phones (native and phone web); the header avatar opens Profile
   instead (owner 201, § 26.4). Everything the drawer offers is also reachable without it (tabs, Settings from
-  Profile's Back, the footer links in Settings > Support).
+  Profile's Back, Feedback, Help, Privacy and About in Settings > Support, owner 204).
 - **Contents, the same as the desktop sidebar (§ 26.3):** a profile header (avatar with the sync-status dot,
   the person's real name; tapping it opens Profile; no "Me" label and no "Saved on this device" text); the
   shared nav items (§ 26.3); the shared footer links Feedback ·
@@ -2589,8 +2589,11 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 - **Auth state comes from one `useSession()`** (Bluesky pattern, `src/state/session`), signed out until the
   backend lands.
 - **Feedback** ("add one feedback section as well"). Placement copied from Bluesky: a "Feedback" item in the
-  drawer (Bluesky `Drawer.tsx` onPressFeedback), a "Support" section in Settings ("Send feedback", "Your
-  feedback", "Help", "About"), and the shared footer links at the bottom of the left sidebar and the drawer (§ 26.3)
+  drawer (Bluesky `Drawer.tsx` onPressFeedback), **"Support" in Settings is one row that opens its
+  own page** (owner 204, `/settings/support`, Back -> Settings) holding every help item: Send feedback, Your
+  feedback, Help, Privacy, About (and the app version); the Settings list itself shows only the "Support" row,
+  and the sidebar/drawer footer links still go straight to each page. *Why:* "make support a section, which opens
+  up all these menus". and the shared footer links at the bottom of the left sidebar and the drawer (§ 26.3)
   "Feedback · Help · Privacy · About" (`desktop/RightNav.tsx`); below 1300 px desktop reaches them through the
   drawer and Settings. "Send feedback" opens a FormSheet (bottom drawer on phones, centred popup on desktop):
   type chips Bug / Idea / Question / Other, a required message, optional screenshot or photo, "Include app
@@ -3208,6 +3211,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 201 | "on click of avatar, now open profile inside settings" | The header avatar opens Profile at every width; Profile lives at /settings/profile with Back to Settings (old /profile redirects); the phone drawer opens by edge swipe | § 26.4, § 26.7 | Avatar opened the drawer on phone and rail |
 | 202 | "move the logout button inside profile" | Log out is the last row of Profile only; removed from Settings, the drawer footer and the sidebar (the add-contact step keeps its own) | § 26.15 | Log out in Settings > Account and the drawer footer |
 | 203 | "remove settings from profile" | Profile holds only the person (avatar, name, contact, stats, Log out); its "Settings" row is removed | § 26.15 | Profile had a Settings row |
+| 204 | "make support a section, which opens up all these menus" | Settings shows one "Support" row opening /settings/support with Send feedback, Your feedback, Help, Privacy, About and the version | § 26.15 | Support items listed inline in the Settings list |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
