@@ -1706,21 +1706,27 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
     "Analytics ›"; a scope choice in its header, **All** (default) / **Groups** / **Direct** (non-group), changes
     only the cards and their counts, remembered and in the URL `/?overview=groups|direct`, and "Analytics ›" carries
-    it over; owner 176); **Requests** (shown only when something is pending, below the Overview: incoming friend requests
-    with Accept / Decline, then **Invites sent** as real rows like before, each with avatar, name, status line and
-    Resend + Cancel on one horizontal line, at most 5 rows then "See all ›" to Friends and invites; owner 175,
-    replaces the compact "N invites waiting ›" row of 120/153); **Recent transactions** (F-1415: the newest expenses and payments
+    it over; owner 176); **no requests or invites on Home** (owner 197: they live on their own pages, below);
+    **Recent transactions** (F-1415: the newest expenses and payments
     across everything, "See all" -> Activity); **Recently active people** (the 5 friends with the newest change,
     by change time, with their per-currency net, "See all" -> People); **Recently active groups** (the 5 groups
     with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
     rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
     here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
   - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. The Groups tab glyph is Lucide `Group` now, since `Users` is People's.
-  - **People** (`/people`, new tab, Lucide `Users`): the same Requests and Invites sent rows Home shows (owner 175),
+  - **Requests and invites live on their own pages, never on Home** (owner 197): **People** shows friend requests
+    (Accept / Decline) and friend invites sent (Resend / Cancel) at the top; **Groups** shows group requests to me
+    (Join / Decline), join requests for groups I run (Approve / Decline) and group invites sent, at the top; a
+    **group page** shows its own pending join requests and invited members under Members. Each section is the
+    one-line row layout of § 26.18, at most 5 rows, then "See all" into Activity filtered to Friends and invites (and
+    the group, owner 195), and hides when empty. *Why:* "all these invites should show on their respective page, not
+    on home page, like group and people".
+  - **People** (`/people`, new tab, Lucide `Users`): friend requests and invites sent at the top (owner 197),
     then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
     Friends header (search, Filters, gear; it opens Friends and invites; no "Manage" text button, owner 177); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
-  - **Groups** (`/groups`): the groups list with search and Filters; no Overview. Header unchanged.
+  - **Groups** (`/groups`): group requests, join requests and group invites sent at the top (owner 197), then the
+    groups list with search and Filters; no Overview. Header unchanged.
   - **Navigation:** the shared list becomes Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the
     default phone bottom bar is Home, People, Groups, Analytics, Activity (5 tabs, labels shown under the icons up to 5 tabs, `components/TabGlyph.tsx` `TabLabel`); Settings >
     Navigation still lets the user change it (owners 84, 127). Every tab keeps the FAB rule (§ 26.6).
@@ -2223,11 +2229,9 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   be properly boxed each one" (screenshot: 4 currencies, the 4th card stretched across a shared box).
 - **Home reads top-down, nothing cut off, nothing crowded** (owner 120, from the owner's Home screenshot of
   2026-10-29; F-248, fixed in the Wave B post-assemble batch with F-244 and F-245):
-  - **Order:** Overview first, then incoming friend requests that need my answer (Accept / Decline), then
-    Recent transactions (F-1415), then Recently active people and Recently active groups (§ 26.3, owners 153/154;
-    the Friends list itself moved to People). "Invites sent" rows are back on Home below the requests (owner 175,
-    replacing the compact "N invites waiting ›" row of this rule's first version); the full list stays on the Friends
-    and invites page (F-621).
+  - **Order:** Overview first, then Recent transactions (F-1415), then Recently active people and Recently active
+    groups (§ 26.3, owners 153/154; the Friends list itself moved to People). Requests and invites are not on Home;
+    they are on People, Groups and the group page (owner 197, replacing owner 175's rows on Home).
   - **Overview amounts and labels are never truncated:** the label is written in full ("You are owed", "You
     owe"), the amount auto-shrinks to fit what the label leaves it on the card's right (down to `text_lg`, then
     wraps the currency symbol line rather than ellipsize); cards in one grid row stretch to the tallest card's
@@ -3171,6 +3175,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 194 | "this activyty page whould be used like this with filters everywhere" | Activity is the one full list behind every "see all" of past events; links pre-set Type, group and person filters (new `person=`), shown as chips; action lists (requests, invites) keep their pages | § 26.14 | Group/Person pages and others kept their own history lists |
 | 195 | "whrever activiyt can be linked do it, also invites can be hanlded like this"; "this way we can handle everything from one place and user wont be confused" | Every link that can lead to Activity does; requests/invites see-all and counts open Activity (Type = Friends and invites) with Accept/Decline and Resend/Cancel in the rows; Friends and invites keeps only its tools | § 26.14 | Requests and invites kept their own list pages (owner 194) |
 | 196 | "in group link, it should show anyone can join, or invites only, or add like this, if i add someone they would acept or i can send request" | Group "Who can join": Anyone with the link / Link, I approve each join (default) / Invite only; adding a friend sends a group request they accept (shown "Invited" until then); join requests and group requests handled in Activity | § 26.18 | Group links always required approval; members were added directly |
+| 197 | "all these invites should show on their respectivr page not on home page, like group and people" | No requests or invites on Home; People shows friend requests and invites sent, Groups shows group requests, join requests and group invites, a group page its own; 5 rows then See all into Activity | § 26.3 | Home Requests section with invites sent (175) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

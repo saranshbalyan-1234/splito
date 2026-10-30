@@ -676,6 +676,17 @@ Each group has a join setting (anyone with the link / approve each join / invite
   3. Adding a Splito friend creates a group request (Join / Decline in their Activity); they show "Invited" (greyed, not selectable) until they join; not-on-Splito people get an invite or "only for you".
   4. Demo carries every state (each policy, a pending join request, an invited member); en + hi; e2e at 390 and 1440.
 
+### F-270 Requests and invites on their own pages, not Home `spec: owner § 26.3 (decision 197)`
+
+Home drops its Requests section; People shows friend requests and invites, Groups shows group requests/join requests/invites, a group page its own.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo, Wave C (with F-268, before F-269) · **Deps** F-268
+- **Prefs** -
+- **Acceptance**
+  1. Home has no requests or invites section; People's top section holds friend requests and friend invites sent; Groups' top section holds group requests, join requests and group invites sent (fills in with F-269); a group page shows its own under Members.
+  2. One-line rows (§ 26.18), max 5, "See all" -> Activity (Friends and invites, group-scoped where relevant); hidden when empty.
+  3. Specs that expected Home's Requests section move to People/Groups; e2e at 390 and 1440.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
