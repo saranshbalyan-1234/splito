@@ -23,6 +23,7 @@ import * as Layout from '#/components/Layout'
 import {TabScreen} from '#/components/TabScreen'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {Shimmer} from '#/motion/Shimmer'
 import {Charts, ChartsPlaceholder} from '#/screens/Analytics/components/Charts'
 import {
@@ -55,6 +56,11 @@ export function AnalyticsScreen() {
   const [view = 'charts', setView] = usePref('analyticsView')
   const isTable = view === 'table'
   const exportRows = useExportRows()
+  /* The data layer reads 200 rows at once; the web list draws every row it is given (20,000 px of page, a 240 ms commit on each revisit), so draw a page and add the next as the end comes near (usePagedRows, as Activity and Group do). */
+  const pageOf = usePagedRows(
+    report && `${report.currency}|${report.range.from}|${report.range.to}|${report.selection?.label}|${report.shareOf}`,
+  )
+  const {shown, onEndReached: showMore} = pageOf(report?.rows ?? [])
   
 
   return (
@@ -107,9 +113,10 @@ export function AnalyticsScreen() {
       ) : (
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
-            data={report.rows}
+            data={shown}
             onEndReached={() => {
-              if (!report.isRowsDone) report.loadMoreRows()
+              showMore()
+              if (shown.length >= report.rows.length && !report.isRowsDone) report.loadMoreRows()
             }}
             keyExtractor={(e: ListedExpense) => e.id}
             renderItem={({item}: {item: ListedExpense}) => (
