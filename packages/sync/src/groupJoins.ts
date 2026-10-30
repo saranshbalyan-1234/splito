@@ -1,7 +1,8 @@
 import {type Contact, type CurrencyCode, DomainError} from '@splito/domain'
 
-import {type Account, type Asked, linkPerson, outgoingRequests, pendingIn, requirePending} from './friends'
-import {type Group, groupAdmins, joinPolicyOf, requireLive, withMembers, write, type Person} from './mutations'
+import {type Account, linkPerson, outgoingRequests, requirePending} from './friends'
+import {buildGroup, type Group, groupAdmins, type JoinPolicy, joinPolicyOf, requireLive, withMembers, write, type Person} from './mutations'
+import {type Asked, pendingIn, requestState} from './requests'
 import {type Store, type Tx} from './store'
 import {type Entity, type MutationCtx} from './types'
 
@@ -24,6 +25,8 @@ export interface GroupRequest extends Asked {
   groupName: string
   groupKind: Group['kind']
   groupCurrency: CurrencyCode
+  /** The group's join rule when the request was made (absent: 'approve'); a group created here from the request keeps it. */
+  groupJoinPolicy?: JoinPolicy
   /** The other side: who added me, the person I added, who asked to join; '' on my own join request. */
   name: string
   accountId: string | null
@@ -54,7 +57,7 @@ export function linkOutcome(g: Pick<Group, 'joinPolicy'>): 'join' | 'request' | 
   return p === 'link' ? 'join' : p === 'approve' ? 'request' : 'none'
 }
 
-type GroupSnapshot = {groupId: string; groupName: string; groupKind: Group['kind']; groupCurrency: CurrencyCode}
+type GroupSnapshot = {groupId: string; groupName: string; groupKind: Group['kind']; groupCurrency: CurrencyCode; groupJoinPolicy?: JoinPolicy}
 
 const blank = (g: GroupSnapshot, now: number): Omit<GroupRequest, 'kind' | 'direction' | 'status'> => ({
   ...g,
@@ -89,41 +92,49 @@ export async function receiveJoinRequest(store: Store, ctx: MutationCtx, input: 
   })
 }
 
-/** I opened a group's link and it needs approval: a join request that waits for an admin. */
-export async function requestToJoin(store: Store, ctx: MutationCtx, input: GroupSnapshot): Promise<Entity<GroupRequest>> {
-  const data: GroupRequest = {...blank(input, ctx.now()), kind: 'join', direction: 'outgoing', status: 'pending'}
+/**
+ * I opened a group's link and it needs approval: a join request that waits for an admin. `admin` is who answers it
+ * (the link's owner, when the directory says); a request that lapsed does not block asking again.
+ */
+export async function requestToJoin(store: Store, ctx: MutationCtx, input: GroupSnapshot & {admin?: Account}): Promise<Entity<GroupRequest>> {
+  const {admin, ...snapshot} = input
+  const data: GroupRequest = {
+    ...blank(snapshot, ctx.now()),
+    kind: 'join',
+    direction: 'outgoing',
+    status: 'pending',
+    name: admin?.name ?? '',
+    accountId: admin?.accountId ?? null,
+    contact: admin?.contact ?? null,
+  }
   return store.transaction(async tx => {
     const waiting = await tx.page<GroupRequest>('groupRequest', {index: 'byGroup', eq: [input.groupId, 'pending'], limit: 200})
-    if (waiting.items.some(r => r.data.kind === 'join' && r.data.direction === 'outgoing')) throw new DomainError('ALREADY_REQUESTED')
+    if (waiting.items.some(r => !r.deleted && r.data.kind === 'join' && r.data.direction === 'outgoing' && requestState(r.data, ctx.now()) === 'pending')) throw new DomainError('ALREADY_REQUESTED')
     return write(tx, ctx, 'groupRequest', ctx.newId(), data, false, 'groupRequest.send')
   })
 }
 
 /**
  * Puts me in a group, creating it here when this device does not hold it yet (until the backend, the group arrives
- * only as the snapshot a request carries: its name, type and currency, plus whoever brought me in).
+ * only as the snapshot a request carries: its name, type, currency and rule, plus whoever brought me in). A group I
+ * deleted is not brought back by a request. The write is `remote`: the server owns membership, and what this device
+ * sends is the request's own answer (or the link code), never a second op for the group. `via` marks the version so
+ * Activity tells it with the request's row, not as "created" or "edited".
  */
-async function enter(tx: Tx, ctx: MutationCtx, me: string, snapshot: GroupSnapshot, other: Entity<Person> | null, opType: string): Promise<Entity<Group>> {
+async function enter(tx: Tx, ctx: MutationCtx, me: string, snapshot: GroupSnapshot, other: Entity<Person> | null, via: string): Promise<Entity<Group>> {
   const existing = await tx.get<Group>('group', snapshot.groupId)
-  if (existing && !existing.deleted) {
-    return write(tx, ctx, 'group', existing.id, {...existing.data, members: withMembers(existing.data.members, [me], ctx.now())}, false, opType)
-  }
+  if (existing?.deleted) throw new DomainError('GROUP_DELETED')
+  if (existing) return write(tx, ctx, 'group', existing.id, {...existing.data, members: withMembers(existing.data.members, [me], ctx.now()), viaRequest: via}, false, 'group.join', {remote: true})
   const joinedAt = ctx.now()
   const members = [
     ...(other ? [{personId: other.id, joinedAt, leftAt: null, role: 'admin' as const}] : []),
     {personId: me, joinedAt, leftAt: null, role: other ? ('member' as const) : ('admin' as const)},
   ]
-  const data: Group = {
-    name: snapshot.groupName,
-    kind: snapshot.groupKind,
-    currency: snapshot.groupCurrency,
-    members,
-    startDate: null,
-    endDate: null,
-    archived: false,
-    joinPolicy: 'approve',
+  const data = {
+    ...buildGroup({name: snapshot.groupName, kind: snapshot.groupKind, currency: snapshot.groupCurrency, startDate: null, endDate: null, joinPolicy: snapshot.groupJoinPolicy}, members),
+    viaRequest: via,
   }
-  return write(tx, ctx, 'group', snapshot.groupId, data, false, opType, {remote: true})
+  return write(tx, ctx, 'group', snapshot.groupId, data, false, 'group.join', {remote: true})
 }
 
 /** "Riya added you to Goa trip" and I tap Join: I become a member (consent given). */
@@ -133,7 +144,7 @@ export async function joinGroup(store: Store, ctx: MutationCtx, id: string): Pro
     const r = await requirePending<GroupRequest>(tx, id, 'incoming', 'groupRequest')
     if (r.data.kind !== 'invite') throw new DomainError('NOT_AN_INVITE')
     const inviter = await linkPerson(tx, ctx, people, {accountId: r.data.accountId!, name: r.data.name, contact: r.data.contact}, false)
-    const group = await enter(tx, ctx, ctx.actor, r.data, inviter, 'group.join')
+    const group = await enter(tx, ctx, ctx.actor, r.data, inviter, id)
     const request = await write(tx, ctx, 'groupRequest', id, {...r.data, status: 'accepted' as const, personId: inviter.id}, false, 'groupRequest.accept')
     return {group, request}
   })
@@ -144,7 +155,7 @@ export async function joinGroupViaLink(store: Store, ctx: MutationCtx, input: Gr
   const people = await store.getAll<Person>('person')
   return store.transaction(async tx => {
     const inviter = await linkPerson(tx, ctx, people, input.inviter, false)
-    const group = await enter(tx, ctx, ctx.actor, input, inviter, 'group.join')
+    const group = await enter(tx, ctx, ctx.actor, input, inviter, input.code)
     // The group row arrives from the server; what I send is joining it by this link (using a link is consent).
     await tx.enqueue({
       opId: ctx.newId(),
@@ -174,7 +185,7 @@ export async function approveJoinRequest(store: Store, ctx: MutationCtx, id: str
     const g = await requireLive<Group>(tx, 'group', r.data.groupId)
     if (!groupAdmins(g.data).includes(ctx.actor)) throw new DomainError('NOT_ADMIN')
     const person = await linkPerson(tx, ctx, people, {accountId: r.data.accountId!, name: r.data.name, contact: r.data.contact}, false)
-    const group = await write(tx, ctx, 'group', g.id, {...g.data, members: withMembers(g.data.members, [person.id], ctx.now())}, false, 'group.members')
+    const group = await write(tx, ctx, 'group', g.id, {...g.data, members: withMembers(g.data.members, [person.id], ctx.now()), viaRequest: id}, false, 'group.members')
     const request = await write(tx, ctx, 'groupRequest', id, {...r.data, status: 'accepted' as const, personId: person.id}, false, 'groupRequest.approve')
     return {group, request}
   })
@@ -202,15 +213,21 @@ export async function cancelGroupRequest(store: Store, ctx: MutationCtx, id: str
 
 /**
  * They said yes to a request I sent (from a pull, or the demo): an invited friend becomes a member; for my own join
- * request the group appears here with me in it. `ctx.actor` is their account.
+ * request the group appears here with me in it as a member and the approver (`account`, else the admin the request
+ * named) as its admin. `ctx.actor` is their account, `me` mine.
  */
-export async function applyGroupRequestAccepted(store: Store, ctx: MutationCtx, id: string, me: string): Promise<Entity<GroupRequest>> {
+export async function applyGroupRequestAccepted(store: Store, ctx: MutationCtx, id: string, me: string, account?: Account): Promise<Entity<GroupRequest>> {
+  const people = await store.getAll<Person>('person')
   return store.transaction(async tx => {
     const r = await requirePending<GroupRequest>(tx, id, 'outgoing', 'groupRequest')
     if (r.data.kind === 'invite') {
       const g = await requireLive<Group>(tx, 'group', r.data.groupId)
-      await write(tx, ctx, 'group', g.id, {...g.data, members: withMembers(g.data.members, [r.data.personId!], ctx.now())}, false, 'group.members', {remote: true})
-    } else await enter(tx, ctx, me, r.data, null, 'group.join')
+      await write(tx, ctx, 'group', g.id, {...g.data, members: withMembers(g.data.members, [r.data.personId!], ctx.now()), viaRequest: id}, false, 'group.members', {remote: true})
+    } else {
+      const approver = account ?? (r.data.accountId ? {accountId: r.data.accountId, name: r.data.name, contact: r.data.contact} : null)
+      const admin = approver ? await linkPerson(tx, ctx, people, approver, true) : null
+      await enter(tx, ctx, me, r.data, admin, id)
+    }
     return write(tx, ctx, 'groupRequest', id, {...r.data, status: 'accepted'}, false, 'groupRequest.accepted', {remote: true})
   })
 }

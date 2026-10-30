@@ -288,3 +288,11 @@ test('Payments folds in New expenses: an old stored off on either key reads as o
   expect(await getPref(s, 'notify.comments')).toBe(true)
   expect(PREFS['notify.comments'].group).toBe('notifications')
 })
+
+test('a stored row of a removed preference (invites.approveJoins, replaced by a group\'s own rule) is ignored, never a crash', async () => {
+  await s.transaction(tx => tx.put({type: 'preference', id: 'invites.approveJoins', data: {value: true}, version: 1, deleted: false, updatedAt: 1}))
+  await setPref(s, ctx, 'defaultCurrency', 'EUR')
+  await resetAllPrefs(s, ctx)
+  expect(await getPref(s, 'defaultCurrency')).toBe(PREFS.defaultCurrency.default)
+  expect((await s.get('preference', 'invites.approveJoins'))!.deleted).toBe(false)
+})

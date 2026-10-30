@@ -671,7 +671,7 @@ Every disputed amount or count opens Activity on All with Expenses, Payments and
 Each group has a join setting (anyone with the link / approve each join / invite only), and adding someone sends them a group request.
 
 - **Effort** M · **Impact** 8 · **Backend** partly (real link joins and cross-device requests need F-2105; local flow and demo now) · **Status** done locally, Wave C (branch c-joins, 2026-10-31; link joins and cross-device requests stay local until F-2105; e2e `groupJoins.spec.ts`) · **Deps** F-268
-- **Prefs** `group:joinPolicy` (per group: link / approve / invite)
+- **Prefs** none: `joinPolicy` (link / approve / invite; absent = approve) is a field of the group, with history, not a preference; the old `invites.approveJoins` preference is removed
 - **Acceptance**
   1. New/Edit group and the Add members sheet show "Who can join" with the three options (default approve); admins only can change it; the group page shows the current rule under Members.
   2. Invite only hides and revokes the group link; anyone-with-link joins at once; approve sends a join request that admins Approve/Decline in Activity rows.

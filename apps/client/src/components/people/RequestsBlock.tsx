@@ -3,7 +3,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 
 import {seeRequestsPath} from '#/lib/links/make'
 import {SectionLink} from '#/components/SectionLink'
-import {SectionHeader} from './SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 
 /** Rows the section shows at most (owner 153, 175, 197); "See all" opens Activity (Friends and invites) for the rest. */
 const MAX_ROWS = 5
@@ -16,12 +16,15 @@ const MAX_ROWS = 5
 export function RequestsBlock({
   testIDPrefix,
   incomingTitle,
+  outgoingTitle,
   incoming,
   outgoing,
 }: {
   /** 'people' or 'groups': testIDs `<prefix>-requests`, `-title`, `-all`, `<prefix>-invites-title`. */
   testIDPrefix: string
   incomingTitle: string
+  /** Heading of the requests I sent ('Invites sent' on People, 'Sent' on Groups). */
+  outgoingTitle: string
   incoming: React.ReactNode[]
   outgoing: React.ReactNode[]
 }) {
@@ -53,7 +56,7 @@ export function RequestsBlock({
       {shownOutgoing.length > 0 ? (
         <>
           <SectionHeader
-            title={l`Invites sent`}
+            title={outgoingTitle}
             testID={`${testIDPrefix}-invites-title`}
             href={seeRequestsPath()}
             hrefLabel={l`See all requests and invites`}

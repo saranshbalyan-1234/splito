@@ -5,6 +5,7 @@ import {useNavigation} from '@react-navigation/native'
 import {DomainError, parseLocalDate} from '@splito/domain'
 import {createGroup, createPerson, type Group, isRemovedFriend, type JoinPolicy, type Person} from '@splito/sync'
 
+import {answerGroupInvites} from '#/data/friends'
 import {useHaptics} from '#/lib/haptics'
 import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
 import {type NavigationProp} from '#/lib/routes/types'
@@ -115,6 +116,7 @@ export function CreateGroupScreen() {
         memberIds,
         joinPolicy,
       })
+      void answerGroupInvites(store, ctx, group.id)
       haptics.success()
       Toast.show(l`${group.data.name} created`, {type: 'success'})
       close()

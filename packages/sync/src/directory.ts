@@ -37,6 +37,11 @@ export interface DirectoryClient {
   /** Accepting an incoming request or an invite code. */
   accept(target: string): Promise<Delivery>
   openInvite(code: string): Promise<InvitePreview | 'not-found' | 'unavailable'>
+  /**
+   * Who answers a group request I sent, once they do: null while nobody has (production until the backend delivers
+   * answers). The demo directory's accounts say yes after the usual delay, so a demo friend is never "Invited" forever.
+   */
+  answerGroupRequest(accountId: string): Promise<DirectoryAccount | null>
 }
 
 /** Production until the backend batch lands. */
@@ -48,6 +53,7 @@ export const offlineDirectory: DirectoryClient = {
   revoke: async () => 'queued',
   accept: async () => 'queued',
   openInvite: async () => 'unavailable',
+  answerGroupRequest: async () => null,
 }
 
 /** A fake directory for demo mode, with a short delay so the checking state shows. */
@@ -76,5 +82,6 @@ export function demoDirectory({
       const inviter = invite && byId.get(invite.inviter)
       return later(invite && inviter ? {kind: invite.kind, inviter, groupName: invite.groupName, group: invite.group} : 'not-found')
     },
+    answerGroupRequest: accountId => later(byId.get(accountId) ?? null),
   }
 }

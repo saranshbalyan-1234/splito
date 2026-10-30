@@ -22,7 +22,7 @@ import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Ti
 import * as Toast from '#/components/Toast'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 import {RequestAction, RequestRow} from '#/components/people/RequestRow'
-import {RequestsBlock} from './RequestsBlock'
+import {RequestsBlock} from '#/components/people/RequestsBlock'
 import {ago} from '#/components/people/ago'
 import {useRowAction} from '#/components/people/useRowAction'
 
@@ -38,6 +38,7 @@ export function RequestsSection() {
     <RequestsBlock
       testIDPrefix="people"
       incomingTitle={l`Requests`}
+      outgoingTitle={l`Invites sent`}
       incoming={incoming.map(r => (
         <IncomingRow key={r.id} request={r} />
       ))}

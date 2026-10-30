@@ -6,6 +6,7 @@ import {
   cancelGroupRequest,
   declineGroupRequest,
   type Entity,
+  type Group,
   type GroupRequest,
   joinGroup,
 } from '@splito/sync'
@@ -13,7 +14,7 @@ import {
 import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
 import {directory} from '#/data/friends'
-import {useMutationCtx, useStore} from '#/data/hooks'
+import {useEntity, useMutationCtx, useStore} from '#/data/hooks'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Toast from '#/components/Toast'
@@ -21,6 +22,11 @@ import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 import {ago} from '#/components/people/ago'
 import {RequestAction, RequestRow} from '#/components/people/RequestRow'
 import {useRowAction} from '#/components/people/useRowAction'
+
+/** The group's name now, else the one the request carried (a group renamed since stays right in its rows). */
+function useGroupName(request: Entity<GroupRequest>) {
+  return useEntity<Group>('group', request.data.groupId)?.data.name ?? request.data.groupName
+}
 
 /**
  * The actions of a group request, in its row on the Groups tab and in place in Activity (owners 195, 197), the same
@@ -34,7 +40,8 @@ export const GroupRequestActions = memo(function GroupRequestActions({request}: 
   const ctx = useMutationCtx()
   const haptics = useHaptics()
   const act = useRowAction()
-  const {kind, direction, groupName: group, name: who} = request.data
+  const {kind, direction, name: who} = request.data
+  const group = useGroupName(request)
 
   if (direction === 'outgoing')
     return (
@@ -100,7 +107,8 @@ export const GroupRequestActions = memo(function GroupRequestActions({request}: 
 /** One group request on one line (26.18): who, what it means, and its actions. */
 export function GroupRequestRow({request}: {request: Entity<GroupRequest>}) {
   const now = useTickEveryMinute()
-  const {kind, direction, groupName: group, name: who, sentAt} = request.data
+  const {kind, direction, name: who, sentAt} = request.data
+  const group = useGroupName(request)
   const when = ago(now - sentAt)
   const row =
     kind === 'invite' && direction === 'incoming'

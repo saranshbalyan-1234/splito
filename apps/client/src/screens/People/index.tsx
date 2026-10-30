@@ -45,7 +45,7 @@ import {
   type PeopleFilters,
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
-import {SectionHeader} from './components/SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 import {peopleParams, readPeopleParams} from './urlState'
 import {filterFriends, listedFriends, searchFriends, seenByPerson, sortFriends} from './sort'
 

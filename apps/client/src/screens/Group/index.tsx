@@ -32,7 +32,7 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {GroupBalanceCards} from '#/screens/Group/components/GroupBalanceCards'
-import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -49,7 +49,8 @@ import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/P
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {historyRowHide, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
 import {rowMenuWrap} from '#/features/disputes/RowMenu'
-import {seeAllTransactionsPath, seeDisputedPath} from '#/lib/links/make'
+import {activityPath, seeAllTransactionsPath, seeDisputedPath} from '#/lib/links/make'
+import {SectionLink} from '#/components/SectionLink'
 import {markOf, useDisputedBalances, useDisputedRecords, useOpenDisputes} from '#/state/disputes'
 import {useHideItem} from '#/features/hidden/HideItem'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
@@ -116,6 +117,7 @@ type Item =
   | {type: 'member'; key: string; personId: string; hasLeft: boolean}
   | {type: 'joinRule'; key: string}
   | {type: 'groupRequest'; key: string; request: Entity<GroupRequest>}
+  | {type: 'seeAllRequests'; key: string}
   | {type: 'owesHeader'; key: string}
   | {
       type: 'owe'
@@ -198,6 +200,8 @@ export function GroupScreen() {
   /* The FAB pre-selects this group (owner 190); a group that takes no expense has none (decision 89). */
   useSuppressFab(!group || isDeleted || isGroupInactive(group.data))
   const isMeAdmin = !!group && !!me && groupAdmins(group.data).includes(me.id)
+  /* The admins see the join requests; everyone sees who was invited. */
+  const waiting = [...(isMeAdmin ? joinRequests : []), ...invited]
   /* Deleted records stay in their date place, struck; the ones I hid are out unless "Show hidden" is on. */
   const {visible, hidden, showHidden} = useVisibleEntries(groupHistory?.entries ?? [])
 
@@ -351,11 +355,13 @@ export function GroupScreen() {
         },
         /* Who can join (owner 196): everyone sees the rule; the admins also see the join requests, everyone the invited. */
         {type: 'joinRule' as const, key: 'join-rule'},
-        ...[...(isMeAdmin ? joinRequests : []), ...invited].map(request => ({
+        /* Five rows at most, then "See all" into Activity on this group (owner 197). */
+        ...waiting.slice(0, 5).map(request => ({
           type: 'groupRequest' as const,
           key: `request-${request.id}`,
           request,
         })),
+        ...(waiting.length > 5 ? [{type: 'seeAllRequests' as const, key: 'requests-all'}] : []),
         ...members.map(m => ({
           type: 'member' as const,
           key: `member-${m.personId}`,
@@ -767,6 +773,14 @@ export function GroupScreen() {
                 ) : null
               case 'groupRequest':
                 return <GroupRequestRow request={item.request} />
+              case 'seeAllRequests':
+                return (
+                  <View style={[a.px_lg, a.pb_sm, a.align_start]}>
+                    <SectionLink testID="group-requests-all" href={activityPath({types: ['friends'], groupId})} label={l`See all requests and invites`}>
+                      <Trans>See all</Trans>
+                    </SectionLink>
+                  </View>
+                )
               case 'member':
                 return (
                   <MemberRow
@@ -905,6 +919,7 @@ export function GroupScreen() {
         <AddMembersDialog
           control={addMembersControl}
           group={group}
+          onChangeRule={() => addMembersControl.close(() => editControl.open())}
           inviteRow={
             <SettingsList.Container>
               <SettingsList.PressableItem

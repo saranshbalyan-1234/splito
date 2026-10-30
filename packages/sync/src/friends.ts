@@ -11,6 +11,7 @@ import {
 
 import {formatContact, isContact} from './contact'
 import {cleanPersonName, type Group, joinPolicyOf, type Person, requireLive, write} from './mutations'
+import {type Asked, pendingIn, REQUEST_LIFETIME_MS, type RequestState, type RequestStatus, requestState} from './requests'
 import {type Store, type Tx} from './store'
 import {type Entity, type MutationCtx} from './types'
 
@@ -30,10 +31,6 @@ export interface FriendRemoval {
 /** True for a friend you removed: still stored, with their history, but out of pickers and lists. */
 export const isRemovedFriend = (p: Person): boolean => !!(p as Person & FriendRemoval).removedAt
 
-/** Unanswered requests lapse after 30 days; declining is silent, so the sender sees this too. */
-export const REQUEST_LIFETIME_MS = 30 * 86_400_000
-
-export type RequestStatus = 'pending' | 'accepted' | 'declined' | 'cancelled'
 /** What the directory said when an outgoing request was made. */
 export type RequestReach = 'on-splito' | 'invited' | 'unchecked'
 
@@ -51,28 +48,13 @@ export interface FriendRequest extends Asked {
   inviteCode: string | null
 }
 
-export type RequestState = RequestStatus | 'expired'
-
-/** What every kind of request shares: who it came from, where it stands and when it was sent (friend and group requests). */
-export interface Asked {
-  direction: 'outgoing' | 'incoming'
-  status: RequestStatus
-  /** Epoch ms of the last send (a resend restarts the 30 days). */
-  sentAt: number
-}
-
 /** The name a request shows: the one you gave (or theirs), else their number or email. */
 export function requestName(r: {name: string; contact: Contact | null}) {
   return r.name || (r.contact ? formatContact(r.contact) : '')
 }
 
-/** Derived, never stored: a pending request past its 30 days reads as expired. */
-export function requestState(r: Asked, now: number): RequestState {
-  return r.status === 'pending' && now > r.sentAt + REQUEST_LIFETIME_MS ? 'expired' : r.status
-}
-
-export const pendingIn = (direction: Asked['direction']) => <R extends Asked>(rs: Entity<R>[], now: number) =>
-  rs.filter(r => !r.deleted && r.data.direction === direction && requestState(r.data, now) === 'pending').sort((x, y) => y.data.sentAt - x.data.sentAt)
+export {REQUEST_LIFETIME_MS, requestState, pendingIn}
+export type {Asked, RequestState, RequestStatus}
 
 /** People > "Invites sent": your requests still waiting, newest first. */
 export const outgoingRequests = pendingIn('outgoing')

@@ -23,7 +23,7 @@ import {
   sortGroups,
 } from '#/screens/Groups/filter'
 import {PersonRow, type PersonRowData} from '#/screens/People/components/PersonRow'
-import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 import {SectionLink} from '#/components/SectionLink'
 
 /** Each short list on Home holds at most this many rows (owner 153). */

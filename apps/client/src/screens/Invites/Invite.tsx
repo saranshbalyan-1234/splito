@@ -144,7 +144,7 @@ function Preview({code, preview}: {code: string; preview: InvitePreview}) {
     try {
       if (preview.kind === 'group' && preview.group) {
         // The group's rule decides (owner 196): "Anyone with the link" joins at once, "I approve each join" asks.
-        const snapshot = {groupId: preview.group.id, groupName: preview.groupName ?? '', groupKind: preview.group.kind, groupCurrency: preview.group.currency}
+        const snapshot = {groupId: preview.group.id, groupName: preview.groupName ?? '', groupKind: preview.group.kind, groupCurrency: preview.group.currency, groupJoinPolicy: preview.group.joinPolicy}
         if (linkOutcome(preview.group) === 'join') {
           const group = await joinGroupViaLink(store, ctx, {...snapshot, inviter, code})
           await directory.accept(code)
@@ -153,7 +153,7 @@ function Preview({code, preview}: {code: string; preview: InvitePreview}) {
           navigation.replace('Group', {groupId: group.id})
           return
         }
-        await requestToJoin(store, ctx, snapshot)
+        await requestToJoin(store, ctx, {...snapshot, admin: inviter})
         await directory.accept(code)
         haptics.success()
         Toast.show(l`Request sent. An admin of ${snapshot.groupName} will answer it.`, {type: 'success'})

@@ -1453,6 +1453,12 @@ Splito lessons (add newest last, dated, with PR):
   a request component that reads data lives in `screens/` (Activity gets its buttons through a render prop, as for
   friend invites). New messages must be extracted, translated and compiled before an e2e build, or the app prints the
   message ids (`+EvjqO`) and every text assertion fails.
+- 2026-10-31, F-269 review: **removing a preference leaves its rows on devices.** `invites.approveJoins` is gone from the
+  registry (a group's own rule replaced it), but old devices still hold its row: readers look up by registry key and
+  skip unknown ids (`resetAllPrefs` filters them, backup exports only account-scope keys it knows), and a test keeps it
+  so. A request that lapsed (30 days) must not block asking again: every "is there already one" check reads
+  `requestState`, never the stored `pending`. Getting into a group by a request or a link marks the written version
+  (`Group.viaRequest`), so Activity shows the request's row and not "created" or "edited".
 
 
 ## 24. Checklists
@@ -2842,11 +2848,14 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   group, it lives only inside the group's "Add members / Invite people" sheet. No header overflow, menu or page
   shows invite links outside these flows (the Home "..." overflow and the Group overflow entries are removed;
   "Manage invite links" is reached from the invite-link sheet's "Manage links" button and from Settings).
-- **Every group says who can join, and adding someone asks them** (owner 196). New group, Edit group and the
-  group's "Add members / Invite people" sheet show one choice, "Who can join", with three options in plain words:
+- **Every group says who can join, and adding someone asks them** (owner 196). New group and Edit group
+  show one choice, "Who can join", with three options in plain words (radios; disabled for anyone but an admin); the
+  group's "Add members / Invite people" sheet shows only the current rule as one line ("Link, an admin approves each
+  join · Change"), and Change opens Edit group (owner 212: the options live in one place):
   - **Anyone with the link:** the group link and QR work, and whoever opens it joins at once.
-  - **Link, I approve each join** (the default): opening the link sends a join request; the group's admins see it
-    in Activity (Type = Friends and invites, owner 195) and Approve or Decline it in the row.
+  - **Link, I approve each join** (the default; everyone but an admin reads it as "Link, an admin approves each
+    join"): opening the link sends a join request; the group's admins see it in Activity (Type = Friends and invites,
+    owner 195) and Approve or Decline it in the row.
   - **Invite only:** no link exists (an existing link stops working); people join only when a member adds them.
   Adding someone to a group never puts them in without consent: adding a Splito friend whose account is linked
   (possible only once a directory or the backend can deliver the request) sends them a group request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as

@@ -2,11 +2,12 @@ import {useState} from 'react'
 import {View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import {DomainError} from '@splito/domain'
-import {type Entity, type Group, groupAdmins, type JoinPolicy, joinPolicyOf, updateGroup} from '@splito/sync'
+import {type Entity, type Group, groupAdmins, inviteLinkState, type JoinPolicy, joinPolicyOf, updateGroup} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {useMutationCtx, useStore} from '#/data/hooks'
+import {revokeGroupLinks} from '#/data/friends'
+import {useInviteLinks, useMutationCtx, useStore} from '#/data/hooks'
 import {atoms as a} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
@@ -55,6 +56,7 @@ function Form({group}: {group: Entity<Group>}) {
   const [value, setValue] = useState(initial)
   const [joinPolicy, setJoinPolicy] = useState<JoinPolicy>(joinPolicyOf(group.data))
   const isAdmin = groupAdmins(group.data).includes(ctx.actor)
+  const links = useInviteLinks()
   const isChanged = JSON.stringify(value) !== JSON.stringify(initial) || joinPolicy !== joinPolicyOf(group.data)
   const [error, setError] = useState<'name' | 'dates' | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -63,6 +65,8 @@ function Form({group}: {group: Entity<Group>}) {
   const save = async () => {
     setIsSaving(true)
     try {
+      /* The links that stop working when the group goes invite only: the directory is told after the change. */
+      const stopping = joinPolicy === 'invite' && joinPolicyOf(group.data) !== 'invite' ? (links ?? []).filter(x => x.data.groupId === group.id && inviteLinkState(x.data, ctx.now()) !== 'revoked').map(x => x.id) : []
       await updateGroup(store, ctx, group.id, {
         name: value.name,
         kind: value.kind,
@@ -72,6 +76,7 @@ function Form({group}: {group: Entity<Group>}) {
         location: value.location,
         joinPolicy,
       })
+      void revokeGroupLinks(stopping)
       haptics.success()
       control.close(() => Toast.show(l`Group updated`, {type: 'success'}))
     } catch (e) {

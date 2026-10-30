@@ -11,7 +11,8 @@ import {Text} from '#/components/Typography'
 export function useJoinPolicyText() {
   const {t: l} = useLingui()
   return {
-    title: (p: JoinPolicy) => ({link: l`Anyone with the link`, approve: l`Link, I approve each join`, invite: l`Invite only`})[p],
+    /** The option's name; the people who cannot change it read "an admin approves", not "I". */
+    title: (p: JoinPolicy, isAdmin = true) => ({link: l`Anyone with the link`, approve: isAdmin ? l`Link, I approve each join` : l`Link, an admin approves each join`, invite: l`Invite only`})[p],
     rule: (p: JoinPolicy) =>
       ({
         link: l`Anyone with the link can join`,
@@ -58,10 +59,10 @@ export function JoinPolicyField({
         onChange={([next]) => next && next !== value && onChange(next as JoinPolicy)}>
         <View style={[a.gap_md, a.pt_xs]}>
           {(['link', 'approve', 'invite'] as const).map(policy => (
-            <Toggle.Item key={policy} testID={`${testIDPrefix}-${policy}`} name={policy} label={text.title(policy)} style={[a.align_start]}>
+            <Toggle.Item key={policy} testID={`${testIDPrefix}-${policy}`} name={policy} label={text.title(policy, !isDisabled)} style={[a.align_start]}>
               <Toggle.Radio />
               <View style={[a.flex_1, a.gap_2xs]}>
-                <Toggle.LabelText>{text.title(policy)}</Toggle.LabelText>
+                <Toggle.LabelText>{text.title(policy, !isDisabled)}</Toggle.LabelText>
                 <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>{text.hint(policy)}</Text>
               </View>
             </Toggle.Item>

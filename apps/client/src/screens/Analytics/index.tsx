@@ -37,7 +37,7 @@ import {
 import {exportCsv} from '#/screens/Analytics/exportCsv'
 import {type Report, useReport} from '#/screens/Analytics/useReport'
 import {seeAllTransactionsPath} from '#/lib/links/make'
-import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 
 const PLACEHOLDER_ROWS = 4
 

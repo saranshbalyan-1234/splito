@@ -711,7 +711,7 @@ function useDescribe(
          Approve / Decline, Cancel. The row shows the request's current state, so an answered one loses its buttons. */
       const request = snapshot.groupRequests.get(event.entityId)
       const current = request?.data ?? event.data
-      const group = <Strong>{current.groupName}</Strong>
+      const group = <Strong>{snapshot.groups.get(current.groupId)?.data.name ?? current.groupName}</Strong>
       const who = <Strong>{current.name}</Strong>
       const isPending = !!request && !request.deleted && current.status === 'pending'
       const actions = isPending ? renderGroupRequestActions?.(request) : undefined

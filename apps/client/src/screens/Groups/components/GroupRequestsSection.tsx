@@ -1,7 +1,7 @@
 import {useLingui} from '@lingui/react/macro'
 
 import {usePendingGroupRequests} from '#/data/hooks'
-import {RequestsBlock} from '#/screens/People/components/RequestsBlock'
+import {RequestsBlock} from '#/components/people/RequestsBlock'
 import {GroupRequestRow} from './GroupRequests'
 
 /**
@@ -16,6 +16,7 @@ export function GroupRequestsSection() {
     <RequestsBlock
       testIDPrefix="groups"
       incomingTitle={l`Group requests`}
+      outgoingTitle={l`Sent`}
       incoming={[...toMe, ...toApprove].map(r => (
         <GroupRequestRow key={r.id} request={r} />
       ))}

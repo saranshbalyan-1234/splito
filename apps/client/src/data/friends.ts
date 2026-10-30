@@ -1,13 +1,16 @@
 import {getLocales} from 'expo-localization'
 import {linkTo} from '#/lib/links/make'
 import {
+  applyGroupRequestAccepted,
   createInviteLink,
   type DirectoryClient,
   type Entity,
+  type GroupRequest,
   type InviteLink,
   mintInviteCode,
   type MutationCtx,
   offlineDirectory,
+  outgoingGroupRequests,
   type Store,
 } from '@splito/sync'
 
@@ -32,6 +35,7 @@ export const directory: DirectoryClient = {
   revoke: code => active.revoke(code),
   accept: target => active.accept(target),
   openInvite: code => active.openInvite(code),
+  answerGroupRequest: accountId => active.answerGroupRequest(accountId),
 }
 
 /**
@@ -57,4 +61,24 @@ export function inviteUrl(code: string) {
 /** The region phone numbers default to: the device's, else India (Splito's first market). */
 export function deviceRegion(): string {
   return getLocales()[0]?.regionCode ?? 'IN'
+}
+
+/**
+ * After friends were asked to join a group: the directory answers for the ones it can (demo mode's accounts say yes after
+ * its usual delay, so a demo friend is never "Invited" forever; production waits for the server, F-2105). Fire and
+ * forget: the row turns into a member when the answer lands. Only the invites this group still has waiting.
+ */
+export async function answerGroupInvites(store: Store, ctx: MutationCtx, groupId: string): Promise<void> {
+  if (!directory.isDemo) return
+  const waiting = outgoingGroupRequests(await store.getAll<GroupRequest>('groupRequest'), ctx.now()).filter(r => r.data.groupId === groupId && r.data.kind === 'invite' && r.data.accountId)
+  for (const r of waiting)
+    void directory
+      .answerGroupRequest(r.data.accountId!)
+      .then(account => (account ? applyGroupRequestAccepted(store, {...ctx, actor: account.accountId}, r.id, ctx.actor) : undefined))
+      .catch(() => undefined) // cancelled or answered meanwhile: nothing to apply
+}
+
+/** Tells the directory that these group links stopped working (the group went invite only): after the change, like a revoked friend link. */
+export async function revokeGroupLinks(codes: string[]): Promise<void> {
+  await Promise.all(codes.map(code => directory.revoke(code).catch(() => undefined)))
 }

@@ -45,20 +45,83 @@ for (const [size, viewport] of SIZES) {
       })
     }
 
-    test('the Add members sheet changes the rule: invite only has no link, the others do', async ({page}) => {
+    test('the Add members sheet shows the rule in one line; Change opens Edit group, where the rule is set', async ({page}) => {
       await openDemo(page, '/groups')
       await openGoa(page)
       await expect(page.getByTestId('group-join-rule')).toHaveText('Joining by link needs an admin’s approval')
       await page.getByTestId('group-add-members').click()
       const sheet = page.getByTestId('add-members-sheet')
+      await expect(sheet.getByTestId('add-members-join-rule')).toHaveText('Link, I approve each join')
+      // One line and no radios here (owner 212).
+      await expect(sheet.getByTestId('add-members-join-policy-invite')).toHaveCount(0)
       await expect(sheet.getByTestId('add-members-invite-link')).toBeVisible()
-      await sheet.getByTestId('add-members-join-policy-invite').click()
+      await sheet.getByTestId('add-members-change-rule').click()
+      await page.getByTestId('edit-join-policy-invite').click()
+      await page.getByTestId('sheet-save').click()
+      await expect(page.getByTestId('group-join-rule')).toHaveText('Invite only: people join when a member adds them')
+      await page.getByTestId('group-add-members').click()
       await expect(sheet.getByTestId('add-members-no-link')).toBeVisible()
       await expect(sheet.getByTestId('add-members-invite-link')).toHaveCount(0)
-      await sheet.getByTestId('add-members-join-policy-link').click()
-      await expect(sheet.getByTestId('add-members-invite-link')).toBeVisible()
+      await sheet.getByTestId('add-members-change-rule').click()
+      await page.getByTestId('edit-join-policy-link').click()
+      await page.getByTestId('sheet-save').click()
+      await page.getByTestId('group-add-members').click()
       await sheet.getByTestId('add-members-invite-link').click()
       await expect(page.getByTestId('invite-join-rule')).toHaveText('Anyone with the link can join')
+    })
+
+    test('anyone but an admin sees the rule, and cannot change it', async ({page}) => {
+      await openDemo(page, '/groups')
+      // Joining Sara\'s group makes me a member of it; she runs it.
+      await groups(page).getByTestId('group-invite-Pune cabin weekend').getByTestId('group-request-join').click()
+      await expect(page.getByTestId('screen-group').last()).toContainText('Pune cabin weekend')
+      await page.getByTestId('group-tab-members').click()
+      await expect(page.getByTestId('group-join-rule')).toBeVisible()
+      await page.getByTestId('group-more').click()
+      await page.getByTestId('group-menu-edit').click()
+      await expect(page.getByTestId('edit-join-policy')).toContainText('Only admins can change this.')
+      await expect(page.getByTestId('edit-join-policy')).toContainText('Link, an admin approves each join')
+      await expect(page.getByTestId('edit-join-policy-invite')).toHaveAttribute('aria-disabled', 'true')
+    })
+
+    test('a friend with a linked account is asked: Invited, then a member once the directory answers; unlinked friends are added at once', async ({page}) => {
+      await openDemo(page, '/groups')
+      await groups(page).getByTestId('group-Flat 4B').click()
+      await page.getByTestId('group-tab-members').click()
+      await page.getByTestId('group-add-members').click()
+      const sheet = page.getByTestId('add-members-sheet')
+      await expect(sheet.getByTestId('add-member-Sara Ali')).toContainText('Gets a request to join')
+      await expect(sheet.getByTestId('add-member-Pooja (flatmate)')).not.toContainText('Gets a request to join')
+      await sheet.getByTestId('add-member-Sara Ali').click()
+      await sheet.getByTestId('add-member-Pooja (flatmate)').click()
+      await sheet.getByTestId('sheet-save').click()
+      const screen = page.getByTestId('screen-group').last()
+      // Pooja has no account link: in at once. Sara is asked...
+      await expect(screen.getByTestId('member-Pooja (flatmate)')).toBeVisible()
+      // ... and the demo directory answers after its usual delay: she never stays Invited.
+      await expect(screen.getByTestId('member-Sara Ali')).toBeVisible({timeout: 15_000})
+      await expect(screen.getByTestId('group-invite-sent-Sara Ali')).toHaveCount(0)
+    })
+
+    test('Cancel on a sent invite works from the Groups tab', async ({page}) => {
+      await openDemo(page, '/groups')
+      const section = groups(page).getByTestId('groups-requests')
+      await expect(section.getByTestId('groups-invites-title')).toContainText('Sent')
+      const row = section.getByTestId('group-invite-sent-Tanvi Rao')
+      await row.getByTestId('group-request-cancel').click()
+      await expect(row).toHaveCount(0)
+      await openGoa(page)
+      await expect(page.getByTestId('screen-group').last().getByTestId('group-invite-sent-Tanvi Rao')).toHaveCount(0)
+    })
+
+    test('an admin approves a join request from the group page', async ({page}) => {
+      await openDemo(page, '/groups')
+      await openGoa(page)
+      const row = page.getByTestId('screen-group').last().getByTestId('join-request-Maya Chen')
+      await expect(row).toContainText('Wants to join Goa trip')
+      await row.getByTestId('join-request-approve').click()
+      await expect(row).toHaveCount(0)
+      await expect(page.getByTestId('screen-group').last().getByTestId('member-Maya Chen')).toBeVisible()
     })
 
     test('Edit group changes the rule', async ({page}) => {

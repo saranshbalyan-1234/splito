@@ -32,8 +32,11 @@ import {
   type ExpenseDraft,
   type Group,
   joinPolicyOf,
+  groupAdmins,
+  setJoinPolicy,
   updateGroup,
 } from '../src/mutations'
+import {deleteGroup} from '../src/groupLifecycle'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {type MutationCtx} from '../src/types'
@@ -92,9 +95,10 @@ describe.each(engines)('%s group joins', (_name, open) => {
     expect(invitedPeople([req!], g.id, 2_000_000).map(r => r.id)).toEqual([req!.id])
     expect(await createExpense(s, ctx, dinner(g.id, [riya.id])).catch(code)).toBe('NOT_A_MEMBER')
     // Adding again later does not repeat the request.
-    await addGroupMembers(s, ctx, g.id, [riya.id])
+    const again = await addGroupMembers(s, ctx, g.id, [riya.id])
+    expect(again).toMatchObject({added: [], asked: []})
     expect((await s.getAll('groupRequest')).length).toBe(1)
-    await addGroupMembers(s, ctx, g.id, [sam.id])
+    expect(await addGroupMembers(s, ctx, g.id, [sam.id])).toMatchObject({added: [], asked: []})
     await expectDerivedTablesMatch(s)
   })
 
@@ -177,12 +181,19 @@ describe.each(engines)('%s group joins', (_name, open) => {
     expect(mine.data).toMatchObject({kind: 'join', direction: 'outgoing', status: 'pending'})
     expect(await ops(mine.id)).toEqual(['groupRequest.send'])
     expect(await requestToJoin(s, ctx, snap).catch(code)).toBe('ALREADY_REQUESTED')
-    await applyGroupRequestAccepted(s, them('acc-admin'), mine.id, 'me')
-    expect((await s.get<Group>('group', 'lis'))!.data.members.map(m => m.personId)).toEqual(['me'])
+    await applyGroupRequestAccepted(s, them('acc-admin'), mine.id, 'me', {accountId: 'acc-admin', name: 'Ada Admin', contact: null})
+    // The approver runs the group; I am a member of it, not its sole admin.
+    const lis = (await s.get<Group>('group', 'lis'))!.data
+    const ada = (await s.getAll<{name: string; accountId?: string}>('person')).find(p => p.data.accountId === 'acc-admin')!
+    expect(lis.members.map(m => [m.personId, m.role])).toEqual([[ada.id, 'admin'], ['me', 'member']])
+    expect(groupAdmins(lis)).toEqual([ada.id])
     const inviter = { accountId: 'acc-o', name: 'Olu', contact: null }
     const immediate = await joinGroupViaLink(s, ctx, {...snap, groupId: 'open', groupName: 'Open', inviter, code: 'openlink1'})
     expect(immediate.data.members.map(m => m.personId)).toContain('me')
     expect(await ops('open')).toEqual(['group.join'])
+    // The group keeps the rule the link showed.
+    const kept = await joinGroupViaLink(s, ctx, {...snap, groupId: 'open2', groupName: 'Open 2', groupJoinPolicy: 'link', inviter, code: 'openlink2'})
+    expect(kept.data.joinPolicy).toBe('link')
   })
 
   test('only an admin changes the rule; invite only revokes every group link, the others keep them in step', async () => {
@@ -229,5 +240,95 @@ describe.each(engines)('%s group joins', (_name, open) => {
     const kinds = activityFromHistory(dump.history).filter(e => e.entityType === 'groupRequest').map(e => e.kind).sort()
     expect(kinds).toEqual(['groupRequest.accepted', 'groupRequest.invited', 'groupRequest.joinRequested', 'groupRequest.joinSent', 'groupRequest.sent'])
     expect(mineJoin.data.groupId).toBe('lis')
+  })
+
+  test('unlinked friends are added at once; only account-linked friends are asked', async () => {
+    await setup()
+    const sam = await createPerson(s, ctx, {name: 'Sam'})
+    const lea = await createPerson(s, ctx, {name: 'Lea'})
+    const riya = await linked('Riya', 'acc-riya')
+    const g = await group({memberIds: [sam.id]})
+    expect(g.data.members.map(m => m.personId).sort()).toEqual(['me', sam.id].sort())
+    expect(await s.getAll('groupRequest')).toEqual([])
+    const out = await addGroupMembers(s, ctx, g.id, [lea.id, riya.id, sam.id])
+    expect(out.added).toEqual([lea.id])
+    expect(out.asked).toEqual([riya.id])
+    expect(out.group.data.members.map(m => m.personId)).toContain(lea.id)
+    expect((await s.getAll<GroupRequest>('groupRequest')).map(r => r.data.personId)).toEqual([riya.id])
+  })
+
+  test('a request that lapsed does not block asking again (invite and join)', async () => {
+    await setup()
+    const riya = await linked('Riya', 'acc-riya')
+    const g = await group()
+    await addGroupMembers(s, ctx, g.id, [riya.id])
+    const later: MutationCtx = {...ctx, now: () => ctx.now() + 31 * 86_400_000}
+    const out = await addGroupMembers(s, later, g.id, [riya.id])
+    expect(out.asked).toEqual([riya.id])
+    const pending = invitedPeople(await s.getAll<GroupRequest>('groupRequest'), g.id, later.now())
+    expect(pending.length).toBe(1)
+    const snap = {groupId: 'lis', groupName: 'Lisbon', groupKind: 'trip' as const, groupCurrency: 'EUR'}
+    await requestToJoin(s, ctx, snap)
+    expect(await requestToJoin(s, later, snap).then(r => r.data.status)).toBe('pending')
+  })
+
+  test('getting in by a request or a link is the request\'s row in Activity, not "created" or "edited"', async () => {
+    await setup()
+    const snap = {groupId: 'goa-remote', groupName: 'Goa', groupKind: 'trip' as const, groupCurrency: 'INR'}
+    const riya = {accountId: 'acc-riya', name: 'Riya', contact: null}
+    await receiveGroupInvite(s, them('acc-riya'), {id: 'gi1', ...snap, inviter: riya})
+    await joinGroup(s, ctx, 'gi1')
+    await joinGroupViaLink(s, ctx, {...snap, groupId: 'open', groupName: 'Open', inviter: riya, code: 'openlink1'})
+    const mine = await group()
+    await receiveJoinRequest(s, them('acc-sam'), {id: 'jr1', groupId: mine.id, joiner: {accountId: 'acc-sam', name: 'Sam', contact: null}})
+    await approveJoinRequest(s, ctx, 'jr1')
+    const mineJoin = await requestToJoin(s, ctx, {...snap, groupId: 'lis', groupName: 'Lisbon'})
+    await applyGroupRequestAccepted(s, them('acc-ada'), mineJoin.id, 'me', {accountId: 'acc-ada', name: 'Ada', contact: null})
+    const events = activityFromHistory((await s.dump()).history)
+    const groupEvents = events.filter(e => e.entityType === 'group').map(e => [e.entityId === mine.id ? 'mine' : e.entityId, e.kind])
+    expect(groupEvents).toEqual([['mine', 'group.created']])
+    expect(events.filter(e => e.kind === 'groupRequest.accepted').length).toBe(3)
+    // A later edit of a joined group is a normal event again.
+    await updateGroup(s, ctx, mine.id, {name: 'Goa 2', kind: 'trip', currency: 'INR', startDate: null, endDate: null})
+    const after = activityFromHistory((await s.dump()).history).filter(e => e.entityType === 'group' && e.entityId === mine.id)
+    expect(after.map(e => e.kind).sort()).toEqual(['group.created', 'group.edited'])
+  })
+
+  test('only an admin changes the rule, whichever way it is called', async () => {
+    await setup()
+    const g = await group()
+    const bob = await createPerson(s, ctx, {name: 'Bob'})
+    await addGroupMembers(s, ctx, g.id, [bob.id])
+    expect(await setJoinPolicy(s, {...ctx, actor: bob.id}, g.id, 'invite').catch(code)).toBe('NOT_ADMIN')
+    expect(joinPolicyOf((await s.get<Group>('group', g.id))!.data)).toBe('approve')
+    expect((await setJoinPolicy(s, ctx, g.id, 'link')).data.joinPolicy).toBe('link')
+    // The same rule again is nothing to change, even for a member.
+    expect((await setJoinPolicy(s, {...ctx, actor: bob.id}, g.id, 'link')).data.joinPolicy).toBe('link')
+  })
+
+  test('a group I hold takes me in without a second op; a group I deleted is not brought back', async () => {
+    await setup()
+    const held = await group()
+    const inviter = {accountId: 'acc-o', name: 'Olu', contact: null}
+    const snap = {groupId: held.id, groupName: held.data.name, groupKind: held.data.kind, groupCurrency: held.data.currency, inviter, code: 'heldlink1'}
+    const out = await joinGroupViaLink(s, ctx, snap)
+    expect(out.data.members.filter(m => m.leftAt === null && m.personId === 'me').length).toBe(1)
+    // One op for the join (the link code), not one for the group row as well.
+    expect((await s.outbox()).filter(o => o.entityId === held.id).map(o => o.opType)).toEqual(['group.create', 'group.join'])
+    const gone = await group({name: 'Gone'})
+    await deleteGroup(s, ctx, gone.id)
+    expect(await joinGroupViaLink(s, ctx, {...snap, groupId: gone.id, code: 'gonelink1'}).catch(code)).toBe('GROUP_DELETED')
+    expect((await s.get<Group>('group', gone.id))!.deleted).toBe(true)
+    await receiveGroupInvite(s, them('acc-riya'), {id: 'gi9', groupId: gone.id, groupName: 'Gone', groupKind: 'trip', groupCurrency: 'INR', inviter})
+    expect(await joinGroup(s, ctx, 'gi9').catch(code)).toBe('GROUP_DELETED')
+  })
+
+  test('nobody is invited to a deleted group', async () => {
+    await setup()
+    const riya = await linked('Riya', 'acc-riya')
+    const g = await group()
+    await deleteGroup(s, ctx, g.id)
+    expect(await addGroupMembers(s, ctx, g.id, [riya.id]).catch(code)).toBe('NOT_FOUND')
+    expect(await s.getAll('groupRequest')).toEqual([])
   })
 })

@@ -10,23 +10,23 @@ import {
   isRemovedFriend,
   joinPolicyOf,
   type Person,
-  setJoinPolicy,
 } from '@splito/sync'
 
+import {answerGroupInvites} from '#/data/friends'
 import {useHaptics} from '#/lib/haptics'
 import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
 import {logger} from '#/logger'
 import {useEntities, useInvitedPeople, useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
-import {Button, ButtonIcon} from '#/components/Button'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Toast from '#/components/Toast'
 import * as FormSheet from '#/components/FormSheet'
-import {JoinPolicyField, useJoinPolicyText} from '#/components/groups/JoinPolicyField'
+import {useJoinPolicyText} from '#/components/groups/JoinPolicyField'
 import {PendingPeople} from '#/components/people/PendingPeople'
 import {Text} from '#/components/Typography'
 
@@ -39,15 +39,18 @@ export function AddMembersDialog({
   control,
   group,
   inviteRow,
+  onChangeRule,
 }: {
   control: Dialog.DialogControlProps
   group: Entity<Group>
   /** The "Invite link or QR code" row, drawn by the screen (it navigates). */
   inviteRow?: React.ReactNode
+  /** Opens Edit group, where "Who can join" is changed (owner 212: one place for the radios). */
+  onChangeRule: () => void
 }) {
   return (
     <FormSheet.Outer control={control} testID="add-members-sheet">
-      <Form group={group} inviteRow={inviteRow} />
+      <Form group={group} inviteRow={inviteRow} onChangeRule={onChangeRule} />
     </FormSheet.Outer>
   )
 }
@@ -55,9 +58,11 @@ export function AddMembersDialog({
 function Form({
   group,
   inviteRow,
+  onChangeRule,
 }: {
   group: Entity<Group>
   inviteRow: React.ReactNode
+  onChangeRule: () => void
 }) {
   const t = useTheme()
   const {outgoing: pending} = usePendingRequests()
@@ -68,6 +73,7 @@ function Form({
   const control = Dialog.useDialogContext()
   const store = useStore()
   const ctx = useMutationCtx()
+  const isAdmin = groupAdmins(group.data).includes(ctx.actor)
   const haptics = useHaptics()
   const people = useEntities<Person>('person')
   const [selected, setSelected] = useState<string[]>([])
@@ -102,11 +108,12 @@ function Form({
   const save = async () => {
     setIsSaving(true)
     try {
-      await addGroupMembers(store, ctx, group.id, selected)
+      const result = await addGroupMembers(store, ctx, group.id, selected)
+      void answerGroupInvites(store, ctx, group.id)
       haptics.success()
-      // A Splito friend is asked, not added (owner 196): they show as Invited until they join.
-      const asked = selected.filter(id => people?.find(p => p.id === id)?.data.accountId).length
-      const added = selected.length - asked
+      // A friend with a linked account is asked, not added (owner 196): they show as Invited until they join.
+      const asked = result.asked.length
+      const added = result.added.length
       control.close(() =>
         Toast.show(
           asked === 0
@@ -243,25 +250,24 @@ function Form({
         </View>
       </View>
 
-      {/* Who can join (owner 196): applies at once; only admins change it. */}
-      <JoinPolicyField
-        testIDPrefix="add-members-join-policy"
-        value={policy}
-        isDisabled={!groupAdmins(group.data).includes(ctx.actor)}
-        onChange={next =>
-          void setJoinPolicy(store, ctx, group.id, next)
-            .then(() => Toast.show(l`Saved: ${policyText.title(next)}`))
-            .catch(e => {
-              logger.error(e, {where: 'AddMembersDialog.joinPolicy'})
-              Toast.show(l`Couldn’t change who can join. Please try again.`, {type: 'error'})
-            })
-        }
-      />
+      {/* Who can join (owner 196): shown as one line; the three options live in Edit group (owner 212). */}
+      <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
+        <Text testID="add-members-join-rule" style={[a.flex_1, a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          {policyText.title(policy, isAdmin)}
+        </Text>
+        {isAdmin ? (
+          <Button testID="add-members-change-rule" label={l`Change who can join`} size="small" variant="ghost" color="secondary" onPress={onChangeRule}>
+            <ButtonText>
+              <Trans>Change</Trans>
+            </ButtonText>
+          </Button>
+        ) : null}
+      </View>
 
       {/* The group's invite link lives only here (26.18 decision 77); invite only has none. */}
       {policy === 'invite' ? (
         <Text testID="add-members-no-link" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>Invite only: there is no group link. Choose another option above to get one.</Trans>
+          <Trans>Invite only: there is no group link. Change who can join to get one.</Trans>
         </Text>
       ) : (
         inviteRow

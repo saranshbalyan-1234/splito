@@ -83,10 +83,12 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
       return row.deleted ? 'person.removed' : isNew ? 'person.added' : undefined
     case 'group': {
       if (row.deleted) return 'group.deleted'
-      if (!prev) return 'group.created'
-      if (prev.deleted) return 'group.restored'
       const now = row.data as Group
+      // Getting into a group by a request or a link is the request's own row ("joined"), not "created" or "edited" (F-269).
+      if (!prev) return now.viaRequest ? undefined : 'group.created'
+      if (prev.deleted) return 'group.restored'
       const before = prev.data as Group
+      if (now.viaRequest && now.viaRequest !== before.viaRequest) return undefined
       if (isGroupInactive(now) !== isGroupInactive(before)) return isGroupInactive(now) ? 'group.inactive' : 'group.active'
       const hasLeft = (m: Group['members'][number]) => !!before.members?.some(b => b.personId === m.personId && b.leftAt === null) && m.leftAt !== null
       return now.members?.some(hasLeft) ? 'group.memberLeft' : 'group.edited'

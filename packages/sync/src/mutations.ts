@@ -17,6 +17,7 @@ import {
 import {formatContact, isContact} from './contact'
 import {type Dispute} from './disputes'
 import {type GroupRequest} from './groupJoins'
+import {requestState} from './requests'
 import {editIdsPref, unhideItems} from './preferences'
 import {type Key} from './schema'
 import {type Page, type Store, type Tx} from './store'
@@ -83,6 +84,8 @@ export interface Group {
   rules?: SettlementRules
   /** Who can join (owner 196). Absent: 'approve'. Only an admin changes it. */
   joinPolicy?: JoinPolicy
+  /** The request (or link code) whose answer wrote this version: Activity tells the story with the request's own row, not as a group edit. */
+  viaRequest?: string
   /** Set on the tombstone by "Delete group"; cleared by restore. */
   removed?: GroupRemoval
 }
@@ -359,6 +362,11 @@ function namedIn(type: MoneyType | 'group', data: unknown): string[] {
   return [d?.from, d?.to].filter((p): p is string => typeof p === 'string')
 }
 
+/** The stored shape of a new group (name and place cleaned, active, the default rule): one builder for a group made here and one that arrives from a request. @internal */
+export function buildGroup(input: Omit<Group, 'members' | 'archived' | 'joinPolicy'> & {joinPolicy?: JoinPolicy}, members: Group['members']): Group {
+  return {...input, name: cleanName(input.name), location: cleanLocation(input.location), members, archived: false, joinPolicy: input.joinPolicy ?? 'approve'}
+}
+
 export async function createGroup(
   store: Store,
   ctx: MutationCtx,
@@ -382,18 +390,20 @@ export async function createGroup(
     const joinedAt = ctx.now()
     const {memberIds: _m, ...rest} = input
     const members = direct.map(personId => ({personId, joinedAt, leftAt: null, role: personId === ctx.actor ? ('admin' as const) : ('member' as const)}))
-    const data: Group = {...rest, name: cleanName(input.name), location: cleanLocation(input.location), members, archived: false, joinPolicy: input.joinPolicy ?? 'approve'}
     const groupId = ctx.newId()
-    const group = await write(tx, ctx, 'group', groupId, data, false, 'group.create')
+    const group = await write(tx, ctx, 'group', groupId, buildGroup(rest, members), false, 'group.create')
     for (const p of asked) await inviteIn(tx, ctx, group, p)
     return group
   })
 }
 
-/** Asks a Splito friend to join a group: an outgoing group request, once (a pending one is not repeated). @internal */
-export async function inviteIn(tx: Tx, ctx: MutationCtx, group: Entity<Group>, person: Entity<Person>): Promise<void> {
+/**
+ * Asks a Splito friend to join a group: an outgoing group request. A request still waiting is not repeated; one that
+ * lapsed (30 days) does not block asking again. True when a request went out. @internal
+ */
+export async function inviteIn(tx: Tx, ctx: MutationCtx, group: Entity<Group>, person: Entity<Person>): Promise<boolean> {
   const pending = await tx.page<GroupRequest>('groupRequest', {index: 'byGroup', eq: [group.id, 'pending'], limit: 200})
-  if (pending.items.some(r => !r.deleted && r.data.kind === 'invite' && r.data.direction === 'outgoing' && r.data.personId === person.id)) return
+  if (pending.items.some(r => !r.deleted && r.data.kind === 'invite' && r.data.direction === 'outgoing' && r.data.personId === person.id && requestState(r.data, ctx.now()) === 'pending')) return false
   const g = group.data
   const data: GroupRequest = {
     kind: 'invite',
@@ -403,6 +413,7 @@ export async function inviteIn(tx: Tx, ctx: MutationCtx, group: Entity<Group>, p
     groupName: g.name,
     groupKind: g.kind,
     groupCurrency: g.currency,
+    groupJoinPolicy: joinPolicyOf(g),
     name: person.data.name,
     accountId: person.data.accountId ?? null,
     contact: person.data.contact ?? null,
@@ -410,6 +421,7 @@ export async function inviteIn(tx: Tx, ctx: MutationCtx, group: Entity<Group>, p
     sentAt: ctx.now(),
   }
   await write(tx, ctx, 'groupRequest', ctx.newId(), data, false, 'groupRequest.send')
+  return true
 }
 
 /**
@@ -673,26 +685,33 @@ export async function updateGroupRules(store: Store, ctx: MutationCtx, groupId: 
   })
 }
 
+/** What `addGroupMembers` did: who is in now, and whom a request went out to (those show as "Invited"). */
+export interface AddedMembers {
+  group: Entity<Group>
+  added: string[]
+  asked: string[]
+}
+
 /**
- * Adds people to a group from now on; earlier splits are untouched. A former member rejoins. A Splito friend is asked,
- * not added (owner 196): they get a group request and show as "Invited" until they join. A private friend joins at once.
+ * Adds people to a group from now on; earlier splits are untouched. A former member rejoins. A friend whose account is
+ * linked is asked, not added (owner 196): they get a group request and show as "Invited" until they join. Anyone with
+ * no account link (a private friend, or any friend before sync exists) joins at once.
  */
-export async function addGroupMembers(store: Store, ctx: MutationCtx, groupId: string, personIds: string[]): Promise<Entity<Group>> {
+export async function addGroupMembers(store: Store, ctx: MutationCtx, groupId: string, personIds: string[]): Promise<AddedMembers> {
   return store.transaction(async tx => {
     const g = await requireLive<Group>(tx, 'group', groupId)
     const current = new Set(g.data.members.filter(m => m.leftAt === null).map(m => m.personId))
-    const direct: string[] = []
-    let asked = 0
+    const added: string[] = []
+    const asked: string[] = []
     for (const personId of new Set(personIds)) {
       const p = await requireLive<Person>(tx, 'person', personId, 'UNKNOWN_PERSON')
       if (current.has(personId)) continue
-      if (p.data.accountId) {
-        await inviteIn(tx, ctx, g, p)
-        asked++
-      } else direct.push(personId)
+      if (!p.data.accountId) added.push(personId)
+      else if (await inviteIn(tx, ctx, g, p)) asked.push(personId)
     }
-    // Only requests went out: the group itself did not change.
-    if (direct.length === 0 && asked > 0) return g
-    return write(tx, ctx, 'group', groupId, {...g.data, members: withMembers(g.data.members, direct, ctx.now())}, false, 'group.members')
+    // Nobody joined (only requests went out, or all were in already): the group itself did not change.
+    if (added.length === 0) return {group: g, added, asked}
+    const group = await write(tx, ctx, 'group', groupId, {...g.data, members: withMembers(g.data.members, added, ctx.now())}, false, 'group.members')
+    return {group, added, asked}
   })
 }
