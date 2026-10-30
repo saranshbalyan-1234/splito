@@ -1215,6 +1215,12 @@ measures a long task); signed-URL caching for picked files (until attachments ex
 
 Inherited from GameRun (2026-10-26); each holds for Splito's stack:
 
+- 2026-10-31, process: **a builder's process cleanup killed the merge gate's test server**, and the 2.4 h full e2e run
+  on combined main came back as 647 connection-refused failures. Rules: nobody runs `pkill`/`killall` by name or
+  pattern (serve, node, playwright, expo); a process is stopped by its own PID or by its own port
+  (`lsof -ti tcp:<port> | xargs kill`); the orchestrator's merge gate serves its build from a copy outside the repo
+  on a reserved port with its own server, so no builder's cleanup can reach it; a run whose failures are mostly
+  ERR_CONNECTION_REFUSED is a broken run, not a red build.
 - 2026-10-30, process: **almost every builder took hours, mostly waiting on each other.** Six to seven builders
   shared one machine (load 25-130); each ran the full 500+ test e2e itself, several times per round, so every run
   took 20-30 min instead of ~10, timing tests failed under load and were re-run, and long-lived overlapping
@@ -1983,8 +1989,9 @@ Bluesky's `LeftNav`, copied as closely as possible. *Why:* "you need to improve 
 good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/LeftNav.tsx`.
 
 - **It holds:** the logo mark, the shared nav items (§ 26.3), the "Add expense" pill, and the shared footer
-  links (Feedback · Help · Privacy · About; same component as the drawer) directly under the pill, not pinned to
-  the bottom of the window (owner 188). No avatar or
+  links (Feedback · Help · Privacy · About; same component as the drawer) pinned to the bottom of the sidebar
+  on desktop and rail-width web (owner 214, replacing owner 188's "directly under the pill"; the items and the pill
+  stay one block at the top). No avatar or
   `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column,
   § 26.17). *Why:* "remove the avatar from sidebar"; "remove label from logo".
 - **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, 12 px (space.md) below the
@@ -1998,8 +2005,7 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
 - **Compact, no space it does not need** (owner 188): the sidebar is as wide as its content needs (icon,
   label, padding; one constant, 216 px, set by the footer row in English and fitting Hindi's longest label; a language that
   needs more raises that one number), so the content starts sooner; the
-  logo, items, pill and footer links form one block at the top with no dead band between them, and nothing is
-  pinned to the bottom. Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
+  logo, items and pill form one block at the top and the footer links sit at the bottom (owner 214). Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
   layouts are unchanged. *Why:* "on desktop there is a lot of space we don't need there in sidebar".
 - **Rail (800-999 px):** Bluesky minimal mode: mark, icons only, round compose button.
 
@@ -2844,10 +2850,12 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   - **Link, I approve each join** (the default): opening the link sends a join request; the group's admins see it
     in Activity (Type = Friends and invites, owner 195) and Approve or Decline it in the row.
   - **Invite only:** no link exists (an existing link stops working); people join only when a member adds them.
-  Adding someone to a group never puts them in without consent: adding a Splito friend sends them a group
-  request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as
-  "Invited" (greyed, not selectable in expenses) until they join; adding someone not on Splito sends an invite or
-  adds them "only for you" (as for friends above). The choice is shown on the group page under Members ("Anyone
+  Adding someone to a group never puts them in without consent: adding a Splito friend whose account is linked
+  (possible only once a directory or the backend can deliver the request) sends them a group request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as
+  "Invited" (greyed, not selectable in expenses) until they join; a friend with no account link (private, local,
+  or any friend before sync exists) is added straight away, so nobody waits on an answer that cannot arrive
+  (assistant's ruling 2026-10-31, after the F-269 review; demo mode's directory answers group requests after its
+  usual delay); adding someone not on Splito sends an invite or adds them "only for you" (as for friends above). The choice is shown on the group page under Members ("Anyone
   with the link can join" and so on) so everyone can see it; only admins change it. *Why:* "in group link, it should
   show anyone can join, or invites only, or add like this; if I add someone they would accept or I can send
   request".
@@ -3302,6 +3310,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 211 | "for importantn task use opus always like speed, new features decisions, etc etc"; "performance"; "important decisions like, what should bet ehre, what should be the flow"; "sonnet should be used to build only" | Opus makes every decision (what goes where, flows, data model), writes every spec, does all performance work and every review; Sonnet only implements Opus specs and stops on open product questions | § 26.1 | Sonnet implemented everything, Opus only decided and reviewed |
 | 212 | "think from users perspective as well, app should be simple to use, nothing complex, make sure of UX"; "code should be simple"; "it should be lightning fast when i click somewhere" | Design from the user's side (one main action, plain words, fewest taps, same pattern everywhere); specs state the flow tap by tap; reviews check as a new user; simplest code; every tap instant | § 26.1 | Simplicity stated for settings only (128, 129) |
 | 213 | "make sure to use proper skeletons, proper animations, proper icons, proper empty screen and proper cta"; "loading wheverever required"; "guided tour for required part only"; "dont overdo anything" | Skeletons where content loads, small loaders only for non-content waits, motion only where it explains, consistent Lucide icons, an empty state with art + one sentence + one CTA on every list, one primary CTA per screen; guided tour only for the essentials; nothing decorative | § 26.1, F-253 | - |
+| 214 | "for some reason, by desktop full width sidebar looks really bad"; "Feedback · Help · Privacy · About moves to bottom" | The sidebar footer links are pinned to the bottom again; items and Add expense stay a block at the top; width stays 216 px | § 26.5 | Footer links directly under Add expense (188) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
