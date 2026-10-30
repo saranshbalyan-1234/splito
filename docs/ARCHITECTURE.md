@@ -2588,7 +2588,15 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   a destructive "Log out" row opening a prompt "Log out?". **Log out lives on Profile** (owner 202): the "Log out"
   row is the last row of Profile (`/profile`) and nowhere else (not in the Settings list, the drawer footer
   or the sidebar); the blocking add-contact step keeps its own Log out. **Profile holds only the person** (owner
-  203): avatar, name, contact details, stats and Log out; no "Settings" row on it (Settings is its own tab, owner 206).
+  203): no "Settings" row on it (Settings is its own tab, owner 206). **Profile is a full page about you** (owner
+  209), Bluesky profile layout, top to bottom: the header (large avatar you can change, name, email and phone with
+  a verified tick, "On Splito since <month year>", Edit profile); a stat row (Friends, Groups, Expenses, You paid
+  this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics; **Your balance**
+  (the net per currency in the owner-161 card style, "Analytics ›"); **Payment details** (your UPI ID and how
+  friends pay you, editable); **Add me** (your friend QR and link, Share); **Your recent activity** (your last 3
+  changes, "See all" -> Activity on Me); and Log out last. Sections hide when empty; each loads after the header
+  (owner 168). *Why:* "move the logout button inside profile"; "remove settings from profile"; "also update
+  profile page, it looks very less".
   *Why:* "move the logout button inside profile"; "remove settings from profile". **Log out erases everything this account left on the
   device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
   database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
@@ -3233,6 +3241,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 206 | "make profile and settings as diff, avatar opens profile and settings as tab is diff" | Profile is its own page at /profile (avatar opens it, Back returns where you were); Settings is a tab (/settings) in the default bar and sidebar | § 26.4, § 26.3 | Profile inside Settings at /settings/profile (201); Settings reached from Profile Back |
 | 207 | "add expense should have paid by always, by default to me" | Paid by is always shown on Add expense and always starts as me on a new expense (any entry point); only an Ask prefill naming a payer differs; edits keep the saved payer | § 26.13 | - |
 | 208 | "fanout more to get things done" | Run as many builders as there is independent work (no file overlap), each running only its touched specs; full e2e once per merge by the orchestrator; perf numbers only on a quiet machine | § 23 (process lesson) | At most three builders at once |
+| 209 | "also update profile page, it looks very less" | Profile becomes a full page: header with verified contacts and since-date, stat row linking out, Your balance, Payment details (UPI), Add me (QR, link), Your recent activity, Log out last | § 26.15 | Avatar, name and a few stats only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
