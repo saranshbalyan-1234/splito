@@ -153,7 +153,9 @@ for (const [name, viewport] of SIZES) {
       await kabir().getByTestId('invite-sent-cancel').click()
       await expect(kabir().getByTestId('invite-sent-cancel')).toHaveCount(0)
 
-      await screen(page).getByTestId('activity-friendRequest.received').filter({hasText: 'Ishaan Verma'}).getByTestId('activity-request-accept').click()
+      const ishaan = () => screen(page).getByTestId('activity-friendRequest.received').filter({hasText: 'Ishaan Verma'})
+      await ishaan().getByTestId('activity-request-accept').click()
+      await expect(ishaan().getByTestId('activity-request-accept')).toHaveCount(0)
       await page.goto('/people')
       await expect(page.getByTestId('person-Ishaan Verma')).toBeVisible()
     })

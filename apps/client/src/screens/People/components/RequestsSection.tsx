@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/JoinRequests.tsx (request rows: avatar, name, Accept / Reject buttons)
-import {useRef} from 'react'
+import {memo, useRef} from 'react'
 import {View} from 'react-native'
 import {plural, t} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -187,7 +187,7 @@ export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
 }
 
 /** Resend and Cancel for an invite sent: the row's buttons on Home and People, and in place on Activity (owner 195). */
-export function OutgoingActions({request}: {request: Entity<FriendRequest>}) {
+export const OutgoingActions = memo(function OutgoingActions({request}: {request: Entity<FriendRequest>}) {
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const store = useStore()
@@ -237,7 +237,7 @@ export function OutgoingActions({request}: {request: Entity<FriendRequest>}) {
       />
     </>
   )
-}
+})
 
 /** "today", "yesterday", "3 days ago": requests move in days. */
 function ago(ms: number) {

@@ -70,7 +70,8 @@ test('on Splito: request -> pending (not selectable) -> they accept -> a friend 
   // They accept (stands in for the pull from their device).
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.acceptOutgoing('ananya@example.com', 'Ananya Gupta'))
   await expect(page.getByTestId('person-Ananya Gupta')).toBeVisible()
-  const answered = await openInvitesSent(page, 'ananya@example.com')
+  // The row names the friend now.
+  const answered = await openInvitesSent(page, 'Ananya Gupta')
   await expect(answered.getByTestId('invite-sent-resend')).toHaveCount(0)
   await page.goBack()
   const after = await pickerOptions(page)
@@ -85,8 +86,8 @@ test('incoming requests: People > Requests and Activity, Accept makes a friend',
   const activityRow = page.getByTestId('activity-friendRequest.received').filter({hasText: 'Sara Ali'})
   await expect(activityRow).toContainText('sent you a friend request')
   await expect(activityRow.getByTestId('activity-unread-dot')).toBeVisible()
-  await page.getByTestId('tab-home').click()
-  await page.getByTestId('request-Ishaan Verma').getByTestId('request-accept').click()
+  await page.getByTestId('tab-people').click()
+  await page.getByTestId('screen-people').last().getByTestId('request-Ishaan Verma').getByTestId('request-accept').click()
   await expect(page.getByTestId('person-name')).toHaveText(/^Ishaan Verma( - Demo)?$/)
 })
 
