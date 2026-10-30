@@ -18,6 +18,7 @@ import {scheduleOnRN} from 'react-native-worklets'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {shouldDismissDrawer} from './drawerDismiss'
 import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
+import {ZOOM_FADE_IN_MS} from '#/alf/atoms'
 
 /*
  * Owner rule: every modal on a phone is a drawer. Web below 800px shows
@@ -43,8 +44,8 @@ export function useIsWebDrawer() {
   return !useBreakpoints().gtMobile
 }
 
-/** A centred popup's zoom-in: its 0.1 s delay and 0.3 s. */
-const POPUP_OPEN_MS = 400
+/** A centred popup is open when its zoom-in (`atoms.zoom_fade_in`) has ended, plus a frame of slack. */
+const POPUP_OPEN_MS = ZOOM_FADE_IN_MS + 16
 
 /** Dialog.Outer -> Dialog.Inner: whether to draw a drawer, and its exit. */
 export const DrawerContext = createContext<{
@@ -139,7 +140,7 @@ export function useDrawer({
         }),
       )
     else if (!isClosing && onOpened) {
-      // Reduced motion: open as drawn. A centred popup zooms in with CSS (0.1 s delay + 0.3 s, atoms.zoom_fade_in).
+      // Reduced motion: open as drawn. A centred popup zooms in with CSS (atoms.zoom_fade_in).
       if (reduceMotion) onOpened()
       else {
         const id = setTimeout(onOpened, POPUP_OPEN_MS)

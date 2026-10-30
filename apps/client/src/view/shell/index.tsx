@@ -12,7 +12,7 @@ import {isStateAtTabRoot} from '#/lib/routes/helpers'
 import {useDialogFullyExpandedCountContext} from '#/state/dialogs'
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
 import {SearchAskProvider} from '#/features/searchAsk/SearchAskProvider'
-import {OpenedContext} from '#/lib/hooks/useAfterTransition'
+import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {DrawerContent} from '#/navigation/Drawer'
 import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {RoutesContainer, TabsNavigator} from '#/navigation/Navigation'
@@ -69,6 +69,12 @@ function DrawerLayout({children}: {children: React.ReactNode}) {
   const swipeEnabled = !gtMobile && !canGoBack
   /* The drawer's own slide decides when its menu mounts (owner 168): it opens first, the items follow. */
   const [drawerSettled, setDrawerSettled] = useState(false)
+  // A timer covers a missed `onTransitionEnd`; a closed drawer is not settled.
+  useEffect(() => {
+    if (!isDrawerOpen) return setDrawerSettled(false)
+    const id = setTimeout(() => setDrawerSettled(true), OPENED_FALLBACK_MS)
+    return () => clearTimeout(id)
+  }, [isDrawerOpen])
 
   return (
     <Drawer

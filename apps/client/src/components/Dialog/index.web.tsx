@@ -210,7 +210,7 @@ export function Outer({
         <Portal>
           <Context.Provider value={context}>
             <DrawerContext.Provider value={drawer}>
-             <OpenedProvider setterRef={setOpenedRef}>
+             <OpenedProvider setterRef={setOpenedRef} closing={isClosing}>
               <RemoveScrollBar />
               <Pressable
                 accessibilityHint={undefined}

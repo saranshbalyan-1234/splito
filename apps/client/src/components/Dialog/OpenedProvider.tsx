@@ -1,4 +1,4 @@
-import {useEffect, useLayoutEffect, useState} from 'react'
+import {useEffect, useLayoutEffect, useRef, useState} from 'react'
 
 import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
 
@@ -9,12 +9,17 @@ import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
  */
 export function OpenedProvider({
   setterRef,
+  closing = false,
   children,
 }: {
   setterRef: React.RefObject<((opened: boolean) => void) | null>
+  /** The sheet is on its way out: the timer must not mount a heavy body under the exit motion. */
+  closing?: boolean
   children: React.ReactNode
 }) {
   const [opened, setOpened] = useState(false)
+  const closingRef = useRef(closing)
+  closingRef.current = closing
   useLayoutEffect(() => {
     setterRef.current = setOpened
     return () => {
@@ -22,7 +27,9 @@ export function OpenedProvider({
     }
   }, [setterRef])
   useEffect(() => {
-    const id = setTimeout(() => setOpened(true), OPENED_FALLBACK_MS)
+    const id = setTimeout(() => {
+      if (!closingRef.current) setOpened(true)
+    }, OPENED_FALLBACK_MS)
     return () => clearTimeout(id)
   }, [])
   return <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
