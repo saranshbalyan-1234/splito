@@ -223,6 +223,12 @@ export async function projectEntity(rows: RowAccess, prev: Entity | undefined, n
       }
     }
   }
+  // A comment (or its edit or delete) on a record is activity for the groups and friends the record names (owner 199).
+  if (type === 'comment' && next) {
+    const c = next.data as {targetType?: string; targetId?: string}
+    const row = c.targetType && c.targetId ? await rows.get(ENTITY_STORE[c.targetType as EntityType], [c.targetId]) : undefined
+    if (row) await bumpTargetActivity(rows, entityOfRow(c.targetType as EntityType, row), next.updatedAt)
+  }
   if (type === 'expense' || type === 'person' || type === 'group') {
     const was = termRows(prev)
     const is = termRows(next)
@@ -247,6 +253,14 @@ function peopleOf(e: Entity | undefined): string[] {
 async function isMeAmong(rows: RowAccess, ids: string[]): Promise<boolean> {
   for (const id of ids) if ((await rows.get('people', [id]))?.isMe === 1) return true
   return false
+}
+
+/** A change at `at` to something that names a group and people (a comment on a record): the same bumps a version of the record makes. */
+async function bumpTargetActivity(rows: RowAccess, target: Entity, at: number) {
+  const groupId = groupOf(target)
+  if (groupId) await bumpActivity(rows, 'groups', groupId, at)
+  const names = peopleOf(target)
+  if (await isMeAmong(rows, names)) for (const personId of names) await bumpActivity(rows, 'people', personId, at)
 }
 
 /** Raises a group's `activityAt` or a person's `lastActivityAt`, never lowers it. */
@@ -283,7 +297,7 @@ export async function rebuildProjections(rows: RowAccess, entities: (type: Entit
   await writeAggregates(rows, aggs, latest)
   await rebuildDisputedProjections(rows, entities)
   for (const type of ['person', 'group', 'expense'] as const) for (const e of type === 'group' ? groups : await entities(type)) for (const r of termRows(e)) await rows.put('search_terms', r)
-  await rebuildActivity(rows, money)
+  await rebuildActivity(rows, money, await entities('comment'))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -416,9 +430,9 @@ export async function rebuildDisputedProjections(rows: RowAccess, entities: (typ
  * history: every version of a money record bumps the groups and people it and
  * the version before it name, at that version's time, exactly as the write
  * did (a record moved out of a group is activity there too; a friend only counts for a record I am on, audit m20). `money` is the
- * live and deleted money entities, for any whose history is missing.
+ * live and deleted money entities, for any whose history is missing; `comments` are the comments on them.
  */
-export async function rebuildActivity(rows: RowAccess, money: Entity[]): Promise<void> {
+export async function rebuildActivity(rows: RowAccess, money: Entity[], comments: Entity[] = []): Promise<void> {
   const groupAt = new Map<string, number>()
   const personAt = new Map<string, number>()
   const bump = (map: Map<string, number>, id: string, at: number) => map.set(id, Math.max(map.get(id) ?? 0, at))
@@ -441,6 +455,13 @@ export async function rebuildActivity(rows: RowAccess, money: Entity[]): Promise
     previous = {key, entity}
   }
   for (const e of money) touch(e, e.updatedAt)
+  // A comment counts at its last change, on the record it is about.
+  const byKey = new Map(money.map(e => [`${e.type}:${e.id}`, e]))
+  for (const c of comments) {
+    const d = c.data as {targetType?: string; targetId?: string}
+    const target = byKey.get(`${d.targetType}:${d.targetId}`)
+    if (target) touch(target, c.updatedAt)
+  }
   for (const g of await rows.range('groups', {})) {
     const at = Math.max(g.updatedAt as number, groupAt.get(g.id as string) ?? 0)
     if (g.activityAt !== at) await rows.put('groups', {...g, activityAt: at})

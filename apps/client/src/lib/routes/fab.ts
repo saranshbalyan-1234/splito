@@ -1,5 +1,5 @@
 /** The FAB's route allow-list (owner 190, § 26.6): where you would add an expense, with what Add expense pre-selects. */
-const TAB_ROUTES = ['Home', 'People', 'Groups', 'Analytics', 'Activity']
+const TAB_ROUTES = ['People', 'Groups', 'Analytics', 'Activity']
 
 /**
  * The params of the Add expense the FAB opens on this route, or null when the route has no FAB. Shown: the five main

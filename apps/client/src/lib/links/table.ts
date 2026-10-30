@@ -57,8 +57,7 @@ export const SHEETS = {
     'export/currency',
   ],
   Profile: ['edit'],
-  Settings: ['export', 'export/period', 'export/range', 'export/group', 'export/person', 'export/currency', 'import'],
-  SettingsSection: ['accent', 'currency', 'timezone', 'category', 'tax-class'],
+  SettingsSection: ['accent', 'currency', 'timezone', 'category', 'tax-class', 'export', 'export/period', 'export/range', 'export/group', 'export/person', 'export/currency', 'import'],
   CreateGroup: ['currency'],
   AddExpense: ['currency', 'date', 'category', 'group', 'people', 'payers', 'charge', 'tax-class'],
   EditExpense: ['currency', 'date', 'category', 'group', 'people', 'payers', 'charge', 'tax-class'],
@@ -70,6 +69,8 @@ export const SETTINGS_SECTION_SHEETS: Record<string, readonly string[]> = {
   defaults: ['currency', 'tax-class'],
   categories: ['category'],
   regional: ['timezone'],
+  /* Your data (owner 205) hosts the Export and Import sheets. */
+  data: ['export', 'export/period', 'export/range', 'export/group', 'export/person', 'export/currency', 'import'],
 }
 
 /** Sheets that open over whatever page is showing: they belong to the shell, not a page. */
@@ -79,8 +80,6 @@ export type GlobalSheet = (typeof GLOBAL_SHEETS)[number]
 /** The global sheets that print as a query on the page they cover (`?drawer=menu`); Search prints as `/search`. */
 export const QUERY_SHEETS = {drawer: 'menu', feedback: 'new', install: 'help'} as const satisfies Partial<Record<GlobalSheet, string>>
 
-/** Settings pages whose name is a sheet of Settings itself (`/settings/export`), not a section. */
-export const SETTINGS_SHEET_SEGMENTS = ['export', 'import'] as const
 
 /** The names in a page pattern: `/people/:personId` -> ['personId']. */
 export function pathParamNames(name: string): string[] {
@@ -103,7 +102,7 @@ export function isSheetChain(name: string, chain: readonly string[]): boolean {
   return isGlobalSheet(chain) || isPageSheet(name, chain)
 }
 
-/** The route name Splito shows a link's page as: Search is not a page (26.3), it is the Search & Ask sheet over Home. */
+/** The route name Splito shows a link's page as: Search is not a page (26.3), it is the Search & Ask sheet over the page it was opened from. */
 export type PageName = Exclude<RouteName, 'Search'>
 
 /**
@@ -112,15 +111,16 @@ export type PageName = Exclude<RouteName, 'Search'>
  */
 export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
   /* `from`: the tab a main screen was opened from, so a refresh keeps its Back (owner 179, 184). */
-  Home: ['overview', 'from'],
+  /* `overview` is the Overview's scope at the top (owners 176, 198). */
   People: ['show', 'sort', 'currency', 'groups', 'settled', 'hidden', 'from'],
   Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden', 'from'],
   Person: ['groups'],
-  Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope'],
+  Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope', 'overview'],
   /* `type=transactions` (Recent transactions' "See all", owners 173, 179), `group=<id>` from a Group's "See all" (F-259); `from` is the tab a pushed copy opened from. */
   Activity: ['type', 'group', 'from'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
-  Settings: ['note'],
+  Settings: ['from'],
+  SettingsSection: ['note'],
   FriendsAndInvites: ['section'],
   CreateInvite: ['kind', 'groupId'],
 }

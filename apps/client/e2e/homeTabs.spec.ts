@@ -1,5 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDrawer} from './nav'
 import {openDemo} from './openDemo'
 
 /*
@@ -187,14 +188,14 @@ test('navigation: phone bar, rail and desktop lists, in order', async ({page}) =
   await expect(page.getByTestId('tab-home')).toHaveAttribute('aria-current', 'page')
   // The drawer lists the same.
   await page.setViewportSize(PHONE)
-  await page.getByTestId('screen-home').getByTestId('header-avatar').click()
+  await openDrawer(page)
   // The menu mounts when the drawer has stopped sliding (owner 168), so wait for it before reading the list.
   await expect(page.getByTestId('drawer-settings')).toBeVisible()
   const rows = await page
     .getByTestId('drawer')
     .locator('[data-testid^="drawer-"]')
     .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  expect(rows.slice(1, 8)).toEqual(['drawer-home', 'drawer-people', 'drawer-groups', 'drawer-analytics', 'drawer-activity', 'drawer-ask', 'drawer-settings'])
+  expect(rows.slice(1, 6)).toEqual(['drawer-people', 'drawer-groups', 'drawer-analytics', 'drawer-activity', 'drawer-settings'])
 })
 
 test('a saved bar from before the People tab gets People after Home, and keeps its own order', async ({page}) => {

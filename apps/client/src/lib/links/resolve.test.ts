@@ -126,7 +126,10 @@ describe('unknown and unsafe links open Home', () => {
   })
   test('old paths redirect', () => {
     expect(resolveLink('/notifications').target.name).toBe('Activity')
-    expect(resolveLink('/settings/recently-deleted').target).toMatchObject({name: 'Settings', params: {note: 'deleted-stay'}})
+    expect(resolveLink('/settings/recently-deleted').target).toMatchObject({name: 'SettingsSection', params: {section: 'data', note: 'deleted-stay'}})
+    /* Export and Import moved under Your data (owner 205). */
+    expect(resolveLink('/settings/export').target).toMatchObject({name: 'SettingsSection', params: {section: 'data'}, sheets: ['export']})
+    expect(resolveLink('/settings/import').target).toMatchObject({name: 'SettingsSection', params: {section: 'data'}, sheets: ['import']})
   })
 })
 
@@ -197,4 +200,17 @@ test('every "See all" of Recent transactions is one path: Activity, All, transac
   expect(seeAllTransactionsPath(ID)).toBe(`/activity?tab=all&type=transactions&group=${ID}`)
   expect(buildPath(resolveLink(seeAllTransactionsPath(ID)).target)).toBe(`/activity/all?group=${ID}&type=transactions`)
   expect(resolveLink(seeAllTransactionsPath(ID)).target.params).toEqual({tab: 'all', type: 'transactions', group: ID})
+})
+
+test('Support and Your data are Settings section pages; Export and Import are sheets of Your data (owners 204, 205)', () => {
+  expect(resolveLink('/settings/support').target).toEqual({name: 'SettingsSection', params: {section: 'support'}, sheets: [], query: {}})
+  expect(resolveLink('/settings/data').target).toEqual({name: 'SettingsSection', params: {section: 'data'}, sheets: [], query: {}})
+  expect(resolveLink('/settings/data/export/period').target).toMatchObject({name: 'SettingsSection', params: {section: 'data'}, sheets: ['export', 'export/period']})
+  // A sheet belongs to the page that hosts it: Export is not a sheet of Appearance or of the Settings tab.
+  expect(resolveLink('/settings/appearance/export').isKnown).toBe(false)
+  expect(resolveLink('/settings/export/period').target).toMatchObject({sheets: ['export', 'export/period']})
+})
+
+test('Profile is its own page at /profile, not a Settings page (owner 206)', () => {
+  expect(resolveLink('/profile').target).toEqual({name: 'Profile', params: {}, sheets: [], query: {}})
 })

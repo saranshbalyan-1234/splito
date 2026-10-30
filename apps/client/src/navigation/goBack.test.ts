@@ -63,3 +63,16 @@ test('goBack pops when it can, otherwise navigates to the fallback', () => {
   goBack(nav(false), {name: 'Group', params: {groupId: 'g'}})
   expect(calls).toEqual(['back', ['Group', {groupId: 'g'}]])
 })
+
+test('Profile goes back to the start tab; Support and Your data sit under Settings, the help pages under Support (owners 204-206)', () => {
+  expect(backFallback({name: 'Profile'})).toEqual({name: 'People'})
+  expect(backFallback({name: 'SettingsSection', params: {section: 'support'}})).toEqual({name: 'Settings'})
+  expect(backFallback({name: 'SettingsSection', params: {section: 'data'}})).toEqual({name: 'Settings'})
+  for (const section of ['feedback', 'help', 'about'])
+    expect(backFallback({name: 'SettingsSection', params: {section}})).toEqual({name: 'SettingsSection', params: {section: 'support'}})
+  // A refreshed help page keeps climbing: Support, then Settings, then the start tab.
+  expect(backChain({name: 'SettingsSection', params: {section: 'about'}}).map(r => r.name)).toEqual(['People', 'Settings', 'SettingsSection', 'SettingsSection'])
+  expect(backChain({name: 'SettingsSection', params: {section: 'data'}}).map(r => r.name)).toEqual(['People', 'Settings', 'SettingsSection'])
+  // Settings is a tab: from a link it goes back to the tab it names.
+  expect(backFallback({name: 'Settings', params: {from: 'groups'}})).toEqual({name: 'Groups'})
+})

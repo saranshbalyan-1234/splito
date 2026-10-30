@@ -1,4 +1,5 @@
 import {recordFriction} from '#/logger'
+import {startPage} from '#/lib/routes/startTab'
 import {IS_WEB} from '#/env'
 import {navigationRef, resetToRoot} from '#/navigation/ref'
 import {openSheetMarkers, ownerOf, queueSheets} from '#/navigation/sheets'
@@ -20,16 +21,16 @@ export type OpenOptions = {isDemo?: boolean; isInStore?: (target: LinkTarget) =>
  * and QR links, shares, Ask answers and Search results (F-254). Cold starts and the browser's address bar go
  * through the same resolver in `navigation/linking`. A link only navigates; it never performs an action.
  *
- * A main screen (Home, People, Groups, Analytics, Activity) named by a link opens as a pushed copy with Back, never
+ * A main screen (People, Groups, Analytics, Activity, Settings) named by a link opens as a pushed copy with Back, never
  * as the plain tab (owner 179, `tabLink`); `plain` keeps the plain tab for what is no real link (an unknown address
- * falling back to Home) and a global sheet that only needs a page under it.
+ * falling back to the start tab) and a global sheet that only needs a page under it.
  */
 export function navigateToTarget(target: LinkTarget, {plain = false}: {plain?: boolean} = {}): boolean {
   if (!navigationRef.isReady()) return false
   const go = navigationRef.navigate as (name: string, params?: object) => void
   const isTab = (TAB_NAMES as readonly string[]).includes(target.name)
   const params = Object.keys(target.params).length > 0 ? target.params : undefined
-  const pushed = isTab && !plain && !(target.name === 'Home' && isGlobalSheet(target.sheets)) ? tabLink(target.name, params, IS_WEB, originTab(navigationRef.getRootState())) : null
+  const pushed = isTab && !plain && !(target.name === startPage() && isGlobalSheet(target.sheets)) ? tabLink(target.name, params, IS_WEB, originTab(navigationRef.getRootState())) : null
   const open = () => {
     if (pushed) navigationRef.dispatch(StackActions.push(pushed.name, pushed.params))
     else if (IS_WEB) go(target.name, params)
@@ -82,7 +83,7 @@ export function openLinkWhenReady(input: string, options: OpenOptions = {}, trie
 /**
  * The address a web page was loaded with is shown by the navigator before the app knows its mode; this checks it
  * once it does (F-254): a dead link is friction, and a link to real data in demo mode, or any link while signed
- * out, is held and the page falls back to Home, so the question or the sign-in comes first.
+ * out, is held and the page falls back to the start tab, so the question or the sign-in comes first.
  */
 export function checkInitialLink(path: string, options: OpenOptions) {
   const {isKnown, target} = resolveLink(path)

@@ -1,39 +1,25 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
 import {lazy, Suspense} from 'react'
 import {View} from 'react-native'
-import {type Feedback, resetAllPrefs} from '@splito/sync'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {useRoute} from '@react-navigation/native'
 
-import {useHaptics} from '#/lib/haptics'
 import {bottomBarItems} from '#/lib/routes/navigationItems'
-import {useEntities, useMe, usePref} from '#/data/hooks'
-import {useExportSheet} from '#/features/export/ExportSheet'
-import {useImportSheet} from '#/features/export/ImportSheet'
-import {useOpenFeedback} from '#/features/feedback/FeedbackProvider'
-import {useData} from '#/data/StoreProvider'
+import {useMe, usePref} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {InstallAppItem} from '#/screens/Settings/components/InstallAppItem'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
-import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
-import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
 import {CircleQuestion_Stroke2_Corner2_Rounded as HelpIcon} from '#/components/icons/CircleQuestion'
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
-import {FileExport_Stroke2_Corner0_Rounded as ExportIcon, Upload_Stroke2_Corner0_Rounded as ImportIcon} from '#/components/icons/Export'
-import {Inbox_Stroke2_Corner0_Rounded as InboxIcon} from '#/components/icons/Feedback'
-import {Message_Stroke2_Corner0_Rounded as MessageIcon, PeopleGroup_Stroke2_Corner0_Rounded as FriendsIcon} from '#/components/icons/Invite'
+import {FileExport_Stroke2_Corner0_Rounded as ExportIcon} from '#/components/icons/Export'
+import {PeopleGroup_Stroke2_Corner0_Rounded as FriendsIcon} from '#/components/icons/Invite'
 import * as Layout from '#/components/Layout'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
+import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
+import {TabScreen} from '#/components/TabScreen'
 import {useTabLabels} from '#/components/settings/NavigationEditor'
-import * as Prompt from '#/components/Prompt'
-import {useHasLegacyStore} from '#/data/account'
-import {requestLegacyOffer} from '#/features/account/LegacyDataOffer'
-import {requestLogOut} from '#/features/account/LogOutPrompt'
-import {useDemoMode} from '#/state/demo'
 import {SETTINGS_SECTIONS, type SettingsSectionId, useSectionInfo} from '#/components/settings/sections'
-import * as Toast from '#/components/Toast'
-import {SignOut_Stroke2_Corner0_Rounded as SignOutIcon} from '#/components/icons/Auth'
 import {Text} from '#/components/Typography'
 import {useSession} from '#/state/session'
 
@@ -50,39 +36,29 @@ const DemoModeRows: ReturnType<typeof lazy> | null = lazy(() =>
 )
 
 /**
- * Bluesky's Settings list, one row per preferences-registry group, then
- * About and "Reset all settings". Account rows (switch account, sign out,
- * privacy) arrive with sign-in.
+ * Settings, a tab of its own (owner 206): Bluesky's Settings list, one row per preferences-registry group, then one
+ * "Support" row and one "Your data" row (owners 204, 205) that open their own pages. Account rows (switch account,
+ * privacy) arrive with sign-in; Log out is on Profile (owner 202).
  */
 export function SettingsScreen() {
   const {t: l} = useLingui()
   const t = useTheme()
-  const {store, ctx} = useData()
-  const haptics = useHaptics()
   const sections = useSectionInfo()
   const summary = useSectionSummary()
-  const resetPrompt = Prompt.usePromptControl()
   const me = useMe()
   const {currentAccount} = useSession()
-  const hasLegacyStore = useHasLegacyStore()
-  const {demo: isDemo} = useDemoMode()
-  const note = (useRoute().params as {note?: string} | undefined)?.note
-  const openFeedback = useOpenFeedback()
-  const exportSheet = useExportSheet()
-  const importSheet = useImportSheet()
-  const feedbackCount = useEntities<Feedback>('feedback')?.length ?? 0
 
   return (
-    <Layout.Screen testID="screen-settings">
+    <TabScreen testID="screen-settings">
       <Layout.Header.Outer>
-        {/* A pushed page on every width (header rule set), sidebar item or not. */}
-        <Layout.Header.BackButton />
+        <HeaderAvatar />
+        <Layout.Header.Slot />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Settings</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <Layout.Header.Slot />
+        <SearchAskButton edge />
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
@@ -123,12 +99,6 @@ export function SettingsScreen() {
               <Trans>Friends and invites</Trans>
             </SettingsList.ItemText>
           </SettingsList.LinkItem>
-          <SettingsList.PressableItem testID="settings-log-out" destructive label={l`Log out`} onPress={requestLogOut}>
-            <SettingsList.ItemIcon icon={SignOutIcon} />
-            <SettingsList.ItemText>
-              <Trans>Log out</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.PressableItem>
           <SettingsList.Divider />
           <SectionTitle>
             <Trans>Preferences</Trans>
@@ -159,88 +129,19 @@ export function SettingsScreen() {
             </SettingsList.LinkItem>
           ))}
           <SettingsList.Divider />
-          <SectionTitle>
-            <Trans>Support</Trans>
-          </SectionTitle>
-          <SettingsList.PressableItem
-            testID="settings-send-feedback"
-            label={l`Send feedback`}
-            onPress={openFeedback}>
-            <SettingsList.ItemIcon icon={MessageIcon} />
-            <SettingsList.ItemText>
-              <Trans>Send feedback</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.PressableItem>
-          <SettingsList.LinkItem
-            testID="settings-your-feedback"
-            to="/settings/feedback"
-            label={l`Your feedback`}>
-            <SettingsList.ItemIcon icon={InboxIcon} />
-            <SettingsList.ItemText>
-              <Trans>Your feedback</Trans>
-            </SettingsList.ItemText>
-            {feedbackCount > 0 ? (
-              <SettingsList.BadgeText>{feedbackCount}</SettingsList.BadgeText>
-            ) : null}
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
-            testID="settings-help"
-            to="/settings/help"
-            label={l`Help`}>
+          {/* One row each (owners 204, 205): the pages hold the items. */}
+          <SettingsList.LinkItem testID="settings-support" to="/settings/support" label={l`Support`}>
             <SettingsList.ItemIcon icon={HelpIcon} />
             <SettingsList.ItemText>
-              <Trans>Help</Trans>
+              <Trans>Support</Trans>
             </SettingsList.ItemText>
           </SettingsList.LinkItem>
-          <SettingsList.LinkItem
-            testID="settings-about"
-            to="/settings/about"
-            label={l`About`}>
-            <SettingsList.ItemIcon icon={InfoIcon} />
-            <SettingsList.ItemText>
-              <Trans>About</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.Divider />
-          <SectionTitle>
-            <Trans>Data</Trans>
-          </SectionTitle>
-          {note === 'deleted-stay' && (
-            <View testID="settings-deleted-note" style={[a.flex_row, a.gap_sm, a.px_xl, a.pb_sm]}>
-              <InfoIcon size="sm" fill={t.atoms.text_contrast_medium.color} />
-              <Text style={[a.flex_1, a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-                <Trans>Deleted items now stay in their lists.</Trans>
-              </Text>
-            </View>
-          )}
-          {/* F-2007 and F-2001: CSV, PDF and the full JSON backup out; a backup back in. */}
-          <SettingsList.PressableItem
-            testID="settings-export"
-            label={l`Export`}
-            onPress={exportSheet.open}>
+          <SettingsList.LinkItem testID="settings-data" to="/settings/data" label={l`Your data`}>
             <SettingsList.ItemIcon icon={ExportIcon} />
             <SettingsList.ItemText>
-              <Trans>Export</Trans>
+              <Trans>Your data</Trans>
             </SettingsList.ItemText>
-          </SettingsList.PressableItem>
-          <SettingsList.PressableItem
-            testID="settings-import"
-            label={l`Import`}
-            onPress={importSheet.open}>
-            <SettingsList.ItemIcon icon={ImportIcon} />
-            <SettingsList.ItemText>
-              <Trans>Import</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.PressableItem>
-          {/* F-2104: while the pre-account database exists, ask again (the one-time offer after sign-in may have been put off). */}
-          {hasLegacyStore && !isDemo && (
-            <SettingsList.PressableItem testID="settings-move-legacy" label={l`Move this device’s older data`} onPress={requestLegacyOffer}>
-              <SettingsList.ItemIcon icon={ImportIcon} />
-              <SettingsList.ItemText>
-                <Trans>Move this device’s older data</Trans>
-              </SettingsList.ItemText>
-            </SettingsList.PressableItem>
-          )}
+          </SettingsList.LinkItem>
           <InstallAppItem />
           {/* Dev and e2e builds only: the demo mode switch (ARCHITECTURE 26.1). */}
           {DemoModeRows && (
@@ -248,16 +149,6 @@ export function SettingsScreen() {
               <DemoModeRows />
             </Suspense>
           )}
-          <SettingsList.PressableItem
-            testID="settings-reset-all"
-            destructive
-            label={l`Reset all settings`}
-            onPress={() => resetPrompt.open()}>
-            <SettingsList.ItemIcon icon={ResetIcon} />
-            <SettingsList.ItemText>
-              <Trans>Reset all settings</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.PressableItem>
           <View style={[a.flex_row, a.gap_sm, a.px_xl, a.pt_lg, a.pb_xl]}>
             <CloudIcon size="sm" fill={t.atoms.text_contrast_low.color} />
             <Text
@@ -276,25 +167,7 @@ export function SettingsScreen() {
         </SettingsList.Container>
       </Layout.Content>
 
-      {exportSheet.element}
-      {importSheet.element}
-      <Prompt.Basic
-        control={resetPrompt}
-        title={l`Reset all settings?`}
-        description={l`Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are.`}
-        confirmButtonCta={l`Reset all`}
-        confirmButtonColor="negative"
-        onConfirm={() => {
-          resetAllPrefs(store, ctx).then(
-            () => {
-              haptics.success()
-              Toast.show(l`Settings reset`)
-            },
-            () => Toast.show(l`Couldn’t reset settings. Please try again.`, {type: 'error'}),
-          )
-        }}
-      />
-    </Layout.Screen>
+    </TabScreen>
   )
 }
 
@@ -303,7 +176,7 @@ function useSectionSummary(): Partial<Record<SettingsSectionId, string>> {
   const {t: l} = useLingui()
   const [theme = 'system'] = usePref('theme')
   const [currency = 'INR'] = usePref('defaultCurrency')
-  const [homeTab = 'home'] = usePref('startTab')
+  const [startTab = 'people'] = usePref('startTab')
   const [tabs] = usePref('tabs')
   const tabCount = tabs && bottomBarItems(tabs).length
   const tabLabels = useTabLabels()
@@ -323,7 +196,7 @@ function useSectionSummary(): Partial<Record<SettingsSectionId, string>> {
     navigation:
       tabCount === undefined
         ? undefined
-        : `${plural(tabCount, {one: '# tab', other: '# tabs'})} · ${tabLabels[homeTab]}`,
+        : `${plural(tabCount, {one: '# tab', other: '# tabs'})} · ${tabLabels[startTab]}`,
     /* The currency new expenses start in. */
     defaults: currency,
     categories: visible === 1 ? l`1 category` : l`${visible} categories`,

@@ -1,3 +1,5 @@
+import {type ListSort, LIST_SORTS} from '@splito/sync'
+
 /**
  * A list page's filters in the address (F-241). Each page names its keys and values once; a key left out of the
  * address falls back to the saved preference (F-1413), so the address only ever carries what differs from
@@ -11,6 +13,14 @@ export const flag = (value: string | undefined): boolean | undefined => (value =
 /** `value` if it is one of `allowed`, else undefined. */
 export function oneOf<T extends string>(value: string | undefined, allowed: readonly T[]): T | undefined {
   return allowed.includes(value as T) ? (value as T) : undefined
+}
+
+/**
+ * `?sort=` of People and Groups (owner 199): one of the four orders; the old address word `recent` is `lastActive`.
+ * Anything else is no sort, so the saved preference applies.
+ */
+export function readSort(value: string | undefined): ListSort | undefined {
+  return oneOf(value === 'recent' ? 'lastActive' : value, LIST_SORTS)
 }
 
 /**

@@ -11,7 +11,7 @@ import {
   type Person,
 } from '@splito/sync'
 
-import {type Params} from '#/lib/links/listState'
+import {type Params, readSort} from '#/lib/links/listState'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useHiddenGroups} from '#/data/groupVisibility'
@@ -38,6 +38,7 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import * as Layout from '#/components/Layout'
 import {TabScreen} from '#/components/TabScreen'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
+import {DEFAULT_LIST_SORT} from '#/components/ListSortMenu'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
@@ -58,7 +59,7 @@ const PLACEHOLDER_ROWS = 4
 /**
  * Groups list: Bluesky's Lists screen (list-card rows); Create group is the
  * header's action, and the FAB adds an expense as on every tab. No Overview
- * (it lives on Home only, owner 153); search and filters sit on the list's
+ * (it is the top of Analytics, owner 198); search, filters and the Sort button sit on the list's
  * heading.
  */
 export function GroupsScreen() {
@@ -79,16 +80,17 @@ export function GroupsScreen() {
   const [isFoldOpen, setIsFoldOpen] = useState(false)
   const [showHidden, setShowHidden] = useShowHidden()
   const [showSettled = false, setShowSettled] = usePref('groups.showSettled')
-  const [sortDefault = 'recent', setSortDefault] = usePref('groups.sort')
+  const [sortSaved = DEFAULT_LIST_SORT, setSortSaved] = usePref('groupsSort')
   const route = useRoute()
-  /* The filters are the address (`/groups?sort=name&show=owe`, F-241): a param that is present wins over the saved preference. */
+  /* The filters are the address (`/groups?type=trip&show=owe`, F-241): a param that is present wins over the saved preference. */
   const filters: GroupFilters = {
     ...DEFAULT_GROUP_FILTERS,
-    sort: sortDefault,
     showHidden,
     showSettled,
     ...readGroupParams(route.params as Params),
   }
+  /* The order is the address too (`/groups?sort=name`, owner 199), its own Sort button beside Filters. */
+  const sort = readSort((route.params as Params)?.sort) ?? sortSaved
   /* The filter dot counts what differs from the defaults. */
   const activeCount = (Object.keys(filters) as (keyof GroupFilters)[]).filter(
     k => filters[k] !== DEFAULT_GROUP_FILTERS[k],
@@ -103,6 +105,7 @@ export function GroupsScreen() {
   const all: GroupRowData[] = (groups ?? []).map(g => ({
     id: g.id,
     name: g.data.name,
+    createdAt: g.createdAt,
     kind: g.data.kind,
     inactive: isGroupInactive(g.data),
     hidden: hiddenIds.has(g.id),
@@ -121,9 +124,9 @@ export function GroupsScreen() {
     ),
   ].sort()
   const order = (rows: GroupRowData[]) =>
-    sortGroups(rows, filters.sort, {
+    sortGroups(rows, sort, {
       currency: filters.currency === 'all' ? defaultCurrency : filters.currency,
-      activity: filters.sort === 'recent' ? (groupActivity ?? new Map()) : new Map(),
+      activity: sort === 'lastActive' ? (groupActivity ?? new Map()) : new Map(),
     })
   const listed = order(filterGroups(all, filters))
   /* Search reaches inactive and hidden groups too (decision 89); it narrows the list only. */
@@ -197,6 +200,14 @@ export function GroupsScreen() {
                     searchLabel={l`Search groups or members`}
                     activeFilterCount={activeCount}
                     onFiltersPress={() => filterControl.open()}
+                    sort={{
+                      value: sort,
+                      onChange: next => {
+                        /* Absent means the saved choice, and the saved choice is now `next`: only a non-stock order is written. */
+                        navigation.setParams({sort: next === DEFAULT_LIST_SORT ? undefined : next} as never)
+                        void setSortSaved(next)
+                      },
+                    }}
                   />
                 </>
               ) : undefined
@@ -235,7 +246,6 @@ export function GroupsScreen() {
                     text: l`Clear filters`,
                     onPress: () => {
                       navigation.setParams(groupParams(DEFAULT_GROUP_FILTERS, DEFAULT_GROUP_FILTERS) as never)
-                      void setSortDefault(DEFAULT_GROUP_FILTERS.sort)
                       void setShowSettled(false)
                       void setShowHidden(false)
                     },
@@ -357,10 +367,9 @@ export function GroupsScreen() {
         filters={filters}
         currencies={currencies}
         onFiltersApplied={f => {
-          navigation.setParams(groupParams(f, DEFAULT_GROUP_FILTERS, {sort: sortDefault, showSettled, showHidden}) as never)
+          navigation.setParams(groupParams(f, DEFAULT_GROUP_FILTERS, {showSettled, showHidden}) as never)
           if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
           if (f.showSettled !== showSettled) void setShowSettled(f.showSettled)
-          if (f.sort !== sortDefault) void setSortDefault(f.sort)
         }}
       />
     </TabScreen>

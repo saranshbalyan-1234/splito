@@ -8,7 +8,6 @@ import {type BottomTabBarProps} from '@react-navigation/bottom-tabs'
 import {StackActions} from '@react-navigation/native'
 
 import {PressableScale} from '#/motion/PressableScale'
-import {useDedupe} from '#/lib/hooks/useDedupe'
 import {useMinimalShellFooterTransform} from '#/lib/hooks/useMinimalShellTransform'
 import {useNavigationTabState} from '#/lib/hooks/useNavigationTabState'
 import {clamp} from '#/lib/numbers'
@@ -21,7 +20,6 @@ import {
   describeUnread,
   useActivityBadge,
 } from '#/components/activity/useActivityFeed'
-import {useSearchAsk} from '#/components/SearchAsk/context'
 import {MAX_LABELLED_TABS, NAV_LABELS, TabGlyph, TabLabel} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
@@ -30,7 +28,7 @@ import {styles} from './BottomBarStyles'
 /*
  * Bluesky's signed-in native bottom bar with the items the `tabs` preference
  * picks from the shared nav list (Settings > Navigation), in its order.
- * Settings opens its page; Ask Splito opens the Search & Ask drawer. There is
+ * There is
  * no centre button: Add expense is the FAB, as Bluesky's compose action is.
  */
 export function BottomBar({navigation}: BottomTabBarProps) {
@@ -41,19 +39,17 @@ export function BottomBar({navigation}: BottomTabBarProps) {
   const {footerHeight} = useShellLayout()
   const tabState = useNavigationTabState()
   const tabs = useTabs()
-  const dedupe = useDedupe()
   const footerMinimalShellTransform = useMinimalShellFooterTransform()
   const iconWidth = 28
   const hasLabels = tabs.length <= MAX_LABELLED_TABS
   const activityBadge = useActivityBadge()
-  const searchAsk = useSearchAsk()
 
   const isAt: Record<SidebarTab, boolean> = {
-    Home: tabState.isAtHome,
     People: tabState.isAtPeople,
     Groups: tabState.isAtGroups,
     Analytics: tabState.isAtAnalytics,
     Activity: tabState.isAtActivity,
+    Settings: tabState.isAtSettings,
   }
 
   const onPressTab = useCallback(
@@ -105,9 +101,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
             icon={
               <TabGlyph
                 tab={tab}
-                isActive={
-                  tab !== 'ask' && tab !== 'settings' && isAt[TAB_ROUTE[tab]]
-                }
+                isActive={isAt[TAB_ROUTE[tab]]}
                 size={iconWidth}
               />
             }
@@ -115,18 +109,11 @@ export function BottomBar({navigation}: BottomTabBarProps) {
               hasLabels ? (
                 <TabLabel
                   label={_(NAV_LABELS[tab])}
-                  isActive={tab !== 'ask' && tab !== 'settings' && isAt[TAB_ROUTE[tab]]}
+                  isActive={isAt[TAB_ROUTE[tab]]}
                 />
               ) : undefined
             }
-            onPress={() => {
-              if (tab === 'settings') {
-                ax.metric('nav:click', {item: tab, surface: 'bottomBar'})
-                dedupe(() => navigation.navigate('Settings'))
-              } else if (tab === 'ask') {
-                searchAsk.open({mode: 'ask'})
-              } else onPressTab(TAB_ROUTE[tab])
-            }}
+            onPress={() => onPressTab(TAB_ROUTE[tab])}
             /* Bluesky's unread badge, on the tab its Notifications became. */
             notificationCount={tab === 'activity' ? activityBadge : undefined}
             accessibilityRole="tab"

@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDrawer} from './nav'
+
 const LAPTOP = {width: 1280, height: 800}
 const PHONE = {width: 390, height: 844}
 
@@ -17,7 +19,7 @@ function background(page: Page, testID: string) {
     .evaluate(el => getComputedStyle(el).backgroundColor)
 }
 
-test('the Settings list has a page for every preference group, plus About', async ({
+test('the Settings list has a page for every preference group, plus Support and Your data', async ({
   page,
 }) => {
   await open(page, '/settings', 'screen-settings')
@@ -29,7 +31,8 @@ test('the Settings list has a page for every preference group, plus About', asyn
     'regional',
     'notifications',
     'privacy',
-    'about',
+    'support',
+    'data',
   ]) {
     await expect(page.getByTestId(`settings-${id}`)).toBeVisible()
   }
@@ -86,7 +89,7 @@ test('hiding Groups removes it from the phone bar only; the drawer and the sideb
   await expect(page.getByTestId('tab-home')).toBeVisible()
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
   // The avatar's drawer still lists every item and reaches Settings.
-  await page.getByTestId('screen-home').getByTestId('header-avatar').click()
+  await openDrawer(page)
   await expect(page.getByTestId('drawer-groups')).toBeVisible()
   await page.getByTestId('drawer-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
@@ -148,20 +151,21 @@ for (const width of [1440, 860]) {
   })
 }
 
-test('Settings can join the phone bar, with arrows to reorder and Reset', async ({
+test('Settings is on the phone bar by default (owner 206); it can go off and Reset brings it back, with arrows to reorder', async ({
   page,
 }) => {
   await page.setViewportSize(LAPTOP)
   await open(page, '/settings/navigation', 'screen-settings-section')
+  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute('aria-checked', 'true')
   const top = async (tab: string) =>
     (await page.getByTestId(`tabs-toggle-${tab}`).boundingBox())!.y
-  expect(await top('home')).toBeLessThan(await top('people'))
   expect(await top('people')).toBeLessThan(await top('groups'))
+  // Nothing is fixed first now: the first row's Up is disabled, the next one can move above it.
+  await expect(page.getByTestId('tabs-up-people')).toBeDisabled()
   await page.getByTestId('tabs-up-analytics').click()
   await expect
     .poll(async () => (await top('analytics')) < (await top('groups')))
     .toBe(true)
-  // Home stays first: nothing moves above it, so the row under it can go no higher.
   await page.getByTestId('tabs-up-analytics').click()
   await expect
     .poll(async () => (await top('analytics')) < (await top('people')))
@@ -178,21 +182,11 @@ test('Settings can join the phone bar, with arrows to reorder and Reset', async 
         .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid'))),
     )
-    .toEqual([
-      'tab-home',
-      'tab-analytics',
-      'tab-people',
-      'tab-groups',
-      'tab-activity',
-      'tab-settings',
-    ])
+    .toEqual(['tab-analytics', 'tab-people', 'tab-groups', 'tab-activity'])
 
   await page.setViewportSize(LAPTOP)
   await page.getByTestId('reset-tabs').click()
-  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute(
-    'aria-checked',
-    'false',
-  )
+  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute('aria-checked', 'true')
   await expect
     .poll(async () => (await top('groups')) < (await top('analytics')))
     .toBe(true)
@@ -268,7 +262,7 @@ test('Reset restores one default, and Reset all restores every default', async (
     'aria-checked',
     'true',
   )
-  await open(page, '/settings', 'screen-settings')
+  await open(page, '/settings/data', 'screen-settings-section')
   await page.getByTestId('settings-reset-all').click()
   await page.getByTestId('confirmBtn').click()
   await expect(page.locator('html')).toHaveClass(/theme--light/)

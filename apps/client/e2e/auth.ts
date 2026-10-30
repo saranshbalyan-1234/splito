@@ -69,10 +69,10 @@ export const signedInShown = (page: Page) => expect(page.getByTestId('screen-hom
 
 export const hooks = (page: Page) => page.evaluate(() => Object.keys((window as unknown as Hooks).__splitoTest ?? {}))
 
-/** Settings > Log out, confirmed: everything the account left on the device is erased, then the logged-out flow shows (owner 186). */
-export const logOutFromSettings = async (page: Page) => {
-  await page.goto('/settings')
-  await page.getByTestId('settings-log-out').click()
+/** Profile > Log out, confirmed: everything the account left on the device is erased, then the logged-out flow shows (owners 186, 202). */
+export const logOutFromProfile = async (page: Page) => {
+  await page.goto('/profile')
+  await page.getByTestId('profile-log-out').click()
   await page.getByTestId('logout-confirm').click()
   await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 30_000})
 }

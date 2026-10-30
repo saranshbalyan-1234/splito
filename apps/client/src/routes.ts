@@ -8,13 +8,12 @@ import {type FlatNavigatorParams} from './lib/routes/types'
  * paths they would otherwise match.
  */
 export const ROUTE_PATHS = {
-  Home: '/',
   People: '/people',
   Groups: '/groups',
   Analytics: '/analytics',
   Activity: '/activity',
-  Profile: '/profile',
   Settings: '/settings',
+  Profile: '/profile',
   Welcome: '/welcome/:step',
   FriendsAndInvites: '/settings/friends',
   Search: '/search',
@@ -39,16 +38,20 @@ export type RouteName = keyof typeof ROUTE_PATHS
 /**
  * Old paths that redirect, so the URL changes too: the feed was briefly
  * Notifications, and Recently deleted is gone (deleted items stay in their lists, decision 103): its link opens
- * Settings with a note under Data. Both linking configs read paths through this.
+ * Your data with a note. Both linking configs read paths through this.
  */
 export function redirectOldPath(path: string) {
   /* Before F-256 the Friends list was Home: its list state (`/?sort=name&show=owesYou`) and Filters sheet (`/filters`) belong to People now. */
   const rootQuery = path.match(/^\/?\?(.*)$/)
+  /* Home is gone (owner 198): its Overview is the top of Analytics. */
+  if (rootQuery && /(^|&)overview=/.test(rootQuery[1]!)) return `/analytics?${rootQuery[1]}`
   if (rootQuery && /(^|&)(show|sort|currency|groups|settled|hidden)=/.test(rootQuery[1]!)) return `/people?${rootQuery[1]}`
   return path
     .replace(/^\/?filters(?=[/?#]|$)/, '/people/filters')
     .replace(/^\/?notifications(?=[/?#]|$)/, '/activity')
-    .replace(/^\/?settings\/recently-deleted(?=[/?#]|$)/, '/settings?note=deleted-stay')
+    .replace(/^\/?settings\/recently-deleted(?=[/?#]|$)/, '/settings/data?note=deleted-stay')
+    /* Export and Import moved under Your data (owner 205). */
+    .replace(/^\/?settings\/(export|import)(?=[/?#]|$)/, '/settings/data/$1')
 }
 
 export const router = new Router<Omit<FlatNavigatorParams, 'Sheet'>>(ROUTE_PATHS)

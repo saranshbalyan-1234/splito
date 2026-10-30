@@ -1,4 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/JoinRequest.tsx (preview card, Wrapper, broken-link state)
+import {startPage} from '#/lib/routes/startTab'
 import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import Animated, {FadeIn} from 'react-native-reanimated'
@@ -232,7 +233,7 @@ function Preview({code, preview}: {code: string; preview: InvitePreview}) {
               disabled={isSaving}
               onPress={() => {
                 Toast.show(l`Invite declined`)
-                navigation.navigate('Home')
+                navigation.navigate(startPage() as never)
               }}>
               <ButtonText>
                 <Trans>Decline</Trans>

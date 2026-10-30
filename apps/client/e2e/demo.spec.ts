@@ -185,9 +185,10 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
   await expect(page.getByTestId('profile-analytics')).toHaveCount(0)
   await expect(page.getByText('Coming with sync')).toHaveCount(0)
   await expect(page.getByTestId('profile-sync-note')).toBeVisible()
-  await expect(page.getByTestId('profile-about')).toBeVisible()
-  await page.getByTestId('profile-settings').click()
-  await expect(page.getByTestId('screen-settings')).toBeVisible()
+  /* Profile holds only the person and Log out (owners 202, 203): no Settings or About rows. */
+  await expect(page.getByTestId('profile-log-out')).toBeVisible()
+  await expect(page.getByTestId('profile-settings')).toHaveCount(0)
+  await expect(page.getByTestId('profile-about')).toHaveCount(0)
 })
 
 test('Home: the Overview counts friends; People: the Friends list has its own search beside Filters', async ({

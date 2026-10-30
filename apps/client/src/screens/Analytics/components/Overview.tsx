@@ -11,7 +11,6 @@ import {
   ZERO,
 } from '@splito/domain'
 
-import {Link} from '#/view/com/util/Link'
 import {atoms as a, useAlf, useBreakpoints, useTheme} from '#/alf'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import * as Skeleton from '#/components/Skeleton'
@@ -20,9 +19,8 @@ import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
 import {usePressScale} from '#/motion/PressableScale'
 import {amountSize, overviewColumns} from '../overviewGrid'
-import {analyticsHref, OVERVIEW_SCOPES} from '../overviewScope'
+import {OVERVIEW_SCOPES} from '../overviewScope'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
-import {SectionLink} from '#/components/SectionLink'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
@@ -35,10 +33,11 @@ const ARROW_ROOM = 28
 const LEFT_ROOM = 124
 
 /**
- * The Overview at the top of Home, the only page that has one (owner 153): one separate compact card per
- * currency (own border, radius and padding) in a balanced grid whose column count comes from the measured width
- * (ARCHITECTURE 26.12, owners 113/114, 156-161), the counts as plain text under the grid, and Analytics on the
- * heading's right. Currencies are never added together. Each card opens Analytics in its currency.
+ * The Overview, the first section of Analytics (owner 198), labelled as balances right now: it ignores the period
+ * and currency filters below it. One separate compact card per currency (own border, radius and padding) in a
+ * balanced grid whose column count comes from the measured width (ARCHITECTURE 26.12, owners 113/114, 156-161),
+ * the counts as plain text under the grid. Currencies are never added together. A card opens the rest of Analytics
+ * in its currency (`onCurrencyPress`).
  */
 export function Overview({
   totals,
@@ -46,9 +45,10 @@ export function Overview({
   counts,
   scope,
   onScopeChange,
+  onCurrencyPress,
   captions = {},
-  testID = 'home-overview',
-  titleTestID = 'home-overview-title',
+  testID = 'analytics-overview',
+  titleTestID = 'analytics-overview-title',
 }: {
   totals: CurrencyTotal[]
   locale: string
@@ -57,6 +57,8 @@ export function Overview({
   /** Which balances the cards count (owner 176); it never changes the sections below. */
   scope: SummaryScope
   onScopeChange: (scope: SummaryScope) => void
+  /** A card was pressed: Analytics below narrows to this currency. */
+  onCurrencyPress: (currency: string) => void
   /** Per currency, who the card's figure comes from ("5 friends"). */
   captions?: Record<string, string>
   testID?: string
@@ -73,13 +75,8 @@ export function Overview({
     <View testID={testID}>
       <SectionHeader
         testID={titleTestID}
-        title={l`Overview`}
-        action={
-          <View style={[a.flex_row, a.align_center, a.gap_xs]}>
-            <ScopeChips scope={scope} onChange={onScopeChange} />
-            <AnalyticsLink scope={scope} />
-          </View>
-        }
+        title={l`Balances right now`}
+        action={<ScopeChips scope={scope} onChange={onScopeChange} />}
       />
       <View style={[a.px_lg, a.pb_sm, a.gap_sm]}>
         <View
@@ -112,7 +109,7 @@ export function Overview({
                 total={total}
                 locale={locale}
                 caption={captions[total.currency]}
-                scope={scope}
+                onPress={() => onCurrencyPress(total.currency)}
                 width={cardWidth}
               />
             ))
@@ -129,7 +126,7 @@ export function Overview({
   )
 }
 
-/** All / Groups / Direct (owner 176): small chips beside "Analytics ›"; one is always on. */
+/** All / Groups / Direct (owner 176): small chips on the heading's right; one is always on. */
 function ScopeChips({scope, onChange}: {scope: SummaryScope; onChange: (scope: SummaryScope) => void}) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -165,32 +162,22 @@ function ScopeChips({scope, onChange}: {scope: SummaryScope; onChange: (scope: S
   )
 }
 
-/** "Analytics ›" on the Overview heading, carrying the Overview's scope. */
-function AnalyticsLink({scope}: {scope: SummaryScope}) {
-  const {t: l} = useLingui()
-  return (
-    <SectionLink testID="overview-analytics" href={analyticsHref(scope)} label={l`Open Analytics`}>
-      <Trans>Analytics</Trans>
-    </SectionLink>
-  )
-}
-
 /**
  * One currency (owners 156-161): line 1 is the label and the currency chip on the left and the NET on the right,
  * large, with its arrow (the only coloured figure); when both directions are open, "Owed to you" and "You owe"
  * follow on the left, small, in the normal text colours; the count line ends the card. About 64-96 px tall.
  */
-function SummaryCard({
+export function SummaryCard({
   total,
   locale,
   caption,
-  scope,
+  onPress,
   width,
 }: {
   total: CurrencyTotal
   locale: string
   caption: string | undefined
-  scope: SummaryScope
+  onPress: () => void
   /** Px, from the grid's measured width; undefined until measured (one full-width column). */
   width: number | undefined
 }) {
@@ -223,17 +210,15 @@ function SummaryCard({
         t.atoms.border_contrast_low,
         press.style,
       ]}>
-      <Link
+      <Pressable
         testID={`summary-${currency}`}
+        accessibilityRole="button"
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
-        href={analyticsHref(scope, currency)}
-        asAnchor
-        anchorNoUnderline
-        accessibilityLabel={l`${getCurrency(currency).name} balance - open analytics`}
+        onPress={onPress}
+        accessibilityLabel={l`${getCurrency(currency).name} balance - show in analytics`}
         accessibilityHint=""
-        hoverStyle={t.atoms.bg_contrast_25}
-        style={[a.flex_1, a.px_md, {paddingVertical: 10}, a.transition_color]}>
+        style={({hovered}: {hovered?: boolean}) => [a.flex_1, a.px_md, {paddingVertical: 10}, a.transition_color, hovered && t.atoms.bg_contrast_25]}>
         <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
           <View style={[a.flex_row, a.align_center, a.gap_sm, a.flex_shrink_0]}>
             <Text
@@ -306,7 +291,7 @@ function SummaryCard({
         <Text testID={`summary-${currency}-caption`} style={[subStyle, a.pt_2xs]}>
           {caption ?? '\u00a0'}
         </Text>
-      </Link>
+      </Pressable>
     </Animated.View>
   )
 }
@@ -317,7 +302,7 @@ export function OverviewPlaceholder() {
   const {t: l} = useLingui()
   return (
     <View>
-      <SectionHeader title={l`Overview`} />
+      <SectionHeader title={l`Balances right now`} />
       <View style={[a.px_lg, a.pb_md]}>
         <View
           style={[

@@ -30,6 +30,7 @@ import {
   ExpenseRowPlaceholder,
 } from '#/screens/Analytics/components/ExpenseRow'
 import {FilterBar} from '#/screens/Analytics/components/FilterBar'
+import {OverviewSection} from '#/screens/Analytics/components/OverviewSection'
 import {
   Summary,
   SummaryPlaceholder,
@@ -129,6 +130,8 @@ export function AnalyticsScreen() {
             )}
             ListHeaderComponent={
               <>
+                {/* Balances right now come first (owner 198), above the filter row they ignore. */}
+                <OverviewSection />
                 <FilterBar
                   report={report}
                   isTable={isTable}

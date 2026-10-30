@@ -2,6 +2,7 @@ import {expect, type Page, test} from '@playwright/test'
 
 import {DEMO_LARGE_PREFIX, generateLargeDemo, localToday} from '@splito/sync/demoLarge'
 
+import {openDrawer} from './nav'
 import {openDemo as enterDemo} from './openDemo'
 
 /* Changes by other people in the demo history, from the same deterministic plan the app seeded. */
@@ -313,13 +314,13 @@ test.describe('header rule set', () => {
   })
 })
 
-test.describe('drawer: Bluesky drawer from the header avatar', () => {
+test.describe('drawer: Bluesky drawer, opened by a swipe from the left edge (owner 201)', () => {
   test('slides in from the left with the account card, the rows and the footer', async ({
     page,
   }) => {
     await page.setViewportSize(PHONE)
     await openDemo(page)
-    await on(page, 'screen-home', 'header-avatar').click()
+    await openDrawer(page)
     const drawer = page.getByTestId('drawer')
     await expect(drawer).toBeVisible()
     await expect.poll(async () => (await drawer.boundingBox())!.x).toBe(0)
@@ -333,15 +334,12 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
     expect(rows).toEqual([
       'drawer-profile',
-      // The default bar's items first, then the rest (26.3).
-      'drawer-home',
+      // The default bar's items first, then the rest (26.3); no Home, no Ask Splito, no Log out (owners 198, 200, 202).
       'drawer-people',
       'drawer-groups',
       'drawer-analytics',
       'drawer-activity',
-      'drawer-ask',
       'drawer-settings',
-      'drawer-log-out',
     ])
     // The footer links are the sidebar's component (26.3).
     await expect(drawer.getByTestId('nav-footer-links')).toContainText(
@@ -366,7 +364,7 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       'title',
       'On this device only',
     )
-    await avatar.click()
+    await openDrawer(page)
     const drawer = page.getByTestId('drawer')
     await expect(drawer.getByTestId('sync-dot-local')).toBeVisible()
     // Tapping the dot opens Settings.
@@ -378,8 +376,7 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
   test('the scrim closes it; rows navigate and close it', async ({page}) => {
     await page.setViewportSize(PHONE)
     await open(page, '/', 'screen-home')
-    await on(page, 'screen-home', 'header-avatar').click()
-    await expect(page.getByTestId('drawer')).toBeVisible()
+    await openDrawer(page)
     await page.mouse.click(PHONE.width - 10, PHONE.height / 2)
     await expect(page.getByTestId('drawer')).toHaveCount(0)
 
@@ -391,7 +388,7 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       ['nav-footer-about', 'screen-settings-section', /\/settings\/about$/],
     ] as const) {
       await open(page, '/analytics', 'screen-analytics')
-      await on(page, 'screen-analytics', 'header-avatar').click()
+      await openDrawer(page)
       await page.getByTestId(row).click()
       await expect(page).toHaveURL(url)
       await expect(page.getByTestId(screen)).toBeVisible()
@@ -601,12 +598,12 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await expect(page.getByTestId('tab-groups')).toBeVisible()
     await expect(page.getByTestId('tab-groups')).not.toContainText('Groups')
     await expect(page.getByTestId('sidebar-add')).toBeVisible()
-    // Bluesky's minimal mode: the mark, icons, the round pill; the header avatar opens the drawer.
+    // Bluesky's minimal mode: the mark, icons, the round pill; the header avatar opens Profile (owner 201).
     await expect(page.getByTestId('logo')).toBeVisible()
     await expect(page.getByTestId('logo-wordmark')).toHaveCount(0)
     await expect(on(page, 'screen-home', 'header-avatar')).toHaveAttribute(
       'aria-label',
-      /^Open menu\. /,
+      /^Open profile\. /,
     )
     await expect(page.getByTestId('sidebar-recent-groups')).toHaveCount(0)
     await expect(page.getByTestId('sidebar-footer')).toHaveCount(0)
@@ -772,7 +769,7 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     expect(Math.abs(logo.x + logo.width / 2 - PHONE.width / 2)).toBeLessThan(1)
   })
 
-  test('tabs navigate; Profile and Settings open from the drawer', async ({
+  test('tabs navigate; the avatar opens Profile and Settings is a tab (owners 201, 206)', async ({
     page,
   }) => {
     await page.setViewportSize(PHONE)
@@ -784,9 +781,8 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     await page.getByTestId('tab-analytics').click()
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
     await on(page, 'screen-analytics', 'header-avatar').click()
-    await page.getByTestId('drawer-profile').click()
     await expect(page.getByTestId('screen-profile')).toBeVisible()
-    await page.getByTestId('profile-settings').click()
+    await page.getByTestId('tab-settings').click()
     await expect(page.getByTestId('screen-settings')).toBeVisible()
   })
 })
@@ -807,7 +803,7 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
     .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
   expect(order).toEqual(['tab-home', 'tab-groups'])
   // Hiding tabs never strands anything: the drawer still reaches every page.
-  await on(page, 'screen-home', 'header-avatar').click()
+  await openDrawer(page)
   await page.getByTestId('drawer-analytics').click()
   await expect(page.getByTestId('screen-analytics')).toBeVisible()
 

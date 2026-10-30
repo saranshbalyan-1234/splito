@@ -197,10 +197,8 @@ function HomeTabPref() {
   const {t: l} = useLingui()
   const labels = useTabLabels()
   const [tabs = PREFS.tabs.default] = usePref('tabs')
-  /* Only a bar item with a page of its own can be where Splito opens. */
-  const destinations = tabs.filter(
-    (tab): tab is TabId => tab !== 'ask' && tab !== 'settings',
-  )
+  /* Only a bar item that holds the user's data can be where Splito opens (Settings is a tab but not a start). */
+  const destinations = tabs.filter((tab): tab is TabId => tab !== 'settings')
   return (
     <RadioPref
       pref={usePrefControl('startTab')}
@@ -587,7 +585,7 @@ export const PREF_CONTROLS = {
   'home.overviewScope': null,
   'people.showSettled': null,
   'groups.showSettled': null,
-  'groups.sort': null,
+  groupsSort: null,
   // Saved by tapping Activity's tabs and applying its Filters, where their effect shows; Reset all resets them.
   'activity.tab': null,
   'activity.type': null,

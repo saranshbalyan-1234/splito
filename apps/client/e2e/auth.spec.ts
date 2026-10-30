@@ -1,6 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {continueWith, createAccount, databases, DEV, devCode, logOutFromSettings, signedInShown, signInWithPassword, toContinue} from './auth'
+import {continueWith, createAccount, databases, DEV, devCode, logOutFromProfile, signedInShown, signInWithPassword, toContinue} from './auth'
 import {signedOut} from './signedOut'
 
 /*
@@ -172,7 +172,7 @@ test.describe('an existing account', () => {
     await page.getByTestId('credential-code').fill(await devCode(page))
     await page.getByTestId('credential-next').click()
     await signedInShown(page)
-    await logOutFromSettings(page)
+    await logOutFromProfile(page)
     await continueWith(page, DEV.email)
     await expect(page.getByTestId('method-code')).toHaveAttribute('aria-checked', 'true')
     // The other is a tap away.
@@ -272,7 +272,7 @@ test.describe('a new account', () => {
     await page.getByTestId('newPasswordInput').fill('longpassword2')
     await page.getByTestId('setNewPassword-next').click()
     await signedInShown(page)
-    await logOutFromSettings(page)
+    await logOutFromProfile(page)
     // It exists now, by either contact.
     await signInWithPassword(page, 'two@example.com', 'longpassword2')
     await signedInShown(page)
@@ -368,8 +368,8 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     test.setTimeout(90_000)
     await page.evaluate(() => (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest.demoMode(true))
     await expect.poll(() => databases(page), {timeout: 30_000}).toContain('splito-demo-dev')
-    await page.goto('/settings')
-    await page.getByTestId('settings-log-out').click()
+    await page.goto('/profile')
+    await page.getByTestId('profile-log-out').click()
     const dialog = page.getByRole('dialog').filter({hasText: 'Log out?'})
     await expect(dialog).toContainText('This removes all your Splito data from this device')
     // The warning comes first, with the count (the person just written has not synced).
@@ -390,7 +390,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     expect(await databases(page)).not.toContain('splito-demo-dev')
   })
 
-  /** Signed in on a phone with a friend written, the browser then refusing to delete any database (another tab holds it, say), and the log out confirmed from the drawer. */
+  /** Signed in on a phone with a friend written, the browser then refusing to delete any database (another tab holds it, say), and the log out confirmed from Profile. */
   async function failedLogOut(page: Page) {
     await page.setViewportSize(PHONE)
     await toContinue(page)
@@ -408,7 +408,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
       }
     })
     await page.getByTestId('header-avatar').first().click()
-    await page.getByTestId('drawer-log-out').click()
+    await page.getByTestId('profile-log-out').click()
     await page.getByTestId('logout-confirm').click()
     await expect(page.getByTestId('logout-failed')).toBeVisible({timeout: 30_000})
     // Half done is never shown as done: still not the logged-out flow, and the session is still there.
@@ -437,12 +437,18 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     expect((await databases(page)).filter(n => n!.startsWith('splito-'))).toEqual([])
   })
 
-  test('the drawer footer has Log out too', async ({page}) => {
+  test('Log out is the last row of Profile and is in neither the drawer footer nor the Settings list (owner 202)', async ({page}) => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
     await page.goto('/?drawer=menu')
-    await page.getByTestId('drawer-log-out').click()
+    await expect(page.getByTestId('drawer')).toBeVisible()
+    await expect(page.getByTestId('drawer-log-out')).toHaveCount(0)
+    await page.goto('/settings')
+    await expect(page.getByTestId('settings-log-out')).toHaveCount(0)
+    await page.goto('/profile')
+    await expect(page.getByTestId('profile-log-out')).toBeVisible()
+    await page.getByTestId('profile-log-out').click()
     await expect(page.getByRole('dialog').filter({hasText: 'Log out?'})).toBeVisible()
     await page.getByTestId('logout-confirm').click()
     await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 30_000})
@@ -457,7 +463,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Only Dev')).toBeVisible()
     const devMe = await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)
-    await logOutFromSettings(page)
+    await logOutFromProfile(page)
 
     await createAccount(page, NEW)
     await signedInShown(page)
@@ -469,7 +475,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Only Riya')).toBeVisible()
     expect((await databases(page)).filter(n => n!.startsWith('splito-acct-'))).toHaveLength(1)
-    await logOutFromSettings(page)
+    await logOutFromProfile(page)
 
     await signInWithPassword(page, DEV.email, DEV.password)
     await signedInShown(page)
@@ -522,7 +528,7 @@ test.describe('data from before accounts', () => {
     await expect(offer).toHaveCount(0)
     expect(await databases(page)).toContain('splito')
     // Settings > Data still offers it while the old database exists, and Move then removes the row.
-    await page.goto('/settings')
+    await page.goto('/settings/data')
     await page.getByTestId('settings-move-legacy').click()
     await expect(offer).toBeVisible()
     await page.getByTestId('legacy-move').click()
@@ -561,7 +567,7 @@ test.describe('tabs, languages and codes', () => {
     await page.waitForFunction(() => 'splito' in window)
     await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('language', 'hi'))
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
-    await logOutFromSettings(page)
+    await logOutFromProfile(page)
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
     await page.reload()
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi')

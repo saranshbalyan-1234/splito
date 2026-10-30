@@ -314,7 +314,7 @@ for (const {name, width, height} of [
       await page.goto('/search?q=camp')
       await expect(page.getByTestId(`search-deleted-${camp}`)).toContainText('Deleted')
       await page.goto('/settings/recently-deleted')
-      await expect(page).toHaveURL(/\/settings(\?|$)/)
+      await expect(page).toHaveURL(/\/settings\/data(\?|$)/)
       await expect(page.getByTestId('settings-deleted-note')).toContainText('Deleted items now stay in their lists')
       await expect(page.getByTestId('settings-recently-deleted')).toHaveCount(0)
     })

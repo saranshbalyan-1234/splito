@@ -3,7 +3,7 @@ import {type JSX, memo} from 'react'
 import {ScrollView, TouchableOpacity, View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {useLingui as useLinguiCore} from '@lingui/react'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 import {
   StackActions,
   useNavigation,
@@ -14,23 +14,22 @@ import {type NavItemId} from '@splito/sync'
 import {NAV_ITEM_ROUTE, splitNavigationItems} from '#/lib/routes/navigationItems'
 import {useTabs} from '#/lib/routes/tabs'
 import {getCurrentRoute} from '#/lib/routes/helpers'
+import {startPage} from '#/lib/routes/startTab'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useSetDrawerOpen} from '#/state/shell'
 import {useMe} from '#/data/hooks'
-import {requestLogOut} from '#/features/account/LogOutPrompt'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, tokens, useTheme, web} from '#/alf'
 import {
   describeUnread,
   useActivityBadge,
 } from '#/components/activity/useActivityFeed'
-import {Button, ButtonText} from '#/components/Button'
+import {Button} from '#/components/Button'
 import {Deferred} from '#/components/Deferred'
 import {Divider} from '#/components/Divider'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
 import {SyncStatusDot, useSyncLabel} from '#/components/SyncStatusDot'
-import {useSearchAsk} from '#/components/SearchAsk/context'
 import {GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
@@ -97,7 +96,7 @@ DrawerProfileCard = memo(DrawerProfileCard)
  * Bluesky's drawer, opened from the header avatar on phone and rail. Its rows
  * are the one shared list the desktop sidebar renders (ARCHITECTURE 26.3,
  * 26.7), every item in the Settings > Navigation order (on first, then off):
- * Home, Groups, Analytics, Ask Splito, Activity (with Bluesky's unread
+ * People, Groups, Analytics, Activity (with Bluesky's unread
  * count), Settings by default; then the shared footer links and Sign in.
  */
 function DrawerContentInner(): React.ReactNode {
@@ -106,9 +105,8 @@ function DrawerContentInner(): React.ReactNode {
   const insets = useSafeAreaInsets()
   const setDrawerOpen = useSetDrawerOpen()
   const navigation = useNavigation<NavigationProp>()
-  const searchAsk = useSearchAsk()
   const currentRouteName = useNavigationState(state =>
-    state ? getCurrentRoute(state).name : 'Home',
+    state ? getCurrentRoute(state).name : startPage(),
   )
   const unreadCount = useActivityBadge()
   /* Same order as the sidebar and bottom bar: what is on, then the rest (26.3). */
@@ -117,21 +115,15 @@ function DrawerContentInner(): React.ReactNode {
   const onPressItem = (id: NavItemId) => {
     setDrawerOpen(false)
     const route = NAV_ITEM_ROUTE[id]
-    if (!route) {
-      searchAsk.open({mode: 'ask'})
-    } else if (route === 'Settings') {
-      navigation.navigate('Settings')
-    } else {
-      /*
-       * A tab goes back to its page if it's already in the stack, as
-       * Bluesky's drawer pops to the tab root. Native nests the tabs in `Tabs`.
-       */
-      navigation.dispatch(
-        IS_WEB
-          ? StackActions.popTo(route)
-          : StackActions.popTo('Tabs', {screen: route}),
-      )
-    }
+    /*
+     * A tab goes back to its page if it's already in the stack, as
+     * Bluesky's drawer pops to the tab root. Native nests the tabs in `Tabs`.
+     */
+    navigation.dispatch(
+      IS_WEB
+        ? StackActions.popTo(route)
+        : StackActions.popTo('Tabs', {screen: route}),
+    )
   }
 
   const isAt = (id: NavItemId) =>
@@ -194,10 +186,9 @@ function DrawerContentInner(): React.ReactNode {
 const DrawerContent = memo(DrawerContentInner)
 export {DrawerContent}
 
-/* The shared footer links (the sidebar shows the same), then Log out (sign-in is required, so there is no Sign in here). */
+/* The shared footer links (the sidebar shows the same); Log out is on Profile (owner 202). */
 let DrawerFooter = ({onBeforeNavigate}: {onBeforeNavigate: () => void}): React.ReactNode => {
   const t = useTheme()
-  const {t: l} = useLingui()
   const insets = useSafeAreaInsets()
   return (
     <View
@@ -214,21 +205,6 @@ let DrawerFooter = ({onBeforeNavigate}: {onBeforeNavigate: () => void}): React.R
           ),
         },
       ]}>
-      <Button
-        testID="drawer-log-out"
-        label={l`Log out`}
-        size="small"
-        variant="solid"
-        color="secondary"
-        style={[a.self_start]}
-        onPress={() => {
-          onBeforeNavigate()
-          requestLogOut()
-        }}>
-        <ButtonText>
-          <Trans>Log out</Trans>
-        </ButtonText>
-      </Button>
       <NavFooterLinks onBeforeNavigate={onBeforeNavigate} />
     </View>
   )

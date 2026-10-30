@@ -4,15 +4,15 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {type Entity, type Group, isGroupInactive, isRemovedFriend, type Person} from '@splito/sync'
 
 import {useCount, useEntities, useMe} from '#/data/hooks'
+import {requestLogOut} from '#/features/account/LogOutPrompt'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
-import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
+import {SignOut_Stroke2_Corner0_Rounded as SignOutIcon} from '#/components/icons/Auth'
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
-import {SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon} from '#/components/icons/Settings'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import * as Layout from '#/components/Layout'
 import {EditFriendDialog} from '#/components/people/EditFriendDialog'
@@ -22,8 +22,8 @@ import {Shimmer} from '#/motion/Shimmer'
 
 /*
  * Bluesky's Settings index, as Splito's Profile page (opened from the
- * drawer): the account block, what I have in Splito, then Settings and
- * About. Account switching, moderation, sign-out and developer options are
+ * avatar, owner 201): the account block, what I have in Splito, then Log out
+ * (owners 202, 203: Profile holds only the person). Account switching, moderation and developer options are
  * removed; sign-in arrives with sync, and a note says so.
  */
 export function ProfileScreen() {
@@ -58,24 +58,6 @@ export function ProfileScreen() {
           </View>
           {me ? <ProfileStats /> : null}
           <SettingsList.Divider />
-          <SettingsList.LinkItem
-            testID="profile-settings"
-            to="/settings"
-            label={l`Settings`}>
-            <SettingsList.ItemIcon icon={SettingsIcon} />
-            <SettingsList.ItemText>
-              <Trans>Settings</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
-            testID="profile-about"
-            to="/settings/about"
-            label={l`About`}>
-            <SettingsList.ItemIcon icon={InfoIcon} />
-            <SettingsList.ItemText>
-              <Trans>About</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
           {/* Sign-in is not built yet: say so plainly instead of a dead row. */}
           <View
             testID="profile-sync-note"
@@ -98,6 +80,14 @@ export function ProfileScreen() {
               </Trans>
             </Text>
           </View>
+          {/* The last row (owner 202): the same prompt and erase as everywhere (owner 186). */}
+          <SettingsList.Divider style={[a.mt_lg]} />
+          <SettingsList.PressableItem testID="profile-log-out" destructive label={l`Log out`} onPress={requestLogOut}>
+            <SettingsList.ItemIcon icon={SignOutIcon} />
+            <SettingsList.ItemText>
+              <Trans>Log out</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.PressableItem>
         </SettingsList.Container>
       </Layout.Content>
     </Layout.Screen>
@@ -233,7 +223,7 @@ function ProfileStats() {
   const stats = [
     {
       key: 'friends',
-      to: '/',
+      to: '/people',
       label: l`Friends`,
       value: (people ?? []).filter(p => !p.data.isMe && !isRemovedFriend(p.data)).length,
     },

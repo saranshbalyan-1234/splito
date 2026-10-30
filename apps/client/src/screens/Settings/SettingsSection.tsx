@@ -10,7 +10,9 @@ import {useHaptics} from '#/lib/haptics'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useData} from '#/data/StoreProvider'
 import {FeedbackList} from '#/features/feedback/FeedbackList'
+import {DataSettings} from '#/screens/Settings/components/DataSettings'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
+import {SupportSettings} from '#/screens/Settings/components/SupportSettings'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
@@ -36,8 +38,9 @@ import {Text} from '#/components/Typography'
 /**
  * One Settings page. Pages are generated from the preferences registry: the
  * route's section is a registry group, and each preference in it renders its
- * control, in registry order. `/settings/about`, `/help` and `/feedback` are
- * the pages that are not groups; Privacy is a group that also links Friends and
+ * control, in registry order. `/settings/support` and `/settings/data` (owners
+ * 204, 205) hold the help items and the data items; `/settings/about`, `/help` and `/feedback` are
+ * the other pages that are not groups; Privacy is a group that also links Friends and
  * invites. `/settings/motion` and `/settings/lists` (gone in F-251) redirect.
  */
 export function SettingsSectionScreen() {
@@ -46,6 +49,20 @@ export function SettingsSectionScreen() {
     useRoute<RouteProp<AllNavigatorParams, 'SettingsSection'>>().params
   const sections = useSectionInfo()
 
+  if (section === 'support') {
+    return (
+      <Frame title={l`Support`}>
+        <SupportSettings />
+      </Frame>
+    )
+  }
+  if (section === 'data') {
+    return (
+      <Frame title={l`Your data`}>
+        <DataSettings />
+      </Frame>
+    )
+  }
   if (section === 'about') {
     return (
       <Frame title={l`About`}>

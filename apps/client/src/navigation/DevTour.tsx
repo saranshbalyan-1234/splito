@@ -1,4 +1,5 @@
 import {useEffect, useRef} from 'react'
+import {startPage} from '#/lib/routes/startTab'
 import {type Group, isGroupInactive} from '@splito/sync'
 
 import {useEntities} from '#/data/hooks'
@@ -29,7 +30,7 @@ export function DevTour() {
     const go = (name: string, params?: object) => () =>
       (navigationRef.navigate as (n: string, p?: object) => void)(name, params)
     const steps = [
-      go('Tabs', {screen: 'Home'}),
+      go('Tabs', {screen: startPage()}),
       () => setDrawerOpenRef.current(true),
       () => setDrawerOpenRef.current(false),
       go('Tabs', {screen: 'Groups'}),

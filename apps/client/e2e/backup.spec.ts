@@ -28,7 +28,7 @@ async function seed(page: Page) {
 }
 
 async function exportAs(page: Page, format: 'pdf' | 'csv' | 'backup') {
-  await page.goto('/settings')
+  await page.goto('/settings/data')
   await page.getByTestId('settings-export').click()
   await page.getByTestId(`export-format-${format}`).click()
 }
@@ -50,7 +50,7 @@ test('a backup exports from Settings and restores into a fresh device with the s
   const fresh = await browser.newContext({baseURL: info.project.use.baseURL})
   const other = await fresh.newPage()
   await ready(other)
-  await other.goto('/settings')
+  await other.goto('/settings/data')
   await other.getByTestId('settings-import').click()
   const chooser = other.waitForEvent('filechooser')
   await other.getByTestId('sheet-save').click()
@@ -66,7 +66,7 @@ test('a backup exports from Settings and restores into a fresh device with the s
   await expect(row.getByTestId('balance-INR')).toContainText('250.00')
   await expect(row.getByTestId('balance-EUR')).toContainText('5.00')
   // Restoring the same file again changes nothing.
-  await other.goto('/settings')
+  await other.goto('/settings/data')
   await other.getByTestId('settings-import').click()
   const again = other.waitForEvent('filechooser')
   await other.getByTestId('sheet-save').click()
@@ -87,7 +87,7 @@ test('a damaged backup is refused and nothing changes', async ({page}, info) => 
   const bad = info.outputPath('bad.json')
   require('node:fs').writeFileSync(bad, readFileSync(file, 'utf8').replace('"$bigint":"50000"', '"$bigint":"50001"'))
 
-  await page.goto('/settings')
+  await page.goto('/settings/data')
   await page.getByTestId('settings-import').click()
   const chooser = page.waitForEvent('filechooser')
   await page.getByTestId('sheet-save').click()
@@ -145,7 +145,7 @@ test('Replace asks for a copy of this device first, and the toast can undo it', 
   await (await download).saveAs(file)
   // A person that only exists here.
   await page.evaluate(async () => (window as unknown as {splito: Splito}).splito.createPerson('Only Here'))
-  await page.goto('/settings')
+  await page.goto('/settings/data')
   await page.getByTestId('settings-import').click()
   const chooser = page.waitForEvent('filechooser')
   await page.getByTestId('sheet-save').click()
@@ -176,7 +176,7 @@ test('Replace can skip the copy only after a second confirm', async ({page}, inf
   await page.getByTestId('sheet-save').click()
   const file = info.outputPath('skip.json')
   await (await download).saveAs(file)
-  await page.goto('/settings')
+  await page.goto('/settings/data')
   await page.getByTestId('settings-import').click()
   const chooser = page.waitForEvent('filechooser')
   await page.getByTestId('sheet-save').click()

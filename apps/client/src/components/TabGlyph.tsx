@@ -23,28 +23,18 @@ import {
   Users_Stroke2_Corner0_Rounded as Users,
 } from '#/components/icons/Users'
 import {
-  HomeOpen_Filled_Corner0_Rounded as HomeFilled,
-  HomeOpen_Stoke2_Corner0_Rounded as Home,
-} from '#/components/icons/HomeOpen'
-import {
   SettingsGear2_Filled_Corner0_Rounded as SettingsFilled,
   SettingsGear2_Stroke2_Corner0_Rounded as Settings,
 } from '#/components/icons/Settings'
-import {
-  Sparkles_Filled_Corner0_Rounded as SparklesFilled,
-  Sparkles_Stroke2_Corner0_Rounded as Sparkles,
-} from '#/components/icons/Sparkles'
 
 /**
  * Each shared nav item's label (ARCHITECTURE 26.3): the sidebar and drawer
  * show it, the bottom bar reads it out (it has no visible labels).
  */
 export const NAV_LABELS = {
-  home: msg`Home`,
   people: msg`People`,
   groups: msg`Groups`,
   analytics: msg`Analytics`,
-  ask: msg`Ask Splito`,
   activity: msg`Activity`,
   settings: msg`Settings`,
 } satisfies Record<NavItemId, unknown>
@@ -59,16 +49,9 @@ export const GLYPHS: Record<
     style?: object
   }
 > = {
-  home: {
-    icon: Home,
-    filled: HomeFilled,
-    widthAdjust: 1,
-    style: styles.homeIcon,
-  },
   people: {icon: Users, filled: UsersFilled, widthAdjust: 1},
   groups: {icon: Group, filled: GroupFilled, widthAdjust: 1},
   analytics: {icon: ChartPie, filled: ChartPieFilled, widthAdjust: 0},
-  ask: {icon: Sparkles, filled: SparklesFilled, widthAdjust: 0},
   activity: {icon: Activity, filled: ActivityFilled, widthAdjust: 0},
   settings: {icon: Settings, filled: SettingsFilled, widthAdjust: 0},
 }
