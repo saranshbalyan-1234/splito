@@ -17,6 +17,7 @@ import {
 } from '#/lib/hooks/useNavigationDeduped'
 import {IS_WEB} from '#/env'
 import {openExternal} from '#/lib/openExternal'
+import {createPressInGate, isPlainPrimaryPress} from '#/view/com/util/pressIn'
 import {getTabState, tabLink, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'
@@ -48,6 +49,8 @@ interface Props extends React.ComponentProps<typeof TouchableOpacity> {
    * release that follows is then ignored. Only for idempotent navigation (switching tab).
    */
   activateOnPressIn?: boolean
+  /** With `activateOnPressIn`: called when a press-in is about to navigate (not for a modified press). */
+  onActivated?: () => void
 }
 
 /**
@@ -66,6 +69,7 @@ export const Link = memo(function Link({
   navigationAction,
   onBeforePress,
   activateOnPressIn,
+  onActivated,
   onPressIn: onPressInProp,
   accessibilityActions,
   onAccessibilityAction,
@@ -87,28 +91,28 @@ export const Link = memo(function Link({
     [navigation, navigationAction, href, onBeforePress],
   )
 
-  /* Set by a press-in that already navigated, so the release does not do it again; every press-in re-arms it. */
-  const pressedIn = useRef(false)
+  /* Remembers a press-in that already navigated, so its own release does not do it again (pressIn.ts). */
+  const gate = useRef(createPressInGate()).current
   const onPressIn = useCallback(
     (e: GestureResponderEvent) => {
       onPressInProp?.(e)
-      if (activateOnPressIn && IS_WEB) {
-        pressedIn.current = true
-        /* A frame later: the press-in's own feedback (the bar's highlight) paints first, then the page switches. */
-        requestAnimationFrame(() => onPress(e))
-      }
+      if (!activateOnPressIn || !IS_WEB) return
+      // A modified or non-primary press (Cmd-click, middle click) is a new-tab request: the click path handles it.
+      const pointer = ((e as {nativeEvent?: object}).nativeEvent ?? e) as Parameters<typeof isPlainPrimaryPress>[0]
+      if (!isPlainPrimaryPress(pointer)) return
+      gate.acted()
+      onActivated?.()
+      /* A frame later: the press-in's own feedback (the bar's highlight) paints first, then the page switches. */
+      requestAnimationFrame(() => onPress(e))
     },
-    [activateOnPressIn, onPress, onPressInProp],
+    [activateOnPressIn, onActivated, onPress, onPressInProp, gate],
   )
   const onPressOnce = useCallback(
     (e?: Event) => {
-      if (pressedIn.current) {
-        pressedIn.current = false
-        return
-      }
+      if (gate.swallowsClick()) return
       onPress(e)
     },
-    [onPress],
+    [onPress, gate],
   )
 
   const accessibilityActionsWithActivate = [

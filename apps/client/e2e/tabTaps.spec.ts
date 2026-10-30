@@ -289,4 +289,43 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
     await page.goBack()
     await expect(page.getByTestId('screen-people')).toBeVisible()
   })
+
+  /* A press-in acts at once; the activations that are not a press-in must still work (keyboard, screen reader, modified click). */
+  test('the keyboard, a screen reader click and a cancelled press still switch tabs; a modified click stays in place', async ({page}) => {
+    await openDemo(page)
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+
+    // Keyboard: Enter on a focused tab link.
+    await page.getByTestId('tab-groups').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+
+    // A screen reader activates a link with a bare click event, no pointer press before it.
+    await page.getByTestId('tab-analytics').evaluate(el => (el as HTMLElement).click())
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+
+    // A press that is dragged off before it lifts has already acted at press-in; it must not leave the link
+    // swallowing the next click-only activation.
+    const box = (await page.getByTestId('tab-activity').boundingBox())!
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width / 2, 300)
+    await page.mouse.up()
+    await expect(page.getByTestId('screen-activity')).toBeVisible()
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await page.waitForTimeout(1200)
+    await page.getByTestId('tab-activity').evaluate(el => (el as HTMLElement).click())
+    await expect(page.getByTestId('screen-activity')).toBeVisible()
+
+    // Ctrl-click asks for a new tab: this page stays where it is.
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    const popup = page.context().waitForEvent('page', {timeout: 3000}).catch(() => null)
+    await page.getByTestId('tab-groups').click({modifiers: ['Control']})
+    ;(await popup)?.close()
+    await page.waitForTimeout(300)
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
+  })
 })

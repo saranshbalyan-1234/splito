@@ -27,6 +27,9 @@ import {styles} from './BottomBarStyles'
 
 type NavItemValue = NavItemId
 
+/** A net only: a pending highlight whose navigation was dropped is released after this. */
+const PENDING_NET_MS = 3000
+
 /*
  * Bluesky's signed-in mobile-web bottom bar with the items the `tabs`
  * preference picks from the shared nav list (Settings > Navigation), in its
@@ -47,12 +50,14 @@ export function BottomBarWeb() {
   /*
    * The tab under the finger lights up in the press-in's own commit, before the page behind it switches (the
    * switch is a frame later and may be heavy on a phone): the bar never waits for its screen. Cleared when the
-   * navigation state catches up, or after a second if the press led nowhere.
+   * navigation state catches up; a modified press (new tab) never sets it.
    */
   const [pending, setPending] = useState<string | null>(null)
   useEffect(() => {
     if (!pending) return
-    const id = setTimeout(() => setPending(null), 1000)
+    // It is set only by a press that navigates, so the navigation state catches up and clears it (below); this
+    // is a net for a dispatch that was dropped, far longer than any switch takes.
+    const id = setTimeout(() => setPending(null), PENDING_NET_MS)
     return () => clearTimeout(id)
   }, [pending])
 
@@ -161,7 +166,7 @@ const NavItem: React.FC<{
       style={[styles.ctrl, a.pb_lg]}
       navigationAction="navigate"
       activateOnPressIn
-      onPressIn={onPressStart}
+      onActivated={onPressStart}
       aria-role="link"
       aria-label={label}
       aria-current={isActive ? 'page' : undefined}
