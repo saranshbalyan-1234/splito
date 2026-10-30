@@ -13,6 +13,7 @@ import {useAccentThemes} from '#/state/theme'
 import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {GestureRoot} from '#/components/GestureRoot'
+import {LaunchScreen} from '#/components/LaunchScreen'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {LinkHost} from '#/features/links/LinkHost'
 import {PwaHost} from '#/features/pwa/PwaHost'
@@ -49,6 +50,8 @@ function Themed() {
               <Shell />
               <ToastOutlet />
             </StoreProvider>
+            {/* Outside the provider: it shows while the store opens, then fades out over the first screen. */}
+            <LaunchScreen />
           </ShellStateProvider>
         </DialogStateProvider>
       </PortalProvider>

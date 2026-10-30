@@ -621,7 +621,7 @@ Back with no history goes to the page's parent (stacked), never disappears; tab 
 
 The launch logo zooms gently in and out while content loads, on web from first paint and on native from the first JS frame.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** built on c-splash (web e2e and renders gate green; iOS simulator dev-client video; Android and a release build not yet checked), Wave C · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. Web: inline CSS keyframes in `index.html` animate the mark before any script loads; it fades into the first screen; `prefers-reduced-motion` gets an opacity pulse.

@@ -4,6 +4,7 @@ import {randomUUID} from 'expo-crypto'
 import {t} from '@lingui/core/macro'
 import {type DirectoryClient, ensureMe, type MutationCtx, prefFrom, type Store} from '@splito/sync'
 
+import {markLaunchReady} from '#/components/LaunchScreen'
 import {StorageNotice} from '#/components/StorageNotice'
 import * as Toast from '#/components/Toast'
 import {perfMark} from '#/lib/perfMark'
@@ -171,6 +172,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       perfMark('splito:store-ready')
     })().catch(e => {
       logger.error(e, {where: 'StoreProvider.open'})
+      markLaunchReady() // a failed open never extends the launch screen (§ 8)
       setError(e)
     })
     return () => {
@@ -248,6 +250,12 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
   }, [setDemo])
 
   const demoValue = useMemo<DemoModeValue>(() => ({demo, hasDirectory, busy, setDemo}), [demo, hasDirectory, busy, setDemo])
+
+  /* The launch screen ends when the app can show something: the store is open, or a notice explains why it is not. */
+  const isLaunchOver = !!value || !!notice
+  useEffect(() => {
+    if (isLaunchOver) markLaunchReady()
+  }, [isLaunchOver])
 
   if (error) throw error
   /* The connection of a replaced tab is closed: nothing can be read or saved until it reloads. */
