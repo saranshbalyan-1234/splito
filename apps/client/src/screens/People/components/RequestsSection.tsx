@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/JoinRequests.tsx (request rows: avatar, name, Accept / Reject buttons)
-import {useRef} from 'react'
+import {memo, useRef} from 'react'
 import {View} from 'react-native'
 import {plural, t} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -14,6 +14,7 @@ import {
   resendFriendRequest,
 } from '@splito/sync'
 
+import {seeRequestsPath} from '#/lib/links/make'
 import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
@@ -47,7 +48,7 @@ export function RequestsSection() {
   const shownOutgoing = outgoing.slice(0, MAX_ROWS - shownIncoming.length)
   const hasMore = shownIncoming.length + shownOutgoing.length < incoming.length + outgoing.length
   const seeAll = (
-    <SectionLink testID="people-requests-all" href="/settings/friends" label={l`See all requests and invites`}>
+    <SectionLink testID="people-requests-all" href={seeRequestsPath()} label={l`See all requests and invites`}>
       <Trans>See all</Trans>
     </SectionLink>
   )
@@ -58,6 +59,8 @@ export function RequestsSection() {
           <SectionHeader
             title={l`Requests`}
             testID="people-requests-title"
+            href={seeRequestsPath()}
+            hrefLabel={l`See all requests and invites`}
             count={incoming.length}
             action={hasMore && shownOutgoing.length === 0 ? seeAll : undefined}
           />
@@ -71,6 +74,8 @@ export function RequestsSection() {
           <SectionHeader
             title={l`Invites sent`}
             testID="people-invites-title"
+            href={seeRequestsPath()}
+            hrefLabel={l`See all requests and invites`}
             count={outgoing.length}
             action={hasMore ? seeAll : undefined}
           />
@@ -158,15 +163,8 @@ export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
 }
 
 export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
-  const {t: l} = useLingui()
-  const navigation = useNavigation<NavigationProp>()
-  const store = useStore()
-  const ctx = useMutationCtx()
-  const haptics = useHaptics()
-  const act = useRowAction()
   const now = useTickEveryMinute()
   const r = request.data
-  const name = requestName(r)
   const sent = ago(now - r.sentAt)
   const detail =
     r.reach === 'invited' ? (
@@ -179,10 +177,28 @@ export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
 
   return (
     <RequestRow
-      testID={`invite-sent-${name}`}
-      name={name}
+      testID={`invite-sent-${requestName(r)}`}
+      name={requestName(r)}
       sync={request}
       detail={detail}>
+      <OutgoingActions request={request} />
+    </RequestRow>
+  )
+}
+
+/** Resend and Cancel for an invite sent: the row's buttons on Home and People, and in place on Activity (owner 195). */
+export const OutgoingActions = memo(function OutgoingActions({request}: {request: Entity<FriendRequest>}) {
+  const {t: l} = useLingui()
+  const navigation = useNavigation<NavigationProp>()
+  const store = useStore()
+  const ctx = useMutationCtx()
+  const haptics = useHaptics()
+  const act = useRowAction()
+  const r = request.data
+  const name = requestName(r)
+
+  return (
+    <>
       <RequestAction
         testID="invite-sent-resend"
         label={l`Resend to ${name}`}
@@ -219,9 +235,9 @@ export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
           })
         }
       />
-    </RequestRow>
+    </>
   )
-}
+})
 
 /** "today", "yesterday", "3 days ago": requests move in days. */
 function ago(ms: number) {

@@ -16,23 +16,30 @@ import {Text} from '#/components/Typography'
 export function ActivityFilterDialog({
   control,
   types,
+  group,
+  person,
   onFiltersApplied,
 }: {
   control: Dialog.DialogControlProps
   types: readonly ActivityTypeId[]
-  onFiltersApplied: (types: ActivityTypeId[]) => void
+  /** The group or friend the list is scoped to (owner 194), shown as a removable chip. */
+  group?: {name: string}
+  person?: {name: string}
+  onFiltersApplied: (types: ActivityTypeId[], scope: {group: boolean; person: boolean}) => void
 }) {
   return (
     <FormSheet.Outer control={control} testID="activity-filters-sheet">
-      <Form types={types} onFiltersApplied={onFiltersApplied} />
+      <Form types={types} group={group} person={person} onFiltersApplied={onFiltersApplied} />
     </FormSheet.Outer>
   )
 }
 
-function Form({types, onFiltersApplied}: {types: readonly ActivityTypeId[]; onFiltersApplied: (types: ActivityTypeId[]) => void}) {
+function Form({types, group, person, onFiltersApplied}: {types: readonly ActivityTypeId[]; group?: {name: string}; person?: {name: string}; onFiltersApplied: (types: ActivityTypeId[], scope: {group: boolean; person: boolean}) => void}) {
   const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
   const [draft, setDraft] = useState<readonly ActivityTypeId[]>(types)
+  const [isGroupOn, setIsGroupOn] = useState(!!group)
+  const [isPersonOn, setIsPersonOn] = useState(!!person)
   const labels: Record<ActivityTypeId, string> = {
     expenses: l`Expenses`,
     payments: l`Payments`,
@@ -48,12 +55,26 @@ function Form({types, onFiltersApplied}: {types: readonly ActivityTypeId[]; onFi
     <FormSheet.Inner
       deferBody
       title={l`Filters`}
-      isDirty={draft.join() !== types.join()}
+      isDirty={draft.join() !== types.join() || isGroupOn !== !!group || isPersonOn !== !!person}
       footer={{
         saveLabel: l`Apply`,
-        onSave: () => control.close(() => onFiltersApplied([...draft])),
+        onSave: () => control.close(() => onFiltersApplied([...draft], {group: isGroupOn, person: isPersonOn})),
       }}>
       <View style={[a.gap_sm]}>
+        {group || person ? (
+          <View testID="filter-scope" style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
+            {person ? (
+              <Button testID="filter-person" label={l`Only ${person.name}`} role="checkbox" aria-checked={isPersonOn} accessibilityState={{checked: isPersonOn}} size="small" color={isPersonOn ? 'primary' : 'secondary'} onPress={() => setIsPersonOn(x => !x)}>
+                <ButtonText>{person.name}</ButtonText>
+              </Button>
+            ) : null}
+            {group ? (
+              <Button testID="filter-group" label={l`Only ${group.name}`} role="checkbox" aria-checked={isGroupOn} accessibilityState={{checked: isGroupOn}} size="small" color={isGroupOn ? 'primary' : 'secondary'} onPress={() => setIsGroupOn(x => !x)}>
+                <ButtonText>{group.name}</ButtonText>
+              </Button>
+            ) : null}
+          </View>
+        ) : null}
         <Text style={[a.text_md, a.font_semi_bold, a.leading_snug]}>{l`Type`}</Text>
         <View role="group" accessibilityLabel={l`Type`} style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
           {/* Nothing chosen is every type: "All" clears the choice. */}

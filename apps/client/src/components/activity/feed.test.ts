@@ -181,3 +181,32 @@ test('a dispute is a type of its own and keeps its group; a comment on a payment
   expect(matchesFilter(comment, {tab: 'all', types: ['comments'], group: 'g1'}, 'me', of)).toBe(true)
   expect(matchesFilter(comment, {tab: 'all', types: ['comments'], group: 'g1'}, 'me')).toBe(false)
 })
+
+test('the person filter keeps what involves that friend: their expenses and payments, comments and disputes on them, reminders, requests and friend events (owner 194)', () => {
+  const e = (entityType: string, kind: string, data: unknown, entityId = 'x') => ({id: `${kind}-${entityId}`, at: at(26, 9), actor: 'me', kind, entityType, entityId, data}) as unknown as ActivityEvent
+  const f = {tab: 'all', types: [], person: 'riya'} as const
+  const parties = (_type: string, id: string) => (id === 'e1' ? ['me', 'riya'] : ['me', 'sam'])
+  const yes = [
+    e('expense', 'expense.created', {payers: {me: 1n}, shares: {me: 1n, riya: 1n}}),
+    e('repayment', 'repayment.recorded', {from: 'riya', to: 'me'}),
+    e('writeoff', 'writeoff.recorded', {from: 'me', to: 'riya'}),
+    e('comment', 'comment.added', {authorId: 'me', mentions: [], targetType: 'expense', targetId: 'e1'}),
+    e('comment', 'comment.added', {authorId: 'me', mentions: ['riya'], targetType: 'expense', targetId: 'e2'}),
+    e('dispute', 'dispute.opened', {raisedBy: 'me', targetType: 'expense', targetId: 'e1'}),
+    e('reminder', 'reminder.set', {personId: 'riya'}),
+    e('friendRequest', 'friendRequest.sent', {personId: 'riya'}),
+    e('person', 'person.added', {}, 'riya'),
+  ]
+  const no = [
+    e('expense', 'expense.created', {payers: {me: 1n}, shares: {me: 1n, sam: 1n}}),
+    e('repayment', 'repayment.recorded', {from: 'sam', to: 'me'}),
+    e('comment', 'comment.added', {authorId: 'me', mentions: [], targetType: 'expense', targetId: 'e2'}),
+    e('dispute', 'dispute.opened', {raisedBy: 'me', targetType: 'expense', targetId: 'e2'}),
+    e('reminder', 'reminder.set', {personId: 'sam'}),
+    e('person', 'person.added', {}, 'sam'),
+    e('group', 'group.created', {}),
+  ]
+  expect(yes.map(x => matchesFilter(x, f, 'me', undefined, parties))).toEqual(yes.map(() => true))
+  expect(no.map(x => matchesFilter(x, f, 'me', undefined, parties))).toEqual(no.map(() => false))
+  expect(matchesFilter(yes[0]!, {...f, types: ['payments']}, 'me')).toBe(false)
+})

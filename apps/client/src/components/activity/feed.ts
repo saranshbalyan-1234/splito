@@ -111,7 +111,7 @@ export type FeedRow =
 export type ActivityTab = 'all' | 'me' | 'others'
 
 /** What the list shows: the tab, the types (empty is every type, owner 173) and, from a Group's "See all", one group. */
-export type FeedFilter = {tab: ActivityTab; types: readonly ActivityTypeId[]; group?: string}
+export type FeedFilter = {tab: ActivityTab; types: readonly ActivityTypeId[]; group?: string; /** One friend (owner 194): events involving them. */ person?: string}
 
 export const ALL_ACTIVITY: FeedFilter = {tab: 'all', types: []}
 
@@ -143,6 +143,32 @@ export function activityTypeOf(kind: string): ActivityTypeId | undefined {
 /** Where a comment's target lives: the group of its expense or payment. */
 export type GroupOfTarget = (type: 'expense' | 'repayment', id: string) => string | null | undefined
 
+/** Who a payment, write-off or expense involves (payers and sharers, or from and to), for comments and disputes on it. */
+export type PartiesOfTarget = (type: 'expense' | 'repayment' | 'writeoff', id: string) => readonly string[] | undefined
+
+/** Whether a change involves `person` (owner 194): the expense or payment they are in, a comment or dispute on one, their reminders, requests and friend events. */
+function involves(e: ActivityEvent, person: string, partiesOfTarget?: PartiesOfTarget): boolean {
+  switch (e.entityType) {
+    case 'expense':
+      return person in e.data.payers || person in e.data.shares
+    case 'repayment':
+    case 'writeoff':
+      return e.data.from === person || e.data.to === person
+    case 'comment':
+      return e.data.authorId === person || e.data.mentions.includes(person) || !!partiesOfTarget?.(e.data.targetType, e.data.targetId)?.includes(person)
+    case 'dispute':
+      return e.data.raisedBy === person || !!partiesOfTarget?.(e.data.targetType, e.data.targetId)?.includes(person)
+    case 'reminder':
+      return e.data.personId === person
+    case 'friendRequest':
+      return e.data.personId === person
+    case 'person':
+      return e.entityId === person
+    default:
+      return false
+  }
+}
+
 /** The group a change belongs to, when it has one. */
 function groupOf(e: ActivityEvent, groupOfTarget?: GroupOfTarget): string | null | undefined {
   switch (e.entityType) {
@@ -161,13 +187,14 @@ function groupOf(e: ActivityEvent, groupOfTarget?: GroupOfTarget): string | null
 }
 
 /** Whether `event` is in the list for `filter`. */
-export function matchesFilter(event: ActivityEvent, filter: FeedFilter, me: string, groupOfTarget?: GroupOfTarget): boolean {
+export function matchesFilter(event: ActivityEvent, filter: FeedFilter, me: string, groupOfTarget?: GroupOfTarget, partiesOfTarget?: PartiesOfTarget): boolean {
   if (filter.tab === 'others' && event.actor === me) return false
   if (filter.tab === 'me' && event.actor !== me) return false
   if (filter.types.length > 0) {
     const type = activityTypeOf(event.kind)
     if (!type || !filter.types.includes(type)) return false
   }
+  if (filter.person && !involves(event, filter.person, partiesOfTarget)) return false
   return !filter.group || groupOf(event, groupOfTarget) === filter.group
 }
 
@@ -183,6 +210,7 @@ export function buildRows(
   filter: FeedFilter,
   tz: string,
   groupOfTarget?: GroupOfTarget,
+  partiesOfTarget?: PartiesOfTarget,
 ) {
   const hidden = new Set(s.hidden)
   const sets = readSets(s)
@@ -191,7 +219,7 @@ export function buildRows(
   let unreadCount = 0
   let day: LocalDate | undefined
   for (const event of events) {
-    if (!matchesFilter(event, filter, me, groupOfTarget)) continue
+    if (!matchesFilter(event, filter, me, groupOfTarget, partiesOfTarget)) continue
     if (hidden.has(event.id)) {
       hiddenCount++
       continue

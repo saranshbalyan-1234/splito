@@ -19,12 +19,15 @@ export function GroupBalanceCards({
   mine,
   locale,
   disputed = {},
+  disputedHref,
 }: {
   openCurrencies: string[]
   mine: Record<string, bigint>
   locale: string
   /** My part of each currency's balance on disputed or held records (F-1210). */
   disputed?: Record<string, bigint>
+  /** Where "of which disputed" leads: Activity filtered to this group's disputed transactions (owner 192). */
+  disputedHref?: string
 }) {
   const t = useTheme()
   const money = useMoneyStyle()
@@ -91,7 +94,7 @@ export function GroupBalanceCards({
                     ]}
                   />
                 </View>
-                <DisputedLine testID="group-disputed" amounts={[{currency, amount: disputed[currency] ?? ZERO}]} />
+                <DisputedLine testID="group-disputed" href={disputedHref} amounts={[{currency, amount: disputed[currency] ?? ZERO}]} />
               </View>
             )
           })

@@ -36,6 +36,7 @@ import {
 } from '#/screens/Analytics/components/Summary'
 import {exportCsv} from '#/screens/Analytics/exportCsv'
 import {type Report, useReport} from '#/screens/Analytics/useReport'
+import {seeAllTransactionsPath} from '#/lib/links/make'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 
 const PLACEHOLDER_ROWS = 4
@@ -167,6 +168,8 @@ function ExpensesHeader({report, locale}: {report: Report; locale: string}) {
         title={l`Expenses`}
         count={rowCount}
         testID="analytics-expenses-title"
+        href={seeAllTransactionsPath()}
+        hrefLabel={l`See all transactions`}
       />
       {selection && (
         <View

@@ -98,6 +98,7 @@ import {Shimmer} from '#/motion/Shimmer'
 import {PersonReminders} from '#/features/remind/PersonReminders'
 import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
 import {HistoryFilterDialog} from './components/HistoryFilterDialog'
+import {seeAllTransactionsPath, seeDisputedPath} from '#/lib/links/make'
 import {DisputedNotice} from '#/components/disputes/DisputedNotice'
 import {rowMenuWrap} from '#/features/disputes/RowMenu'
 import {markOf, useDisputedPairs, useDisputedRecords, useOpenDisputes} from '#/state/disputes'
@@ -415,14 +416,17 @@ export function PersonScreen() {
             groupNames={groupNames}
             locale={locale}
             disputed={disputedLeft}
+            disputedHref={seeDisputedPath({personId})}
           />
-          <DisputedNotice leftOut={disputedLeft} isIncluded={includeDisputed} onToggle={setIncludeDisputed} scope="friend" testIDPrefix="person" />
+          <DisputedNotice leftOut={disputedLeft} isIncluded={includeDisputed} onToggle={setIncludeDisputed} scope="friend" testIDPrefix="person" href={seeDisputedPath({personId})} />
           <PersonReminders personId={personId} />
         </View>
       </View>
       <SectionHeader
         title={l`History`}
         testID="person-history-title"
+        href={seeAllTransactionsPath({personId})}
+        hrefLabel={l`See all transactions`}
         count={pairHistory?.isDone ? history.length : undefined}
         action={
           <View style={[a.flex_row, a.align_center, a.gap_sm]}>

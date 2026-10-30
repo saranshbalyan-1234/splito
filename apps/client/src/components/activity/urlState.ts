@@ -32,10 +32,10 @@ export function typesToParam(types: readonly ActivityTypeId[]): string {
 }
 
 /** What the address sets of Activity: its tab (`/activity/me`), types and one group (`/activity?type=transactions&group=<id>`). */
-export function readActivityParams(params: Params): {tab?: ActivityTab; types?: ActivityTypeId[]; group?: string} {
+export function readActivityParams(params: Params): {tab?: ActivityTab; types?: ActivityTypeId[]; group?: string; person?: string} {
   const tab = oneOf(params?.tab, ACTIVITY_TABS)
   const types = parseTypes(params?.type)
-  return {...(tab && {tab}), ...(types && {types}), ...(params?.group && {group: params.group})}
+  return {...(tab && {tab}), ...(types && {types}), ...(params?.group && {group: params.group}), ...(params?.person && {person: params.person})}
 }
 
 /** The params a tap on a tab or an Apply writes, by the one list-state rule (`param`): stock values drop out only when the saved choice is stock too. */

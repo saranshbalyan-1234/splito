@@ -18,6 +18,7 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
+import {OutgoingActions} from '#/screens/People/components/RequestsSection'
 import {ActivityItem} from '#/components/activity/ActivityItem'
 import {type ActivityTab, type FeedRow} from '#/components/activity/feed'
 import {LoadingSkeleton} from '#/components/activity/LoadingSkeleton'
@@ -77,6 +78,7 @@ export function ActivityScreen() {
   const tabName: ActivityTab = fromAddress.tab ?? savedTab ?? 'all'
   const types = fromAddress.types ?? savedTypes ?? NO_TYPES
   const group = fromAddress.group
+  const person = fromAddress.person
   const tab = ACTIVITY_TABS.indexOf(tabName)
   /* The saved choices load a moment after the screen: until they are known (and the address names nothing), no tab is lit and the body waits, so nothing flashes the wrong tab (owners 166, 168). */
   const isChoiceKnown = (fromAddress.tab !== undefined || savedTab !== undefined) && (fromAddress.types !== undefined || savedTypes !== undefined)
@@ -88,21 +90,26 @@ export function ActivityScreen() {
   const filterControl = useDialogControl({url: 'filters'})
   /* The filter dot counts the types chosen; a group scope has its own chip. */
   const activeFilterCount = types.length
-  const applyTypes = (next: ActivityTypeId[]) => {
-    navigation.setParams({type: activityParams({tab: tabName, types: next}, {tab: savedTab ?? 'all', types: savedTypes ?? NO_TYPES}).type})
+  const applyTypes = (next: ActivityTypeId[], scope?: {group: boolean; person: boolean}) => {
+    navigation.setParams({
+      type: activityParams({tab: tabName, types: next}, {tab: savedTab ?? 'all', types: savedTypes ?? NO_TYPES}).type,
+      ...(scope && !scope.group ? {group: undefined} : {}),
+      ...(scope && !scope.person ? {person: undefined} : {}),
+    })
     void setSavedTypes(next)
   }
   const clearGroup = () => navigation.setParams({group: undefined})
+  const clearPerson = () => navigation.setParams({person: undefined})
   const shouldReduceMotion = useShouldReduceMotion()
   /* The tab bar follows the tap at once; the list behind it re-renders as a transition (owner 151). */
   const bodyTab = useDeferredValue(tabName)
   /* Deferred as a string: the types are a new array each render, which a deferred value would chase forever. */
   const bodyTypesKey = useDeferredValue(typesToParam(types))
   const bodyTypes = useMemo(() => readActivityParams({type: bodyTypesKey}).types ?? NO_TYPES, [bodyTypesKey])
-  const feed = useActivityFeed(bodyTab, bodyTypes, group)
+  const feed = useActivityFeed(bodyTab, bodyTypes, group, person)
   const actions = useActivityActions(feed)
   const {snapshot, rows, hiddenCount, unreadCount, me} = feed
-  const {shown, onEndReached: showMore} = usePagedRows(`${bodyTab}|${bodyTypesKey}|${group}`)(rows)
+  const {shown, onEndReached: showMore} = usePagedRows(`${bodyTab}|${bodyTypesKey}|${group}|${person}`)(rows)
   /* Rows already loaded appear a page at a time; past the last one, older history is read by cursor. */
   const onEndReached = () => {
     if (shown.length < rows.length) showMore()
@@ -118,18 +125,18 @@ export function ActivityScreen() {
   const eventCount = rows.length - rows.filter(r => r.type === 'section').length
   const windowSize = snapshot?.events.length ?? 0
   const canLookFurther = !feed.isDone && !!feed.loadMore
-  const isSearchingOlder = canLookFurther && eventCount < MIN_LISTED && (bodyTypes.length > 0 || !!group) && windowSize < AUTO_SEARCH_EVENTS
+  const isSearchingOlder = canLookFurther && eventCount < MIN_LISTED && (bodyTypes.length > 0 || !!group || !!person) && windowSize < AUTO_SEARCH_EVENTS
   const loadMore = feed.loadMore
   useEffect(() => {
     if (isSearchingOlder) loadMore?.(5)
   }, [isSearchingOlder, snapshot, loadMore])
 
   /* The empty state follows the tab and the filters (owner 173): it says what is missing, and a narrowed list offers the way out. */
-  const isNarrowedView = bodyTypes.length > 0 || !!group
+  const isNarrowedView = bodyTypes.length > 0 || !!group || !!person
   const emptyMessage = () => {
     if (hiddenCount > 0) return l`You've hidden everything here. New expenses, payments and group changes will show up as they happen.`
     if (canLookFurther && (isNarrowedView || bodyTab !== 'all')) return l`Nothing matches in the latest changes.`
-    if (bodyTypes.length === 1 && bodyTypes[0] === 'disputes' && !group) return l`No disputes or holds. When someone questions an expense or puts it on hold, it shows up here.`
+    if (bodyTypes.length === 1 && bodyTypes[0] === 'disputes' && !group && !person) return l`No disputes or holds. When someone questions an expense or puts it on hold, it shows up here.`
     if (isNarrowedView) return l`Nothing matches these filters yet.`
     if (bodyTab === 'me') return l`Nothing from you yet. What you add or change shows up here.`
     if (bodyTab === 'others') return l`Nothing from other people yet. When someone else adds or changes something you share, it shows up here.`
@@ -139,7 +146,7 @@ export function ActivityScreen() {
   const clearButton = isNarrowedView
     ? bodyTypes.length > 0
       ? {testID: 'activity-clear-filters', label: l`Show every type`, text: l`Show every type`, onPress: () => applyTypes([])}
-      : {testID: 'activity-clear-filters', label: l`Show everything`, text: l`Show everything`, onPress: clearGroup}
+      : {testID: 'activity-clear-filters', label: l`Show everything`, text: l`Show everything`, onPress: () => (group ? clearGroup() : clearPerson())}
     : undefined
   const lookFurtherButton = canLookFurther
     ? {testID: 'activity-look-further', label: l`Look further back`, text: l`Look further back`, onPress: () => loadMore?.(5)}
@@ -173,6 +180,7 @@ export function ActivityScreen() {
           me={me}
           locale={locale}
           actions={actions}
+          renderInviteActions={request => <OutgoingActions request={request} />}
         />
       </Animated.View>
     )
@@ -234,8 +242,20 @@ export function ActivityScreen() {
           items={[l`All`, l`Me`, l`Others`]}
           onSelect={setTab}
         />
-        {group ? (
-          <View style={[a.flex_row, a.px_lg, a.py_sm]}>
+        {group || person ? (
+          <View style={[a.flex_row, a.flex_wrap, a.gap_sm, a.px_lg, a.py_sm]}>
+            {person ? (
+              <Button
+                testID="activity-person-chip"
+                label={l`Only ${feed.snapshot?.people.get(person)?.data.name ?? l`this friend`}. Show everything`}
+                size="tiny"
+                color="secondary"
+                onPress={clearPerson}>
+                <ButtonText>{feed.snapshot?.people.get(person)?.data.name ?? l`This friend`}</ButtonText>
+                <ButtonIcon icon={ClearIcon} />
+              </Button>
+            ) : null}
+            {group ? (
             <Button
               testID="activity-group-chip"
               label={l`Only ${feed.snapshot?.groups.get(group)?.data.name ?? l`this group`}. Show everything`}
@@ -245,6 +265,7 @@ export function ActivityScreen() {
               <ButtonText>{feed.snapshot?.groups.get(group)?.data.name ?? l`This group`}</ButtonText>
               <ButtonIcon icon={ClearIcon} />
             </Button>
+            ) : null}
           </View>
         ) : null}
       </Layout.Header.Sticky>
@@ -326,7 +347,13 @@ export function ActivityScreen() {
         </LayoutAnimationConfig>
         )}
       </Deferred>
-      <ActivityFilterDialog control={filterControl} types={types} onFiltersApplied={applyTypes} />
+      <ActivityFilterDialog
+        control={filterControl}
+        types={types}
+        group={group ? {name: feed.snapshot?.groups.get(group)?.data.name ?? l`This group`} : undefined}
+        person={person ? {name: feed.snapshot?.people.get(person)?.data.name ?? l`This friend`} : undefined}
+        onFiltersApplied={applyTypes}
+      />
     </TabScreen>
   )
 }

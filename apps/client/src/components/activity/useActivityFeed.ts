@@ -84,6 +84,7 @@ export function useActivityFeed(
   tab: ActivityTab = ALL_ACTIVITY.tab,
   types: readonly ActivityTypeId[] = ALL_ACTIVITY.types,
   group?: string,
+  person?: string,
 ) {
   const {actor: me} = useMutationCtx()
   const tz = useTimeZone()
@@ -101,11 +102,19 @@ export function useActivityFeed(
         events,
         state,
         me,
-        {tab, types, group},
+        {tab, types, group, person},
         tz,
         (type, id) => (type === 'expense' ? snapshot?.expenses : snapshot?.transfers)?.get(id)?.data.groupId,
+        (type, id) => {
+          if (type === 'expense') {
+            const x = snapshot?.expenses.get(id)?.data
+            return x && [...Object.keys(x.payers), ...Object.keys(x.shares)]
+          }
+          const x = snapshot?.transfers.get(id)?.data
+          return x && [x.from, x.to]
+        },
       ),
-    [events, state, me, tab, types, group, tz, snapshot],
+    [events, state, me, tab, types, group, person, tz, snapshot],
   )
   return {
     me,
@@ -116,7 +125,7 @@ export function useActivityFeed(
     loadMore: loaded?.loadMore,
     isDone: loaded?.isDone ?? false,
     /** A type or group narrows the list: "Mark all read" then marks only what is listed. */
-    isNarrowed: types.length > 0 || !!group,
+    isNarrowed: types.length > 0 || !!group || !!person,
     ...feed,
   }
 }
