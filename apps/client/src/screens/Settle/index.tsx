@@ -98,13 +98,15 @@ export function SettleScreen() {
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
   )
 
-  const leftOut = withoutDisputed({}, disputedRows).leftOut
+  /* What the disputed records would take out of the plan (what was actually removed), whether or not it is left out. */
+  const adjusted = storedNets ? withoutDisputed(storedNets, disputedRows) : undefined
+  const leftOut = adjusted?.leftOut ?? {}
   let current: Snapshot | null = null
   if (!isLoading && group) {
     const rules = group.data.rules ?? NO_RULES
     const plans = Object.entries(
       zeroFillNets(
-        includeDisputed ? storedNets : withoutDisputed(storedNets, disputedRows).nets,
+        includeDisputed ? storedNets : adjusted!.nets,
         group.data.members.map(m => m.personId),
       ),
     ).map(

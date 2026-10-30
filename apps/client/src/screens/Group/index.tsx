@@ -159,6 +159,7 @@ export function GroupScreen() {
   /* "Disputed only" (F-1210): this page's own choice, not remembered. ponytail: not in the address yet. */
   const [onlyDisputed, setOnlyDisputed] = useState(false)
   const openDisputes = useOpenDisputes()
+  const disputedRecords = useDisputedRecords(onlyDisputed)
   const disputedRows = useDisputedBalances({groupId})
   const addMembersControl = useDialogControl({url: 'add-members'})
   const editControl = useDialogControl({url: 'edit'})
@@ -216,7 +217,6 @@ export function GroupScreen() {
   const names = new Map(
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
   )
-  const disputedRecords = useDisputedRecords(onlyDisputed)
   /* "Disputed only" lists this group's disputed records from the open disputes themselves, not just the pages loaded. */
   const history = onlyDisputed ? (disputedRecords ?? []).filter(e => e.entity.data.groupId === groupId) : visible
   /* Every member listed, zero when they have no records yet, so a settlement plan can route through them. */
