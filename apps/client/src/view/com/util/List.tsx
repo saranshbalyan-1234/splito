@@ -2,7 +2,6 @@
 import {forwardRef, memo, useContext, useMemo} from 'react'
 import {
   type ListViewToken as ViewToken,
-  RefreshControl,
   StyleSheet,
 } from 'react-native'
 import {
@@ -16,6 +15,7 @@ import {scheduleOnRN} from 'react-native-worklets'
 import {useNonReactiveCallback} from '#/lib/hooks/useNonReactiveCallback'
 import {useScrollHandlers} from '#/lib/ScrollContext'
 import {addStyle} from '#/lib/styles'
+import {useRefreshControl} from '#/lib/refresh/useRefreshControl'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {useBreakpoints, useTheme} from '#/alf'
 import {shouldCenterNativeTabletContent} from '#/alf/breakpoints.shared'
@@ -156,19 +156,13 @@ let List = forwardRef<ListMethods, ListProps>(
       ]
     }, [onItemSeen])
 
-    let refreshControl
-    if (refreshing !== undefined || onRefresh !== undefined) {
-      refreshControl = (
-        <RefreshControl
-          key={t.atoms.text.color}
-          refreshing={refreshing ?? false}
-          onRefresh={onRefresh}
-          tintColor={t.atoms.text.color}
-          titleColor={t.atoms.text.color}
-          progressViewOffset={progressViewOffset ?? headerOffset}
-        />
-      )
-    }
+    /* Pull to refresh on every list (owners 167, 169, 170): Bluesky's RefreshControl, with the shared refresh when the caller passes none. Not in a dialog, where a pull closes the sheet. */
+    const refreshControl = useRefreshControl({
+      enabled: !isWithinDialog,
+      refreshing,
+      onRefresh,
+      progressViewOffset: progressViewOffset ?? headerOffset,
+    })
 
     if (headerOffset != null) {
       style = addStyle(style, {

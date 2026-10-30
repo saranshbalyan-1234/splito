@@ -5878,6 +5878,10 @@ msgstr "प्रोफ़ाइल"
 msgid "Proposed: {fixText}"
 msgstr "सुझाव: {fixText}"
 
+#: src/lib/refresh/PullSurface.web.tsx:40
+msgid "Pull to refresh"
+msgstr "रीफ़्रेश करने के लिए खींचें"
+
 #: src/components/disputes/RecordMenuItems.tsx:23
 #: src/components/disputes/RecordMenuItems.tsx:25
 #: src/components/people/PaymentDetailsDialog.tsx:268
@@ -5980,6 +5984,10 @@ msgstr "कम"
 msgid "Reduced swaps movement for gentle fades. Off shows every change instantly."
 msgstr "कम में हलचल की जगह हल्का फ़ेड होता है। बंद में हर बदलाव तुरंत दिखता है।"
 
+#: src/lib/refresh/PullSurface.web.tsx:40
+msgid "Refreshing…"
+msgstr "रीफ़्रेश हो रहा है…"
+
 #: src/components/disputes/DisputePanel.tsx:174
 #: src/components/disputes/DisputePanel.tsx:176
 #: src/features/disputes/AnswerSheet.tsx:67
@@ -6002,6 +6010,10 @@ msgstr "अस्वीकार किया। रिकॉर्ड में
 #: src/components/disputes/DisputePanel.tsx:191
 msgid "Release"
 msgstr "रोक हटाएँ"
+
+#: src/lib/refresh/PullSurface.web.tsx:40
+msgid "Release to refresh"
+msgstr "रीफ़्रेश करने के लिए छोड़ें"
 
 #: src/components/disputes/DisputePanel.tsx:188
 #: src/components/disputes/words.ts:35

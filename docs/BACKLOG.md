@@ -554,7 +554,7 @@ Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between 
 
 Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Group to refresh; the header stays fixed and visible throughout; native RefreshControl, phone-web pull handler.
 
-- **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** todo, Wave C (next free slot) · **Deps** F-255, F-256
+- **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** built on c-refresh (web: `PullSurface` + `pullController`; native: `useRefreshControl` in `List` and `Layout.Content`; `refreshAll` re-reads live projections and calls `syncNow()`, a no-op until F-2103; `e2e/pullRefresh.spec.ts` green in Chrome touch and Playwright WebKit; native RefreshControl and real iOS Safari / Android Chrome not run) · **Deps** F-255, F-256
 - **Prefs** -
 - **Acceptance**
   1. Every full screen refreshes on pull at the top, header or not (owners 169, 170), built once in the shared scaffold with a test over every route; sheets and popups keep drag-to-close (§ 26.8); the spinner sits under the header; the header never moves or hides during the pull (e2e checks its top stays at 0 while pulling at 390).

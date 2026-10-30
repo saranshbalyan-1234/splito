@@ -26,6 +26,8 @@ import {addStyle} from '#/lib/styles'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {useTheme, web} from '#/alf'
 import * as Layout from '#/components/Layout'
+import {useDialogContext} from '#/components/Dialog/context'
+import {PullSurface} from '#/lib/refresh/PullSurface'
 import {useAnalytics} from '#/analytics'
 
 export type ListMethods = {
@@ -89,12 +91,12 @@ function ListImpl<ItemT>(
     desktopFixedHeight,
     headerOffset,
     keyExtractor,
-    refreshing: _unsupportedRefreshing,
+    refreshing: _ownRefreshing,
     onStartReached,
     onStartReachedThreshold = 2,
     onEndReached,
     onEndReachedThreshold = 2,
-    onRefresh: _unsupportedOnRefresh,
+    onRefresh,
     onScrolledDownChange,
     onContentSizeChange,
     onItemSeen,
@@ -107,6 +109,7 @@ function ListImpl<ItemT>(
 ) {
   const contextScrollHandlers = useScrollHandlers()
   const {isWithinSplitView} = useIsWithinSplitView()
+  const {isWithinDialog} = useDialogContext()
   const t = useTheme()
 
   // automatically disable full window scroll when within split view
@@ -359,6 +362,8 @@ function ListImpl<ItemT>(
         rowNodesRef={rowNodesRef}
         disableFullWindowScroll={disableFullWindowScroll}
       />
+      {/* Pull to refresh (owners 167, 169, 170): the window scrolls, so the list's content moves under the header. Not in a dialog (a pull closes the sheet) or a contained scroller. */}
+      <PullSurface enabled={!disableFullWindowScroll && !isWithinDialog} onRefresh={onRefresh}>
       <Layout.Center>
         <View
           ref={containerRef}
@@ -409,6 +414,7 @@ function ListImpl<ItemT>(
           {footerComponent}
         </View>
       </Layout.Center>
+      </PullSurface>
     </View>
   )
 }

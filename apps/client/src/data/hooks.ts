@@ -89,7 +89,7 @@ export function useMutationCtx(): MutationCtx {
   return useData().ctx
 }
 
-const IDLE: Projection<never> = {subscribe: () => () => {}, get: () => undefined}
+const IDLE: Projection<never> = {subscribe: () => () => {}, get: () => undefined, refresh: () => Promise.resolve()}
 
 /** A shared projection's current value; undefined until its first load (or always, for a null query: nothing is read). */
 export function useProjection<T>(query: Query<T> | null): T | undefined {

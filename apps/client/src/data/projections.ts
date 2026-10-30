@@ -45,6 +45,8 @@ export const MORE: StoreChange = {}
 export type Projection<T> = {
   subscribe: (onChange: () => void) => () => void
   get: () => T | undefined
+  /** Re-reads now (pull to refresh) and resolves when the load, and any that queued behind it, has finished; at once while nobody listens. */
+  refresh: () => Promise<void>
 }
 
 const registry = new WeakMap<Store, Map<string, Projection<unknown>>>()
@@ -58,6 +60,11 @@ function create<T>(store: Store, query: Query<T>): Projection<T> {
   // What changed while a load was running; read once it ends.
   let pending: StoreChange | undefined
   let isLive = false
+  // Callers of refresh() waiting for the loads to go quiet.
+  const waiters: Array<() => void> = []
+  const flush = () => {
+    if (!isLoading) waiters.splice(0).forEach(done => done())
+  }
 
   const run = (change: StoreChange) => {
     if (isLoading) {
@@ -68,7 +75,7 @@ function create<T>(store: Store, query: Query<T>): Projection<T> {
     load!(change, value).then(
       next => {
         isLoading = false
-        if (!isLive) return
+        if (!isLive) return flush()
         if (next !== value) {
           value = next
           listeners.forEach(l => l())
@@ -78,6 +85,7 @@ function create<T>(store: Store, query: Query<T>): Projection<T> {
           pending = undefined
           run(again)
         }
+        flush()
       },
       () => {
         // A failed read keeps the last answer; the next commit retries.
@@ -87,6 +95,7 @@ function create<T>(store: Store, query: Query<T>): Projection<T> {
           pending = undefined
           run(again)
         }
+        flush()
       },
     )
   }
@@ -113,7 +122,22 @@ function create<T>(store: Store, query: Query<T>): Projection<T> {
       }
     },
     get: () => value,
+    refresh: () =>
+      isLive
+        ? new Promise<void>(done => {
+            waiters.push(done)
+            // MORE, not 'unknown' (which restarts the Activity tracker, minutes on 10,000 expenses): every plain loader re-reads anyway, a tracker goes on from its cursor.
+            run(MORE)
+          })
+        : Promise.resolve(),
   }
+}
+
+/** Re-reads every live projection of `store` (the mounted screens' queries) and waits for them. A value that comes back equal keeps its identity, so nothing redraws (owner 166). */
+export async function refreshProjections(store: Store): Promise<number> {
+  const live = [...(registry.get(store)?.values() ?? [])]
+  await Promise.all(live.map(p => p.refresh()))
+  return live.length
 }
 
 /** The one projection of `query` on `store`, created on first use. */

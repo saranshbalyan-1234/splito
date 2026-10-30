@@ -1057,6 +1057,15 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **A gesture moves DOM nodes, not React state, and cancels the browser only while it owns the touch.** Phone-web
+  pull to refresh (F-258) writes a transform and the spinner straight to the list's nodes from one window
+  `touchmove` listener (non-passive, but it returns at once unless a pull started at the top of the page and moved
+  down); a pull renders nothing, the header never moves (only the list's content is translated, never the screen),
+  and the transform is removed at rest so no `position: fixed` child keeps a containing block. Measured at 390 px:
+  no long task over 50 ms in Chromium (real CDP touches) across People, Groups, Activity, Analytics, a group page
+  and Settings; WebKit has no long task API, so `pullRefresh.spec` also reports the worst frame gap. Refreshing
+  re-reads the live projections with the empty change notice, never `'unknown'` (which restarts the Activity tracker).
+
 - **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
   Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
   72 ms per new expense); it now keeps its pool, cursor and sorted events and merges each page in (0.35 s SQLite /
@@ -1411,6 +1420,17 @@ Splito lessons (add newest last, dated, with PR):
   meanwhile. Also: a main screen that is pushed from a link must be told apart from its tab by a param
   (`from=<tab>`, owner 184, in the address so a refresh keeps Back), not by stack depth (a deep link puts People
   under every page).
+- 2026-10-31, F-258 (c-refresh): **pull to refresh on phone web is a window gesture, and Bluesky has none.** Bluesky's
+  `List` takes `refreshing`/`onRefresh` for the native `RefreshControl` only; Splito supplies the refresh in the shared
+  layer (`useRefreshControl` for `List` and `Layout.Content`, `PullSurface` + `pullController` on web), so a screen
+  passes nothing. Web: the window scrolls, so a touch that starts at `scrollY` 0 and moves down is the pull; only that
+  case calls `preventDefault` (iOS rubber band, Android Chrome's own refresh, with `overscroll-behavior-y: contain` on
+  the root), and the list content, not the header, is translated. Three traps: `lib/` may not import `data/` (the
+  refresh handler lives in `state/refresh`); the Loader's `rotate-500ms` class was never defined in `index.html`, so it
+  never spun on web (Bluesky's base.html has it; now added); and `'unknown'` as a projection's change notice restarts
+  the Activity tracker, so refresh passes the empty notice. Playwright WebKit has no `Touch`/`TouchEvent` constructor
+  and no long task API: its run dispatches touch-shaped events and reads the frame gap, and says so. Real iOS Safari
+  rubber band and Android Chrome were not driven by a person.
 
 ---
 
