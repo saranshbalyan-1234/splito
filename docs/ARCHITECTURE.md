@@ -1650,15 +1650,14 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   depends on), each reviewed by Opus and fixed once, then one assemble step merges the wave, runs every check
   and deploys the preview. *Why:* "add everything to feature list and pick one by one"; then "fanout with
   sonnet and get done" (replaces strictly one feature at a time).
-- **Model split: Opus for anything important, Sonnet for the rest** (owner 211 refines the earlier split). Opus
-  (latest) builds every important task: performance work, new features, data-model and navigation changes, anything
-  that needs decisions, plus every decision (design, rulings, planning), review, audit, judge and verification.
-  Sonnet (latest) builds only small, mechanical, well-specified work (test-only changes, copy, a one-file fix, a
-  rename, a docs update). When unsure, Opus. *Why:* "for important task use opus always like speed, new features
-  decisions, etc"; earlier: "use sonnet for all implementation and opus for decisions and reviews". Each feature in the build chain is built by Sonnet,
-  then reviewed by Opus against § 26 and its BACKLOG criteria; a "fix-first" verdict sends it back to a Sonnet
-  fixer once before the next feature starts. *Why:* "use sonnet for all implementation and opus for decisions
-  and reviews".
+- **Model split: Opus thinks, Sonnet only builds** (owner 211). Opus (latest) does every important decision
+  (what a screen holds, what goes where, the flow from tap to tap, data model and navigation choices, rulings),
+  every design/spec handed to a builder, all **performance** work end to end (measuring, finding causes, fixing),
+  and every review, audit, judge and verification. Sonnet (latest) only implements what an Opus spec already
+  decided (building, fixing review findings, migrating, test work); a builder that hits an open product or flow
+  question stops and asks rather than deciding. *Why:* "for important task use opus always like speed, new
+  features decisions"; "performance"; "important decisions like what should be there, what should be the flow";
+  "sonnet should be used to build only".
 - **Large work fans out** into parallel throwaway worktrees (§ 20) with judges and review. *Why:* "Fanout".
 - **Push to GitHub after every merge** (owner 149): `main` is pushed to `origin`
   (`github.com/saranshbalyan-1234/splito`, public; Render auto-deploys `main` to https://splito-web.onrender.com)
@@ -3275,7 +3274,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 208 | "fanout more to get things done" | Run as many builders as there is independent work (no file overlap), each running only its touched specs; full e2e once per merge by the orchestrator; perf numbers only on a quiet machine | § 23 (process lesson) | At most three builders at once |
 | 209 | "also update profile page, it looks very less" | Profile becomes a full page: header with verified contacts and since-date, stat row linking out, Your balance, Payment details (UPI), Add me (QR, link), Your recent activity, Log out last | § 26.15 | Avatar, name and a few stats only |
 | 210 | "make sure whatever can be reused do it" | Reuse before writing, inside Splito first then Bluesky; duplicates are defects merged into one shared piece; briefs, reviews and reports enforce it | § 26.1 | Reuse rule covered Bluesky only |
-| 211 | "for importantn task use opus always like speed, new features decisions, etc etc"; "performance" | Opus builds every important task (performance, new features, data model, navigation, decisions) as well as reviewing; Sonnet only for small mechanical work; when unsure, Opus | § 26.1 | Sonnet implemented everything, Opus only decided and reviewed |
+| 211 | "for importantn task use opus always like speed, new features decisions, etc etc"; "performance"; "important decisions like, what should bet ehre, what should be the flow"; "sonnet should be used to build only" | Opus makes every decision (what goes where, flows, data model), writes every spec, does all performance work and every review; Sonnet only implements Opus specs and stops on open product questions | § 26.1 | Sonnet implemented everything, Opus only decided and reviewed |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
