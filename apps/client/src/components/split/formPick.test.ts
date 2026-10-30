@@ -108,3 +108,23 @@ describe('pre-filling the group currency (audit M5)', () => {
       expect(formWithGroup(f, goa, 'me', one, {}).currency).toBe('EUR')
     })
 })
+
+describe('F-273 the payer stays me when a group is picked (owner 207)', () => {
+  test('a fresh form in a group whose members list someone else first: still me', () => {
+    const g = {...goa, members: ['sam', 'riya', 'me', 'lena'].map(personId => ({personId, leftAt: null}))}
+    const f = formWithGroup(base(), g, 'me', one, {})
+    expect(f.payer).toBe('me')
+    expect(f.people[0]).toBe('me')
+  })
+  test('a person-page form (friend pre-selected) then a group pick: the friend is not the payer', () => {
+    const person = emptyForm({
+      me: 'me', currency: 'EUR', date: '2026-10-26', people: ['riya'], groupId: null, mode: 'equal',
+    })
+    expect(person.payer).toBe('me')
+    expect(formWithGroup(person, goa, 'me', one, {}).payer).toBe('me')
+  })
+  test('a payer the person chose is kept while still in the group, and falls to me when not', () => {
+    expect(formWithGroup(base({payer: 'riya'}), goa, 'me', one, {}).payer).toBe('riya')
+    expect(formWithGroup(base({payer: 'ghost'}), goa, 'me', one, {}).payer).toBe('me')
+  })
+})

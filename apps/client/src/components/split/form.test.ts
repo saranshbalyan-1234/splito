@@ -645,3 +645,28 @@ test('a currency in a route parameter is used only when this build knows it', ()
   expect(knownCurrency('')).toBeUndefined()
   expect(knownCurrency(undefined)).toBeUndefined()
 })
+
+describe('F-273 a new expense starts with me as the payer (owner 207)', () => {
+  const fresh = (people: string[], groupId: string | null = null) =>
+    emptyForm({me: 'me', currency: 'INR', date: '2026-10-26', people, groupId, mode: 'equal'})
+
+  test('no people, a person page pre-selecting a friend, a group: the payer is me, single mode', () => {
+    for (const people of [[], ['riya'], ['riya', 'sam', 'me']]) {
+      const f = fresh(people, people.length > 1 ? 'g1' : null)
+      expect(f.payer).toBe('me')
+      expect(f.payerMode).toBe('single')
+      expect(f.paid).toEqual({})
+      expect(f.people[0]).toBe('me')
+      expect(formPayers(f)).toEqual(['me'])
+    }
+  })
+  test('the friend on a person page is on the split but never the payer', () => {
+    const f = fresh(['riya'])
+    expect(f.people).toEqual(['me', 'riya'])
+    expect(f.payer).not.toBe('riya')
+  })
+  test('a restored draft whose payer has left falls back to me, not to a friend', () => {
+    const f = pruneForm(base({payer: 'riya'}), new Set(['me', 'sam']))
+    expect(f.payer).toBe('me')
+  })
+})
