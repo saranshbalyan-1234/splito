@@ -6,7 +6,6 @@ import {
   type TabId,
 } from '@splito/sync'
 import {useLingui} from '@lingui/react/macro'
-import {getLocales} from 'expo-localization'
 
 import {useA11y} from '#/state/a11y'
 import {TEXT_SCALE_STEPS} from '#/state/preferences/mirror'
@@ -17,7 +16,7 @@ import {
   formatLocalDate,
   utcOffsetLabel,
 } from '#/locale/dates'
-import {resolveNumberLocale} from '#/locale/numberLocale'
+import {deviceLocale, resolveNumberLocale} from '#/locale/numberLocale'
 import {APP_LANGUAGES} from '#/locale/languages'
 import {useDateLocale, useToday} from '#/locale/useDates'
 import {native} from '#/alf'
@@ -369,7 +368,7 @@ function NumberFormatPref() {
   const [language = 'en'] = usePref('language')
   const example = (pref: 'auto' | 'en-IN' | 'en-US' | 'de-DE' | 'fr-FR') =>
     new Intl.NumberFormat(
-      resolveNumberLocale(pref, language, getLocales()[0]?.languageTag),
+      resolveNumberLocale(pref, language, deviceLocale()?.languageTag),
       {minimumFractionDigits: 2},
     ).format(1234567.5)
   return (

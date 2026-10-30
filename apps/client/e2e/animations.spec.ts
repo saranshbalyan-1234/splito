@@ -244,3 +244,52 @@ test.describe('touch screens', () => {
     await expect.poll(scale).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/)
   })
 })
+
+/*
+ * Row exits (owner 189, ARCHITECTURE 17.1): Reanimated's web exit clones every row that unmounts. A row a filter takes
+ * off a list that stays animates out; the rows of a page that is left do not (`ScreenExitScope`). And no animated row
+ * measures itself while it mounts or updates (the patched `saveSnapshot`, patches/react-native-reanimated): 60 rows
+ * forced 60 layouts on every open and every keystroke. Each half fails when its workaround stops applying.
+ */
+test('a filtered-out row fades out, the rows of a page that is left do not, and mounting rows forces no layout per row', async ({page}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as {__dummies: number; __rects: number}
+    w.__dummies = 0
+    w.__rects = 0
+    new MutationObserver(list => {
+      for (const m of list) for (const n of m.addedNodes) if ((n as unknown as {isDummy?: boolean}).isDummy) w.__dummies++
+    }).observe(document, {childList: true, subtree: true})
+    const rect = Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = function () {
+      w.__rects++
+      return rect.call(this)
+    }
+  })
+  await ready(page, '/groups', 'group-Goa trip', true)
+  const read = () => page.evaluate(() => (window as unknown as {__dummies: number; __rects: number}))
+  const groups = page.getByTestId('screen-groups')
+
+  // Opening a pushed page with its rows, then leaving it: no clones.
+  await groups.getByTestId('group-Goa trip').click()
+  await expect(page.getByTestId('screen-group')).toBeVisible()
+  await page.waitForTimeout(1000)
+  const atOpen = await read()
+  await page.getByTestId('header-back').last().click()
+  await expect(page.getByTestId('screen-group')).toHaveCount(0)
+  await page.waitForTimeout(500)
+  expect((await read()).__dummies - atOpen.__dummies).toBe(0)
+
+  // A search that leaves one group: the others fade out on the page that stays, measuring nothing as they mount.
+  await groups.getByTestId('list-search').click()
+  const before = await read()
+  await groups.getByTestId('list-search-input').fill('Goa')
+  await expect(groups.getByTestId('list-search-count')).toContainText('1 of')
+  await page.waitForTimeout(500)
+  const after = await read()
+  expect(after.__dummies - before.__dummies).toBeGreaterThan(0)
+  await groups.getByTestId('list-search-input').fill('')
+  await page.waitForTimeout(800)
+  const back = await read()
+  // Every group row mounts again: a handful of reads (the search field, the list), never one per row.
+  expect(back.__rects - after.__rects).toBeLessThan(10)
+})

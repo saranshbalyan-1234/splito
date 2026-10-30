@@ -15,7 +15,6 @@ import {atoms as a, web} from '#/alf'
 import * as Composer from '#/components/Composer'
 import * as Prompt from '#/components/Prompt'
 import {IS_IOS, IS_IPAD, IS_LIQUID_GLASS} from '#/env'
-import {ScreenExitScope} from '#/motion/listAnimations'
 import {
   DiscardPrompt,
   Footer,
@@ -34,16 +33,7 @@ import {
  * changes?" as the dialog sheets; on native a swipe down or Back with
  * unsaved changes asks first too.
  */
-/** Its rows skip their exit animations when the sheet's route is popped (owner 189, `motion/listAnimations`). */
-export function Screen(props: React.ComponentProps<typeof ScreenBody>) {
-  return (
-    <ScreenExitScope>
-      <ScreenBody {...props} />
-    </ScreenExitScope>
-  )
-}
-
-function ScreenBody({
+export function Screen({
   testID,
   title,
   closeHint,

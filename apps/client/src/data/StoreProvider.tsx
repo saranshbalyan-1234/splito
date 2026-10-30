@@ -242,7 +242,7 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
     })
   }, [])
 
-  /** The progress of a seeding reaches the blocking dialog (and the caller's own callback, if any). */
+  /** The progress of a seeding reaches the progress pill (and the caller's own callback, if any); while it runs the app stays usable on the store it is on. */
   const withProgress = useCallback(<T,>(onProgress: ((done: number) => void) | undefined, run: (report: (done: number) => void) => Promise<T>) => {
     setDemoProgress(0)
     return run(done => {
@@ -253,36 +253,37 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
 
   const setDemo = useCallback(
     (on: boolean, onProgress?: (done: number) => void) =>
-      serial(() =>
-        withProgress(onProgress, async report => {
-          await booted.current
-          const cur = live.current
-          if (!cur || cur.demo === on) return
-          const m = await loadDemo()
-          if (on) {
-            // Seeded and ready before anything changes; the real database learns of the mode last, so a failure leaves it untouched.
-            const opened = await m.openDemo(accountId, cur.ctx, notices.current, report)
-            try {
-              await m.writeDemoMode(cur.store, cur.ctx, true)
-            } catch (e) {
-              await opened.store.close()
-              throw e
-            }
-            void adopt({...opened, demo: true})
-          } else {
-            const real = await openReal()
-            try {
-              await m.writeDemoMode(real.store, real.ctx, false)
-            } catch (e) {
-              await real.store.close()
-              throw e
-            }
-            // Back on the real data first; then the demo database and everything it kept are erased (owner 136).
-            await adopt({...real, demo: false})
-            await m.eraseDemo(accountId)
+      serial(async () => {
+        // Turning on starts at 0 %: the progress pill, not the cover, shows from the first frame (the seeding is the long part).
+        setDemoProgress(on ? 0 : null)
+        await booted.current
+        const cur = live.current
+        if (!cur || cur.demo === on) return setDemoProgress(null)
+        const m = await loadDemo()
+        if (on) {
+          // Seeded and ready before anything changes; the real database learns of the mode last, so a failure leaves it untouched.
+          // The app stays usable on the real store meanwhile; only the swap itself covers it.
+          const opened = await withProgress(onProgress, report => m.openDemo(accountId, cur.ctx, notices.current, report))
+          try {
+            await m.writeDemoMode(cur.store, cur.ctx, true)
+          } catch (e) {
+            await opened.store.close()
+            throw e
           }
-        }),
-      ),
+          void adopt({...opened, demo: true})
+        } else {
+          const real = await openReal()
+          try {
+            await m.writeDemoMode(real.store, real.ctx, false)
+          } catch (e) {
+            await real.store.close()
+            throw e
+          }
+          // Back on the real data first; then the demo database and everything it kept are erased (owner 136).
+          await adopt({...real, demo: false})
+          await m.eraseDemo(accountId)
+        }
+      }),
     [accountId, adopt, openReal, serial, withProgress],
   )
 

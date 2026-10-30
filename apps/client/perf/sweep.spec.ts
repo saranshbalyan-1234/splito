@@ -36,13 +36,14 @@ type Pred =
   | {flips: [string, string]} // [selector, attribute] changes from its value when armed
   | {moves: string} // the element's box or opacity changes (a sheet starting to move), or it appears/disappears
   | {ready: string; rows?: string} // on screen with no skeleton inside (aria-busy or *-loading) and, if given, a row
+  | {fresh: string} // an element that was not there when armed (a sheet over a sheet), on screen with no skeleton
   | {all: Pred[]}
   | {any: Pred[]}
 
 type Result = {fb: number; ct: number; long: number; exits: number}
 
 type Probe = {
-  arm(a: {fb: Pred; ct: Pred; now: boolean}): void
+  arm(a: {fb: Pred; ct: Pred; now: boolean; timeout?: number}): void
   result(): Promise<Result>
   load: Promise<Result>
   typeStart(): void
@@ -51,7 +52,7 @@ type Probe = {
   framesEnd(): {maxGap: number; slow: number; long: number}
 }
 
-function installProbe() {
+function installProbe(START_READY: Pred[]) {
   const w = window as unknown as {__sw: Probe}
   const blocks: Array<{s: number; d: number}> = []
   let domExits = 0
@@ -83,8 +84,9 @@ function installProbe() {
     [...root.querySelectorAll('[aria-busy="true"],[data-testid$="-loading"]')].some(
       e => !(e.getAttribute('data-testid') ?? '').startsWith('sync-dot') && e.getClientRects().length > 0,
     )
+  /* The topmost match: a picker's dialog sits after its parent sheet's in the portal. */
   const sig = (sel: string) => {
-    const e = document.querySelector(sel)
+    const e = [...document.querySelectorAll(sel)].at(-1)
     if (!e) return 'gone'
     const r = e.getBoundingClientRect()
     return `${r.x}|${r.y}|${r.width}|${r.height}|${getComputedStyle(e).opacity}`
@@ -105,6 +107,10 @@ function installProbe() {
         [...document.querySelectorAll(p.ready)].some(
           r => r.getClientRects().length > 0 && !busy(r) && (!p.rows || shown(p.rows, r)),
         )
+    }
+    if ('fresh' in p) {
+      const before = new Set(document.querySelectorAll(p.fresh))
+      return () => [...document.querySelectorAll(p.fresh)].some(r => !before.has(r) && r.getClientRects().length > 0 && !busy(r))
     }
     if ('any' in p) {
       const any = p.any.map(compile)
@@ -167,7 +173,7 @@ function installProbe() {
   }
   for (const type of ['pointerdown', 'touchstart', 'mousedown']) addEventListener(type, down, true)
 
-  const start = (a: {fb: Pred; ct: Pred; now: boolean}, t0: number) =>
+  const start = (a: {fb: Pred; ct: Pred; now: boolean; timeout?: number}, t0: number) =>
     new Promise<Result>(done => {
       const c: Cur = {
         t0,
@@ -183,7 +189,7 @@ function installProbe() {
           /* Never happened: report what did. */
           if (c.fbAt > 0 && c.fbPaint < 0) c.fbPaint = c.fbAt
           finish(c)
-        }, 8000),
+        }, a.timeout ?? 8000),
       }
       cur = c
       if (a.now) poll()
@@ -194,7 +200,7 @@ function installProbe() {
       pending = start(a, a.now ? performance.now() : -1)
     },
     result: () => pending ?? Promise.reject(new Error('not armed')),
-    /* The first load: from navigation start to Home with its recent transactions. */
+    /* The first load: from navigation start to the start tab with its rows. */
     load: Promise.resolve({fb: -1, ct: -1, long: 0, exits: 0}),
     typeStart() {
       typed.length = 0
@@ -257,7 +263,7 @@ function installProbe() {
   probe.load = start(
     {
       fb: {visible: '[data-testid^="screen-"]'},
-      ct: {ready: '[data-testid="screen-home"]', rows: '[data-testid^="home-transaction-"]'},
+      ct: {any: START_READY},
       now: false,
     },
     0,
@@ -292,6 +298,10 @@ type Step = {
   data?: Data
   /** Wait after the step before the next one (the screen finishing its own motion). */
   settle?: number
+  /** The content budget when it is not a tap's 200 ms (the demo seed: a few seconds, with no long task meanwhile). */
+  ctBudget?: number
+  /** How long the probe waits for the content (default 8 s). */
+  timeout?: number
 }
 
 type Flow = {
@@ -333,7 +343,6 @@ async function firstTestId(page: Page, scope: string, re: RegExp, skip: RegExp =
 const personRow = (c: Ctx) => firstTestId(c.page, T('screen-people'), /^person-/, /^person-(row-|demo-)|-(chips|more|deleted|deleted-clock)$/)
 const groupRow = (c: Ctx) => firstTestId(c.page, T('screen-groups'), /^group-/, /^group-(balance|my-|demo-|bulk-)|-(more|deleted|deleted-clock)$/)
 const historyRow = (c: Ctx) => firstTestId(c.page, T('screen-group'), /^history-.*-e-|^history-bulk-/, /$^/)
-const activityRow = (c: Ctx) => firstTestId(c.page, T('screen-activity'), /^activity-expense\.(created|edited)$/)
 /* Kept-mounted screens behind the focused one hold copies of the same test ids, hidden: take the one on screen. */
 const tid = (id: string) => (c: Ctx) => Promise.resolve(c.page.locator(`${T(id)}:visible`).first())
 const css = (sel: string) => (c: Ctx) => Promise.resolve(c.page.locator(`${sel}:visible`).first())
@@ -351,13 +360,15 @@ async function tapQuietly(c: Ctx, id: string) {
 }
 /** The switch sends the app home; the next step starts from Settings again. */
 async function onSettings(c: Ctx) {
-  if (await c.page.locator(`${T('settings-demo-mode')}:visible`).count()) return
-  await c.page.goto('/settings')
-  await c.page.waitForFunction(() => !!document.querySelector('[data-testid="settings-demo-mode"]'))
-  await c.page.waitForTimeout(2000)
+  const toggle = c.page.locator(`${T('settings-demo-mode')}:visible`)
+  /* A switch made a moment ago may still send the app home after the page loads: try again until Settings stays. */
+  for (let i = 0; i < 4 && !(await toggle.count()); i++) {
+    await c.page.goto('/settings')
+    await toggle.first().waitFor({timeout: 15_000}).catch(() => {})
+    await c.page.waitForTimeout(2000)
+  }
 }
 const press = (key: string) => async (c: Ctx) => void (await c.page.keyboard.press(key))
-const settled = async (c: Ctx, ms = 700) => void (await c.page.waitForTimeout(ms))
 
 /** A pushed page's way back: the header's Back. */
 const back = (screen: string, id = screen.toLowerCase()): Step => ({
@@ -397,7 +408,7 @@ const openPage = (screen: string, id: string, tap: Step['tap'], extra: Partial<S
 
 /** A sheet, popup or menu opening from a tap and closing again. */
 const sheet = (screen: string, what: string, open: Step['tap'], extra: Partial<Step> = {}): Step[] => [
-  {screen, action: `${what}: open`, tap: open, fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900, ...extra},
+  {screen, action: `${what}: open`, tap: open, fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 900, ...extra},
   {screen, action: `${what}: close`, act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700},
 ]
 
@@ -473,17 +484,25 @@ function scrolling(screen: string, start: Flow['start']): Flow {
   }
 }
 
+/*
+ * The main tabs are the link table's tab routes (`ROUTE_PATHS`), so a tab that is added or removed (F-271 removes Home)
+ * changes the sweep with it; each names the rows that mean "its content is on screen". A tab route missing here fails
+ * the coverage test.
+ */
+const TAB_ROWS: Record<string, string> = {
+  Home: P('home-transaction-'),
+  People: P('person-'),
+  Groups: P('group-'),
+  Analytics: P('analytics-over-time-chart'),
+  Activity: P('activity-'),
+}
+const TABS = Object.keys(ROUTE_PATHS).filter(r => r in TAB_ROWS)
+/** Any tab on screen with its rows: the first load and the demo switch land on the start tab, whichever it is. */
+const START_READY: Pred[] = TABS.map(r => ({ready: T(`screen-${r.toLowerCase()}`), rows: TAB_ROWS[r]}))
+
 const FLOWS: Flow[] = [
-  {
-    name: 'tabs',
-    steps: [
-      TAB('people', 'People', P('person-')),
-      TAB('groups', 'Groups', P('group-')),
-      TAB('analytics', 'Analytics', P('analytics-over-time-chart')),
-      TAB('activity', 'Activity', P('activity-')),
-      TAB('home', 'Home', P('home-transaction-')),
-    ],
-  },
+  /* From the start tab round every tab and back to the first: each tab is left once and opened once more. */
+  {name: 'tabs', steps: [...TABS.slice(1), TABS[0]!].map(r => TAB(r.toLowerCase(), r, TAB_ROWS[r]!))},
   {name: 'Person', start: '/people', steps: [openPage('Person', 'person', personRow), back('Person')]},
   {name: 'Group', start: '/groups', steps: [openPage('Group', 'group', groupRow), back('Group')]},
   {
@@ -642,7 +661,7 @@ const FLOWS: Flow[] = [
         action: 'filters: open',
         tap: tid('list-filters'),
         fb: {moves: DIALOG},
-        ct: {ready: DIALOG},
+        ct: {fresh: DIALOG},
         settle: 900,
       },
       {screen: 'Groups', action: 'filter chip', tap: tid('filter-show-owed'), fb: {flips: [T('filter-show-owed'), 'aria-checked']}, settle: 500},
@@ -713,7 +732,7 @@ const FLOWS: Flow[] = [
     (name): Flow => ({
       name: `Global sheet: ${name}`,
       steps: [
-        {screen: `Global sheet ${name}`, action: 'open', act: link(`/?${name}=${name === 'feedback' ? 'new' : 'help'}`), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900},
+        {screen: `Global sheet ${name}`, action: 'open', act: link(`/?${name}=${name === 'feedback' ? 'new' : 'help'}`), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 900},
         {screen: `Global sheet ${name}`, action: 'close', act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700},
       ],
     }),
@@ -744,11 +763,7 @@ const FLOWS: Flow[] = [
   typing('Expense comment', c => `/expense/${idsOf(c).expense}`, 'Expense', async () => {}, 'comment-input'),
   typing('Feedback message', '/?feedback=new', 'Feedback sheet', async c => void (await c.page.waitForTimeout(900)), 'feedback-message'),
   /* ---- scrolling */
-  scrolling('Home', '/'),
-  scrolling('People', '/people'),
-  scrolling('Groups', '/groups'),
-  scrolling('Activity', '/activity'),
-  scrolling('Analytics', '/analytics'),
+  ...TABS.map(r => scrolling(r, (ROUTE_PATHS as Record<string, string>)[r]!)),
   scrolling('Group', c => `/groups/${idsOf(c).group}`),
   scrolling('Person', c => `/people/${idsOf(c).person}`),
   scrolling('Settings', '/settings'),
@@ -773,8 +788,34 @@ const FLOWS: Flow[] = [
           await p.waitForTimeout(600)
         },
         tap: tid('sheet-save'),
-        fb: {visible: T('expense-saved')},
+        /* Feedback: the button goes busy; content: the write committed and its check is on screen. */
+        fb: {any: [{visible: T('expense-saved')}, {flips: [T('sheet-save'), 'aria-disabled']}]},
+        ct: {visible: T('expense-saved')},
         settle: 1500,
+      },
+    ],
+  },
+  {
+    name: 'Record payment',
+    start: c => `/people/${idsOf(c).person}`,
+    steps: [
+      {
+        screen: 'Person',
+        action: 'record payment: save',
+        prepare: async c => {
+          const p = c.page
+          await link(`/people/${idsOf(c).person}/record-payment`)(c)
+          const amount = p.locator(`${T('payment-amount')}:visible`).first()
+          await amount.waitFor({timeout: 15_000})
+          await p.waitForTimeout(700)
+          await amount.fill('10')
+          await expect(p.locator(`${T('record-payment-sheet')} ${T('sheet-save')}:visible`).first()).toBeEnabled()
+          await p.waitForTimeout(400)
+        },
+        tap: css(`${T('record-payment-sheet')} ${T('sheet-save')}`),
+        fb: {any: [{visible: T('payment-recorded')}, {flips: [`${T('record-payment-sheet')} ${T('sheet-save')}`, 'aria-disabled']}]},
+        ct: {visible: T('payment-recorded')},
+        settle: 2500,
       },
     ],
   },
@@ -793,7 +834,7 @@ const FLOWS: Flow[] = [
         },
         tap: tid('expense-menu'),
         fb: {moves: DIALOG},
-        ct: {ready: DIALOG},
+        ct: {fresh: DIALOG},
         settle: 900,
       },
       {screen: 'Expense', action: 'delete', tap: tid('expense-delete'), fb: {any: [{visible: T('expense-deleted')}, {gone: T('screen-expense')}]}, settle: 1200},
@@ -814,14 +855,29 @@ const FLOWS: Flow[] = [
       await onSettings(c)
     },
     steps: [
-      {screen: 'Settings', action: 'demo mode off', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-home')}]}, settle: 2500},
-      {screen: 'Settings', action: 'demo mode on', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-home')}]}, settle: 2500},
+      {screen: 'Settings', action: 'demo mode off', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {any: START_READY}]}, settle: 2500},
+      /*
+       * On seeds a fresh year of data (off erased it, owner 136). Feedback is the progress pill; content is the demo
+       * showing, within a few seconds, and the app must stay usable meanwhile: no main-thread block over 50 ms.
+       */
+      {
+        screen: 'Settings',
+        action: 'demo mode on (seed)',
+        prepare: onSettings,
+        tap: tid('settings-demo-mode'),
+        fb: {any: [{visible: T('demo-progress')}, {flips: [T('settings-demo-mode'), 'aria-checked']}]},
+        ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {any: START_READY}]},
+        ctBudget: 5000,
+        timeout: 180_000,
+        settle: 4000,
+      },
     ],
+    laps: 2,
   },
   {
     name: 'Search',
     steps: [
-      {screen: 'Search & Ask', action: 'open', tap: tid('header-search-ask'), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900},
+      {screen: 'Search & Ask', action: 'open', tap: tid('header-search-ask'), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 900},
       {screen: 'Search & Ask', action: 'close', tap: tid('search-ask-cancel'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700},
     ],
   },
@@ -860,9 +916,9 @@ function sheetFlows(): Flow[] {
     for (const parent of parents) {
       const url = (c: Ctx) => `${base(c).replace(/\/$/, '')}/${parent}`
       const kids = chains.filter(ch => ch.startsWith(`${parent}/`))
-      steps.push({screen: `${name} sheet`, action: parent, act: link(url), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 1000})
+      steps.push({screen: `${name} sheet`, action: parent, act: link(url), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 1000})
       for (const kid of kids) {
-        steps.push({screen: `${name} sheet`, action: kid, act: link(c => `${base(c).replace(/\/$/, '')}/${kid}`), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 1000})
+        steps.push({screen: `${name} sheet`, action: kid, act: link(c => `${base(c).replace(/\/$/, '')}/${kid}`), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 1000})
         steps.push({screen: `${name} sheet`, action: `${kid}: close`, act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700})
       }
       steps.push({screen: `${name} sheet`, action: `${parent}: close`, act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700})
@@ -895,13 +951,14 @@ const medianOf = (s: Sample[]): Sample => ({
   exits: Math.max(...s.map(x => x.exits)),
 })
 
-function misses(s: Sample, step: {leaving?: boolean; info?: boolean}, label: string): string[] {
+function misses(s: Sample, step: {leaving?: boolean; info?: boolean; ctBudget?: number}, label: string): string[] {
+  const content = step.ctBudget ?? BUDGET.content
   if (step.info) return []
   const out: string[] = []
   if (s.fb < 0) out.push(`${label}: feedback never showed`)
   else if (s.fb > BUDGET.feedback) out.push(`${label}: feedback ${s.fb.toFixed(0)} ms > ${BUDGET.feedback}`)
   if (s.ct < 0) out.push(`${label}: content never showed`)
-  else if (s.ct > BUDGET.content) out.push(`${label}: content ${s.ct.toFixed(0)} ms > ${BUDGET.content}`)
+  else if (s.ct > content) out.push(`${label}: content ${s.ct.toFixed(0)} ms > ${content}`)
   if (s.long > BUDGET.longTask) out.push(`${label}: long task ${s.long.toFixed(0)} ms > ${BUDGET.longTask}`)
   if (step.leaving && s.exits > 0) out.push(`${label}: ${s.exits} exit animations on a leaving screen`)
   return out
@@ -935,7 +992,13 @@ async function boot(run: Run, path: string) {
   await page.waitForTimeout(Number(process.env.SWEEP_QUIET ?? 2500))
 }
 
+/*
+ * Playwright's own session turns Chrome's accessibility tree on, and every commit then rebuilds it: 66 of a 213 ms
+ * Analytics revisit at 6x was `Blink.Accessibility`, work a phone without a screen reader never does (Mobile Safari
+ * builds no tree unless VoiceOver runs). Measured steps switch it off first; it stays off until Playwright asks again.
+ */
 async function throttle(run: Run, rate: number) {
+  if (rate > 1) await run.cdp?.send('Accessibility.disable').catch(() => {})
   await run.cdp?.send('Emulation.setCPUThrottlingRate', {rate})
 }
 
@@ -963,7 +1026,7 @@ async function runStep(run: Run, c: Ctx, step: Step): Promise<Sample> {
     const f = await page.evaluate(() => (window as unknown as {__sw: Probe}).__sw.framesEnd())
     r = {fb: f.maxGap, ct: f.maxGap, long: f.long, exits: 0}
   } else {
-    await page.evaluate(a => (window as unknown as {__sw: Probe}).__sw.arm(a), {fb: step.fb, ct: step.ct ?? step.fb, now: !step.tap})
+    await page.evaluate(a => (window as unknown as {__sw: Probe}).__sw.arm(a), {fb: step.fb, ct: step.ct ?? step.fb, now: !step.tap, timeout: step.timeout})
     if (target) {
       const b = (await target.boundingBox())!
       await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2)
@@ -1048,7 +1111,7 @@ test.describe.configure({timeout: 3_600_000})
 
 for (const data of (process.env.SWEEP_DATA ?? 'demo,bulk').split(',') as Data[]) {
   test(`sweep: every screen and interaction, ${data} data`, async ({page, browserName}, info) => {
-    await page.addInitScript(installProbe)
+    await page.addInitScript(installProbe, START_READY)
     page.on('pageerror', e => console.log(`pageerror: ${(e.stack ?? e.message).slice(0, 1200)}`))
     page.on('crash', () => console.log('page crashed'))
     const cdp = browserName === 'chromium' ? await page.context().newCDPSession(page) : null
@@ -1111,7 +1174,7 @@ test('the sweep covers every route, in-page tab, sheet and global sheet of the l
   const has = (name: string) => screens.some(x => x === name || x.startsWith(`${name} `))
   const missing: string[] = []
   for (const route of Object.keys(ROUTE_PATHS)) {
-    const ok = route === 'Search' ? has('Search & Ask') : ['Home', 'People', 'Groups', 'Analytics', 'Activity'].includes(route) ? has(`Tab ${route}`) : has(route)
+    const ok = route === 'Search' ? has('Search & Ask') : has(route) || has(`Tab ${route}`)
     if (!ok) missing.push(`route ${route}`)
   }
   for (const [page, chains] of Object.entries(SHEETS)) {

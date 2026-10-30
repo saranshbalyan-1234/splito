@@ -1,11 +1,13 @@
 import {useEffect, useLayoutEffect, useRef, useState} from 'react'
 
 import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
+import {ScreenExitScope} from '#/motion/listAnimations'
 
 /**
  * Owns `opened` for one open sheet, popup or composer (it mounts and unmounts with it), so the flip when the
  * motion ends re-renders only what reads `OpenedContext`, not the shell that animates (owner 168). The owner
- * calls `setterRef.current(true)` on the real end of the motion; a timer opens it if that never comes.
+ * calls `setterRef.current(true)` on the real end of the motion; a timer opens it if that never comes. It is also the
+ * surface's exit scope: rows inside skip their exit animations when the whole sheet closes (owner 189).
  */
 export function OpenedProvider({
   setterRef,
@@ -32,5 +34,9 @@ export function OpenedProvider({
     }, OPENED_FALLBACK_MS)
     return () => clearTimeout(id)
   }, [])
-  return <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
+  return (
+    <OpenedContext.Provider value={opened}>
+      <ScreenExitScope>{children}</ScreenExitScope>
+    </OpenedContext.Provider>
+  )
 }

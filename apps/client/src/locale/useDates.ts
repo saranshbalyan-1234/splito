@@ -2,7 +2,6 @@ import {useSyncExternalStore} from 'react'
 import {AppState} from 'react-native'
 import {addDays, type LocalDate} from '@splito/domain'
 import {useLingui} from '@lingui/react/macro'
-import {getLocales} from 'expo-localization'
 
 import {
   formatDay,
@@ -10,12 +9,13 @@ import {
   todayIn,
 } from '#/locale/dates'
 import {usePref} from '#/data/hooks'
+import {deviceLocale} from '#/locale/numberLocale'
 
 /** The locale dates are written in: Hindi uses hi-IN, English follows the device. */
 export function useDateLocale(): string {
   const [language = 'en'] = usePref('language')
   if (language === 'hi') return 'hi-IN'
-  const tag = getLocales()[0]?.languageTag
+  const tag = deviceLocale()?.languageTag
   return tag?.startsWith('en') ? tag : 'en'
 }
 

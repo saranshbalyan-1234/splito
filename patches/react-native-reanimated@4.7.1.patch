@@ -105,3 +105,59 @@ index 8448ad3fa53872d81a765cb8f3428fbf25b2b1da..0382abbdd19fa72a80f28d95616c0476
      };
    }
  
+diff --git a/lib/module/createAnimatedComponent/AnimatedComponent.js b/lib/module/createAnimatedComponent/AnimatedComponent.js
+index c61c8dd2b55f1b00247e2d3441277594d1a466c7..dd0168327a0838468e8d77097e7c62e70e173c7b 100644
+--- a/lib/module/createAnimatedComponent/AnimatedComponent.js
++++ b/lib/module/createAnimatedComponent/AnimatedComponent.js
+@@ -65,9 +65,8 @@ export default class AnimatedComponent extends ReanimatedAnimatedComponent {
+         element.appendChild(dummyClone.firstChild);
+       }
+       delete element.dummyClone;
+-      if (this.props.exiting) {
+-        saveSnapshot(element);
+-      }
++      // Splito: no snapshot here. It forced a layout per animated row on every mount and update (191 per page);
++      // the exit reads the element's box when it starts (getSnapshotForElement's fallback).
+       if (!this.props.entering) {
+         this._isFirstRender = false;
+         return;
+@@ -173,9 +172,8 @@ export default class AnimatedComponent extends ReanimatedAnimatedComponent {
+     this._NativeEventsManager?.updateEvents(prevProps);
+     this._updateAnimatedStylesAndProps();
+     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+-    if (this.props.exiting && this._componentDOMRef) {
+-      saveSnapshot(this._componentDOMRef);
+-    }
++    // Splito: no snapshot here. It forced a layout per animated row on every mount and update (191 per page);
++    // the exit reads the element's box when it starts (getSnapshotForElement's fallback).
+     if (snapshot && this.props.layout) {
+       if (getReducedMotionFromConfig(this.props.layout)) {
+         this.props.layout.callbackV?.(true);
+diff --git a/src/createAnimatedComponent/AnimatedComponent.tsx b/src/createAnimatedComponent/AnimatedComponent.tsx
+index b77b1830b1014c7b77d80aa232223ec9d9a983af..054a4740ca9dec06047a46a48eeded0b5dc4f497 100644
+--- a/src/createAnimatedComponent/AnimatedComponent.tsx
++++ b/src/createAnimatedComponent/AnimatedComponent.tsx
+@@ -121,9 +121,8 @@ export default class AnimatedComponent
+       }
+       delete element.dummyClone;
+ 
+-      if (this.props.exiting) {
+-        saveSnapshot(element);
+-      }
++      // Splito: no snapshot here. It forced a layout per animated row on every mount and update (191 per page);
++      // the exit reads the element's box when it starts (getSnapshotForElement's fallback).
+ 
+       if (!this.props.entering) {
+         this._isFirstRender = false;
+@@ -289,9 +288,8 @@ export default class AnimatedComponent
+     this._updateAnimatedStylesAndProps();
+     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+ 
+-    if (this.props.exiting && this._componentDOMRef) {
+-      saveSnapshot(this._componentDOMRef);
+-    }
++    // Splito: no snapshot here. It forced a layout per animated row on every mount and update (191 per page);
++    // the exit reads the element's box when it starts (getSnapshotForElement's fallback).
+ 
+     if (snapshot && this.props.layout) {
+       if (getReducedMotionFromConfig(this.props.layout as CustomConfig)) {
