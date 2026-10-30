@@ -2188,9 +2188,15 @@ built yet.
   "Sign-in arrives with sync" and only the dev/e2e "Continue with a dev account" works; no fake success, no fake
   account. *Why:* "there is signin page already there in bluesky, use that"; "basically no signup needed".
 - **Signed in (only once the backend exists):** an account row (avatar, name, email/phone, sync status) and
-  a destructive "Log out" row opening a prompt "Log out?" that warns when the outbox holds unsynced changes
-  ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data". Logout
-  never silently deletes unsynced outbox rows (§ 11).
+  a destructive "Log out" row opening a prompt "Log out?". **Log out erases everything this account left on the
+  device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
+  database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
+  caches, search index); device-level choices (language, theme) stay so the logged-out flow still speaks the
+  person's language. There is no "keep" option. The prompt says what will happen ("This removes all your Splito
+  data from this device") and, when the outbox holds changes the server has not acknowledged, says so first with
+  the count ("N changes haven't synced yet and will be lost"), so nothing unsynced is deleted silently (§ 11).
+  The erase finishes before the logged-out flow shows; a failure is reported and retried, never left half-done.
+  *Why:* "when logout, it should remove all data from db".
 - **"Sign in" / "Log out" also appear in the drawer footer** (§ 26.7).
 - **Auth state comes from one `useSession()`** (Bluesky pattern, `src/state/session`), signed out until the
   backend lands.
@@ -2256,8 +2262,8 @@ built yet.
     app opens and works offline with the account's local database (one database per account, so two accounts on
     one device never mix), and only an API 401 ends the session (§ 11). Sign-in itself needs a connection, and
     says so offline.
-  - **Log out** returns to the logged-out flow and closes that account's database; the prompt of § 26.15 (keep
-    or erase this device's data, unsynced warning) still applies.
+  - **Log out** returns to the logged-out flow and closes that account's database; it erases all of that
+    account's data on the device (owner 186, § 26.15; unsynced warning first).
   - **Data already on a device from before this rule** is offered once after the first sign-in: "Move this
     device's data into your account" (F-2104), never merged silently.
   - **Until the auth API exists** (F-2101/F-2102, built after the whole front end, owner 164): dev and e2e builds offer
@@ -2728,6 +2734,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 182 | "for trip ask for location as well" | Trip groups get an optional "Where?" text field in New/Edit group; shown with type and dates, searchable, in CSV, in demo trips | § 26.12 | Trips had name and dates only |
 | 184 | "there should be some specific set of back for sure, for example if i open appearance in settings, the flow is from settings to appearance" | Every page has a fixed parent; Back with no history goes to it (parents stacked); a main tab opened from a link keeps Back after refresh via `from` in the address | § 26.3 | Assistant ruling: a refreshed pushed copy became the plain tab; parents only for a few routes |
 | 185 | "also animate the splash screen icon, so that i see that its loading"; "like zoomin zoomout a little, so i know content is being downloaded" | Launch mark zooms 1 -> 1.08 -> 1 while loading, web from first paint (inline CSS), native via a matching JS launch screen; opacity pulse under reduced motion | § 26.11 | Static splash mark |
+| 186 | "when logout, it should remove all data from db" | Log out always erases the account's local DB, demo DB, account prefs, drafts, session and caches; device language/theme stay; prompt warns with the unsynced count first; no keep option | § 26.15 | Prompt offered "Keep this device's data" / "Erase this device's data" |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

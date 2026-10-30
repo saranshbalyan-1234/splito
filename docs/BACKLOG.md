@@ -1818,7 +1818,7 @@ Everything a group trip needs, from first booking to closing the books.
 
 Trip groups ask where the trip is: an optional plain-text place on New and Edit group, shown and searchable.
 
-- **Effort** S · **Impact** 6 · **Backend** no (synced with the group in M2) · **Status** in progress, Wave C · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no (synced with the group in M2) · **Status** done (web), Wave C; native unverified · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. "Where? (optional)" shows for Trip only, beside the dates; saved as `group.location` (trimmed, null when empty) through createGroup / updateGroup with history and outbox.
