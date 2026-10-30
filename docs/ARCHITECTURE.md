@@ -1490,6 +1490,19 @@ Splito lessons (add newest last, dated, with PR):
   reference) is what makes this safe, not the speed number. Also: the migration tests' `storedTerms` helper listed
   the term kinds by hand, so a new kind failed dozens of migration tests until it read `TERM_KINDS`.
 
+- 2026-10-31, F-246 fix round (c-search, Opus): **"answered from the keys" was still a full-ledger read.** The first cut
+  intersected key sets well, then ordered every answer by reading all `d` keys and totalled it by reading all `a` and
+  `s` keys, and a balance status listed every record of every settled group plus every record outside groups: one
+  match cost 21,201 keys at 10,000 expenses + 600 payments, "owed" 44,916, and IndexedDB 50-130 ms of CPU per query
+  (load 45). Now an answer of at most 500 records is read by id and ordered, totalled and status-checked from its rows;
+  the rest is unchanged. Three more things to remember: (1) a word that finds a person must not expand to the person's
+  records when it is not a name: phone digits ("91", "98") and UPI words matched almost the whole ledger through the
+  `h` keys, and so did my own name; such words are their own term kind (`k`) that lists the person only; (2) a cached
+  promise of maintenance work must be dropped when it rejects, or one failure breaks the feature until reload; derived
+  data is rebuilt at idle, in chunks with yields, never inside the first keystroke; (3) a version marker cannot see a
+  writer of the same version that skipped rows (an older tab, a rollback): also compare a cheap count (`d` keys against
+  records). The oracle became a property test (random changes on both engines, the stored keys equal `termRows`, 30
+  queries equal a row-by-row reference, narrow and broad both exercised), which is what makes the two paths safe.
 
 ## 24. Checklists
 
@@ -2959,27 +2972,42 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   results stay grouped (People, Groups, Expenses...) with totals per currency and paged (§ 9.8 `search_terms`,
   extended with tokens for every field above). *Why:* "make sure the search works logically with most of the
   things like name, place, amount, category, type, group etc".
-  *How the query is read (assistant's ruling, F-246, replacing "words and simple amount filters"):* English and
-  Hindi words for "over / under / between / around", "this / last week / month / year", months, today / yesterday,
-  "paid by X / X ne", "with X / X ke saath", "in <place>", statuses and types; amounts accept `1k`, `1.5 lakh`, `2 cr`
-  and a currency sign or code; `food or travel` is OR inside one facet, everything else AND; a name that nobody has
-  ("with friends") is just words; a status or type word that finds nothing ("group dinner", "settled bill") is
-  searched as text. Status: *deleted* = tombstones (people and groups too), *disputed* = an open dispute or hold,
-  *hidden* = the groups I hid and the deleted items I hid, *inactive* = inactive groups; *settled / owed / owe* are a
-  group's own nets (all zero / I am owed / I owe), and for a record outside any group my direct balance with the
-  others on it (a friend's balance inside groups is not folded in). Results: People, Groups, Expenses (with count and
-  per-currency totals) and Payments (payments and write-offs); a comment's text finds the expense or payment it is
-  on; each row names the field that matched (Notes, Item, Group, Place, Category, With, Paid by, Comment, Amount, Date,
-  Currency, status) and marks the words; each facet is a removable chip under the box. Not searched: invites and
-  friend requests (they are not ledger records and have their own list in People).
-  *Reads/writes:* reads term ranges only (`store.terms`, `store.termCount`), `getMany` for the 30 rows of a page, the
-  people / groups / balances projections for the statuses, `listOpenDisputes` for *disputed*; writes up to 12 term rows
-  per expense, payment or write-off (about 5 more than before), none for a comment beyond its words. *Cost:* a query
-  touches the keys of its tokens plus the `d` and `a` ranges (about 0.2 us a key); no row is read to count or total;
-  the first search of an older database rebuilds its terms once. *Telemetry:* none added. *Checks:*
-  `search.test.ts` (parser, per-field, paging, speed at 5,000 and 10,000), `searchFields.test.ts` (every field on
-  SQLite and IndexedDB), `searchOracle.test.ts` (keys equal rows), `searchQuery.test.ts` (90-query table),
-  `searchMatch.test.ts`, `e2e/search.spec.ts` at 390 and 1440; web verified, native not run.
+  *How the query is read (assistant's ruling, F-246, replacing "words and simple amount filters"; fix round rulings
+  2026-10-31):* English and Hindi words for "over / under / between / around", "this / last week / month / year" (the
+  week starts on the `weekStart` preference), months and one day ("4 march", "march 4", "4 march 2026"; without a year,
+  the latest one not after today), today / yesterday, "paid by X / X ne", "with X / X ke saath", "in <place>",
+  statuses and types; amounts accept `1k`, `1.5 lakh`, `2 cr`, a currency sign or code, and `rs`, `Rs.`, `rupees`,
+  `रु` (all INR); joining words ("in", "on", "for", "spent", "at", "of", "the", "to", "from", "में", "पर", "लिए"...)
+  are dropped when they are not part of a facet and something else is left; `food or travel` (Hindi `या`) is OR
+  inside one facet, everything else AND (Hindi `और` is AND, as "and" is); a name that nobody has ("with friends") is
+  just words; a close spelling counts only for a person's name, keeps the first letter and is at most 20 letters; a
+  status or type word that finds nothing ("group dinner", "settled bill") is searched as text. A friend's contact
+  (email, phone, with or without the country code) or UPI id finds the friend, never their records; my own name finds
+  nothing (every record is mine). A category is found by its name in the person's language and by its stored name.
+  Status: *deleted* = tombstones (people and groups too), *disputed* = an open dispute or hold, *hidden* = the groups I
+  hid and the deleted items I hid, *inactive* = inactive groups; *settled / owed / owe* are a group's own nets (all
+  zero / I am owed / I owe), and for a record outside any group my direct balance with the others on it (a friend's
+  balance inside groups is not folded in). Results: People, Groups, Payments (payments and write-offs) and Expenses
+  (with count and per-currency totals), in that order, each paged with its own Show more, so loading more never moves a
+  section; a comment's text finds the expense, payment or write-off it is on; each row names the field that matched
+  (Notes, Item, Group, Place, Category, With, Paid by, Comment, Amount, Date, Currency, status) and marks the words; an
+  amount, date, currency or status match is the tag alone (the amount and date are already in the right column), and a
+  balance status says where it applies: "Settled in group", "Owed in group", "You owe in group" on a group's record,
+  "Settled", "Owed", "You owe" outside groups; the row's accessibility label names the matched fields and the comment;
+  each facet is a removable chip under the box. Types are expense, payment, write-off, comment, group and friend; not
+  searched: invites and friend requests (they are not ledger records and have their own list in People), so "invite"
+  is a plain word. If the search cannot be answered (its index cannot be built), the drawer says so with Try again,
+  never an endless spinner.
+  *Reads/writes:* reads term ranges (`store.terms`), `getMany` for a narrow answer (at most 500 records) and for the
+  30 rows of a page, the people / groups / balances projections for the statuses, `listOpenDisputes` for *disputed*;
+  `store.prepareSearch()` once per open at idle; writes up to 12 term rows per expense, payment or write-off, none
+  for a comment beyond its words. *Cost:* a narrow query touches its tokens' keys plus its rows; a broad one (over 500
+  records) also the `d` and `a` ranges (about 1 us a key); a stale index is rebuilt once, at idle, in 500-row chunks.
+  *Telemetry:* none added (a failed index build is a `StoreProvider.prepareSearch` error log). *Checks:*
+  `search.test.ts` (parser, per-field, paging, speed on both engines at 10,000, IndexedDB rebuild), `searchFields.test.ts`
+  (every field on SQLite and IndexedDB, contacts, weekStart, localised categories, >30 payments, mixed-version writer,
+  failed rebuild), `searchOracle.test.ts` (property test on both engines), `searchQuery.test.ts` (table of 107
+  queries), `searchMatch.test.ts`, `e2e/search.spec.ts` at 390 and 1440; web verified, native not run.
 - **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
   shows exactly what data is sent; nothing is sent for on-device answers.
 

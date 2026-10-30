@@ -260,7 +260,7 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
   /* ------------------------------------------------------------------ */
 
   /**
-   * Records with a word or a comment word that starts with `p`, in a group whose name or place does, on with a person
+   * Records with a word or a comment word that starts with `p`, in a group whose name or place does, with a person
    * whose name does (never me: every record is mine), or in a category whose name does. Contact and UPI words (`k`)
    * find the person only, never their records.
    */
