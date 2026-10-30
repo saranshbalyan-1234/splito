@@ -1650,9 +1650,12 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   depends on), each reviewed by Opus and fixed once, then one assemble step merges the wave, runs every check
   and deploys the preview. *Why:* "add everything to feature list and pick one by one"; then "fanout with
   sonnet and get done" (replaces strictly one feature at a time).
-- **Model split: Sonnet implements, Opus decides and reviews.** Every implementation agent (building,
-  fixing, migrating, merging) runs on Sonnet (latest); every decision (design, rulings, planning), review,
-  audit, judge and verification agent runs on Opus (latest). Each feature in the build chain is built by Sonnet,
+- **Model split: Opus for anything important, Sonnet for the rest** (owner 211 refines the earlier split). Opus
+  (latest) builds every important task: performance work, new features, data-model and navigation changes, anything
+  that needs decisions, plus every decision (design, rulings, planning), review, audit, judge and verification.
+  Sonnet (latest) builds only small, mechanical, well-specified work (test-only changes, copy, a one-file fix, a
+  rename, a docs update). When unsure, Opus. *Why:* "for important task use opus always like speed, new features
+  decisions, etc"; earlier: "use sonnet for all implementation and opus for decisions and reviews". Each feature in the build chain is built by Sonnet,
   then reviewed by Opus against § 26 and its BACKLOG criteria; a "fix-first" verdict sends it back to a Sonnet
   fixer once before the next feature starts. *Why:* "use sonnet for all implementation and opus for decisions
   and reviews".
@@ -3272,6 +3275,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 208 | "fanout more to get things done" | Run as many builders as there is independent work (no file overlap), each running only its touched specs; full e2e once per merge by the orchestrator; perf numbers only on a quiet machine | § 23 (process lesson) | At most three builders at once |
 | 209 | "also update profile page, it looks very less" | Profile becomes a full page: header with verified contacts and since-date, stat row linking out, Your balance, Payment details (UPI), Add me (QR, link), Your recent activity, Log out last | § 26.15 | Avatar, name and a few stats only |
 | 210 | "make sure whatever can be reused do it" | Reuse before writing, inside Splito first then Bluesky; duplicates are defects merged into one shared piece; briefs, reviews and reports enforce it | § 26.1 | Reuse rule covered Bluesky only |
+| 211 | "for importantn task use opus always like speed, new features decisions, etc etc"; "performance" | Opus builds every important task (performance, new features, data model, navigation, decisions) as well as reviewing; Sonnet only for small mechanical work; when unsure, Opus | § 26.1 | Sonnet implemented everything, Opus only decided and reviewed |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
