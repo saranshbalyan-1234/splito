@@ -1,8 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/desktop/RightNav.tsx (fixed right column, width, borders)
 import {ScrollView, View} from 'react-native'
-import {useNavigationState} from '@react-navigation/native'
 
-import {getCurrentRoute} from '#/lib/routes/helpers'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {AppLanguageDropdown} from '#/components/AppLanguageDropdown'
 import {RecentGroups} from './LeftNav'

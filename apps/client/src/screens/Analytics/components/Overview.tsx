@@ -218,7 +218,7 @@ export function SummaryCard({
         onPress={onPress}
         accessibilityLabel={l`${getCurrency(currency).name} balance - show in analytics`}
         accessibilityHint=""
-        style={({hovered}: {hovered?: boolean}) => [a.flex_1, a.px_md, {paddingVertical: 10}, a.transition_color, hovered && t.atoms.bg_contrast_25]}>
+        style={[a.flex_1, a.px_md, {paddingVertical: 10}]}>
         <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
           <View style={[a.flex_row, a.align_center, a.gap_sm, a.flex_shrink_0]}>
             <Text

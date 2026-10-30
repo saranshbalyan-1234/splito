@@ -472,7 +472,7 @@ export function RecentGroups() {
         members: [],
         syncStatus: g.syncStatus,
       })),
-      'recent',
+      'lastActive',
       {
         currency: defaultCurrency,
         activity: groupActivity,

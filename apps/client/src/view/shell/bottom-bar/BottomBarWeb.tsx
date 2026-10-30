@@ -18,7 +18,6 @@ import {
   describeUnread,
   useActivityBadge,
 } from '#/components/activity/useActivityFeed'
-import {PressableScale} from '#/motion/PressableScale'
 import {MAX_LABELLED_TABS, NAV_LABELS, TabGlyph, TabLabel} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'

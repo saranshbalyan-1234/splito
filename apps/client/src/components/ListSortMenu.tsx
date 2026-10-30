@@ -46,7 +46,7 @@ export function ListSortMenu({value, onChange}: {value: ListSort; onChange: (sor
               key={sort}
               testID={`list-sort-${sort}`}
               label={labels[sort]}
-              role="menuitemradio"
+              role="radio"
               aria-checked={sort === value}
               onPress={() => onChange(sort)}>
               <Menu.ItemText>{labels[sort]}</Menu.ItemText>
