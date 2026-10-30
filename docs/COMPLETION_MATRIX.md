@@ -304,9 +304,9 @@ Checks, 2026-10-30, machine load under 6 for the perf runs (e2e at load 5-135 fr
 
 ## Animated icons and empty-state art (F-1713, F-260; owners 96, 172, 210, 213; branch c-anim, web, measured 2026-10-31)
 
-- Web first-load JS (`expo export -p web`, e2e build; the `index`, `__common` and runtime scripts): 7,305,880 B before, 7,028,860 B after
-  (-277,020 B, -3.8 %); gzip 1,545,216 B before, 1,497,565 B after. Lazy: 391 KB raw in 49 chunks (`lottie-web` 168 KB plus 48 animation files; 19 empty
-  states and the 5 intro slides, light and dark; loading and success are lazy too).
+- Web first-load JS (`expo export -p web`, e2e build; the `index`, `__common` and runtime scripts): 7,305,880 B before, 7,029,015 B after
+  (-276,865 B, -3.8 %); gzip 1,545,216 B before, 1,497,558 B after. Lazy: 415 KB raw in 53 chunks (`lottie-web` 168 KB plus 52 animation files: 19 empty
+  states, the 5 intro slides, loading and success, light and dark).
 - Animations are UI-thread only (Reanimated shared values); each icon motion is 180-380 ms; the sync dot loops only while syncing and rests on blur or reduced motion.
 - Not profiled: the 1,000-row list scroll with animated icons visible (F-1713 acceptance 4). Native (iOS, Android) was not run for the art: the once-and-rest play on
   `lottie-react-native` (`play(0, staticFrame)`) and the lid/tick motion are untested on a device.

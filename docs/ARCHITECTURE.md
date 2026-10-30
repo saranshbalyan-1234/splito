@@ -1074,8 +1074,8 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
 - **Load animation assets and their player on first use, and read a module-level cache through state.** The
   start-up bundle held `lottie-web` (168 KB) and, through `require()` in a registry object, every animation JSON
   (inline requires do not help when the registry object is built at import); each is now a dynamic `import()`
-  behind `useIllustrationSource`, so the web first-load JS fell from 7,305,880 B to 7,028,860 B (gzip 1,545,216 to
-  1,497,565 B) while 19 new pieces of art (about 391 KB raw, 49 lazy chunks) were added. Measure the entry
+  behind `useIllustrationSource`, so the web first-load JS fell from 7,305,880 B to 7,029,015 B (gzip 1,545,216 to
+  1,497,558 B) while 19 new pieces of art (with loading and success, about 415 KB raw in 53 lazy chunks) were added. Measure the entry
   chunks of `expo export` (the `index`, `__common` and runtime scripts in `index.html`) before and after, never the
   folder total. A hook that reads a module-level `Map` during render must also hold what it read in state: the
   React Compiler caches a bare `loaded.get(key)` on `key` alone, so the art never appeared after its chunk
@@ -1450,7 +1450,7 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-31, F-260 / F-1713 (c-anim): **lazy art needs the player lazy too, and a compiled hook must not read a
   module cache without state.** Moving the animation JSON behind `import()` was not enough on its own; `lottie-web`
   was also in the entry (now dynamic) and together they took 277 KB (3.8 %) off the web first-load JS (7,305,880 to
-  7,028,860 B; gzip 1,545,216 to 1,497,565), with 19 new empty-state pieces added as 49 lazy chunks (391 KB). The first
+  7,029,015 B; gzip 1,545,216 to 1,497,558), with 19 new empty-state pieces added as lazy chunks (53 with loading, success and lottie-web: 415 KB). The first
   version of `useIllustrationSource` drew nothing: the React Compiler memoised `loaded.get(key)` on `key`, so the
   re-render after the fetch returned the old `undefined`; the hook now keeps `{key, json}` in state. Also: an empty
   state plays once to a resting frame (`playSegments([0, staticFrame])`), so a looped file whose last frame equals
