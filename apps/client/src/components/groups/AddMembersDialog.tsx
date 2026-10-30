@@ -12,11 +12,10 @@ import {
   type Person,
 } from '@splito/sync'
 
-import {answerGroupInvites} from '#/data/friends'
 import {useHaptics} from '#/lib/haptics'
 import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
 import {logger} from '#/logger'
-import {useEntities, useInvitedPeople, useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
+import {useAnswerGroupInvites, useEntities, useInvitedPeople, useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -73,6 +72,7 @@ function Form({
   const control = Dialog.useDialogContext()
   const store = useStore()
   const ctx = useMutationCtx()
+  const answerInvites = useAnswerGroupInvites()
   const isAdmin = groupAdmins(group.data).includes(ctx.actor)
   const haptics = useHaptics()
   const people = useEntities<Person>('person')
@@ -109,7 +109,7 @@ function Form({
     setIsSaving(true)
     try {
       const result = await addGroupMembers(store, ctx, group.id, selected)
-      void answerGroupInvites(store, ctx, group.id)
+      void answerInvites(group.id)
       haptics.success()
       // A friend with a linked account is asked, not added (owner 196): they show as Invited until they join.
       const asked = result.asked.length

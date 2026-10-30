@@ -78,7 +78,7 @@ import {
 } from '#/data/projections'
 import {useData, useMaybeData} from '#/data/StoreProvider'
 
-import {directory} from '#/data/friends'
+import {directory, answerGroupInvites, revokeGroupLinks} from '#/data/friends'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 
 export function useStore(): Store {
@@ -508,3 +508,12 @@ export function useAnswerFriendRequest() {
     await directory.accept(requestId)
   }
 }
+
+/** After friends were asked to join a group: lets the directory answer for them (demo mode; see `answerGroupInvites`). */
+export function useAnswerGroupInvites() {
+  const {store, ctx} = useData()
+  return (groupId: string) => answerGroupInvites(store, ctx, groupId)
+}
+
+/** The directory is told these group links stopped working (the group went invite only). */
+export {revokeGroupLinks}

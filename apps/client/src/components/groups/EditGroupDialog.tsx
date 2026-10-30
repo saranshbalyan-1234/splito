@@ -6,8 +6,7 @@ import {type Entity, type Group, groupAdmins, inviteLinkState, type JoinPolicy, 
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {revokeGroupLinks} from '#/data/friends'
-import {useInviteLinks, useMutationCtx, useStore} from '#/data/hooks'
+import {revokeGroupLinks, useInviteLinks, useMutationCtx, useStore} from '#/data/hooks'
 import {atoms as a} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
