@@ -41,6 +41,7 @@ import {
   MainScrollProvider,
 } from '#/components/Layout/MainScrollProvider'
 import {IS_IPAD, IS_WEB} from '#/env'
+import {ScreenExitScope} from '#/motion/listAnimations'
 
 export * from '#/components/Layout/const'
 export * as Header from '#/components/Layout/Header'
@@ -91,13 +92,15 @@ export const Screen = memo(function Screen({
         style,
       ]}
       {...props}>
-      <HeaderModeProvider>
-        <MainScrollProvider>
-          <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
-        </MainScrollProvider>
-        {/* The FAB is decided here, once, from the route (owner 190, § 26.6); a screen can only hold it back. */}
-        <RouteFAB />
-      </HeaderModeProvider>
+      <ScreenExitScope>
+        <HeaderModeProvider>
+          <MainScrollProvider>
+            <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
+          </MainScrollProvider>
+          {/* The FAB is decided here, once, from the route (owner 190, § 26.6); a screen can only hold it back. */}
+          <RouteFAB />
+        </HeaderModeProvider>
+      </ScreenExitScope>
     </View>
   )
 })

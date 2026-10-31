@@ -10,7 +10,7 @@ import {
 } from '@react-navigation/native'
 
 import {useWorkAtStake} from '#/lib/pwa/workAtStake'
-import {useDemoMode} from '#/state/demo'
+import {useIsStoreCovered} from '#/state/demo'
 import {atoms as a, web} from '#/alf'
 import * as Composer from '#/components/Composer'
 import * as Prompt from '#/components/Prompt'
@@ -78,8 +78,9 @@ export function Screen({
   useWorkAtStake(isDirty)
 
   /* A swipe down, Back or the browser's Back is a route removal, so ask before it happens (web too, audit m27). */
-  // Not while a demo-mode switch runs: the app is covered, and the store this sheet was typed for is going away, so it is dropped, not asked about.
-  const {busy: isSwitchingStore} = useDemoMode()
+  // Not while a demo-mode switch swaps the store: the app is covered, and the store this sheet was typed for is going away, so it is
+  // dropped, not asked about. While the first seeding runs behind its pill the app is usable and Back asks as usual.
+  const isSwitchingStore = useIsStoreCovered()
   usePreventRemove(isDirty && !isSwitchingStore, ({data}) => {
     pendingAction.current = data.action
     discardControl.open()

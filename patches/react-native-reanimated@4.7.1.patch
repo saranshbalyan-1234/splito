@@ -105,3 +105,87 @@ index 8448ad3fa53872d81a765cb8f3428fbf25b2b1da..0382abbdd19fa72a80f28d95616c0476
      };
    }
  
+diff --git a/lib/module/createAnimatedComponent/AnimatedComponent.js b/lib/module/createAnimatedComponent/AnimatedComponent.js
+index c61c8dd2b55f1b00247e2d3441277594d1a466c7..be06a8b4268d67bce10376101f3a03a642131045 100644
+--- a/lib/module/createAnimatedComponent/AnimatedComponent.js
++++ b/lib/module/createAnimatedComponent/AnimatedComponent.js
+@@ -65,9 +65,8 @@ export default class AnimatedComponent extends ReanimatedAnimatedComponent {
+         element.appendChild(dummyClone.firstChild);
+       }
+       delete element.dummyClone;
+-      if (this.props.exiting) {
+-        saveSnapshot(element);
+-      }
++      // Splito: no snapshot here. It forced a layout per animated row on every mount and update (191 per page);
++      // the exit reads the element's box when it starts (handleExitingAnimation, patched too).
+       if (!this.props.entering) {
+         this._isFirstRender = false;
+         return;
+@@ -173,9 +172,8 @@ export default class AnimatedComponent extends ReanimatedAnimatedComponent {
+     this._NativeEventsManager?.updateEvents(prevProps);
+     this._updateAnimatedStylesAndProps();
+     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+-    if (this.props.exiting && this._componentDOMRef) {
+-      saveSnapshot(this._componentDOMRef);
+-    }
++    // Splito: no snapshot here. It forced a layout per animated row on every mount and update (191 per page);
++    // the exit reads the element's box when it starts (handleExitingAnimation, patched too).
+     if (snapshot && this.props.layout) {
+       if (getReducedMotionFromConfig(this.props.layout)) {
+         this.props.layout.callbackV?.(true);
+diff --git a/lib/module/layoutReanimation/web/componentUtils.js b/lib/module/layoutReanimation/web/componentUtils.js
+index b44c1a5522af682bcca36d66c4228af28b838abc..5fcc1a8847bd1083971972e91ace50820926733b 100644
+--- a/lib/module/layoutReanimation/web/componentUtils.js
++++ b/lib/module/layoutReanimation/web/componentUtils.js
+@@ -296,6 +296,9 @@ function cleanupEnteringAnimations(element) {
+   }
+ }
+ export function handleExitingAnimation(element, animationConfig) {
++  // Splito: the box is read here, while the element still holds its children (mount and update no longer save it,
++  // see AnimatedComponent), so the clone takes the row's real size and place, not a stale or emptied one.
++  saveSnapshot(element);
+   const parent = element.offsetParent;
+   const dummy = element.cloneNode();
+   dummy.isDummy = true;
+diff --git a/src/createAnimatedComponent/AnimatedComponent.tsx b/src/createAnimatedComponent/AnimatedComponent.tsx
+index b77b1830b1014c7b77d80aa232223ec9d9a983af..70696340b69844027885b6e16892718a0f30e952 100644
+--- a/src/createAnimatedComponent/AnimatedComponent.tsx
++++ b/src/createAnimatedComponent/AnimatedComponent.tsx
+@@ -121,9 +121,8 @@ export default class AnimatedComponent
+       }
+       delete element.dummyClone;
+ 
+-      if (this.props.exiting) {
+-        saveSnapshot(element);
+-      }
++      // Splito: no snapshot here. It forced a layout per animated row on every mount and update (191 per page);
++      // the exit reads the element's box when it starts (handleExitingAnimation, patched too).
+ 
+       if (!this.props.entering) {
+         this._isFirstRender = false;
+@@ -289,9 +288,8 @@ export default class AnimatedComponent
+     this._updateAnimatedStylesAndProps();
+     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+ 
+-    if (this.props.exiting && this._componentDOMRef) {
+-      saveSnapshot(this._componentDOMRef);
+-    }
++    // Splito: no snapshot here. It forced a layout per animated row on every mount and update (191 per page);
++    // the exit reads the element's box when it starts (handleExitingAnimation, patched too).
+ 
+     if (snapshot && this.props.layout) {
+       if (getReducedMotionFromConfig(this.props.layout as CustomConfig)) {
+diff --git a/src/layoutReanimation/web/componentUtils.ts b/src/layoutReanimation/web/componentUtils.ts
+index ffa3cac8a193d9c01c0facfc65f4388a241056ba..bbc6bb7bc7bc12660400b0a5e75a6b818513b5d6 100644
+--- a/src/layoutReanimation/web/componentUtils.ts
++++ b/src/layoutReanimation/web/componentUtils.ts
+@@ -410,6 +410,9 @@ export function handleExitingAnimation(
+   element: ReanimatedHTMLElement,
+   animationConfig: AnimationConfig
+ ) {
++  // Splito: the box is read here, while the element still holds its children (mount and update no longer save it,
++  // see AnimatedComponent), so the clone takes the row's real size and place, not a stale or emptied one.
++  saveSnapshot(element);
+   const parent = element.offsetParent;
+   const dummy = element.cloneNode() as ReanimatedHTMLElement;
+ 

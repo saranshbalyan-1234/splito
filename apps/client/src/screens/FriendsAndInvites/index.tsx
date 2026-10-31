@@ -6,13 +6,13 @@ import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
-import {isSettledBalance, personSummary} from '@splito/domain'
+import {isSettledBalance} from '@splito/domain'
 import {type Entity, type InviteLink, isRemovedFriend, type Person, restoreFriend} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {useBalanceRows, useEntities, useMutationCtx, useSortedInviteLinks, useStore} from '#/data/hooks'
+import {useEntities, useMutationCtx, usePersonSummary, useSortedInviteLinks, useStore} from '#/data/hooks'
 import {RemoveFriendDialog} from '#/features/friends/RemoveFriendDialog'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {List, type ListMethods} from '#/view/com/util/List'
@@ -235,8 +235,7 @@ function Note({text}: {text: string}) {
 
 /** Open parts per currency, or the settled state. */
 function useOpenBalances(personId: string) {
-  const rows = useBalanceRows()
-  const summary = personSummary(rows ?? [], {includeGroups: true}).find(s => s.person === personId)
+  const summary = usePersonSummary(personId)
   return Object.entries(summary?.byCurrency ?? {})
     .filter(([, b]) => !isSettledBalance(b))
     .sort(([x], [y]) => (x < y ? -1 : 1))

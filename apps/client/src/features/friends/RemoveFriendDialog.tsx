@@ -1,11 +1,11 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {isSettledBalance, personSummary} from '@splito/domain'
+import {isSettledBalance} from '@splito/domain'
 import {type Entity, type Person, removeFriend, restoreFriend} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {useBalanceRows, useMutationCtx, useStore} from '#/data/hooks'
+import {useMutationCtx, usePersonSummary, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {atoms as a, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
@@ -45,11 +45,9 @@ export function RemoveFriendDialog({
   const ctx = useMutationCtx()
   const haptics = useHaptics()
   const locale = useNumberLocale()
-  const rows = useBalanceRows()
+  const summary = usePersonSummary(person?.id)
   const name = person?.data.name ?? ''
-  const open = Object.entries(
-    personSummary(rows ?? [], {includeGroups: true}).find(s => s.person === person?.id)?.byCurrency ?? {},
-  )
+  const open = Object.entries(summary?.byCurrency ?? {})
     .filter(([, b]) => !isSettledBalance(b))
     .sort(([x], [y]) => (x < y ? -1 : 1))
 
