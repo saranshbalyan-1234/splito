@@ -31,7 +31,7 @@ import {useActivityActions} from '#/components/activity/useActivityActions'
 import {useActivityFeed} from '#/components/activity/useActivityFeed'
 import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
+import {SearchAskButton, SearchAskSpacer} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {ActivityFilterDialog} from '#/components/activity/ActivityFilterDialog'
 import {ACTIVITY_TABS, readActivityParams, activityParams, typesToParam} from '#/components/activity/urlState'
@@ -199,15 +199,15 @@ export function ActivityScreen() {
       <Layout.Header.Sticky>
         <Layout.Header.Outer noBottomBorder sticky={false}>
           <HeaderAvatar />
-          {/* Balances Search & Ask and Filters on the right, so the title stays centred. */}
-          <Layout.Header.Slot />
+          {/* Balance Search & Ask (start tab only, owner 218) and Filters on the right, so the title stays centred. */}
+          <SearchAskSpacer tab="activity" />
           <Layout.Header.Slot />
           <Layout.Header.Content>
             <Layout.Header.TitleText>
               <Trans>Activity</Trans>
             </Layout.Header.TitleText>
           </Layout.Header.Content>
-          <SearchAskButton />
+          <SearchAskButton tab="activity" />
           <Layout.Header.ActionButton
             testID="activity-filters"
             label={activeFilterCount > 0 ? l`Filters, ${activeFilterCount} on` : l`Filters`}

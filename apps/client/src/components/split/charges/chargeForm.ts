@@ -203,6 +203,16 @@ export function startItemize(
 }
 
 /**
+ * Whether the bill carries any charge: a charge list with a row, or a typed
+ * tax, tip, service charge or discount. The itemize editor keeps this
+ * section collapsed behind one row until there is something to show (F-275).
+ */
+export function hasCharges(f: ExpenseForm): boolean {
+  if (f.charges !== undefined) return f.charges.length > 0
+  return [f.tax, f.tip, f.service, f.discount].some(v => !!v?.trim())
+}
+
+/**
  * The Simple rows as typed (a rate or an amount each for tax, tip, service
  * and discount) as an editable charge list, so going to Custom keeps them.
  * A row that does not read yet is left out, as an empty one is.

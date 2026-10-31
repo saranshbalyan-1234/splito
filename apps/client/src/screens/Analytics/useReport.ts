@@ -15,7 +15,7 @@ import {
   type WeekStart,
   ZERO,
 } from '@splito/domain'
-import {type Group, isGroupInactive, type Person} from '@splito/sync'
+import {type AnalyticsScope, type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useCategoryLookup} from '#/components/split/shared'
@@ -37,6 +37,8 @@ import {
   scopeToPref,
 } from '#/screens/Analytics/scope'
 import {MAX_OFFSET, readAnalyticsParams, scopeToParam} from '#/screens/Analytics/urlState'
+import {overviewScopeParam} from '#/screens/Analytics/overviewScope'
+import {type Params} from '#/lib/links/listState'
 
 export type PeriodChoice = 'week' | 'month' | 'year' | 'all' | 'custom'
 
@@ -95,6 +97,11 @@ type View = {
  * loaded): charts, totals, the expense list and the CSV all read from here,
  * so the numbers agree everywhere. Undefined while the local store loads.
  */
+/** The address's scope (or an old `overview=` link's, owner 219) wins over the saved one; checked against the groups here. */
+function scopeOf(fromAddress: AnalyticsScope | undefined, saved: AnalyticsScope | undefined, groupIds: string[]): Scope {
+  return fromAddress ? scopeFromPref(fromAddress, groupIds) : scopeFromPref(saved, groupIds)
+}
+
 export function useReport() {
   const {t: l, i18n} = useLingui()
   const {actor: me} = useMutationCtx()
@@ -141,7 +148,7 @@ export function useReport() {
         x.name.localeCompare(y.name),
     )
   const groupIds = groupOptions.map(g => g.id)
-  const scope = urlState.scope ? scopeFromPref(urlState.scope, groupIds) : scopeFromPref(scopePref, groupIds)
+  const scope = scopeOf(urlState.scope ?? overviewScopeParam(route.params as Params), scopePref, groupIds)
   const scopeKey = JSON.stringify(scope)
   const isIn = (groupId: string | null) => inScope(groupId, scope)
 

@@ -27,6 +27,7 @@ import {searchFriends} from '../sort'
  * value, so the field echoes the key first; rows a key removes or brings back swap without their exit or enter fade.
  */
 export function FriendsList({
+  overview,
   filtered,
   friendsCount,
   filters,
@@ -40,6 +41,8 @@ export function FriendsList({
   onShowSettled,
   onClearFilters,
 }: {
+  /** The balances Overview above the requests (made by the screen, so a keystroke leaves it alone). */
+  overview: React.ReactNode
   /** Friends after the filters and in order; the search picks from these (never re-derives them). */
   filtered: PersonRowData[]
   /** Friends before any filter: none means the first-use empty state. */
@@ -91,6 +94,7 @@ export function FriendsList({
           ListHeaderComponent={
             friendsCount > 0 ? (
               <>
+                {overview}
                 <RequestsSection />
                 <ListToolsHeader
                   title={l`Friends`}
@@ -128,7 +132,7 @@ export function FriendsList({
               <EmptyState
                 testID="people-search-empty"
                 illustration="empty-search"
-                message={l`No matches for “${trimmed}”`}
+                message={l`No matches for “${listQuery.trim()}”`}
                 button={{
                   testID: 'people-search-clear',
                   label: l`Clear search`,

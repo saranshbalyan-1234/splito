@@ -7,7 +7,7 @@ import {ShowHiddenToggle} from '#/features/hidden/ShowHidden'
 import {DisputedOnlyToggle} from '#/components/disputes/DisputedOnlyToggle'
 import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
-import * as Toggle from '#/components/forms/Toggle'
+import {IncludeGroupsToggle} from '#/components/IncludeGroupsToggle'
 import {Text} from '#/components/Typography'
 import * as FormSheet from '#/components/FormSheet'
 
@@ -76,34 +76,7 @@ function Form({
           }),
       }}>
       <View style={[a.gap_lg]}>
-        <Toggle.Item type="switch"
-          testID="filter-include-groups"
-          name="includeGroups"
-          label={l`Include groups`}
-          value={draft}
-          onChange={setDraft}
-          style={[a.w_full]}>
-          <View style={[a.flex_1, a.gap_2xs, a.pr_md]}>
-            <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
-              <Trans>Include groups</Trans>
-            </Toggle.LabelText>
-            <Text
-              style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-              {name ? (
-                <Trans>
-                  Count expenses and payments from groups you share with {name}.
-                  Off shows only what is between the two of you.
-                </Trans>
-              ) : (
-                <Trans>
-                  Count balances from groups you share with each friend. Off
-                  shows only what is between you and them.
-                </Trans>
-              )}
-            </Text>
-          </View>
-          <Toggle.Switch />
-        </Toggle.Item>
+        <IncludeGroupsToggle value={draft} onChange={setDraft} name={name} />
         {disputed ? <DisputedOnlyToggle value={draftDisputed} onChange={setDraftDisputed} /> : null}
         <ShowHiddenToggle value={draftHidden} onChange={setDraftHidden} />
         <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>

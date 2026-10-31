@@ -1,5 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {chooseSplitMode, openAddExpense as openComposer, openCharges} from './composer'
 import {openDemo} from './openDemo'
 
 const DESKTOP = {width: 1440, height: 900}
@@ -50,7 +51,7 @@ test('add an expense: category suggestion, calculator, exact split readout, save
     '₹500.00 each · 3 people',
   )
 
-  await page.getByTestId('split-mode-exact').click()
+  await chooseSplitMode(page, 'exact')
   await page.getByTestId('split-exact-You').fill('700')
   await page.getByTestId('split-exact-Riya Sharma').fill('500')
   await expect(page.getByTestId('split-readout')).toHaveText(
@@ -128,7 +129,7 @@ test('a group expense uses the group members and currency; multiple payers must 
   await page.getByTestId('payers-dialog').getByTestId('sheet-close').click()
   await expect(page.getByTestId('expense-payers-value')).toHaveText('2 people')
 
-  await page.getByTestId('split-mode-percent').click()
+  await chooseSplitMode(page, 'percent')
   for (const name of ['You', 'Sam Carter', 'Lena Fischer'])
     await page.getByTestId(`split-percent-${name}`).fill('25')
   await expect(page.getByTestId('split-readout')).toHaveText(
@@ -153,15 +154,15 @@ test('itemised split with tax, shares and equal-with-adjustments', async ({
   await page.getByTestId('amount-input').fill('330')
   await splitWith(page, ['Riya Sharma'])
 
-  await page.getByTestId('split-mode-shares').click()
+  await chooseSplitMode(page, 'shares')
   await page.getByTestId('split-shares-You-plus').click()
   await expect(page.getByTestId('share-You')).toHaveText('₹220.00')
 
-  await page.getByTestId('split-mode-adjusted').click()
+  await chooseSplitMode(page, 'adjusted')
   await page.getByTestId('split-adjust-Riya Sharma').fill('30')
   await expect(page.getByTestId('share-Riya Sharma')).toHaveText('₹180.00')
 
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   await page.getByTestId('item-add').click()
   await page.getByTestId('item-0-name').fill('Margherita')
   await page.getByTestId('item-0-amount').fill('200')
@@ -170,12 +171,18 @@ test('itemised split with tax, shares and equal-with-adjustments', async ({
   await page.getByTestId('item-1-amount').fill('100')
   // A right-click (long press on touch) takes someone off an item.
   await page.getByTestId('item-1-person-You').click({button: 'right'})
-  // Another tap on someone already on it gives them one more portion; Everyone resets to one each.
+  // A tap on someone narrows an untouched "Everyone" to them, the next tap adds the other person,
+  // and only then does a portion stepper show; Everyone resets to one each.
   await page.getByTestId('item-0-person-Riya Sharma').click()
+  await expect(page.getByTestId('item-0-person-You')).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.getByTestId('item-0-portion-steppers')).toHaveCount(0)
+  await page.getByTestId('item-0-person-You').click()
+  await page.getByTestId('item-0-portion-Riya Sharma-plus').click()
   await expect(page.getByTestId('item-0-portions-Riya Sharma')).toHaveText('×2')
   await page.getByTestId('item-0-everyone').click()
   await expect(page.getByTestId('item-0-portions-Riya Sharma')).toHaveCount(0)
   // Tax starts as a percentage (preference default); this bill gives it as an amount.
+  await openCharges(page)
   await page.getByTestId('item-tax-mode-amount').click()
   await page.getByTestId('item-tax').fill('30')
   await expect(page.getByTestId('split-readout')).toHaveText(
@@ -282,6 +289,98 @@ test('phones: the FAB opens Add expense as a sheet from the bottom edge; the cro
   await expect(composer).toHaveCount(0)
 })
 
+for (const [label, size] of [
+  ['phone', PHONE],
+  ['desktop', DESKTOP],
+] as const) {
+  test(`Add expense (${label}) shows the essentials first: the amount has focus, advanced options sit behind More options`, async ({
+    page,
+  }) => {
+    await openComposer(page, size)
+    // Focus is on the amount (F-275), where the first thing to type goes.
+    await expect(page.getByTestId('amount-input')).toBeFocused()
+    for (const id of ['expense-title', 'amount-input', 'expense-people', 'expense-payers', 'expense-group'])
+      await expect(page.getByTestId(id)).toBeVisible()
+    // Paid by is always there and starts as me (owner 207).
+    await expect(page.getByTestId('expense-payers-value')).toHaveText('You')
+    // Alone, there is nothing to split: no split section, no second "Add people" button, no wall of chips.
+    await expect(page.getByTestId('split-include-You')).toHaveCount(0)
+    await expect(page.getByTestId('split-add-people')).toHaveCount(0)
+    await expect(page.getByTestId('split-mode-items')).toHaveCount(0)
+    await expect(page.getByTestId('cash-rounding')).toHaveCount(0)
+    await expect(page.getByTestId('expense-notes')).toHaveCount(0)
+    // With a second person the equal split's who-is-in list appears.
+    await splitWith(page, ['Riya Sharma'])
+    await expect(page.getByTestId('split-include-Riya Sharma')).toBeVisible()
+    await expect(page.getByTestId('split-mode-items')).toHaveCount(0)
+    // More options holds Itemize, the other splits, cash rounding and notes.
+    await page.getByTestId('expense-more').click()
+    await expect(page.getByTestId('expense-more-options')).toBeVisible()
+    await expect(page.getByTestId('split-mode-items')).toBeVisible()
+    await expect(page.getByTestId('split-mode-exact')).toBeVisible()
+    await expect(page.getByTestId('cash-rounding')).toBeVisible()
+    await expect(page.getByTestId('expense-notes')).toBeVisible()
+    // Picking Itemize shows the bill, with the charges behind one row.
+    await page.getByTestId('split-mode-items').click()
+    await page.getByTestId('item-add').click()
+    await expect(page.getByTestId('item-charges-row')).toBeVisible()
+    await expect(page.getByTestId('item-tax')).toHaveCount(0)
+    await expect(page.getByTestId('charge-preset-simple')).toHaveCount(0)
+    await page.getByTestId('item-charges-row').click()
+    await expect(page.getByTestId('item-tax')).toBeVisible()
+  })
+}
+
+test('itemize with no total typed: the total is the items’ sum, charges fold into one row with a summary, and edit reopens them', async ({
+  page,
+}) => {
+  await openAddExpense(page)
+  await page.getByTestId('expense-title').fill('Brunch')
+  await splitWith(page, ['Riya Sharma'])
+  await chooseSplitMode(page, 'items')
+  await page.getByTestId('item-add').click()
+  await page.getByTestId('item-0-name').fill('Pancakes')
+  await page.getByTestId('item-0-amount').fill('200')
+  await page.getByTestId('item-add').click()
+  await page.getByTestId('item-1-name').fill('Juice')
+  await page.getByTestId('item-1-amount').fill('100')
+  // Nothing typed as the total: it is what the items come to, and Save is ready.
+  await expect(page.getByTestId('amount-input')).toHaveValue('')
+  await expect(page.getByTestId('amount-from-items')).toContainText('₹300.00')
+  await expect(page.getByTestId('split-readout')).toHaveText('All ₹300.00 assigned')
+  await expect(page.getByTestId('sheet-save')).toBeEnabled()
+
+  // A charge changes the total with it, and the closed row says what is set.
+  await openCharges(page)
+  await page.getByTestId('item-tax-mode-amount').click()
+  await page.getByTestId('item-tax').fill('30')
+  await expect(page.getByTestId('amount-from-items')).toContainText('₹330.00')
+  await page.getByTestId('item-charges-row').click()
+  await expect(page.getByTestId('item-charges')).toHaveCount(0)
+  await expect(page.getByTestId('item-charges-row-summary')).toContainText('Tax ₹30.00')
+
+  await saveAndView(page)
+  await expect(page.getByTestId('expense-detail-amount')).toHaveText('₹330.00')
+
+  // Editing an itemised bill opens what it uses.
+  await page.getByTestId('expense-edit-button').click()
+  await expect(page.getByTestId('expense-more-options')).toBeVisible()
+  await expect(page.getByTestId('item-charges')).toBeVisible()
+})
+
+test('a typed total still wins over the items', async ({page}) => {
+  await openAddExpense(page)
+  await page.getByTestId('expense-title').fill('Snacks')
+  await chooseSplitMode(page, 'items')
+  await page.getByTestId('item-add').click()
+  await page.getByTestId('item-0-amount').fill('200')
+  await page.getByTestId('amount-input').fill('250')
+  await expect(page.getByTestId('amount-from-items')).toHaveCount(0)
+  await expect(page.getByTestId('split-readout')).toContainText('₹50.00 left to assign')
+  await expect(page.getByTestId('sheet-save')).toBeDisabled()
+  await expect(page.getByTestId('items-use-total')).toBeVisible()
+})
+
 test('itemize: portions badge, each item’s parts, service charge and everyone’s share before saving', async ({
   page,
 }) => {
@@ -289,17 +388,20 @@ test('itemize: portions badge, each item’s parts, service charge and everyone�
   await page.getByTestId('expense-title').fill('Dinner at Gunpowder')
   await page.getByTestId('amount-input').fill('1100')
   await splitWith(page, ['Riya Sharma'])
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   await page.getByTestId('item-add').click()
   await page.getByTestId('item-0-name').fill('Kingfisher, 3 pints')
   await page.getByTestId('item-0-amount').fill('900')
-  // You had two of the three.
+  // You had two of the three: tap You, then Riya, then give You one more portion.
   await page.getByTestId('item-0-person-You').click()
+  await page.getByTestId('item-0-person-Riya Sharma').click()
+  await page.getByTestId('item-0-portion-You-plus').click()
   await expect(page.getByTestId('item-0-portions-You')).toHaveText('×2')
   await expect(page.getByTestId('item-0-parts')).toHaveText(
     'You ₹600.00  ·  Riya Sharma ₹300.00',
   )
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
+  await openCharges(page)
   await page.getByTestId('item-service-mode-amount').click()
   await page.getByTestId('item-service').fill('200')
   // Service follows each subtotal, 600 : 300.
@@ -323,11 +425,12 @@ test('itemize: charges as a percentage - discount first, then tax on the rest; t
   await page.getByTestId('expense-title').fill('Thali lunch')
   await page.getByTestId('amount-input').fill('1003')
   await splitWith(page, ['Riya Sharma'])
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   await page.getByTestId('item-add').click()
   await page.getByTestId('item-0-name').fill('Thalis')
   await page.getByTestId('item-0-amount').fill('1000')
   // Discount defaults to an amount; this one is 15% off. GST is 18% (tax defaults to %).
+  await openCharges(page)
   await page.getByTestId('item-discount-mode-percent').click()
   await page.getByTestId('item-discount').fill('15')
   await page.getByTestId('item-tax').fill('18')

@@ -62,8 +62,9 @@ import {
   RestoredBadge,
   WriteOffBadge,
 } from './icons'
-import {useTimeZone, useToday} from '#/locale/useDates'
-import {dayOf, daysAgo, writeOffParties} from './feed'
+import {dayBucket, dayOfInstant} from '#/locale/dayLabel'
+import {useFormatDateTime, useFormatTime, useTimeZone, useToday} from '#/locale/useDates'
+import {writeOffParties} from './feed'
 import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {type ActivityActions, type RowAction} from './useActivityActions'
 import {openPerson} from '#/lib/links/make'
@@ -1321,8 +1322,10 @@ function Timestamp({at}: {at: number}) {
   const {i18n} = useLingui()
   const tz = useTimeZone()
   const today = useToday()
+  const formatTime = useFormatTime()
+  const formatDateTime = useFormatDateTime()
   const date = new Date(at)
-  const isToday = daysAgo(dayOf(at, tz), today) === 0
+  const isToday = dayBucket(dayOfInstant(at, tz), today) === 'today'
   return (
     <TimeElapsed
       // TimeElapsed only re-formats on its minute tick; a language switch remounts it.
@@ -1331,15 +1334,11 @@ function Timestamp({at}: {at: number}) {
       timeToString={
         isToday
           ? formatTimeAgo
-          : (i18n, timestamp) => formatTimeOfDay(i18n, timestamp, tz)
+          : (_i18n, timestamp) => formatTime(new Date(timestamp))
       }>
       {({timeElapsed}) => (
         <Text
-          title={i18n.date(date, {
-            dateStyle: 'medium',
-            timeStyle: 'short',
-            timeZone: tz,
-          })}
+          title={formatDateTime(date)}
           style={[
             a.self_start,
             a.text_sm,
@@ -1351,10 +1350,6 @@ function Timestamp({at}: {at: number}) {
       )}
     </TimeElapsed>
   )
-}
-
-function formatTimeOfDay(i18n: I18n, timestamp: string, timeZone: string) {
-  return i18n.date(new Date(timestamp), {timeStyle: 'short', timeZone})
 }
 
 function formatTimeAgo(i18n: I18n, timestamp: string) {
