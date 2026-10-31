@@ -439,13 +439,10 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     expect((await databases(page)).filter(n => n!.startsWith('splito-'))).toEqual([])
   })
 
-  test('Log out is the last row of Profile and is in neither the drawer footer nor the Settings list (owner 202)', async ({page}) => {
+  test('Log out is the last row of Profile and is not in the Settings list (owners 202, 217: no drawer)', async ({page}) => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.goto('/?drawer=menu')
-    await expect(page.getByTestId('drawer')).toBeVisible()
-    await expect(page.getByTestId('drawer-log-out')).toHaveCount(0)
     await page.goto('/settings')
     await expect(page.getByTestId('settings-log-out')).toHaveCount(0)
     await page.goto('/profile')

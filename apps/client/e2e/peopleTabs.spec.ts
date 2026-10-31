@@ -1,6 +1,5 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDrawer} from './nav'
 import {openDemo} from './openDemo'
 
 /*
@@ -122,19 +121,11 @@ test('navigation: phone bar, rail and desktop lists, in order', async ({page}) =
   await page.getByTestId('tab-groups').click()
   await expect(page).toHaveURL(/\/groups$/)
   await expect(page.getByTestId('tab-groups')).toHaveAttribute('aria-current', 'page')
-  // The drawer lists the same.
+  // Back on a phone the bar is at the bottom again and is the only navigation (no drawer, owner 217).
   await page.setViewportSize(PHONE)
-  // The bar is at the bottom again.
   await expect.poll(async () => (await page.getByRole('navigation').boundingBox())?.y ?? 0).toBeGreaterThan(600)
-  await openDrawer(page)
-  // The menu mounts when the drawer has stopped sliding (owner 168), so wait for it before reading the list.
-  await expect(page.getByTestId('drawer-settings')).toBeVisible()
-  const rows = await page
-    .getByTestId('drawer')
-    .locator('[data-testid^="drawer-"]')
-    .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  // The profile card heads the drawer; the nav rows follow in the shared order.
-  expect(rows.filter(id => id !== 'drawer-profile').slice(0, 5)).toEqual(['drawer-people', 'drawer-groups', 'drawer-analytics', 'drawer-activity', 'drawer-settings'])
+  await expect.poll(() => ids(page)).toEqual(everyItem)
+  await expect(page.getByTestId('drawer')).toHaveCount(0)
 })
 
 test('a saved bar naming home or ask loses them and keeps its order, with People and Settings; the old default bar becomes the new one (owners 198, 200, 206)', async ({page}) => {

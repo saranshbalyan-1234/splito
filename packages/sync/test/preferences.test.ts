@@ -46,8 +46,9 @@ test('account pref enqueues an outbox op, device pref does not', async () => {
 test('tabs: any number from one item to every item of the shared nav list, no duplicates (26.3, decision 84; owners 198, 200)', async () => {
   await setPref(s, ctx, 'tabs', ['people', 'settings'])
   expect(await getPref(s, 'tabs')).toEqual(['people', 'settings'])
+  // Settings always joins (owner 217: a phone has no drawer, the bar is the only way to it).
   await setPref(s, ctx, 'tabs', ['groups'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'settings'])
   await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'activity', 'settings'])
   expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
   await expect(setPref(s, ctx, 'tabs', [])).rejects.toThrow('INVALID_PREF')
@@ -67,18 +68,18 @@ test('a saved bar naming home (owner 198) or ask (owner 200) reads without them,
   // People takes Home's place (the start tab stays in the bar).
   expect(await getPref(s, 'tabs')).toEqual(['people', 'activity', 'groups', 'settings'])
   await stored('tabs', ['people', 'activity', 'ask', 'groups'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'activity', 'groups'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'activity', 'groups', 'settings'])
   // Nothing left of it (a bar of Home alone, or Ask alone): the default bar.
   await stored('tabs', ['home'])
   expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
   await stored('tabs', ['ask'])
   expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
-  // A list without either is untouched.
+  // A list without either keeps its tabs (and gains Settings, owner 217).
   await stored('tabs', ['groups', 'people'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'settings'])
   // The bell build dropped 'activity' on read only, so the stored value may still name it; Profile left too.
   await stored('tabs', ['groups', 'profile', 'people'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics', 'settings'])
 })
 
 test('the default bar lost Home and gained Settings (owners 198, 206): the old default bar becomes the new one, any other choice stays', async () => {
@@ -87,14 +88,14 @@ test('the default bar lost Home and gained Settings (owners 198, 206): the old d
   // Home with the four (the bar before owner 198) was never customised.
   await stored('tabs', ['home', 'people', 'groups', 'analytics', 'activity'])
   expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
-  // Settings taken off the new default stays off: the four alone are a choice, not the old default.
+  // A saved bar without Settings gets it back (owner 217: no drawer on a phone, so the bar is the only way to it).
   await stored('tabs', ['people', 'groups', 'analytics', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
-  // Customised: another order, fewer tabs or Settings placed elsewhere are left alone.
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
+  // Customised: another order, fewer tabs or Settings placed elsewhere keep their order (Settings joins if missing).
   await stored('tabs', ['groups', 'people', 'analytics', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics', 'activity', 'settings'])
   await stored('tabs', ['people', 'groups'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'settings'])
   await stored('tabs', ['settings', 'people', 'groups', 'analytics', 'activity'])
   expect(await getPref(s, 'tabs')).toEqual(['settings', 'people', 'groups', 'analytics', 'activity'])
 })
@@ -175,7 +176,7 @@ test('an order saved while Profile was a tab predates the Analytics tab, so Anal
   await s.transaction(async tx =>
     tx.put({type: 'preference', id: 'tabs', data: {value: ['people', 'groups', 'activity', 'profile']}, version: 1, deleted: false, updatedAt: 1}),
   )
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity', 'analytics'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity', 'analytics', 'settings'])
 })
 
 test('reset restores default', async () => {

@@ -19,8 +19,6 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/components/icons/UserCircle.tsx': 3,
     'apps/client/src/components/icons/lucide.tsx': 1,
     'apps/client/src/view/com/util/UserAvatar.tsx': 8,
-    'apps/client/src/view/shell/index.tsx': 4,
-    'apps/client/src/view/shell/index.web.tsx': 3,
   },
   rnModal: {},
   expoHaptics: {},
@@ -93,7 +91,6 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/components/split/pickers.tsx': 1,
     'apps/client/src/features/remind/RemindSheet.tsx': 1,
     'apps/client/src/features/settlement/CallItEvenDialog.tsx': 2,
-    'apps/client/src/navigation/Drawer.tsx': 1,
     'apps/client/src/screens/AddFriend.tsx': 1,
     'apps/client/src/screens/CreateGroup.tsx': 2,
     'apps/client/src/screens/Group/index.tsx': 1, // the header's member stack is one control: it opens Members, not each face

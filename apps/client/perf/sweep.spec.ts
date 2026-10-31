@@ -10,7 +10,7 @@ import {ROUTE_PATHS} from '#/routes'
 
 /*
  * The perf sweep (F-266, ARCHITECTURE 26.10 owner 189): every route in the link table (open, back, revisit), tabs,
- * every sheet / popup / picker, menus, the drawer, Search & Ask, scrolling the lists, typing in the fields, save,
+ * every sheet / popup / picker, menus, Search & Ask, scrolling the lists, typing in the fields, save,
  * delete, filter, switching demo mode and the first load, measured at 390 px with touch on the large demo set and on
  * a 10,000-expense ledger, in Playwright WebKit (1x) and in Chrome at 6x CPU throttle.
  *
@@ -319,7 +319,7 @@ const PHONE = {width: 390, height: 844}
 const LAPS = Number(process.env.SWEEP_LAPS ?? 4)
 const BUDGET = {feedback: 100, content: 200, longTask: 50}
 /*
- * A surface that moves in (a sheet, popup, composer or the drawer) starts moving within a frame of the tap (feedback,
+ * A surface that moves in (a sheet, popup or composer) starts moving within a frame of the tap (feedback,
  * owner 107), shows its same-size skeleton meanwhile, and mounts its body when the ~300 ms rise ends (owner 168): its
  * body is due 200 ms after the motion, not 200 ms after the tap (owner 189 read with 107 and 168).
  */
@@ -548,16 +548,8 @@ const FLOWS: Flow[] = [
       browserBack('Repayment'),
     ],
   },
-  /* The avatar opens Profile at every width (owners 201, 206); the phone drawer opens by an edge swipe or its address. */
+  /* The avatar opens Profile at every width (owners 201, 206); there is no side drawer (owner 217). */
   {name: 'Profile', steps: [openPage('Profile', 'profile', tid('header-avatar')), back('Profile')]},
-  {
-    name: 'Drawer',
-    start: '/people',
-    steps: [
-      {screen: 'Drawer', action: 'open', act: link('/people?drawer=menu'), fb: {moves: T('drawer')}, ct: {ready: T('drawer')}, ...MOVING, settle: 900},
-      {screen: 'Drawer', action: 'close', act: press('Escape'), fb: {moves: T('drawer')}, ct: {gone: T('drawer')}, settle: 700},
-    ],
-  },
   ...SETTINGS_SECTIONS.map(
     (section): Flow => ({
       name: `Settings ${section}`,
@@ -1196,7 +1188,7 @@ test('the sweep covers every route, in-page tab, sheet and global sheet of the l
   }
   for (const [page, tabs] of Object.entries(PAGE_TABS))
     for (const tab of tabs) if (!FLOWS.some(f => f.steps.some(s => s.screen === page && s.action === `tab ${tab}`))) missing.push(`tab ${page}/${tab}`)
-  const globals: Record<(typeof GLOBAL_SHEETS)[number], string> = {search: 'Search & Ask', drawer: 'Drawer', feedback: 'Global sheet feedback', install: 'Global sheet install'}
+  const globals: Record<(typeof GLOBAL_SHEETS)[number], string> = {search: 'Search & Ask', feedback: 'Global sheet feedback', install: 'Global sheet install'}
   for (const g of GLOBAL_SHEETS) if (!has(globals[g])) missing.push(`global sheet ${g}`)
   expect(missing, 'link-table entries the sweep does not walk').toEqual([])
 })

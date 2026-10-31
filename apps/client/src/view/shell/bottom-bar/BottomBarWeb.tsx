@@ -94,7 +94,7 @@ export function BottomBarWeb() {
               }>
               {({isActive}) => (
                 <>
-                  <TabGlyph tab={tab} isActive={isActive} size={iconWidth} badge={tab === 'activity' ? activityBadge : undefined} />
+                  <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
                   {hasLabels && <TabLabel label={_(NAV_LABELS[tab])} isActive={isActive} />}
                 </>
               )}

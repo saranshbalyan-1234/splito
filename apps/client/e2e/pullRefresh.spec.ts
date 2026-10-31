@@ -255,19 +255,6 @@ test('reduced motion keeps the pull working with a label and no movement', async
   await expect.poll(async () => (await read(page)).indicatorOpacity).toBe(0)
 })
 
-test('a pull on the open drawer is not a pull to refresh', async ({page, browserName, context}) => {
-  await openAt(page, '/people')
-  const f = await finger(page, browserName === 'chromium' ? await context.newCDPSession(page) : null)
-  await page.evaluate(() => performance.clearMarks())
-  // The drawer sits outside every screen: a pull on it must not refresh the page behind.
-  // The avatar opens Profile (owner 201); the drawer opens by its address only (owner 216).
-  await page.goto('/people?drawer=menu')
-  await expect(page.getByTestId('drawer-scrim')).toBeVisible()
-  await pull(page, f, 220)
-  await page.waitForTimeout(600)
-  expect(await marks(page, 'refresh:start')).toHaveLength(0)
-})
-
 const touchFor = async (page: Page, context: BrowserContext, browserName: string) =>
   finger(page, browserName === 'chromium' ? await context.newCDPSession(page) : null)
 

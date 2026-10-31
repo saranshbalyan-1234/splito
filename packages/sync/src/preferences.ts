@@ -297,6 +297,10 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
     value = isPreAnalytics && !kept.includes('analytics') ? [...kept, 'analytics'] : kept
     // The default bar lost Home and gained Settings (owners 198, 206): a saved bar that is exactly the old default never was customised, so it becomes the new one; any other choice keeps its tabs.
     if (isOldDefault) value = [...NAV_ITEM_IDS]
+    // A phone has no side drawer (owner 217), so the bar is the only way to Settings: a saved bar always holds it.
+    // An empty list is left empty, so it fails validation and reads as the default bar.
+    const bar = value as NavItemId[]
+    if (bar.length > 0 && !bar.includes('settings')) value = [...bar, 'settings']
   }
   // The "Open on" tab was the `homeTab` key before F-256: read that old row once when there is no new one. A saved 'home' fails validation and reads as People.
   if (key === 'startTab' && value === undefined) {

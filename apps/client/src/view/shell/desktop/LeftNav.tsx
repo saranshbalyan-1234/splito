@@ -77,7 +77,7 @@ import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
 import {SyncToned} from '#/components/SyncTone'
 import {MorphIcon} from '#/components/anim/AnimatedIcon'
-import {badgeTick, GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
+import {GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
@@ -272,7 +272,7 @@ function NavItem({
           },
           a.z_10,
         ]}>
-        <MorphIcon outline={icons.inactive} filled={icons.active} isActive={isSelected} playKey={badgeTick(count)} aria-hidden={true} width={NAV_ICON_WIDTH} style={t.atoms.text} />
+        <MorphIcon outline={icons.inactive} filled={icons.active} isActive={isSelected} aria-hidden={true} width={NAV_ICON_WIDTH} style={t.atoms.text} />
         {typeof count === 'string' && count ? (
           <View
             style={[

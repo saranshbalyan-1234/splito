@@ -1,11 +1,10 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDrawer} from './nav'
 
 /*
  * F-271 owners 201-206 (ARCHITECTURE 26.3, 26.4, 26.7, 26.15): the avatar opens Profile at every width and Back
  * returns where you were; Settings is a tab; Log out is the last row of Profile; Support and Your data are one row
- * each in Settings and open their own pages; no swipe opens the phone drawer (owner 216).
+ * each in Settings and open their own pages; a phone has no side drawer (owner 217).
  */
 
 const VIEWPORTS = [
@@ -140,10 +139,10 @@ for (const [label, viewport] of VIEWPORTS) {
   })
 }
 
-test.describe('phone 390: no swipe opens the drawer (owner 216)', () => {
+test.describe('phone 390: there is no side drawer, the bottom bar is the navigation (owner 217)', () => {
   test.use({viewport: {width: 390, height: 844}})
 
-  test('a swipe from the left edge (Safari\'s Back), the middle or a vertical one never opens it; its address does', async ({page}) => {
+  test('no swipe (Safari\'s Back from the edge, the middle, vertical) and no old ?drawer=menu address opens one', async ({page}) => {
     await page.goto('/activity')
     await expect(page.getByTestId('screen-activity')).toBeVisible()
     const swipe = (from: {x: number; y: number}, to: {x: number; y: number}) =>
@@ -165,11 +164,12 @@ test.describe('phone 390: no swipe opens the drawer (owner 216)', () => {
     await swipe({x: 4, y: 300}, {x: 30, y: 700})
     await page.waitForTimeout(300)
     await expect(page.getByTestId('drawer')).toHaveCount(0)
-    await openDrawer(page)
-    await expect(page.getByTestId('drawer-groups')).toBeVisible()
-    await expect(page).toHaveURL(/drawer=menu/)
-    await page.keyboard.press('Escape')
+    // An old link to the drawer opens its page alone.
+    await page.goto('/groups?drawer=menu')
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await page.waitForTimeout(300)
     await expect(page.getByTestId('drawer')).toHaveCount(0)
+    await expect(page.getByRole('navigation').getByTestId('tab-settings')).toBeVisible()
   })
 
   test('the avatar no longer opens the drawer', async ({page}) => {

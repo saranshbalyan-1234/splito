@@ -1,10 +1,9 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDrawer} from './nav'
 import {openDemo} from './openDemo'
 
 /*
- * ARCHITECTURE 26.9, owner 168: the drawer and a heavy sheet OPEN first (the panel moves at once, showing only its
+ * ARCHITECTURE 26.9, owner 168: a heavy sheet OPENS first (the panel moves at once, showing only its
  * light shell) and the heavy content mounts after the motion has ended, on the real end-of-motion signal, not on a
  * fixed two frames. Sampled every animation frame on a phone.
  */
@@ -55,20 +54,6 @@ function check(f: Frame[]) {
   // ...and the content appears only once the shell has come to rest.
   expect(Math.abs(f[firstContent]!.shell! - final), 'the shell is at rest when the content mounts').toBeLessThanOrEqual(2)
 }
-
-test('the drawer slides first, its menu mounts after the slide', async ({page}) => {
-  await openDemo(page)
-  await expect(page.getByTestId('screen-people')).toBeVisible()
-  await page.waitForTimeout(800)
-  await sample(page, '[role="dialog"][aria-label="Menu"]', 'left', '[data-testid="drawer-groups"]')
-  await openDrawer(page)
-  await expect(page.getByTestId('drawer-groups')).toBeVisible()
-  await page.waitForTimeout(300)
-  const f = await frames(page)
-  check(f)
-  // The light parts (profile card, footer) are in the sliding panel from its first frame.
-  await expect(page.getByTestId('drawer-profile')).toBeVisible()
-})
 
 test('a heavy sheet rises first, its body mounts after the rise', async ({page}) => {
   await openDemo(page)
