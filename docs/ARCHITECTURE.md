@@ -1994,6 +1994,15 @@ Splito lessons (add newest last, dated, with PR):
   a component keeps its test ids (`settings-*`), and the page that now hosts it adds one wrapper id (`profile-settings`) for
   the new tests to anchor on. Not run on a simulator or a device here.
 
+- 2026-10-31, process (orchestrator's e2e on PR #4): **two Playwright runs in one folder break each other, and the port
+  variable is `E2E_PORT`.** A second run started beside the gate's rerun of 82 failures wiped the shared `test-results`
+  folder (the first one died at 49/82 with ENOENT on its own trace files), and its `PORT=` setting did nothing: the
+  config reads `E2E_PORT`, so both runs asked for 8081. Rules: a run beside another one sets `E2E_PORT` and its own
+  `--output` folder; the failures of a run are taken from its log (`file:line` list), not from `--last-failed`, which
+  the next run in that folder overwrites. Also from that run: a spec that writes screenshots writes them under the
+  ignored `qa/`, never over tracked files; and a spec that calls the dev hook waits for the hook itself
+  (`window.splito?.createPerson`), not for the `splito` key, which outlives an account switch.
+
 ## 24. Checklists
 
 **Adding a split mode:** domain `SplitInput` union + `computeShares` + `validateExpense` codes + Lingui
