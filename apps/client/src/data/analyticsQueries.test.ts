@@ -1,7 +1,7 @@
-import {Database} from 'bun:sqlite'
 import {expect, test} from 'bun:test'
 import {type DateRange, type SpendCell} from '@splito/domain'
-import {cellsOfEntity, type Expense, openSqlStore, type Repayment, type SqlExecutor, type Store} from '@splito/sync'
+import {cellsOfEntity, type Expense, openSqlStore, type Repayment, type Store} from '@splito/sync'
+import {bunExecutor} from '@splito/sync/testing'
 
 import {cellsQuery} from './analyticsQueries'
 
@@ -12,27 +12,6 @@ import {cellsQuery} from './analyticsQueries'
  * for any range: partial head and tail, one month, a range before the data,
  * deleted rows, and a row of a shape this build does not know.
  */
-
-function memoryExecutor(): SqlExecutor {
-  const db = new Database(':memory:')
-  return {
-    exec: async sql => void db.run(sql),
-    run: async (sql, params) => void db.query(sql).run(...(params as never[])),
-    all: async (sql, params) => db.query(sql).all(...(params as never[])) as never,
-    async withTransaction(fn) {
-      db.run('BEGIN IMMEDIATE')
-      try {
-        const r = await fn()
-        db.run('COMMIT')
-        return r
-      } catch (e) {
-        db.run('ROLLBACK')
-        throw e
-      }
-    },
-    close: async () => db.close(),
-  }
-}
 
 /** mulberry32, so a failing seed replays. */
 function rng(seed: number) {
@@ -87,7 +66,7 @@ async function seed(store: Store, rand: ReturnType<typeof rng>) {
 }
 
 test('period cells equal the cells of the records, for random ranges (partial head and tail, one month, before the data)', async () => {
-  const store = await openSqlStore(memoryExecutor())
+  const store = await openSqlStore(bunExecutor(':memory:'))
   const rand = rng(2026)
   const entities = await seed(store, rand)
   const all = entities.flatMap(e => cellsOfEntity(e as never)).filter(c => c.currency === 'INR')

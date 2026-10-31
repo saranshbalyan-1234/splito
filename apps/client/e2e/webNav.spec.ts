@@ -1,53 +1,24 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openApp} from './app'
 import {openDemo} from './openDemo'
+import {seedGroup} from './seed'
+import {PHONE} from './viewports'
 
 /* F-116: web navigation and sheet robustness (audit M16, m26, m27). */
 
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createGroup(input: unknown): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-}
-
-async function ready(page: Page) {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
-}
-
 async function seed(page: Page) {
-  return page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
-    const b = await s.createPerson('Bela Joshi')
-    const group = await s.createGroup({
-      name: 'Rishikesh',
-      kind: 'trip',
-      currency: 'INR',
-      startDate: null,
-      endDate: null,
-      memberIds: [b],
-    })
-    const expense = await s.createExpense({
-      title: 'Rafting',
-      groupId: group,
-      currency: 'INR',
-      total: '10000',
-      payers: {[s.me]: '10000'},
-      split: {mode: 'equal', participants: [s.me, b]},
-      date: '2026-09-05',
-      tz: 'Asia/Kolkata',
-      category: 'entertainment',
-      notes: '',
-    })
-    return {group, expense}
+  const {group, expenses} = await seedGroup(page, {
+    people: ['Bela Joshi'],
+    expenses: [{title: 'Rafting', total: '10000', paidBy: 0, among: [0, 1], date: '2026-09-05', category: 'entertainment'}],
   })
+  return {group, expense: expenses[0]!}
 }
 
 test('M16: Back after a deep link or refresh goes to the page above, not People', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {group, expense} = await seed(page)
 
   // /groups/:id/settle -> Group -> Groups
@@ -69,7 +40,7 @@ test('M16: Back after a deep link or refresh goes to the page above, not People'
 test('m26: reopening a phone drawer during its exit leaves it on screen', async ({
   page,
 }) => {
-  await page.setViewportSize({width: 390, height: 844})
+  await page.setViewportSize(PHONE)
   await openDemo(page, '/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   const people = page.getByTestId('screen-people')
@@ -96,7 +67,7 @@ test('m26: reopening a phone drawer during its exit leaves it on screen', async 
 test('m27: browser Back on a dirty Add friend sheet asks "Discard changes?"', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   await page.goto('/people')
   await page.getByTestId('people-add-friend').click()
   await expect(page.getByTestId('screen-add-friend')).toBeVisible()
@@ -119,7 +90,7 @@ test('m27: browser Back on a dirty Add friend sheet asks "Discard changes?"', as
 test('m30d: Enter twice in "Add someone new" makes one friend', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   await page.goto('/groups/new')
   const input = page.getByTestId('create-group-new-member')
   await input.fill('Dup Dev')

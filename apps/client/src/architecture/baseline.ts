@@ -73,7 +73,6 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
   /* Not links to a person: own avatars (header, drawer, Profile, Settings, a person's own page), selection rows and
    * dialogs whose whole row picks, an invitee / contact who is not a person yet, avatar previews. */
   personAvatarOutsideLink: {
-    'apps/client/src/components/FeedCard.tsx': 1,
     'apps/client/src/components/HeaderAvatar.tsx': 1,
     'apps/client/src/components/activity/ActivityItem.tsx': 1,
     'apps/client/src/components/comments/CommentComposer.tsx': 1,

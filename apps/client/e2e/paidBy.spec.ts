@@ -2,6 +2,7 @@ import {expect, type Page, test} from '@playwright/test'
 
 import {composeButton, openAddExpense} from './composer'
 import {openDemo} from './openDemo'
+import {SIZES} from './viewports'
 
 /*
  * F-273 (owner 207): Add expense always shows Paid by, and a new expense starts
@@ -9,11 +10,6 @@ import {openDemo} from './openDemo'
  * Scanned receipts (F-501) and Duplicate expense are not built yet; they have to
  * join this list when they land.
  */
-
-const sizes = [
-  ['390', {width: 390, height: 844}],
-  ['1440', {width: 1440, height: 900}],
-] as const
 
 /** Paid by is on screen and reads "You". */
 async function expectPaidByMe(page: Page) {
@@ -23,7 +19,7 @@ async function expectPaidByMe(page: Page) {
   await expect(page.getByTestId('expense-payers-value')).toHaveText('You')
 }
 
-for (const [name, size] of sizes) {
+for (const [name, size] of SIZES) {
   test.describe(`at ${name}`, () => {
     test.use({viewport: size})
 

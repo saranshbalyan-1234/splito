@@ -1,4 +1,3 @@
-import {Database} from 'bun:sqlite'
 import {beforeAll, describe, expect, test} from 'bun:test'
 import {
   ACTIVITY_TYPE_IDS,
@@ -32,6 +31,7 @@ import {
   type StoreDump,
   type WriteOff,
 } from '@splito/sync'
+import {bunExecutor} from '@splito/sync/testing'
 
 import {activityTypeOf} from '#/components/activity/feed'
 import {DEMO_ME, seedDemo} from '#/data/demoSeed'
@@ -277,24 +277,7 @@ const T0 = Date.now()
 let clock = T0
 
 beforeAll(async () => {
-  const db = new Database(':memory:')
-  store = await openSqlStore({
-    exec: async sql => void db.run(sql),
-    run: async (sql, params) => void db.query(sql).run(...(params as never[])),
-    all: async (sql, params) => db.query(sql).all(...(params as never[])) as never,
-    withTransaction: async fn => {
-      db.run('BEGIN IMMEDIATE')
-      try {
-        const r = await fn()
-        db.run('COMMIT')
-        return r
-      } catch (e) {
-        db.run('ROLLBACK')
-        throw e
-      }
-    },
-    close: async () => db.close(),
-  })
+  store = await openSqlStore(bunExecutor(':memory:'))
   const ctx = ctxAt(() => clock)
   await ensureMe(store, ctx, 'Me')
   await seedDemo(store, ctx)

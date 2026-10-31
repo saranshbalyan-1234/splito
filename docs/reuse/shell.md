@@ -42,7 +42,6 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/alf/themes.ts` | `src/alf/themes.ts` | Bluesky blue default; emerald optional accent |
 | `src/components/Layout/index.tsx` | `src/components/Layout/index.tsx` | `Center` is full width; centre-column borders removed |
 | `src/components/Layout/Header/index.tsx` | `src/components/Layout/Header/index.tsx` | Full width (no centre-column max width or offset); header rule set in `preview-shell.md` |
-| `src/components/FeedCard.tsx` | `src/components/FeedCard.tsx` | - |
 | `src/screens/Groups/components/GroupRow.tsx` | `src/components/FeedCard.tsx (list card layout)` | Group row: square avatar, title, byline, balance per currency |
 | `src/components/ProfileCard.tsx` | `src/components/ProfileCard.tsx` | Takes a local name instead of an AT Protocol profile |
 | `src/components/Pills.tsx` | `src/components/Pills.tsx` | - |
