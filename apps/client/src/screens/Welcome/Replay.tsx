@@ -31,7 +31,7 @@ export function WelcomeScreen() {
           setPrevious(slide)
           navigation.setParams({step: String(next + 1)})
         }}
-        onDone={() => goBack(navigation, backFallback({name: 'Welcome'}))}
+        onDone={() => goBack(navigation, backFallback({name: 'Welcome'}), IS_WEB)}
         isLanguageFromDevice={false}
       />
     </View>

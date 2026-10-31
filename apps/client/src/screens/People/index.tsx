@@ -280,7 +280,7 @@ export function PeopleScreen() {
                     icon: PersonPlusIcon,
                     onPress: () => navigation.navigate('AddFriend'),
                     size: 'small',
-                    color: 'primary',
+                    color: 'secondary',
                   }}
                 />
               )

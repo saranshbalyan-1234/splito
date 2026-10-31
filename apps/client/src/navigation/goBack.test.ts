@@ -71,9 +71,14 @@ test('goBack pops when it can, otherwise navigates to the fallback', () => {
     goBack: () => calls.push('back'),
     navigate: (...args: unknown[]) => calls.push(args),
   })
-  goBack(nav(true), {name: 'Groups'})
-  goBack(nav(false), {name: 'Group', params: {groupId: 'g'}})
+  goBack(nav(true), {name: 'Groups'}, true)
+  goBack(nav(false), {name: 'Group', params: {groupId: 'g'}}, true)
   expect(calls).toEqual(['back', ['Group', {groupId: 'g'}]])
+  // Native: a tab fallback goes through Tabs (Settings moved into the tabs; c-nohome review).
+  calls.length = 0
+  goBack(nav(false), {name: 'Settings'}, false)
+  goBack(nav(false), {name: 'Group', params: {groupId: 'g'}}, false)
+  expect(calls).toEqual([['Tabs', {screen: 'Settings', params: undefined}], ['Group', {groupId: 'g'}]])
 })
 
 test('Profile goes back to the start tab; Support and Your data sit under Settings, the help pages under Support (owners 204-206)', () => {

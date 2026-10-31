@@ -39,7 +39,7 @@ export function DevTour() {
       },
       go('Tabs', {screen: 'Analytics'}),
       go('Tabs', {screen: 'Activity'}),
-      go('Settings'),
+      go('Tabs', {screen: 'Settings'}),
       go('AddExpense', {}),
     ]
     if (tourTimer) return

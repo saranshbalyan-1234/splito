@@ -6,7 +6,9 @@ import {resetPref} from '@splito/sync'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 
+import {IS_WEB} from '#/env'
 import {useHaptics} from '#/lib/haptics'
+import {navigateArgs} from '#/lib/routes/helpers'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useData} from '#/data/StoreProvider'
 import {FeedbackList} from '#/features/feedback/FeedbackList'
@@ -106,7 +108,10 @@ function MovedPage({to}: {to?: SettingsSectionId}) {
   const navigation = useNavigation<NavigationProp>()
   useEffect(() => {
     if (to) navigation.replace('SettingsSection', {section: to})
-    else navigation.replace('Settings')
+    else {
+      const settings = navigateArgs('Settings', undefined, IS_WEB)
+      ;(navigation.replace as (name: string, params?: object) => void)(settings.name, settings.params)
+    }
   }, [navigation, to])
   return null
 }
@@ -256,7 +261,10 @@ function NotFound() {
       </Text>
       <Button
         label={l`Go to Settings`}
-        onPress={() => navigation.navigate('Settings')}
+        onPress={() => {
+          const settings = navigateArgs('Settings', undefined, IS_WEB)
+          ;(navigation.navigate as (name: string, params?: object) => void)(settings.name, settings.params)
+        }}
         size="small"
         color="primary">
         <ButtonText>

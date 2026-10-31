@@ -41,6 +41,7 @@ import {
   boundsQuery,
   type CellData,
   cellsQuery,
+  myExpenseCountQuery,
   type Overview,
   overviewQuery,
   rowsQuery,
@@ -421,6 +422,11 @@ export function useAnalyticsCells(request: {currency: string; from: string; to: 
 /** The expense list behind the charts, newest first, a page at a time. */
 export function useAnalyticsRows(spec: RowsSpec | null): RowsPager | undefined {
   return useProjection(spec ? rowsQuery(spec) : null)
+}
+
+/** How many live expenses I have a share in (stored sums, no ledger read). Undefined while loading. */
+export function useMyExpenseCount(me: string): number | undefined {
+  return useProjection(myExpenseCountQuery(me))
 }
 
 /** How many rows an index range holds (`count`), live. */

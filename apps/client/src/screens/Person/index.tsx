@@ -25,6 +25,7 @@ import {
   type WriteOff,
 } from '@splito/sync'
 
+import {IS_WEB} from '#/env'
 import {useDeferredReady} from '#/lib/hooks/useAfterTransition'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {goBack} from '#/navigation/goBack'
@@ -699,7 +700,7 @@ export function PersonScreen() {
             person={person}
             onSettleUp={() => recordPayment()}
             onCallItEven={callItEven}
-            onRemoved={() => goBack(navigation, {name: 'People'})}
+            onRemoved={() => goBack(navigation, {name: 'People'}, IS_WEB)}
           />
         </>
       )}

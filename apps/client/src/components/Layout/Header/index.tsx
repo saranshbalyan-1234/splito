@@ -7,6 +7,7 @@ import {msg} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import {useNavigation} from '@react-navigation/native'
 
+import {IS_WEB} from '#/env'
 import {type NavigationProp} from '#/lib/routes/types'
 import {backFallback, goBack} from '#/navigation/goBack'
 import {useDemoMode} from '#/state/demo'
@@ -144,7 +145,7 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
       if (evt.defaultPrevented) return
       // Opened directly (deep link, refresh): Back goes to this page's parent.
       const state = navigation.getState()
-      goBack(navigation, backFallback(state?.routes[state.index] ?? {name: startPage()}))
+      goBack(navigation, backFallback(state?.routes[state.index] ?? {name: startPage()}), IS_WEB)
     },
     [onPress, navigation],
   )

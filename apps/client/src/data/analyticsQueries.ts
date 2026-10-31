@@ -64,6 +64,30 @@ export const overviewQuery: Query<Overview> = {
   },
 }
 
+const myExpenseCountQueries = new Map<string, Query<number>>()
+
+/**
+ * How many live expenses I have a share in, from the stored per-person cells (no ledger read). An expense I only paid
+ * for, with no share of my own, has no counted cell, so it is not in this number (ceiling of the stored projection).
+ */
+export function myExpenseCountQuery(me: string): Query<number> {
+  const key = `analytics:myExpenses:${me}`
+  let q = myExpenseCountQueries.get(key)
+  if (!q) {
+    q = {
+      key,
+      isTouchedBy: isMoney,
+      loader: store => async () => {
+        let n = 0
+        for (const c of await store.aggregates({personId: me})) if (c.kind === 'expense') n += c.count
+        return n
+      },
+    }
+    myExpenseCountQueries.set(key, q)
+  }
+  return q
+}
+
 /* -------------------------------------------------------------------------- */
 /* Cells                                                                      */
 /* -------------------------------------------------------------------------- */
