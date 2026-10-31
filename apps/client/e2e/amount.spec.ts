@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test'
 
-import {openAddExpense, pickPeople} from './composer'
+import {openAddExpense, openMoreOptions, pickPeople} from './composer'
 import {openDemo} from './openDemo'
 import {DESKTOP, PHONE} from './viewports'
 
@@ -47,6 +47,7 @@ test('cash rounding: whole shares, the remainder shown on one person, saved with
   await page.getByTestId('expense-title').fill('Cab to the station')
   await page.getByTestId('amount-input').fill('1000.50')
   await pickPeople(page, ['Riya Sharma', 'Sam Carter'])
+  await openMoreOptions(page)
   await expect(page.getByTestId('cash-rounding')).toBeVisible()
 
   await page.getByTestId('cash-rounding-switch').click()

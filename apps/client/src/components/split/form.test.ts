@@ -128,6 +128,65 @@ describe('evaluateForm', () => {
     const short = evaluateForm(base({mode: 'items', items}), 'UTC')
     expect(short.remaining).toEqual({kind: 'money', value: 3000n})
   })
+  test('itemize with no total typed: the total is the items plus charges, from the domain', () => {
+    const items = [
+      {key: 'a', name: 'Pizza', amount: '200', people: ['me', 'riya']},
+      {key: 'b', name: 'Juice', amount: '70', people: ['sam']},
+    ]
+    const r = evaluateForm(
+      base({mode: 'items', items, amount: '', tax: '30'}),
+      'UTC',
+    )
+    expect(r.isTotalFromItems).toBe(true)
+    expect(r.error).toBeUndefined()
+    expect(r.total).toBe(30000n)
+    expect(r.draft?.total).toBe(30000n)
+    expect(r.draft?.payers).toEqual({me: 30000n})
+    expect(r.shares).toEqual({me: 11111n, riya: 11111n, sam: 7778n})
+    expect(r.remaining).toEqual({kind: 'money', value: 0n})
+  })
+  test('a percentage charge still makes the items total', () => {
+    const items = [{key: 'a', name: 'Thali', amount: '1000', people: ['me']}]
+    const r = evaluateForm(
+      base({
+        mode: 'items',
+        items,
+        amount: '',
+        discount: '15',
+        tax: '18',
+        adjustModes: {discount: 'percent', tax: 'percent'},
+      }),
+      'UTC',
+    )
+    expect(r.isTotalFromItems).toBe(true)
+    expect(r.total).toBe(100300n)
+    expect(r.error).toBeUndefined()
+  })
+  test('a typed total is never replaced by the items', () => {
+    const items = [{key: 'a', name: 'Pizza', amount: '200', people: ['me']}]
+    const r = evaluateForm(base({mode: 'items', items, amount: '250'}), 'UTC')
+    expect(r.isTotalFromItems).toBeUndefined()
+    expect(r.total).toBe(25000n)
+    expect(r.remaining).toEqual({kind: 'money', value: 5000n})
+    expect(r.error).toBe('TOTAL_MISMATCH')
+  })
+  test('itemize with no total and no priced item still asks for an amount', () => {
+    const none = evaluateForm(base({mode: 'items', items: [], amount: ''}), 'UTC')
+    expect(none.isTotalFromItems).toBeUndefined()
+    expect(none.error).toBe('AMOUNT_REQUIRED')
+    const unassigned = evaluateForm(
+      base({
+        mode: 'items',
+        amount: '',
+        items: [{key: 'a', name: 'Pizza', amount: '200', people: []}],
+      }),
+      'UTC',
+    )
+    expect(unassigned.isTotalFromItems).toBeUndefined()
+    expect(unassigned.error).toBe('AMOUNT_REQUIRED')
+  })
+  test('other modes with no total are not derived', () =>
+    expect(evaluateForm(base({amount: ''}), 'UTC').isTotalFromItems).toBeUndefined())
   test('item portions: 2 of 3 beers, and they survive a round trip', () => {
     const items = [
       {
