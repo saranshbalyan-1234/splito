@@ -53,6 +53,8 @@ function instrument() {
     memoizedProps?: {testID?: string; 'data-testid'?: string} | null
   }
   const COMPONENT_TAGS = new Set([0, 1, 11, 14, 15])
+  /* Rows of each kind this commit mounted; the most any one commit mounted is kept as `max:<kind>`. */
+  let perCommit: Record<string, number> = {}
   const walk = (first: Fiber | null) => {
     for (let fiber = first; fiber; fiber = fiber.sibling) {
       if (COMPONENT_TAGS.has(fiber.tag) && (!fiber.alternate || (fiber.flags & 1) === 1)) {
@@ -65,11 +67,13 @@ function instrument() {
       }
       /* A person or activity row's own element (react-native-web hands the test id down as a prop). */
       const id = fiber.tag === 5 ? (fiber.memoizedProps?.['data-testid'] ?? '') : ''
-      if (/^person-[^-]+.*$/.test(id) && !/-(chips|more|sync|deleted)$/.test(id) || /^activity-[a-z]+\.[a-z.]+$/.test(id)) {
+      if (/^person-[^-]+.*$/.test(id) && !/-(chips|more|sync|deleted)$/.test(id) || /^activity-[a-zA-Z]+\.[a-zA-Z.]+$/.test(id)) {
         const kind = id.startsWith('person-') ? 'personRow' : 'activityRow'
         const n = `${kind}:${fiber.alternate ? 'update' : 'mount'}`
-        if (!fiber.alternate || (fiber.flags & 1) === 1 || fiber.memoizedProps !== (fiber.alternate as Fiber).memoizedProps)
+        if (!fiber.alternate || (fiber.flags & 1) === 1 || fiber.memoizedProps !== (fiber.alternate as Fiber).memoizedProps) {
           state.counts[n] = (state.counts[n] ?? 0) + 1
+          if (!fiber.alternate) perCommit[kind] = (perCommit[kind] ?? 0) + 1
+        }
       }
       if (!fiber.alternate || fiber.child !== fiber.alternate.child) walk(fiber.child)
     }
@@ -85,7 +89,9 @@ function instrument() {
     onPostCommitFiberRoot: () => {},
     onCommitFiberRoot: (_id: number, root: {current: Fiber}) => {
       state.commits++
+      perCommit = {}
       walk(root.current.child)
+      for (const [k, n] of Object.entries(perCommit)) state.counts[`max:${k}`] = Math.max(state.counts[`max:${k}`] ?? 0, n)
     },
   }
   /* Reanimated's web exit animation clones the leaving node (`isDummy`). */
@@ -283,11 +289,12 @@ test('People search: a keystroke re-renders only what its answer changed', async
   console.log(`LISTWORK people-search x${CPU} ${JSON.stringify(result)}`)
   console.log(`LISTWORK people-search echo per key: ${echo.map(Math.round).join(' ')}; long tasks: ${s.long.map(Math.round).join(' ')}`)
   /*
-   * Structural budget (17.1): a key re-renders the field, the heading's count and the rows that came or went, never every
-   * row; a filtered-out row leaves without an exit clone. Before the fix: 2,079 renders a key, 466 row re-renders.
+   * Structural budget (17.1): a key renders the list and its heading, not the screen above it, and only the rows that came
+   * or went, never every row; a row a key removes leaves without an exit clone. Before the fix (2026-10-31, large demo, 42
+   * friends): 211 renders a key, 83 row re-renders and 46 exit clones over the 16 keys; after: 62-64, 2-4 and 0.
    */
-  expect(Number(result.rendersPerKey), 'React renders per keystroke').toBeLessThan(400)
-  expect(result.personRowUpdates, 'person rows re-rendered while typing').toBeLessThanOrEqual(keys * 2)
+  expect(Number(result.rendersPerKey), 'React renders per keystroke').toBeLessThan(100)
+  expect(result.personRowUpdates, 'person rows re-rendered while typing').toBeLessThanOrEqual(8)
   expect(result.exitClones, 'rows cloned out by a keystroke').toBe(0)
 })
 
@@ -345,11 +352,20 @@ test('Activity: the first fling mounts rows a slice at a time', async ({page}) =
     renders: (s.counts.mount ?? 0) + (s.counts.update ?? 0),
     activityRowMounts: s.counts['activityRow:mount'] ?? 0,
     activityRowUpdates: s.counts['activityRow:update'] ?? 0,
+    mostRowsInOneCommit: s.counts['max:activityRow'] ?? 0,
     longTasks: s.long.length,
     longestTask: Math.round(Math.max(0, ...s.long)),
     worstFrame: Math.round(frames.maxGap),
   }
   console.log(`LISTWORK activity-fling x${CPU} ${JSON.stringify(result)}`)
-  /* Rows already mounted never re-render because more were added under them. */
+  /*
+   * Structural budget (17.1): the next page grows a few rows a commit (one commit mounted all 27 before), rows already
+   * mounted never re-render because more were added under them, and a row costs what it draws (130 renders a row
+   * before, with the closed row menu mounted on every row; 97 after).
+   */
+  const added = result.rowsAfter - result.rowsBefore
+  expect(added, 'the fling reached the next page').toBeGreaterThan(10)
+  expect(result.mostRowsInOneCommit, 'activity rows mounted by one commit').toBeLessThanOrEqual(8)
   expect(result.activityRowUpdates, 'mounted activity rows re-rendered by the fling').toBeLessThanOrEqual(2)
+  expect(result.renders / added, 'React renders per added activity row').toBeLessThan(110)
 })

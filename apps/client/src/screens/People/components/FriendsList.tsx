@@ -65,11 +65,11 @@ export function FriendsList({
   const listQuery = useDeferredValue(query)
   const quietRows = useQuietRows()
   const changeQuery = (next: string) => {
-    quietRows.hush()
+    quietRows.hush(next)
     setQuery(next)
   }
   useEffect(() => {
-    if (listQuery === query) quietRows.settle()
+    if (listQuery === query) quietRows.settle(listQuery)
   }, [listQuery, query, quietRows])
   /*
    * Memoised by hand: the compiler left this call unmemoised in the screen (measured), and a new `listed` per render

@@ -390,3 +390,33 @@ branch); the counts above came from a local run with the scroll target lowered t
 
 Not verified: WebKit (not installed in this container), iOS and Android (native paths unchanged: the Reanimated patch and
 the exit scope touch web code only; `LayoutAnimationConfig skipExiting` still does the native job).
+
+## People search and Activity's first fling (F-266 sweep misses, owner 189; web, measured 2026-10-31)
+
+`perf/listWork.spec.ts` (new): Chromium, 390 x 844, touch, large demo (42 friends), CPU x6, accessibility tree off. Base =
+`claude/repo-status-other-chat-xmr0l3` at the merge base of this branch, after = this branch, both `e2e:build`, three runs
+each interleaved. Machine load 23-41 during every run (other builders), so the timings are upper bounds and not a budget
+claim; the counts do not depend on load and are what the spec gates. Run: `E2E_PORT=8933 pnpm perf listWork` (`PERF_DIST`
+for another build).
+
+| People search, "rahul sharma 120" (16 keys) | Base (3 runs) | After (3 runs) |
+|---|---|---|
+| React renders per key | 210.6 (every run) | 58.5-74.3 |
+| Person rows re-rendered (whole search) | 83 | 4 |
+| Rows cloned out by Reanimated's exit | 46 | 0 |
+| Worst key-to-echo, ms (median) | 1,108 / 1,842 / 737 (1,108) | 496 / 227 / 226 (227) |
+| Longest task, ms (median) | 1,030 / 1,158 / 674 (1,030) | 373 / 79 / 86 (86) |
+
+| Activity, first fling (adds 27 rows) | Base | After |
+|---|---|---|
+| React renders | 3,496 | 2,618 |
+| Most rows mounted by one commit | 27 | 6 |
+| Worst frame gap, ms (median) | 2,462 / 482 / 1,755 (1,755) | 518 / 171 / 310 (310) |
+| Longest task, ms (median) | 2,083 / 356 / 1,668 (1,668) | 500 / 110 / 242 (242) |
+
+Causes and fixes in ARCHITECTURE 17.1 (rule) and 23 (lesson): the query state re-rendered the whole People screen and
+every row (an unmemoised summary chain), rows a key removed ran exit clones, every Activity row mounted its closed Radix
+menu and phone drawer, and a page of rows was one commit. Still to measure on a quiet machine, in WebKit and on devices.
+Renders gate not re-recorded here (port 8191 shared; the gate is red on base for the 806-row scroll and the pre-People
+baseline, 2026-10-31 c-perf note above); its scroll phase will count fewer renders (no closed menus) and a few more
+`ActivityScreen` updates per page (the six-row steps), and the next re-record should take both.
