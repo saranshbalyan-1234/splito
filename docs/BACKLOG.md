@@ -545,7 +545,7 @@ Home shows the Overview and Recent transactions (F-1415); a new People tab holds
 
 Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between main tabs (native sceneStyleInterpolator ~220 ms, web ~200 ms), the springing bottom-bar indicator, the icon pop with haptic, the badge spring and re-tap-scrolls-to-top are not built (web switches instantly; "no soft reset yet"). Build them interruptible from the start (owner 150: a new tap redirects the running slide from its current value), reduced-motion aware.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo, after F-256 · **Deps** F-255
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** slide built 2026-10-31 (web CSS, native 'shift'; indicator spring, badge spring and re-tap scroll-to-top still todo; icon pop came with F-1713) · **Deps** F-255
 - **Prefs** -
 - **Acceptance**
   1. Slide direction follows tab order; a tap mid-slide redirects from the current position; the landing tab is the last tapped (tabTaps.spec stays green).

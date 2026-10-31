@@ -13,6 +13,8 @@ import {useTabs} from '#/lib/routes/tabs'
 
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {Link} from '#/view/com/util/Link'
+import {noteTabSlide, slideDirection} from '#/lib/routes/tabSlide'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a, useTheme} from '#/alf'
 import {
   describeUnread,
@@ -139,6 +141,7 @@ const NavItem: React.FC<{
   const ax = useAnalytics()
   /* Under a page that is not in the bar (Settings, unless added) the tab it was opened from stays lit, as Bluesky's does. */
   const section = useNavigationState(state => currentSection(state, sections))
+  const isReducedMotion = useShouldReduceMotion()
 
   const onBeforePress = useCallback(() => {
     ax.metric('nav:click', {item: navItem, surface: 'bottomBar'})
@@ -156,7 +159,11 @@ const NavItem: React.FC<{
       style={[styles.ctrl, hasLabels && styles.ctrlLabelled, hasLabels ? a.pb_sm : a.pb_lg]}
       navigationAction="navigate"
       activateOnPressIn
-      onActivated={onPressStart}
+      onActivated={() => {
+        // The new screen slides in from the side it sits on in the bar (owner 174), unless motion is reduced.
+        noteTabSlide(isReducedMotion ? undefined : slideDirection(sections, section, routeName))
+        onPressStart()
+      }}
       aria-role="link"
       aria-label={label}
       aria-current={isActive ? 'page' : undefined}

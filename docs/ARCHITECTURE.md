@@ -1747,6 +1747,11 @@ Splito lessons (add newest last, dated, with PR):
   each switch takes 165-930 ms, and Analytics was the worst because it drew every report row. Rule in 17.1. Not yet
   verified on a real iPhone: this container has no WebKit or simulator, so iPhone numbers still need the owner's
   phone or Mac.
+- 2026-10-31, F-257 (tab slide): **an animation that shifts content right widens the page.** The first cut moved the
+  incoming screen 32 px right and `tabTaps.spec` "no tab widens the page" read 422 px on a 390 px phone (the fixed
+  bar slips below the fold, § 23 fix/tab-taps). The sliding screen clips sideways (`overflow-x: clip` on the screen
+  root only, never on `html` or `body`). Also: a `transform` on a screen's root would carry its `position: fixed` FAB
+  with it, so the slide moves the screen's children except `[data-fab]`.
 
 ## 24. Checklists
 
@@ -2465,11 +2470,15 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   another, app-wide on native and per tab on web; `useNavigationDeduped().navigate` no longer dedupes, it is
   idempotent); e2e `tabTaps.spec.ts`.
 - **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch; reaffirmed by
-  owner 174 on 2026-10-30, "in tab switch, it should switch with sliding animation": F-257, next in Wave C, not built
-  yet; it must stay interruptible per owner 150 and must not redraw per owner 166): a
-  direction-aware horizontal slide (from the right when moving to a tab on the right, else from the left;
-  native ~220 ms via a bottom-tabs `sceneStyleInterpolator` + `transitionSpec`, web ~200 ms transform of the
-  content area). A small indicator under the active bottom-bar icon / beside the active sidebar item springs
+  owner 174 on 2026-10-30, "in tab switch, it should switch with sliding animation"; it must stay interruptible per
+  owner 150 and must not redraw per owner 166): a direction-aware horizontal slide (from the right when moving to a
+  tab on the right in the bar's own order, else from the left). [Built, F-257 slide part, 2026-10-31, web checked in
+  Chromium, native not yet run] Web: a bar tap notes the direction (`lib/routes/tabSlide.ts`) and the screen that
+  gains focus sets `data-tab-in` on its root; a CSS keyframe in `public/index.html` shifts the screen's content 32 px
+  with a fade in 200 ms on the compositor (no JS per frame, no React render; the fixed FAB is excluded, the screen
+  clips sideways so the page never widens), and a newer tap simply shows its screen with its own slide. Native: the
+  bottom tabs' `animation: 'shift'`. Reduced motion or motion off: instant (the bar notes no direction; CSS
+  `prefers-reduced-motion`; native `'none'`). Sidebar switches (rail and desktop) stay instant for now. A small indicator under the active bottom-bar icon / beside the active sidebar item springs
   to the new tab like the Activity underline; the tapped icon does a small spring scale pop while filled and
   stroke states cross-fade, with a Bluesky haptic tap; the unread badge springs in on count change; re-tap
   scrolls to top. No swipe between main tabs (it would fight the drawer edge-swipe and row swipe actions).
