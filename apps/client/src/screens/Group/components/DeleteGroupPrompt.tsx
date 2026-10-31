@@ -12,7 +12,7 @@ import {
 import {useStore} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {type DialogControlProps} from '#/components/Dialog'
-import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
+import {TrashLid_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Prompt from '#/components/Prompt'
 import {Text} from '#/components/Typography'
 

@@ -15,6 +15,7 @@ import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import {useDeferredReady} from '#/lib/hooks/useAfterTransition'
+import {CheckDrawn_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Loader} from '#/components/Loader'
 import * as Prompt from '#/components/Prompt'
@@ -257,6 +258,12 @@ export type FooterProps = {
   saveLabel: string
   canSave?: boolean
   isSaving?: boolean
+  /**
+   * The save went through: the button shows a drawn check (instead of a full-sheet success screen, F-275) for the
+   * moment before the caller closes the sheet. `savedTestID` names the button then, for specs that wait on it.
+   */
+  isSaved?: boolean
+  savedTestID?: string
   /** The secondary button's words (default "Cancel"). */
   cancelLabel?: string
   /** Default: the sheet's close request (asks first if anything changed). */
@@ -303,6 +310,8 @@ function Actions({
   cancelLabel,
   canSave = true,
   isSaving = false,
+  isSaved = false,
+  savedTestID,
 }: FooterProps) {
   const {t: l} = useLingui()
   const {requestClose} = useFormSheet()
@@ -323,15 +332,17 @@ function Actions({
         </ButtonText>
       </Button>
       <Button
-        testID="sheet-save"
+        testID={isSaved ? (savedTestID ?? 'sheet-save') : 'sheet-save'}
         label={saveLabel}
         color="primary"
         size={size}
-        disabled={!canSave || isSaving}
+        disabled={(!canSave && !isSaved) || isSaving}
         style={[isSheet && a.flex_1]}
-        onPress={onSave}>
+        onPress={isSaved ? () => {} : onSave}>
         {isSaving ? (
           <Loader size="sm" />
+        ) : isSaved ? (
+          <ButtonIcon icon={CheckIcon} />
         ) : (
           <ButtonText maxFontSizeMultiplier={2} numberOfLines={1}>{saveLabel}</ButtonText>
         )}

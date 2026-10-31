@@ -24,6 +24,7 @@ import {
 import {HITSLOP_10} from '#/lib/constants'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {PersonLink} from '#/components/PersonLink'
+import {EmptyState} from '#/view/com/util/EmptyState'
 import {atoms as a, type TextStyleProp, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
@@ -585,26 +586,24 @@ export function SearchFailed({onRetry}: {onRetry: () => void}) {
   )
 }
 
-/** Bluesky's "No results found for “…”." box. */
-export function NoResults({query}: {query: string}) {
-  const t = useTheme()
+/** "No results found for “…”.": the shared empty state with the search art (owner 172). */
+export function NoResults({query, onClear}: {query: string; onClear: () => void}) {
+  const {t: l} = useLingui()
   return (
-    <View testID="search-empty" style={[a.p_xl]}>
-      <View style={[t.atoms.bg_contrast_25, a.rounded_sm, a.p_lg, a.gap_xs]}>
-        <Text style={[a.text_md]}>
-          <Trans>
-            No results found for “
-            <Text style={[a.text_md, a.font_semi_bold]}>{query}</Text>”.
-          </Trans>
-        </Text>
-        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>
-            Try fewer words, part of a word, an amount like 450 or a month like
-            march.
-          </Trans>
-        </Text>
-      </View>
-    </View>
+    <EmptyState
+      testID="search-empty"
+      illustration="empty-search"
+      title={l`No results found for “${query}”.`}
+      message={l`Try fewer words, part of a word, an amount like 450 or a month like march.`}
+      button={{
+        testID: 'search-clear',
+        label: l`Clear search`,
+        text: l`Clear search`,
+        onPress: onClear,
+        size: 'small',
+        color: 'secondary',
+      }}
+    />
   )
 }
 

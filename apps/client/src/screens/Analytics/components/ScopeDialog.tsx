@@ -9,7 +9,7 @@ import * as FormSheet from '#/components/FormSheet'
 import {SearchInput} from '#/components/forms/SearchInput'
 import * as Toggle from '#/components/forms/Toggle'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
-import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
+import {ChevronExpand_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {createIcon} from '#/components/icons/lucide'
 import {Person_Stroke2_Corner2_Rounded as PersonIcon} from '#/components/icons/Person'
 import {Pressable} from '#/components/Pressable'
@@ -193,9 +193,7 @@ function Checklist({
             <ChevronDownIcon
               size="sm"
               fill={t.atoms.text_contrast_medium.color}
-              style={{
-                transform: [{rotate: isArchivedVisible ? '180deg' : '0deg'}],
-              }}
+              active={isArchivedVisible}
             />
           </Pressable>
         )}

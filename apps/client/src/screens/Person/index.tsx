@@ -53,6 +53,8 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {
+  Banknote_Stroke2_Corner0_Rounded as BanknoteIcon,
+  HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon,
   Handshake_Stroke2_Corner0_Rounded as HandshakeIcon,
   IndianRupee_Stroke2_Corner0_Rounded as RupeeIcon,
 } from '#/components/icons/Money'
@@ -201,7 +203,7 @@ export function PersonScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="person-not-found"
-          illustration="empty-people"
+          illustration="empty-not-found"
           message={l`This friend isn’t on this device. They may have been removed.`}
           button={{
             label: l`Back to People`,
@@ -487,7 +489,7 @@ export function PersonScreen() {
         <Layout.Header.ActionButton
           testID="person-record-payment"
           label={hasOpenBalance ? l`Settle up` : l`Record payment`}
-          icon={HandshakeIcon}
+          icon={hasOpenBalance ? HandCoinsIcon : BanknoteIcon}
           disabled={!person || isDeleted}
           onPress={() => recordPayment()}
         />
@@ -594,25 +596,20 @@ export function PersonScreen() {
             ) : !rowsReady ? <></> : (
               <EmptyState
                 testID="person-history-empty"
-                illustration="empty-people"
+                illustration="empty-history"
                 message={
                   includeGroups
                     ? l`Nothing with ${person!.data.name} yet. Add an expense you shared and it shows up here.`
                     : l`No direct expenses with ${person!.data.name}. Group expenses are hidden by the filter.`
                 }
-                button={
-                  gtMobile
-                    ? {
-                        label: l`Add expense`,
-                        text: l`Add expense`,
-                        icon: PlusIcon,
-                        onPress: () =>
-                          navigation.navigate('AddExpense', {personId}),
-                        size: 'small',
-                        color: 'secondary',
-                      }
-                    : undefined
-                }
+                button={{
+                  label: l`Add expense`,
+                  text: l`Add expense`,
+                  icon: PlusIcon,
+                  onPress: () => navigation.navigate('AddExpense', {personId}),
+                  size: 'small',
+                  color: 'secondary',
+                }}
               />
             )
           }

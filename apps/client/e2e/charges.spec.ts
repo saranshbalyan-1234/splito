@@ -105,7 +105,7 @@ for (const [label, size] of [
 
     // Riya had only food: no part of the alcohol VAT.
     await page.getByTestId('sheet-save').click()
-    await expect(page.getByTestId('expense-saved')).toBeVisible()
+    await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
     await page.getByRole('button', {name: 'View expense'}).click()
     await expect(page.getByTestId('screen-expense')).toBeVisible()
 
@@ -141,7 +141,7 @@ test('presets in one tap; save a merchant setup and get it back as a dashed sugg
   await page.getByTestId('charge-save-setup').click()
   await page.getByTestId('amount-input').fill('1155')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('expense-saved')).toBeVisible()
+  await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
   // The same merchant on a new bill: the setup is offered, not forced.
   await openAddExpense(page, DESKTOP)
   await page.getByTestId('expense-title').fill('toit  brewpub')
@@ -232,7 +232,7 @@ test('a round-off is shared by everyone by share (F-251: no setting), and an unn
   await unnamedItemsBill(page)
   await expect(page.getByTestId('bill-line-round-off')).toContainText('₹1.00')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('expense-saved')).toBeVisible()
+  await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
   await page.getByRole('button', {name: 'View expense'}).click()
   const detail = page.getByTestId('expense-items')
   await expect(detail.getByTestId('expense-charge-0')).toContainText('on Item 2')

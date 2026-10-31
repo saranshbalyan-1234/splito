@@ -61,7 +61,7 @@ test('C1: Record payment as offered settles a BHD balance exactly under de-DE', 
   // The prefill is written in the format's own mark, and saved as offered.
   await expect(page.getByTestId('payment-amount')).toHaveValue('1,234')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
   await expect(page.getByTestId('person-settled')).toBeVisible()
   await expect(page.getByTestId('person-total-BHD')).toHaveCount(0)
 })
@@ -77,7 +77,7 @@ test('C1: Call it even as offered clears a BHD balance under de-DE', async ({
   await expect(page.getByTestId('call-even-amount')).toHaveValue('1,234')
   await expect(page.getByTestId('sheet-save')).toBeEnabled()
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('call-even-done')).toBeVisible()
+  await expect(page.getByText(/^(All even|Written off)$/)).toBeVisible()
   await expect(page.getByTestId('person-total-BHD')).toHaveCount(0)
 })
 

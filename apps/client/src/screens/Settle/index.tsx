@@ -35,6 +35,7 @@ import {NO_RULES} from '#/components/groups/RulesEditor'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as RefreshIcon} from '#/components/icons/ArrowRotate'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
+import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
 import {
   type PaymentDraft,
@@ -153,7 +154,7 @@ export function SettleScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="settle-not-found"
-          illustration="empty-groups"
+          illustration="empty-not-found"
           message={l`This group isn’t on this device. It may have been removed.`}
           button={{
             label: l`Back to Groups`,
@@ -457,8 +458,17 @@ export function SettleScreen() {
             isLoading ? undefined : (
               <EmptyState
                 testID="settle-empty"
-                illustration="empty-groups"
+                illustration="empty-settle"
                 message={l`Nothing to settle. This group has no expenses yet.`}
+                button={{
+                  testID: 'settle-empty-add-expense',
+                  label: l`Add expense`,
+                  text: l`Add expense`,
+                  icon: PlusIcon,
+                  onPress: () => navigation.navigate('AddExpense', {groupId}),
+                  size: 'small',
+                  color: 'secondary',
+                }}
               />
             )
           }

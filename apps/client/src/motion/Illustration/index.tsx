@@ -6,6 +6,7 @@ import {NavigationContext} from '@react-navigation/native'
 
 import {useTheme} from '#/alf'
 import {ILLUSTRATIONS, type IllustrationProps} from '#/motion/illustrations'
+import {useIllustrationSource} from '#/motion/useIllustrationSource'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 
 /**
@@ -15,17 +16,18 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
  */
 export function Illustration({name, size, loop, testID}: IllustrationProps) {
   const t = useTheme()
-  const {staticFrame, isLoop, ...sources} = ILLUSTRATIONS[name]
-  const source = t.scheme === 'dark' ? sources.sourceDark : sources.source
+  const {staticFrame, frames, isLoop} = ILLUSTRATIONS[name]
+  const source = useIllustrationSource(name, t.scheme === 'dark')
   const shouldReduceMotion = useShouldReduceMotion()
   const [hasFailed, setHasFailed] = useState(false)
   const ref = useRef<LottieView>(null)
   const navigation = useContext(NavigationContext)
-  const style = {width: size, height: (size * source.h) / source.w}
+  const style = {width: size, height: size}
+  const shouldLoop = loop ?? isLoop
 
   /* From Expensify: pause while the screen is covered so stacked screens stop rendering frames. */
   useEffect(() => {
-    if (!navigation || shouldReduceMotion) return
+    if (!navigation || shouldReduceMotion || !shouldLoop) return
     const offBlur = navigation.addListener('blur', () => ref.current?.pause())
     const offFocus = navigation.addListener('focus', () =>
       ref.current?.resume(),
@@ -34,10 +36,16 @@ export function Illustration({name, size, loop, testID}: IllustrationProps) {
       offBlur()
       offFocus()
     }
-  }, [navigation, shouldReduceMotion])
+  }, [navigation, shouldReduceMotion, shouldLoop])
+
+  /* Once and at rest: play to the resting frame and hold it (reduced motion shows that frame from the start). */
+  useEffect(() => {
+    if (source && !shouldReduceMotion && !shouldLoop) ref.current?.play(0, staticFrame)
+  }, [source, shouldReduceMotion, shouldLoop, staticFrame])
 
   /* From Expensify: a failed animation leaves an empty box of the same size rather than breaking layout. */
-  if (hasFailed) return <View style={style} testID={testID} />
+  /* The JSON is its own chunk: until it arrives the art's box is empty at its final size. */
+  if (hasFailed || !source) return <View style={style} testID={testID} />
 
   return (
     <View
@@ -46,12 +54,12 @@ export function Illustration({name, size, loop, testID}: IllustrationProps) {
       importantForAccessibility="no-hide-descendants">
       <LottieView
         ref={ref}
-        source={source}
+        source={source as never}
         style={style}
         testID={testID}
-        autoPlay={!shouldReduceMotion}
-        loop={!shouldReduceMotion && (loop ?? isLoop)}
-        progress={shouldReduceMotion ? staticFrame / source.op : undefined}
+        autoPlay={!shouldReduceMotion && shouldLoop}
+        loop={!shouldReduceMotion && shouldLoop}
+        progress={shouldReduceMotion ? staticFrame / frames : undefined}
         onAnimationFailure={() => setHasFailed(true)}
       />
     </View>

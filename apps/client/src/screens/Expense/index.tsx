@@ -150,7 +150,7 @@ export function ExpenseScreen() {
       ) : expense === null ? (
         <EmptyState
           testID="expense-not-found"
-          illustration="empty-activity"
+          illustration="empty-not-found"
           message={l`This expense doesn’t exist. The link may be wrong.`}
           button={{
             label: l`Go to People`,

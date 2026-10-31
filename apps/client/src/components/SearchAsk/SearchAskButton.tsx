@@ -3,15 +3,15 @@ import {View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 
 import {useBreakpoints} from '#/alf'
-import {Sparkles_Stroke2_Corner0_Rounded as SparklesIcon} from '#/components/icons/Sparkles'
+import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import * as Layout from '#/components/Layout'
 import {IS_WEB} from '#/env'
 import {useSearchAsk} from './context'
 import {SHORTCUT_HINT} from './useSearchAskHotkey'
 
 /**
- * The Search & Ask button (ARCHITECTURE 26.3, decision 74): Lucide's
- * Sparkles, the widely recognised AI mark, in every top-level header to the
+ * The Search & Ask button (ARCHITECTURE 26.3, decision 74): a
+ * magnifier (the sparkle means Ask only, owner 213), in every top-level header to the
  * left of the page's action (the page's only action on Home, where `edge` puts it at the far right). It opens the one drawer for search and AI.
  * Web shows the label as a tooltip, with the Cmd/Ctrl+K hint on desktop.
  */
@@ -36,7 +36,7 @@ export function SearchAskButton({edge = false}: {edge?: boolean} = {}) {
       <Layout.Header.ActionButton
         testID="header-search-ask"
         label={label}
-        icon={SparklesIcon}
+        icon={SearchIcon}
         edge={edge}
         onPress={() => open()}
       />

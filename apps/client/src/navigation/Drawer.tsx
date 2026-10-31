@@ -31,7 +31,8 @@ import {type Props as SVGIconProps} from '#/components/icons/common'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
 import {SyncStatusDot, useSyncLabel} from '#/components/SyncStatusDot'
 import {useSearchAsk} from '#/components/SearchAsk/context'
-import {GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
+import {MorphIcon} from '#/components/anim/AnimatedIcon'
+import {badgeTick, GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
 
@@ -255,7 +256,6 @@ function MenuItem({
   onPress: () => void
 }): JSX.Element {
   const t = useTheme()
-  const Glyph = isActive ? ActiveIcon : Icon
   return (
     <Button
       testID={testID}
@@ -276,7 +276,7 @@ function MenuItem({
             (hovered || pressed) && t.atoms.bg_contrast_25,
           ]}>
           <View style={[a.relative]}>
-            <Glyph style={[t.atoms.text]} width={iconWidth} />
+            <MorphIcon outline={Icon} filled={ActiveIcon} isActive={isActive} playKey={badgeTick(count)} style={[t.atoms.text]} width={iconWidth} />
             {count ? (
               /* Bluesky's drawer badge, verbatim: pinned to the glyph's top right corner. */
               <View

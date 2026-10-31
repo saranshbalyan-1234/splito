@@ -12,7 +12,7 @@
  * Every file carries meta.g = "splito/scripts/lottie.ts" so its origin is
  * traceable.
  */
-import {mkdirSync, writeFileSync} from 'node:fs'
+import {mkdirSync, readFileSync, writeFileSync} from 'node:fs'
 import {createRequire} from 'node:module'
 import {dirname, join} from 'node:path'
 import {fileURLToPath} from 'node:url'
@@ -543,6 +543,18 @@ const backdrop = (c: Palette, r = 100): Layer => ({
   shapes: [group('disc', [ellipse(r * 2), fill(c.t(0.74), st(12))])],
 })
 
+/** The rounded card the empty states sit on. */
+const cardLayer = (c: Palette): Layer => ({
+  nm: 'card',
+  shapes: [
+    group('card', [
+      rect(148, 148, 22),
+      fill(c.ink, st(10)),
+      stroke(c.t(0.74), 3, st(70)),
+    ]),
+  ],
+})
+
 /** Head and shoulders, centred on its own origin (head above, shoulders below). */
 function person(color: string, scale = 1) {
   const s = (n: number) => n * scale
@@ -920,16 +932,7 @@ function emptyActivity(c: Palette) {
   })
   return animation('empty-activity', 180, [
     backdrop(c),
-    {
-      nm: 'card',
-      shapes: [
-        group('card', [
-          rect(148, 148, 22),
-          fill(c.ink, st(10)),
-          stroke(c.t(0.74), 3, st(70)),
-        ]),
-      ],
-    },
+    cardLayer(c),
     ...rows,
     {
       nm: 'ping',
@@ -1005,16 +1008,7 @@ function emptyAnalytics(c: Palette) {
   })
   return animation('empty-analytics', 180, [
     backdrop(c),
-    {
-      nm: 'card',
-      shapes: [
-        group('card', [
-          rect(148, 148, 22),
-          fill(c.ink, st(10)),
-          stroke(c.t(0.74), 3, st(70)),
-        ]),
-      ],
-    },
+    cardLayer(c),
     {
       nm: 'baseline',
       shapes: [
@@ -1208,6 +1202,430 @@ function welcomeOffline(c: Palette) {
   ])
 }
 
+
+/* ---------- screen-specific empty states (F-260) ---------- */
+
+/**
+ * A Lucide glyph (ISC) as Lottie strokes: its `path` nodes, read from the installed
+ * lucide-react-native icon file, scaled by `k` and centred on the layer origin.
+ */
+function lucide(name: string, c: Palette, k: number, w: number, color = c.ink, tint?: string) {
+  const file = createRequire(import.meta.url).resolve(
+    `lucide-react-native/icons/${name}`,
+  )
+  const src = readFileSync(file, 'utf8')
+  const ds = [...src.matchAll(/\[\s*"path",\s*\{\s*d:\s*"([^"]+)"/g)].map(m => m[1]!)
+  if (!ds.length) throw new Error(`lucide ${name}: no paths found`)
+  const map = (p: Pt): Pt => [(p[0] - 12) * k, (p[1] - 12) * k]
+  return ds.flatMap(d =>
+    parsePath(d).map(sub =>
+      group('glyph', [pathShape(toBezier(sub, map)), stroke(color, w * k), ...(tint ? [fill(tint, st(30))] : [])]),
+    ),
+  )
+}
+
+/** A speech bubble with a tail at the bottom left, centred on the origin. */
+function bubble(w: number, h: number, bg: string, line: string, lineW = 5) {
+  const [x, y] = [w / 2, h / 2]
+  const tail = polyline([[-x + 22, y - 1], [-x + 16, y + 16], [-x + 40, y - 1]])
+  return [
+    group('tail', [pathShape(tail), stroke(line, lineW)]),
+    group('body', [rect(w, h, 22), fill(bg), stroke(line, lineW)]),
+  ]
+}
+
+/** Scale keys for something that pops in at `t`, holds, and leaves before the loop ends. */
+const bob = (t: number, amp: number): Key[] => [
+  [0, 0],
+  [t, 0, EASE.out],
+  [t + 14, -amp, EASE.inOut],
+  [t + 30, 0],
+  [LOOP, 0],
+]
+
+/** A lens sweeps over a card of rows and finds nothing. */
+function emptySearch(c: Palette) {
+  const rows = [-34, 0, 34].map(y =>
+    group('row', [
+      group('dot', [ellipse(14), fill(c.t(0.54))], {p: st([-50, 0])}),
+      group('bar', [rect(y === 0 ? 70 : 92, 10, 5), fill(c.t(0.34))], {p: st([8, 0])}),
+    ], {p: st([0, y])}),
+  )
+  return animation('empty-search', LOOP, [
+    backdrop(c),
+    cardLayer(c),
+    {nm: 'rows', shapes: rows, p: st([C, C, 0])},
+    {
+      nm: 'lens',
+      shapes: [
+        group('handle', [pathShape(polyline([[17, 17], [36, 36]])), stroke(c.ink, 7)]),
+        group('ring', [ellipse(50), stroke(c.ink, 7), fill(c.paper, st(55))]),
+      ],
+      p: kf(
+        [
+          [0, [C - 30, C - 24]],
+          [60, [C + 22, C - 16]],
+          [120, [C - 8, C + 18]],
+          [LOOP, [C - 30, C - 24]],
+        ],
+        true,
+      ),
+    },
+  ])
+}
+
+/** A funnel takes dots in at the top; nothing comes out. */
+function emptyFilter(c: Palette) {
+  const funnel = polyline([[-48, -36], [48, -36], [10, 6], [10, 44], [-10, 34], [-10, 6]])
+  funnel.c = true
+  const dots = [-22, 0, 22].map((x, i): Layer => {
+    const t = 8 + i * 22
+    return {
+      nm: `dot-${i}`,
+      shapes: [group('dot', [ellipse(12), fill(i === 1 ? c.ink : c.t(0.54))])],
+      p: kf([[0, [C + x, C - 84]], [t, [C + x, C - 84], EASE.in], [t + 38, [C + x * 0.3, C - 20]], [LOOP, [C + x * 0.3, C - 20]]], true),
+      o: kf([[0, 0], [t, 0], [t + 6, 100], [t + 30, 100], [t + 40, 0], [LOOP, 0]], false),
+    }
+  })
+  return animation('empty-filter', LOOP, [
+    backdrop(c),
+    {
+      nm: 'funnel',
+      shapes: [
+        group('outline', [pathShape(funnel), stroke(c.ink, 7), fill(c.t(0.34), st(30))]),
+      ],
+      p: st([C, C + 8, 0]),
+    },
+    ...dots,
+    {
+      nm: 'tray',
+      shapes: [group('tray', [rect(56, 6, 3), fill(c.t(0.54), st(70))])],
+      p: st([C, C + 66, 0]),
+    },
+  ])
+}
+
+/** A disc pops, its check draws, a ring pulses: everything is even. */
+function emptySettled(c: Palette) {
+  return animation('empty-settled', LOOP, [
+    backdrop(c),
+    {
+      nm: 'ring',
+      shapes: [
+        group('ring', [
+          ellipse(0, 0, [0, 0], kf([[34, [120, 120], EASE.out], [90, [200, 200]]])),
+          stroke(c.t(0.54), 5, kf([[0, 0], [33, 0], [34, 80, EASE.out], [90, 0], [LOOP, 0]])),
+        ]),
+      ],
+    },
+    {
+      nm: 'disc',
+      shapes: [group('disc', [ellipse(116), fill(c.ink)], {s: kf(popKeys(0))})],
+    },
+    {
+      nm: 'check',
+      shapes: [
+        group('check', [
+          pathShape(polyline([[-24, 2], [-8, 18], [26, -16]])),
+          trim(kf([[0, 0], [16, 0, EASE.out], [44, 100], [LOOP - 26, 100, EASE.in], [LOOP - 8, 0], [LOOP, 0]])),
+          stroke(c.paper, 12),
+        ]),
+      ],
+    },
+  ])
+}
+
+/** A clock hand sweeps round and the past fills in as dots. */
+function emptyHistory(c: Palette) {
+  const dots = Array.from({length: 4}, (_, i) => {
+    const a = (i / 4) * Math.PI * 2
+    return group('mark', [ellipse(i === 0 ? 12 : 9), fill(i === 0 ? c.ink : c.t(0.54))], {
+      p: st([Math.sin(a) * 50, -Math.cos(a) * 50]),
+      s: kf(popKeys(10 + i * 14)),
+    })
+  })
+  return animation('empty-history', LOOP, [
+    backdrop(c),
+    {
+      nm: 'clock',
+      shapes: [
+        group('minute', [pathShape(polyline([[0, 0], [0, -38]])), stroke(c.ink, 7)], {
+          r: kf([[0, 0, EASE.linear], [LOOP, 360]]),
+        }),
+        group('hour', [pathShape(polyline([[0, 0], [0, -24]])), stroke(c.t(0.54), 7)], {
+          r: kf([[0, 0, EASE.linear], [LOOP, 30]]),
+        }),
+        group('hub', [ellipse(12), fill(c.ink)]),
+        ...dots,
+        group('face', [ellipse(116), fill(c.paper), stroke(c.t(0.34), 5)]),
+      ],
+      p: st([C, C, 0]),
+    },
+  ])
+}
+
+/** A receipt writes its lines; a plus badge pops: add the first expense. */
+function emptyExpenses(c: Palette) {
+  const widths = [60, 72, 48]
+  return animation('empty-expenses', LOOP, [
+    backdrop(c),
+    {
+      nm: 'receipt',
+      shapes: [
+        ...widths.map((w, i) =>
+          group('line', [rect(w, 8, 4), fill(i === 2 ? c.t(0.54) : c.t(0.34))], {
+            p: st([C - 46, C - 30 + i * 24]),
+            a: st([-w / 2, 0]),
+            s: kf(drawKeys(14 + i * 14)),
+          }),
+        ),
+        group('paper', [rect(100, 130, 12), fill(c.paper), stroke(c.ink, 4)], {p: st([C - 6, C])}),
+      ],
+      p: st([0, 0, 0]),
+    },
+    {
+      nm: 'badge',
+      shapes: [
+        group('plus', [pathShape(polyline([[-9, 0], [9, 0]])), stroke(c.paper, 5)]),
+        group('plus-v', [pathShape(polyline([[0, -9], [0, 9]])), stroke(c.paper, 5)]),
+        group('disc', [ellipse(38), fill(c.ink)]),
+      ],
+      p: st([C + 46, C + 40, 0]),
+      s: kf(popKeys(66)),
+    },
+  ])
+}
+
+/** A pair of scales swings, then settles level: no balances yet. */
+function emptyBalances(c: Palette) {
+  const pan = (x: number) => [
+    group('string', [pathShape(polyline([[x, -28], [x - 20, 8], [x + 20, 8], [x, -28]])), stroke(c.t(0.54), 3)]),
+    group('pan', [rect(46, 8, 4), fill(c.ink)], {p: st([x, 10])}),
+  ]
+  return animation('empty-balances', LOOP, [
+    backdrop(c),
+    {
+      nm: 'stand',
+      shapes: [
+        group('foot', [rect(70, 8, 4), fill(c.t(0.54))], {p: st([0, 52])}),
+        group('post', [rect(8, 80, 4), fill(c.t(0.54))], {p: st([0, 12])}),
+      ],
+      p: st([C, C, 0]),
+    },
+    {
+      nm: 'beam',
+      shapes: [
+        ...pan(-52),
+        ...pan(52),
+        group('bar', [rect(120, 7, 3.5), fill(c.ink)], {p: st([0, -28])}),
+        group('pivot', [ellipse(14), fill(c.ink)], {p: st([0, -28])}),
+      ],
+      a: st([0, -28, 0]),
+      p: st([C, C - 28, 0]),
+      r: kf([[0, 0], [20, 0, EASE.out], [50, -10], [84, 8], [116, -4], [146, 0], [LOOP, 0]]),
+    },
+  ])
+}
+
+/** Two friends meet in the middle and the account closes: nothing to settle. */
+function emptySettle(c: Palette) {
+  const x = (from: number, to: number): Key[] => [
+    [0, from], [40, from, EASE.out], [86, to], [130, to, EASE.in], [168, from], [LOOP, from],
+  ]
+  const side = (nm: string, color: string, from: number, to: number): Layer => ({
+    nm,
+    shapes: [group('person', person(color, 0.9), {a: st([0, 14])})],
+    p: {s: true, x: kf(x(C + from, C + to)), y: st(C + 6)} as never,
+  })
+  return animation('empty-settle', LOOP, [
+    backdrop(c),
+    side('left', c.ink, -58, -24),
+    side('right', c.t(0.54), 58, 24),
+    {
+      nm: 'seal',
+      shapes: [
+        group('check', [pathShape(polyline([[-9, 1], [-2, 8], [10, -8]])), stroke(c.paper, 5)]),
+        group('disc', [ellipse(34), fill(c.ink)]),
+      ],
+      p: st([C, C - 46, 0]),
+      s: kf(popKeys(84)),
+    },
+  ])
+}
+
+/** A bubble with three dots that take turns to bounce: nobody has said anything yet. */
+function emptyFeedback(c: Palette) {
+  const dots = [-24, 0, 24].map((x, i) =>
+    group('dot', [ellipse(13), fill(i === 1 ? c.ink : c.t(0.54))], {
+      p: kf([[0, [x, 0]], ...bob(14 + i * 10, 12).slice(1).map(([t, v]) => [t, [x, v as number]] as Key)]),
+    }),
+  )
+  return animation('empty-feedback', LOOP, [
+    backdrop(c),
+    {
+      nm: 'bubble',
+      shapes: [...dots, ...bubble(132, 86, c.paper, c.ink)],
+      p: st([C, C - 4, 0]),
+    },
+    {
+      nm: 'heart',
+      shapes: lucide('heart', c, 2.2, 2, c.ink),
+      p: st([C + 54, C - 54, 0]),
+      s: kf(popKeys(70)),
+    },
+  ])
+}
+
+/** Two links slide together: a link to invite someone. */
+function emptyInvites(c: Palette) {
+  const u = [Math.cos((-40 * Math.PI) / 180), Math.sin((-40 * Math.PI) / 180)]
+  const at = (k: number, sign: number) => [C + sign * k * u[0]!, C + sign * k * u[1]!]
+  const link = (nm: string, sign: number, color: string): Layer => ({
+    nm,
+    shapes: [group('link', [rect(76, 38, 19), stroke(color, 9)])],
+    r: st(-40),
+    p: kf(
+      [
+        [0, at(44, sign)],
+        [50, at(44, sign), EASE.out],
+        [90, at(18, sign)],
+        [140, at(18, sign), EASE.in],
+        [172, at(44, sign)],
+        [LOOP, at(44, sign)],
+      ],
+      true,
+    ),
+  })
+  return animation('empty-invites', LOOP, [
+    backdrop(c),
+    link('left', -1, c.ink),
+    link('right', 1, c.t(0.54)),
+  ])
+}
+
+/** A page with a question mark that drifts: not found. */
+function emptyNotFound(c: Palette) {
+  return animation('empty-not-found', LOOP, [
+    backdrop(c),
+    {
+      nm: 'page',
+      shapes: [
+        ...lucide('circle-question-mark', c, 4.2, 2, c.ink),
+        group('paper', [rect(104, 132, 14), fill(c.paper), stroke(c.t(0.34), 5)], {p: st([0, 0])}),
+      ],
+      p: kf([[0, [C, C]], [45, [C, C - 5]], [90, [C, C]], [135, [C, C - 5]], [LOOP, [C, C]]], true),
+      r: kf([[0, 0], [45, 2.5], [90, 0], [135, -2.5], [LOOP, 0]]),
+    },
+  ])
+}
+
+/** A bubble with a sparkle: ask anything. */
+function emptyAsk(c: Palette) {
+  return animation('empty-ask', LOOP, [
+    backdrop(c),
+    {
+      nm: 'bubble',
+      shapes: bubble(136, 92, c.paper, c.ink),
+      p: st([C, C + 4, 0]),
+    },
+    {
+      nm: 'sparkle',
+      shapes: lucide('sparkles', c, 3.4, 2, c.ink),
+      p: st([C, C - 2, 0]),
+      s: kf([[0, [100, 100]], [30, [100, 100], EASE.back], [48, [124, 124]], [78, [100, 100]], [110, [100, 100], EASE.back], [128, [124, 124]], [158, [100, 100]], [LOOP, [100, 100]]]),
+      r: kf([[0, 0], [48, 8], [78, 0], [128, -8], [158, 0], [LOOP, 0]]),
+    },
+  ])
+}
+
+/** A shield draws itself and its check: no disputes. */
+function emptyDisputes(c: Palette) {
+  return animation('empty-disputes', LOOP, [
+    backdrop(c),
+    {
+      nm: 'shield',
+      shapes: [
+        group('check', [pathShape(polyline([[-18, 0], [-6, 12], [20, -14]])), trim(kf(drawKeys(50).map(([t, v]) => [t, (v as number[])[0]!] as Key))), stroke(c.ink, 12)]),
+        ...lucide('shield', c, 6, 2, c.ink, c.t(0.54)),
+      ],
+      p: st([C, C + 2, 0]),
+    },
+  ])
+}
+
+/** A note slides from one friend to the other: no payments yet. */
+function emptyPayments(c: Palette) {
+  const note = [
+    group('coin', [ellipse(16), stroke(c.ink, 4)]),
+    group('note', [rect(78, 46, 9), fill(c.t(0.34)), stroke(c.ink, 4)]),
+  ]
+  return animation('empty-payments', LOOP, [
+    backdrop(c),
+    {nm: 'left', shapes: [group('p', person(c.ink, 0.62), {a: st([0, 14])})], p: st([C - 74, C + 24, 0])},
+    {nm: 'right', shapes: [group('p', person(c.t(0.54), 0.62), {a: st([0, 14])})], p: st([C + 74, C + 24, 0])},
+    {
+      nm: 'trail',
+      shapes: [0, 1, 2].map(i => group('speed', [rect(24 - i * 6, 4, 2), fill(c.t(0.54))], {p: st([-52, -10 + i * 10])})),
+      p: kf([[0, [C - 20, C - 20]], [30, [C - 20, C - 20], EASE.out], [90, [C + 50, C - 20]], [LOOP, [C + 50, C - 20]]], true),
+      o: kf([[0, 0], [34, 0], [44, 80], [80, 80], [92, 0], [LOOP, 0]], false),
+    },
+    {
+      nm: 'note',
+      shapes: note,
+      p: kf([[0, [C - 50, C - 20]], [30, [C - 50, C - 20], EASE.inOut], [90, [C + 18, C - 20]], [LOOP, [C + 18, C - 20]]], true),
+      o: kf([[0, 0], [20, 0], [32, 100], [80, 100], [94, 0], [LOOP, 0]], false),
+    },
+  ])
+}
+
+/** Two bubbles answer each other: no comments. */
+function emptyComments(c: Palette) {
+  const dots = (x0: number, t: number, color: string) =>
+    [-16, 0, 16].map((dx, i) => group('dot', [ellipse(9), fill(color)], {p: st([x0 + dx, 0]), s: kf(popKeys(t + i * 6))}))
+  return animation('empty-comments', LOOP, [
+    backdrop(c),
+    {
+      nm: 'one',
+      shapes: [...dots(0, 28, c.paper), ...bubble(100, 60, c.ink, c.ink)],
+      p: st([C - 22, C - 30, 0]),
+      s: kf(popKeys(14)),
+    },
+    {
+      nm: 'two',
+      shapes: [...dots(0, 62, c.ink), ...bubble(100, 60, c.paper, c.ink)],
+      p: st([C + 22, C + 34, 0]),
+      s: kf(popKeys(48)),
+    },
+  ])
+}
+
+/** A bell swings and rings: no reminders. */
+function emptyReminders(c: Palette) {
+  const swing = (t: number): Key[] => [
+    [t, 0, EASE.out], [t + 10, 16], [t + 22, -13], [t + 34, 9], [t + 46, -5], [t + 58, 0],
+  ]
+  return animation('empty-reminders', LOOP, [
+    backdrop(c),
+    {
+      nm: 'bell',
+      shapes: lucide('bell', c, 6, 2, c.ink),
+      a: st([0, -34, 0]),
+      p: st([C, C - 26, 0]),
+      r: kf([[0, 0], ...swing(10), ...swing(100), [LOOP, 0]]),
+    },
+    {
+      nm: 'ring',
+      shapes: [
+        group('ring', [
+          ellipse(0, 0, [0, 0], kf([[12, [90, 90], EASE.out], [60, [150, 150]]])),
+          stroke(c.t(0.54), 4, kf([[0, 0], [11, 0], [12, 70, EASE.out], [60, 0], [LOOP, 0]])),
+        ]),
+      ],
+      p: st([C, C - 4, 0]),
+    },
+  ])
+}
+
 const BUILDERS = {
   loading,
   success,
@@ -1215,6 +1633,21 @@ const BUILDERS = {
   'empty-groups': emptyGroups,
   'empty-activity': emptyActivity,
   'empty-analytics': emptyAnalytics,
+  'empty-search': emptySearch,
+  'empty-filter': emptyFilter,
+  'empty-settled': emptySettled,
+  'empty-history': emptyHistory,
+  'empty-expenses': emptyExpenses,
+  'empty-balances': emptyBalances,
+  'empty-settle': emptySettle,
+  'empty-feedback': emptyFeedback,
+  'empty-invites': emptyInvites,
+  'empty-not-found': emptyNotFound,
+  'empty-ask': emptyAsk,
+  'empty-disputes': emptyDisputes,
+  'empty-payments': emptyPayments,
+  'empty-comments': emptyComments,
+  'empty-reminders': emptyReminders,
   'welcome-split': welcomeSplit,
   'welcome-bills': welcomeBills,
   'welcome-settle': welcomeSettle,

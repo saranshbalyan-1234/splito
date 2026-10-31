@@ -35,7 +35,6 @@ import {currencyName} from '#/locale/currencyName'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import * as FormSheet from '#/components/FormSheet'
-import {SuccessCheck} from '#/motion/SuccessCheck'
 
 export type PaymentDraft = {
   /** Who paid. */
@@ -228,6 +227,16 @@ function Form({
         })),
       )
       setIsDone(true)
+      /* The button draws its check, then the sheet closes with the one toast (F-275: no full-sheet success screen). */
+      haptics.success()
+      setTimeout(
+        () =>
+          control.close(() => {
+            Toast.show(l`Payment recorded`, {type: 'success'})
+            onPaymentRecorded?.()
+          }),
+        300,
+      )
     } catch (e) {
       logger.error(e, {where: 'RecordPaymentDialog.save'})
       setIsSaving(false)
@@ -236,46 +245,6 @@ function Form({
   }
 
   const title = l`Record a payment`
-  if (isDone) {
-    return (
-      <FormSheet.Inner title={title}>
-        <View
-          testID="payment-recorded"
-          style={[a.align_center, a.gap_md, a.py_xl]}>
-          <SuccessCheck
-            size={72}
-            onCheckShown={() =>
-              setTimeout(
-                () =>
-                  control.close(() => {
-                    Toast.show(l`Payment recorded`, {type: 'success'})
-                    onPaymentRecorded?.()
-                  }),
-                400,
-              )
-            }
-          />
-          <Text style={[a.text_xl, a.font_bold, a.text_center]}>
-            <Trans>Payment recorded</Trans>
-          </Text>
-          <Text
-            style={[
-              a.text_md,
-              a.leading_snug,
-              a.text_center,
-              t.atoms.text_contrast_medium,
-            ]}>
-            {sentence}{' '}
-            {formatAmount(
-              parseTypedAmount(amountText, currency, locale),
-              currency,
-              locale,
-            )}
-          </Text>
-        </View>
-      </FormSheet.Inner>
-    )
-  }
 
   return (
     <FormSheet.Inner
@@ -288,8 +257,10 @@ function Form({
       }
       footer={{
         saveLabel: l`Record payment`,
-        canSave: typed !== null && typed > ZERO,
+        canSave: typed !== null && typed > ZERO && !isDone,
         isSaving,
+        isSaved: isDone,
+        savedTestID: 'payment-recorded',
         onSave: () => void save(),
       }}>
       <FormSheet.Description>

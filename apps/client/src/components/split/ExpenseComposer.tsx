@@ -28,6 +28,7 @@ import {
   updateExpenseResolving,
 } from '@splito/sync'
 
+import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
 import {joinList} from '#/locale/joinList'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -44,7 +45,6 @@ import {Divider} from '#/components/Divider'
 import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-import {SuccessCheck} from '#/motion/SuccessCheck'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {DateDialog} from './DateDialog'
 import {clearDraft, type DraftContext, writeDraft} from './drafts'
@@ -161,6 +161,7 @@ export function ExpenseComposer({
   const [isSaving, setIsSaving] = useState(false)
   /* Once the currency was chosen (or restored from a draft) a group never overwrites it (audit M5). */
   const [isCurrencyPicked, setIsCurrencyPicked] = useState(isDraftRestored)
+  const haptics = useHaptics()
   const [savedId, setSavedId] = useState<string>()
   const [isTitleFocused, setIsTitleFocused] = useState(false)
   const evaluation = evaluateForm(form, tz, decimalMark(locale))
@@ -252,7 +253,7 @@ export function ExpenseComposer({
         </Toast.Outer>,
         {type: 'success'},
       )
-    }
+    } else Toast.show(l`Changes saved`, {type: 'success'})
   }
 
   const save = async (resolveIds: readonly string[] = []) => {
@@ -267,6 +268,9 @@ export function ExpenseComposer({
     }
     if (draftContext) clearDraft(draftContext)
     setSavedId(result.saved.id)
+    /* The button draws its check, then the sheet closes with the one toast (F-275: no full-sheet success screen). */
+    haptics.success()
+    setTimeout(() => finish(result.saved.id), 300)
   }
 
   const first = form.people[0] ? name(form.people[0]) : ''
@@ -334,6 +338,8 @@ export function ExpenseComposer({
         onSave: () => (resolvable.length > 0 ? resolveControl.open() : void save()),
         canSave: !!evaluation.draft && !savedId,
         isSaving,
+        isSaved: !!savedId,
+        savedTestID: 'expense-saved',
       }}
       readout={
         <Readout
@@ -345,31 +351,6 @@ export function ExpenseComposer({
       }
       overlay={
         <>
-          {savedId ? (
-            <View
-              testID="expense-saved"
-              style={[
-                a.absolute,
-                a.inset_0,
-                a.z_50,
-                a.align_center,
-                a.justify_center,
-                a.gap_lg,
-                t.atoms.bg,
-              ]}>
-              <SuccessCheck
-                size={72}
-                onCheckShown={() => setTimeout(() => finish(savedId), 350)}
-              />
-              <Text style={[a.text_xl, a.font_semi_bold]}>
-                {isEdit ? (
-                  <Trans>Changes saved</Trans>
-                ) : (
-                  <Trans>Expense added</Trans>
-                )}
-              </Text>
-            </View>
-          ) : null}
           <CurrencyDialog
             control={currencyControl}
             value={form.currency}

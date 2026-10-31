@@ -31,7 +31,6 @@ import {parseTypedAmount} from '#/components/people/ledger'
 import {currencyName} from '#/locale/currencyName'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-import {SuccessCheck} from '#/motion/SuccessCheck'
 
 /**
  * Two people and what one owes the other, part by part, per currency.
@@ -201,7 +200,27 @@ function Form({
           note,
         })),
       )
-      setDone({written: written.map(w => w.id), isFull})
+      const ids = written.map(w => w.id)
+      setDone({written: ids, isFull})
+      /* The button draws its check, then the sheet closes with the one toast (F-275: no full-sheet success screen). */
+      haptics.success()
+      setTimeout(
+        () =>
+          control.close(() => {
+            Toast.show(
+              <Toast.Outer>
+                <Toast.Icon />
+                <Toast.Text>{isFull ? l`All even` : l`Written off`}</Toast.Text>
+                <Toast.Action label={l`Undo`} onPress={() => undo(ids)}>
+                  <Trans context="action">Undo</Trans>
+                </Toast.Action>
+              </Toast.Outer>,
+              {type: 'success'},
+            )
+            onWrittenOff?.()
+          }),
+        300,
+      )
     } catch (e) {
       logger.error(e, {where: 'CallItEvenDialog.save'})
       setIsSaving(false)
@@ -217,55 +236,6 @@ function Form({
     })
 
   const title = l`Call it even`
-  if (done) {
-    return (
-      <FormSheet.Inner title={title}>
-        <View
-          testID="call-even-done"
-          style={[a.align_center, a.gap_md, a.py_xl]}>
-          <SuccessCheck
-            size={72}
-            fill={t.palette.positive_500}
-            onCheckShown={() =>
-              setTimeout(
-                () =>
-                  control.close(() => {
-                    Toast.show(
-                      <Toast.Outer>
-                        <Toast.Icon />
-                        <Toast.Text>
-                          {done.isFull ? l`All even` : l`Written off`}
-                        </Toast.Text>
-                        <Toast.Action
-                          label={l`Undo`}
-                          onPress={() => undo(done.written)}>
-                          <Trans context="action">Undo</Trans>
-                        </Toast.Action>
-                      </Toast.Outer>,
-                      {type: 'success'},
-                    )
-                    onWrittenOff?.()
-                  }),
-                400,
-              )
-            }
-          />
-          <Text style={[a.text_xl, a.font_bold, a.text_center]}>
-            {done.isFull ? <Trans>All even</Trans> : <Trans>Written off</Trans>}
-          </Text>
-          <Text
-            style={[
-              a.text_md,
-              a.leading_snug,
-              a.text_center,
-              t.atoms.text_contrast_medium,
-            ]}>
-            {isZeroNet ? sentence : `${sentence} ${money(typed ?? ZERO)}`}
-          </Text>
-        </View>
-      </FormSheet.Inner>
-    )
-  }
 
   return (
     <FormSheet.Inner
@@ -277,8 +247,10 @@ function Form({
       }
       footer={{
         saveLabel: isFull || !isValid ? l`Call it even` : l`Write off`,
-        canSave: isValid,
+        canSave: isValid && !done,
         isSaving,
+        isSaved: !!done,
+        savedTestID: 'call-even-done',
         onSave: () => void save(),
       }}>
       <FormSheet.Description>

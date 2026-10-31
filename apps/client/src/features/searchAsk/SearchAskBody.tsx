@@ -423,7 +423,7 @@ function SearchPanel({
         ) : results?.isFailed ? (
           <SearchFailed onRetry={results.retry} />
         ) : results?.isDone ? (
-          <NoResults query={query.trim()} />
+          <NoResults query={query.trim()} onClear={() => changeQuery('')} />
         ) : undefined
       }
       onEndReached={results?.hasMore ? results.loadMore : undefined}
@@ -433,7 +433,7 @@ function SearchPanel({
         rows.length === 1 && results?.isFailed ? (
           <SearchFailed onRetry={results.retry} />
         ) : rows.length === 1 && results?.isDone ? (
-          <NoResults query={query.trim()} />
+          <NoResults query={query.trim()} onClear={() => changeQuery('')} />
         ) : results?.hasMore && rows.length > 0 ? (
           <View style={[a.align_center, a.pt_md, a.pb_sm]}>
             <Button
