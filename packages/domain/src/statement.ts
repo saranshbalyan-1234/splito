@@ -19,12 +19,23 @@ export interface StatementInput {
   createdAt: number
 }
 
+/** Which records a statement counts by group: the same shape as Analytics' scope (non-group on or off, every group or a list). */
+export interface StatementScope {
+  nonGroup: boolean
+  groups: 'all' | string[]
+}
+
 export interface StatementFilter {
   /** Inclusive; the balance before it becomes the opening balance. */
   from?: LocalDate | null
   to?: LocalDate | null
   /** Only this group's records. */
   groupId?: string | null
+  /**
+   * Only the records the scope counts (Analytics' export): like a statement of everything, it keeps the
+   * records I am in. `groupId` wins when both are given.
+   */
+  scope?: StatementScope | null
   /** Only what is between me and this person. */
   personId?: string | null
   /** Only this currency. */
@@ -68,6 +79,10 @@ export interface Statement {
 
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
+function inScope(groupId: string | null, s: StatementScope): boolean {
+  return groupId === null ? s.nonGroup : s.groups === 'all' || s.groups.includes(groupId)
+}
+
 function involves(r: LedgerRecord, who: string): boolean {
   return r.kind === 'expense' ? who in r.payers || who in r.shares : r.from === who || r.to === who
 }
@@ -86,6 +101,7 @@ export function buildStatement(inputs: readonly StatementInput[], me: string, fi
     if (r.deleted) return false
     if (filter.currency && r.currency !== filter.currency) return false
     if (filter.groupId && r.groupId !== filter.groupId) return false
+    if (!filter.groupId && filter.scope && !inScope(r.groupId, filter.scope)) return false
     if (filter.personId) return involves(r, me) && involves(r, filter.personId) && effectOf(r, me, filter.personId) !== 0n
     return filter.groupId ? true : involves(r, me)
   })

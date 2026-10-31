@@ -168,7 +168,7 @@ msgstr "{0} (शामिल)"
 
 #. placeholder {0}: name(summary.groupId)
 #. placeholder {1}: summary.more
-#: src/screens/Analytics/components/FilterBar.tsx:157
+#: src/screens/Analytics/useScopeLabel.ts:20
 msgid "{0} + {1}"
 msgstr "{0} + {1}"
 
@@ -264,7 +264,7 @@ msgid "{0} forgave you"
 msgstr "{0} ने आपका कर्ज़ माफ़ किया"
 
 #. placeholder {0}: summary.count
-#: src/screens/Analytics/components/FilterBar.tsx:164
+#: src/screens/Analytics/useScopeLabel.ts:22
 msgid "{0} groups"
 msgstr "{0} समूह"
 
@@ -475,13 +475,13 @@ msgid "{0}, settled up"
 msgstr "{0}, हिसाब बराबर"
 
 #. placeholder {0}: report.nameOfPerson(report.shareOf)
-#: src/screens/Analytics/index.tsx:142
+#: src/screens/Analytics/index.tsx:144
 msgid "{0}’s share"
 msgstr "{0} का हिस्सा"
 
 #. placeholder {0}: report.nameOfPerson(report.shareOf)
 #. placeholder {1}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:224
+#: src/screens/Analytics/index.tsx:226
 msgid "{0}’s share <0>{1}</0>"
 msgstr "{0} का हिस्सा <0>{1}</0>"
 
@@ -1271,7 +1271,7 @@ msgstr "Splito के बाहर हुए पैसों के लेन-�
 msgid "A record of money that changed hands outside Splito. Deleting it puts the balance back as it was."
 msgstr "Splito के बाहर हुए लेन-देन का रिकॉर्ड। इसे हटाने पर बैलेंस पहले जैसा हो जाएगा।"
 
-#: src/features/export/ExportSheet.tsx:166
+#: src/features/export/ExportSheet.tsx:183
 msgid "A tidy statement with a running balance for each currency. Print it or save it as a PDF."
 msgstr "हर मुद्रा के चालू बैलेंस के साथ साफ़-सुथरा स्टेटमेंट। इसे प्रिंट करें या PDF के रूप में सहेजें।"
 
@@ -1506,8 +1506,8 @@ msgid "Add each item, then tap the people who had it. Right-click a name to take
 msgstr "हर आइटम जोड़ें, फिर जिन्होंने लिया उन पर टैप करें। किसी को हटाने के लिए नाम पर राइट-क्लिक करें।"
 
 #: src/navigation/Navigation.tsx:82
-#: src/screens/Analytics/index.tsx:116
-#: src/screens/Analytics/index.tsx:117
+#: src/screens/Analytics/index.tsx:118
+#: src/screens/Analytics/index.tsx:119
 #: src/screens/Group/index.tsx:581
 #: src/screens/Group/index.tsx:582
 #: src/screens/Person/index.tsx:610
@@ -1677,12 +1677,12 @@ msgstr "सभी"
 msgid "All {0} assigned"
 msgstr "पूरे {0} बँट गए"
 
-#: src/features/export/ExportSheet.tsx:142
+#: src/features/export/ExportSheet.tsx:159
 msgid "All activity"
 msgstr "सारी गतिविधि"
 
-#: src/features/export/ExportSheet.tsx:214
-#: src/features/export/ExportSheet.tsx:264
+#: src/features/export/ExportSheet.tsx:231
+#: src/features/export/ExportSheet.tsx:281
 msgid "All currencies"
 msgstr "सभी मुद्राएँ"
 
@@ -1694,9 +1694,9 @@ msgstr "सभी तारीखें"
 msgid "All even"
 msgstr "हिसाब बराबर"
 
-#: src/features/export/ExportSheet.tsx:208
-#: src/features/export/ExportSheet.tsx:246
-#: src/screens/Analytics/components/FilterBar.tsx:150
+#: src/features/export/ExportSheet.tsx:225
+#: src/features/export/ExportSheet.tsx:263
+#: src/screens/Analytics/useScopeLabel.ts:18
 msgid "All groups"
 msgstr "सभी समूह"
 
@@ -1720,9 +1720,9 @@ msgstr "सब चुकता"
 msgid "All settled up"
 msgstr "सब हिसाब बराबर"
 
-#: src/features/export/ExportSheet.tsx:108
+#: src/features/export/ExportSheet.tsx:124
 #: src/screens/Analytics/components/Summary.tsx:198
-#: src/screens/Analytics/useReport.ts:329
+#: src/screens/Analytics/useReport.ts:327
 msgid "All time"
 msgstr "अब तक"
 
@@ -1802,7 +1802,7 @@ msgstr "राशि, सबसे बड़ी पहले"
 msgid "Amount: {0} → {1}"
 msgstr "रकम: {0} → {1}"
 
-#: src/screens/Analytics/components/FilterBar.tsx:62
+#: src/screens/Analytics/components/FilterBar.tsx:63
 msgid "Amounts are never added across currencies."
 msgstr "अलग-अलग मुद्राओं की राशियाँ कभी जोड़ी नहीं जातीं।"
 
@@ -1828,7 +1828,7 @@ msgstr "एक खर्च"
 
 #: src/components/TabGlyph.tsx:38
 #: src/navigation/Navigation.tsx:71
-#: src/screens/Analytics/index.tsx:75
+#: src/screens/Analytics/index.tsx:76
 #: src/screens/Profile/index.tsx:363
 msgid "Analytics"
 msgstr "विश्लेषण"
@@ -1993,15 +1993,15 @@ msgstr "लोग पर वापस जाएं"
 msgid "Back to search results"
 msgstr "खोज के नतीजों पर वापस"
 
-#: src/features/export/ExportSheet.tsx:168
+#: src/features/export/ExportSheet.tsx:185
 msgid "Backup"
 msgstr "बैकअप"
 
-#: src/features/export/ExportSheet.tsx:136
+#: src/features/export/ExportSheet.tsx:153
 msgid "Backup downloaded ({count} records)"
 msgstr "बैकअप डाउनलोड हुआ ({count} रिकॉर्ड)"
 
-#: src/features/export/ExportSheet.tsx:136
+#: src/features/export/ExportSheet.tsx:153
 msgid "Backup ready to save ({count} records)"
 msgstr "बैकअप सहेजने के लिए तैयार ({count} रिकॉर्ड)"
 
@@ -2171,7 +2171,6 @@ msgstr "श्रेणियाँ"
 #: src/components/SearchAsk/ResultRows.tsx:331
 #: src/components/split/pickers.tsx:67
 #: src/screens/Analytics/components/Charts.tsx:188
-#: src/screens/Analytics/index.tsx:249
 msgid "Category"
 msgstr "श्रेणी"
 
@@ -2226,7 +2225,7 @@ msgstr "चार्ज सेटअप"
 msgid "Charges"
 msgstr "शुल्क"
 
-#: src/screens/Analytics/components/FilterBar.tsx:94
+#: src/screens/Analytics/components/FilterBar.tsx:95
 msgid "Charts"
 msgstr "चार्ट"
 
@@ -2268,7 +2267,7 @@ msgstr "दूसरी फ़ाइल चुनें"
 msgid "Choose at least one person to split with"
 msgstr "बाँटने के लिए कम से कम एक व्यक्ति चुनें"
 
-#: src/features/export/ExportSheet.tsx:214
+#: src/features/export/ExportSheet.tsx:231
 msgid "Choose currency"
 msgstr "मुद्रा चुनें"
 
@@ -2280,7 +2279,7 @@ msgstr "डिफ़ॉल्ट मुद्रा चुनें"
 msgid "Choose file"
 msgstr "फ़ाइल चुनें"
 
-#: src/features/export/ExportSheet.tsx:211
+#: src/features/export/ExportSheet.tsx:228
 msgid "Choose friend"
 msgstr "दोस्त चुनें"
 
@@ -2289,7 +2288,7 @@ msgstr "दोस्त चुनें"
 msgid "Choose from contacts"
 msgstr "संपर्कों से चुनें"
 
-#: src/features/export/ExportSheet.tsx:208
+#: src/features/export/ExportSheet.tsx:225
 msgid "Choose group"
 msgstr "ग्रुप चुनें"
 
@@ -2297,7 +2296,7 @@ msgstr "ग्रुप चुनें"
 msgid "Choose one"
 msgstr "एक चुनें"
 
-#: src/features/export/ExportSheet.tsx:205
+#: src/features/export/ExportSheet.tsx:222
 msgid "Choose period"
 msgstr "अवधि चुनें"
 
@@ -2354,7 +2353,7 @@ msgid "Clear chat?"
 msgstr "चैट साफ़ करें?"
 
 #. placeholder {0}: selection.label
-#: src/screens/Analytics/index.tsx:206
+#: src/screens/Analytics/index.tsx:208
 msgid "Clear filter: {0}"
 msgstr "फ़िल्टर हटाएँ: {0}"
 
@@ -2607,13 +2606,9 @@ msgstr "ग्रुप हटा नहीं सके। कृपया फ�
 msgid "Couldn't delete this expense"
 msgstr "यह खर्च हटाया नहीं जा सका"
 
-#: src/features/export/ExportSheet.tsx:223
+#: src/features/export/ExportSheet.tsx:240
 msgid "Couldn’t export. Nothing was changed. Try again."
 msgstr "एक्सपोर्ट नहीं हो सका। कुछ भी नहीं बदला। फिर कोशिश करें।"
-
-#: src/screens/Analytics/index.tsx:271
-msgid "Couldn’t export. Try again."
-msgstr "एक्सपोर्ट नहीं हो सका। फिर से कोशिश करें।"
 
 #: src/screens/Group/components/MemberExitDialog.tsx:173
 msgid "Couldn’t leave the group. Please try again."
@@ -2795,7 +2790,7 @@ msgstr "आमंत्रण लिंक बनाएँ"
 msgid "Create link"
 msgstr "लिंक बनाएँ"
 
-#: src/features/export/ExportSheet.tsx:177
+#: src/features/export/ExportSheet.tsx:194
 msgid "Create PDF"
 msgstr "PDF बनाएँ"
 
@@ -2807,7 +2802,7 @@ msgstr "PDF बनाएँ"
 msgid "Create your account"
 msgstr "अपना खाता बनाएँ"
 
-#: src/features/export/ExportSheet.tsx:167
+#: src/features/export/ExportSheet.tsx:184
 msgid "CSV"
 msgstr "CSV"
 
@@ -2816,11 +2811,10 @@ msgstr "CSV"
 #: src/components/people/RecordPaymentDialog.tsx:319
 #: src/components/SearchAsk/ResultRows.tsx:343
 #: src/components/SearchAsk/ResultRows.tsx:435
-#: src/features/export/ExportSheet.tsx:213
-#: src/features/export/ExportSheet.tsx:262
+#: src/features/export/ExportSheet.tsx:230
+#: src/features/export/ExportSheet.tsx:279
 #: src/features/export/statementText.ts:47
 #: src/features/settlement/CallItEvenDialog.tsx:298
-#: src/screens/Analytics/index.tsx:251
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:96
 #: src/screens/People/components/FriendsFilterDialog.tsx:107
 msgid "Currency"
@@ -2829,7 +2823,7 @@ msgstr "मुद्रा"
 #. placeholder {0}: currencyName(value.currency, i18n.locale)
 #. placeholder {0}: report.currency
 #: src/components/groups/GroupFields.tsx:106
-#: src/screens/Analytics/components/FilterBar.tsx:47
+#: src/screens/Analytics/components/FilterBar.tsx:48
 msgid "Currency: {0}"
 msgstr "मुद्रा: {0}"
 
@@ -2853,8 +2847,8 @@ msgstr "अपना रंग"
 msgid "Custom color {applied}"
 msgstr "अपना रंग {applied}"
 
-#: src/features/export/ExportSheet.tsx:108
-#: src/features/export/ExportSheet.tsx:233
+#: src/features/export/ExportSheet.tsx:124
+#: src/features/export/ExportSheet.tsx:250
 #: src/screens/Analytics/components/RangeDialog.tsx:80
 #: src/screens/Analytics/components/Summary.tsx:202
 msgid "Custom range"
@@ -2887,7 +2881,6 @@ msgstr "डार्क मोड की शैली"
 #: src/features/export/statementText.ts:72
 #: src/features/remind/RemindMeSheet.tsx:183
 #: src/features/remind/RemindMeSheet.tsx:185
-#: src/screens/Analytics/index.tsx:247
 #: src/screens/Repayment/index.tsx:214
 msgid "Date"
 msgstr "तारीख"
@@ -3058,7 +3051,6 @@ msgstr "डेमो मोड"
 
 #: src/features/export/statementText.ts:45
 #: src/features/export/statementText.ts:72
-#: src/screens/Analytics/index.tsx:248
 msgid "Description"
 msgstr "विवरण"
 
@@ -3177,7 +3169,7 @@ msgstr "इस माफ़ी पर विवाद"
 
 #: src/components/disputes/words.ts:31
 #: src/components/SearchAsk/ResultRows.tsx:311
-#: src/features/export/ExportSheet.tsx:124
+#: src/features/export/ExportSheet.tsx:141
 msgid "Disputed"
 msgstr "विवादित"
 
@@ -3521,8 +3513,8 @@ msgstr "हर हफ़्ते"
 
 #: src/components/settings/prefControls.tsx:463
 #: src/components/split/SplitEditor.tsx:632
-#: src/features/export/ExportSheet.tsx:211
-#: src/features/export/ExportSheet.tsx:255
+#: src/features/export/ExportSheet.tsx:228
+#: src/features/export/ExportSheet.tsx:272
 #: src/screens/People/components/FriendsFilterDialog.tsx:121
 msgid "Everyone"
 msgstr "सभी"
@@ -3560,7 +3552,7 @@ msgstr "सबके हिस्से"
 msgid "Everyone's total"
 msgstr "सबका कुल"
 
-#: src/screens/Analytics/components/FilterBar.tsx:142
+#: src/screens/Analytics/useScopeLabel.ts:14
 msgid "Everything"
 msgstr "सब कुछ"
 
@@ -3580,7 +3572,7 @@ msgstr "सब कुछ पहले इसी डिवाइस पर सह
 msgid "Everything is saved on this device. It will sync across your devices once sync arrives."
 msgstr "सब कुछ इसी डिवाइस पर सहेजा है। सिंक आने पर यह आपके सभी डिवाइस पर सिंक होगा।"
 
-#: src/features/export/ExportSheet.tsx:168
+#: src/features/export/ExportSheet.tsx:185
 msgid "Everything on this device in one file: people, groups, expenses, payments, settings and history. Restore it from Settings > Import."
 msgstr "इस डिवाइस का सब कुछ एक फ़ाइल में: लोग, ग्रुप, खर्च, भुगतान, सेटिंग और इतिहास। इसे सेटिंग > इम्पोर्ट से वापस लाएँ।"
 
@@ -3632,7 +3624,7 @@ msgstr "खर्च के विकल्प"
 #: src/screens/Analytics/components/Charts.tsx:280
 #: src/screens/Analytics/components/Charts.tsx:327
 #: src/screens/Analytics/components/Summary.tsx:137
-#: src/screens/Analytics/index.tsx:188
+#: src/screens/Analytics/index.tsx:190
 #: src/screens/Group/index.tsx:535
 #: src/screens/Group/index.tsx:542
 #: src/screens/Profile/index.tsx:295
@@ -3655,19 +3647,19 @@ msgstr "एक घंटे के अंदर समाप्त"
 msgid "Explore Splito with sample data. Your own data is kept separately and untouched."
 msgstr "नमूना डेटा के साथ Splito आज़माएँ। आपका अपना डेटा अलग रखा जाता है और अछूता रहता है।"
 
-#: src/features/export/ExportSheet.tsx:175
+#: src/features/export/ExportSheet.tsx:192
+#: src/screens/Analytics/index.tsx:82
 #: src/screens/Group/index.tsx:675
 #: src/screens/Settings/components/DataSettings.tsx:49
 #: src/screens/Settings/components/DataSettings.tsx:52
 msgid "Export"
 msgstr "एक्सपोर्ट"
 
-#: src/features/export/ExportSheet.tsx:177
-#: src/screens/Analytics/index.tsx:81
+#: src/features/export/ExportSheet.tsx:194
 msgid "Export CSV"
 msgstr "CSV एक्सपोर्ट करें"
 
-#: src/features/export/ExportSheet.tsx:183
+#: src/features/export/ExportSheet.tsx:200
 msgid "Export format"
 msgstr "एक्सपोर्ट का प्रारूप"
 
@@ -3675,20 +3667,11 @@ msgstr "एक्सपोर्ट का प्रारूप"
 msgid "Export statement"
 msgstr "स्टेटमेंट एक्सपोर्ट करें"
 
-#. placeholder {0}: rows.length
-#: src/screens/Analytics/index.tsx:266
-msgid "Exported {0} expenses"
-msgstr "{0} खर्च एक्सपोर्ट किए गए"
-
-#: src/features/export/ExportSheet.tsx:155
+#: src/features/export/ExportSheet.tsx:172
 msgid "Exported {n} records"
 msgstr "{n} रिकॉर्ड एक्सपोर्ट हुए"
 
-#: src/screens/Analytics/index.tsx:265
-msgid "Exported 1 expense"
-msgstr "1 खर्च एक्सपोर्ट किया गया"
-
-#: src/features/export/ExportSheet.tsx:155
+#: src/features/export/ExportSheet.tsx:172
 msgid "Exported 1 record"
 msgstr "1 रिकॉर्ड एक्सपोर्ट हुआ"
 
@@ -3792,8 +3775,8 @@ msgid "Found at least {n, plural, one {# expense} other {# expenses}} for “{0}
 msgstr "“{0}” के लिए कम से कम {n, plural, one {# खर्च} other {# खर्चे}} मिले।"
 
 #: src/components/SearchAsk/ResultRows.tsx:503
-#: src/features/export/ExportSheet.tsx:210
-#: src/features/export/ExportSheet.tsx:253
+#: src/features/export/ExportSheet.tsx:227
+#: src/features/export/ExportSheet.tsx:270
 #: src/screens/Person/index.tsx:200
 #: src/screens/Person/index.tsx:481
 msgid "Friend"
@@ -3938,16 +3921,15 @@ msgstr "किराना"
 #: src/components/split/ExpenseComposer.tsx:565
 #: src/components/split/pickers.tsx:168
 #: src/components/split/pickers.tsx:172
-#: src/features/export/ExportSheet.tsx:207
-#: src/features/export/ExportSheet.tsx:244
+#: src/features/export/ExportSheet.tsx:224
+#: src/features/export/ExportSheet.tsx:261
 #: src/features/export/statementText.ts:46
 #: src/features/export/statementText.ts:72
 #: src/features/searchAsk/AskAnswer.tsx:136
 #: src/features/settlement/CallItEvenDialog.tsx:157
 #: src/navigation/Navigation.tsx:80
 #: src/screens/Analytics/components/Charts.tsx:327
-#: src/screens/Analytics/index.tsx:250
-#: src/screens/Analytics/useReport.ts:340
+#: src/screens/Analytics/useReport.ts:338
 #: src/screens/Group/index.tsx:217
 #: src/screens/Group/index.tsx:376
 #: src/screens/Group/index.tsx:626
@@ -4639,7 +4621,7 @@ msgstr "हाल में सक्रिय"
 msgid "last month"
 msgstr "पिछले महीने"
 
-#: src/features/export/ExportSheet.tsx:108
+#: src/features/export/ExportSheet.tsx:124
 msgid "Last month"
 msgstr "पिछला महीना"
 
@@ -4739,7 +4721,6 @@ msgid "Liquor VAT"
 msgstr "शराब पर वैट"
 
 #: src/features/export/statementText.ts:54
-#: src/screens/Analytics/index.tsx:255
 msgid "Location"
 msgstr "स्थान"
 
@@ -4777,7 +4758,7 @@ msgstr "दूसरे डिवाइस पर बना: हर खर्च
 msgid "Made on this device on {0}"
 msgstr "इस डिवाइस पर {0} को बना"
 
-#: src/features/export/ExportSheet.tsx:217
+#: src/features/export/ExportSheet.tsx:234
 msgid "Made on this device, works offline. Each currency keeps its own running balance; they are never added together."
 msgstr "इसी डिवाइस पर बनता है, ऑफ़लाइन चलता है। हर मुद्रा का अपना चालू बैलेंस रहता है; उन्हें कभी जोड़ा नहीं जाता।"
 
@@ -5319,17 +5300,17 @@ msgid "Nobody’s balance changes. {who} stays in the group’s balances, marked
 msgstr "किसी का बैलेंस नहीं बदलता। {who} ग्रुप के बैलेंस में रहते हैं, \"छोड़ चुके\" के निशान के साथ।"
 
 #: src/features/searchAsk/AskAnswer.tsx:329
-#: src/screens/Analytics/useReport.ts:340
+#: src/screens/Analytics/useReport.ts:338
 msgid "Non-group"
 msgstr "बिना समूह"
 
 #. placeholder {0}: name(summary.groupId)
-#: src/screens/Analytics/components/FilterBar.tsx:169
+#: src/screens/Analytics/useScopeLabel.ts:24
 msgid "Non-group + {0}"
 msgstr "बिना समूह + {0}"
 
 #. placeholder {0}: summary.count
-#: src/screens/Analytics/components/FilterBar.tsx:170
+#: src/screens/Analytics/useScopeLabel.ts:24
 msgid "Non-group + {0} groups"
 msgstr "बिना समूह + {0} समूह"
 
@@ -5337,7 +5318,7 @@ msgstr "बिना समूह + {0} समूह"
 msgid "Non-group expenses"
 msgstr "बिना समूह के खर्च"
 
-#: src/screens/Analytics/components/FilterBar.tsx:146
+#: src/screens/Analytics/useScopeLabel.ts:16
 msgid "Non-group only"
 msgstr "केवल बिना समूह"
 
@@ -5527,7 +5508,7 @@ msgstr "{on} पर"
 #: src/components/disputes/DisputePanel.tsx:104
 #: src/components/disputes/words.ts:25
 #: src/components/disputes/words.ts:31
-#: src/features/export/ExportSheet.tsx:124
+#: src/features/export/ExportSheet.tsx:141
 msgid "On hold"
 msgstr "रोके हुए"
 
@@ -5573,7 +5554,7 @@ msgstr "एक व्यक्ति"
 msgid "One place for shared costs"
 msgstr "साझा खर्च के लिए एक जगह"
 
-#: src/features/export/ExportSheet.tsx:167
+#: src/features/export/ExportSheet.tsx:184
 msgid "One row per record, for a spreadsheet. Amounts are exact, with their currency beside them."
 msgstr "स्प्रेडशीट के लिए हर रिकॉर्ड की एक पंक्ति। रकम सटीक है, साथ में उसकी मुद्रा लिखी है।"
 
@@ -5963,7 +5944,7 @@ msgstr "{toName} को देता है"
 msgid "pays you"
 msgstr "आपको देता है"
 
-#: src/features/export/ExportSheet.tsx:166
+#: src/features/export/ExportSheet.tsx:183
 msgid "PDF"
 msgstr "PDF"
 
@@ -5993,8 +5974,8 @@ msgid "Percentages need to add up to 100%"
 msgstr "प्रतिशत मिलाकर 100% होने चाहिए"
 
 #: src/components/SearchAsk/AskCards.tsx:237
-#: src/features/export/ExportSheet.tsx:204
-#: src/features/export/ExportSheet.tsx:231
+#: src/features/export/ExportSheet.tsx:221
+#: src/features/export/ExportSheet.tsx:248
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:372
 msgid "Period"
@@ -6134,7 +6115,7 @@ msgstr "चीज़ {0} की कीमत"
 msgid "Prices include this tax"
 msgstr "कीमतों में यह टैक्स शामिल है"
 
-#: src/features/export/ExportSheet.tsx:155
+#: src/features/export/ExportSheet.tsx:172
 msgid "Print dialog opened. Choose Save as PDF."
 msgstr "प्रिंट डायलॉग खुल गया। PDF के रूप में सहेजें चुनें।"
 
@@ -6771,7 +6752,7 @@ msgstr "पहले इस डिवाइस की एक कॉपी सह
 msgid "Save as preset for {title}"
 msgstr "{title} के लिए प्रीसेट सेव करें"
 
-#: src/features/export/ExportSheet.tsx:177
+#: src/features/export/ExportSheet.tsx:194
 msgid "Save backup"
 msgstr "बैकअप सहेजें"
 
@@ -6858,7 +6839,7 @@ msgstr "खोजें"
 
 #: src/components/CurrencyDialog.tsx:36
 #: src/components/settings/prefControls.tsx:247
-#: src/features/export/ExportSheet.tsx:263
+#: src/features/export/ExportSheet.tsx:280
 msgid "Search currencies"
 msgstr "मुद्राएँ खोजें"
 
@@ -6871,14 +6852,14 @@ msgstr "{0} खोजें"
 msgid "Search for {q}"
 msgstr "{q} खोजें"
 
-#: src/features/export/ExportSheet.tsx:254
+#: src/features/export/ExportSheet.tsx:271
 #: src/screens/FriendsAndInvites/index.tsx:182
 #: src/screens/FriendsAndInvites/index.tsx:183
 #: src/screens/People/index.tsx:206
 msgid "Search friends"
 msgstr "दोस्त खोजें"
 
-#: src/features/export/ExportSheet.tsx:245
+#: src/features/export/ExportSheet.tsx:262
 #: src/screens/Analytics/components/ScopeDialog.tsx:124
 #: src/screens/Analytics/components/ScopeDialog.tsx:125
 msgid "Search groups"
@@ -6913,7 +6894,7 @@ msgstr "Splito में खोजें या पूछें"
 msgid "Search people"
 msgstr "लोग खोजें"
 
-#: src/features/export/ExportSheet.tsx:232
+#: src/features/export/ExportSheet.tsx:249
 msgid "Search periods"
 msgstr "अवधि खोजें"
 
@@ -6945,7 +6926,7 @@ msgstr "सभी समूह देखें"
 msgid "See all requests and invites"
 msgstr "सभी अनुरोध और आमंत्रण देखें"
 
-#: src/screens/Analytics/index.tsx:192
+#: src/screens/Analytics/index.tsx:194
 #: src/screens/Group/index.tsx:545
 #: src/screens/Person/index.tsx:432
 #: src/view/shell/desktop/RecentTransactions.tsx:34
@@ -6989,6 +6970,10 @@ msgstr "एक विकल्प चुनें"
 #: src/components/AppLanguageDropdown.tsx:79
 msgid "Select language"
 msgstr "भाषा चुनें"
+
+#: src/features/export/ExportSheet.tsx:263
+msgid "Selected groups"
+msgstr "चुने हुए समूह"
 
 #: src/screens/Login/CodeForm.tsx:113
 #: src/screens/Login/CodeForm.tsx:115
@@ -7249,11 +7234,11 @@ msgstr "खोज में सब दिखाएँ"
 msgid "Show all time"
 msgstr "अब तक का सब दिखाएँ"
 
-#: src/screens/Analytics/components/FilterBar.tsx:88
+#: src/screens/Analytics/components/FilterBar.tsx:89
 msgid "Show as tables"
 msgstr "टेबल के रूप में दिखाएँ"
 
-#: src/screens/Analytics/components/FilterBar.tsx:88
+#: src/screens/Analytics/components/FilterBar.tsx:89
 msgid "Show charts"
 msgstr "चार्ट दिखाएँ"
 
@@ -7281,7 +7266,7 @@ msgstr "सब कुछ दिखाएँ"
 msgid "Show expenses from"
 msgstr "इनके खर्च दिखाएँ"
 
-#: src/screens/Analytics/components/FilterBar.tsx:178
+#: src/screens/Analytics/components/FilterBar.tsx:161
 msgid "Show expenses from: {label}"
 msgstr "इनके खर्च दिखाएँ: {label}"
 
@@ -7443,7 +7428,7 @@ msgstr "कोल्ड ड्रिंक"
 #: src/features/remind/RemindSheet.tsx:68
 #: src/features/searchAsk/AskAnswer.tsx:60
 #: src/features/settlement/CallItEvenDialog.tsx:129
-#: src/screens/Analytics/useReport.ts:338
+#: src/screens/Analytics/useReport.ts:336
 #: src/screens/Group/components/MemberExitDialog.tsx:99
 #: src/screens/Group/index.tsx:749
 #: src/screens/Group/index.tsx:801
@@ -7714,7 +7699,7 @@ msgstr "आपके दूसरे डिवाइस पर सिंक ह�
 msgid "System"
 msgstr "सिस्टम"
 
-#: src/screens/Analytics/components/FilterBar.tsx:94
+#: src/screens/Analytics/components/FilterBar.tsx:95
 msgid "Table"
 msgstr "टेबल"
 
@@ -7872,7 +7857,7 @@ msgstr "{0} के बैलेंस आपस में मेल नहीं
 msgid "The charges a new itemised bill opens with."
 msgstr "नया मद-वार बिल इन शुल्कों के साथ खुलता है।"
 
-#: src/features/export/ExportSheet.tsx:200
+#: src/features/export/ExportSheet.tsx:217
 msgid "The file stays on your device until you choose where to send it. Keep it somewhere safe: it holds everything you have recorded."
 msgstr "फ़ाइल तब तक आपके डिवाइस पर रहती है जब तक आप उसे भेजने की जगह नहीं चुनते। इसे सुरक्षित रखें: इसमें वह सब है जो आपने दर्ज किया है।"
 
@@ -8150,7 +8135,7 @@ msgstr "यह लिंक आपके अपने ग्रुप और द
 msgid "this month"
 msgstr "इस महीने"
 
-#: src/features/export/ExportSheet.tsx:108
+#: src/features/export/ExportSheet.tsx:124
 msgid "This month"
 msgstr "यह महीना"
 
@@ -8205,7 +8190,7 @@ msgstr "यह माफ़ी वापस ले ली गई थी। अ�
 msgid "this year"
 msgstr "इस साल"
 
-#: src/features/export/ExportSheet.tsx:108
+#: src/features/export/ExportSheet.tsx:124
 msgid "This year"
 msgstr "यह साल"
 
@@ -8287,7 +8272,6 @@ msgid "Too short: use at least 8 characters"
 msgstr "बहुत छोटा: कम से कम 8 अक्षर रखें"
 
 #: src/components/split/charges/Reconciliation.tsx:132
-#: src/screens/Analytics/index.tsx:252
 #: src/screens/Expense/components/ChargedBreakdown.tsx:192
 msgid "Total"
 msgstr "कुल"
@@ -8841,7 +8825,7 @@ msgstr "क्यों नहीं?"
 msgid "With"
 msgstr "के साथ"
 
-#: src/features/export/ExportSheet.tsx:142
+#: src/features/export/ExportSheet.tsx:159
 msgid "With {personName}"
 msgstr "{personName} के साथ"
 
@@ -8951,7 +8935,7 @@ msgstr "आप"
 #: src/components/split/shared.tsx:23
 #: src/features/export/statementText.ts:23
 #: src/features/searchAsk/AskAnswer.tsx:60
-#: src/screens/Analytics/useReport.ts:338
+#: src/screens/Analytics/useReport.ts:336
 #: src/screens/CreateGroup.tsx:203
 #: src/screens/Group/components/MemberExitDialog.tsx:99
 #: src/screens/Group/index.tsx:239
@@ -9209,7 +9193,6 @@ msgstr "ग्रुप में आपको देना है"
 #: src/screens/Analytics/components/Charts.tsx:249
 #: src/screens/Analytics/components/Charts.tsx:259
 #: src/screens/Analytics/components/Summary.tsx:124
-#: src/screens/Analytics/index.tsx:253
 msgid "You paid"
 msgstr "आपने चुकाया"
 
@@ -9431,13 +9414,12 @@ msgstr "आपके रिमाइंडर"
 #: src/screens/Analytics/components/Charts.tsx:250
 #: src/screens/Analytics/components/Charts.tsx:263
 #: src/screens/Analytics/components/Charts.tsx:327
-#: src/screens/Analytics/index.tsx:141
-#: src/screens/Analytics/index.tsx:254
+#: src/screens/Analytics/index.tsx:143
 msgid "Your share"
 msgstr "आपका हिस्सा"
 
 #. placeholder {0}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:217
+#: src/screens/Analytics/index.tsx:219
 msgid "Your share <0>{0}</0>"
 msgstr "आपका हिस्सा <0>{0}</0>"
 
@@ -9473,7 +9455,7 @@ msgstr "खर्चों में आपका हिस्सा"
 msgid "Your spending"
 msgstr "आपका खर्च"
 
-#: src/screens/Analytics/index.tsx:112
+#: src/screens/Analytics/index.tsx:114
 msgid "Your spending shows up here – by month, category, person and group – once you add an expense."
 msgstr "खर्च जोड़ते ही आपका खर्च यहाँ दिखेगा – महीने, श्रेणी, व्यक्ति और समूह के अनुसार।"
 

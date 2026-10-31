@@ -63,7 +63,7 @@ export async function loadStatement(store: Store, me: string, filter: StatementF
     if (!e.deleted) inputs.push({record: toWriteOffRecord(e), title: '', note: e.data.note, createdAt: e.createdAt})
   const statement = buildStatement(inputs, me, filter)
   // A friend's statement that runs up to now closes on the figure their page shows (an earlier end date is that day's balance, not today's).
-  if (!filter.personId || filter.groupId || (filter.to && filter.to < today)) return statement
+  if (!filter.personId || filter.groupId || filter.scope || (filter.to && filter.to < today)) return statement
   const open = await friendOpenBalances(store, me, filter.personId)
   const onScreen: Record<CurrencyCode, bigint> = Object.fromEntries(Object.entries(open).map(([c, b]) => [c, b.total]))
   return reconcileStatement(statement, filter.currency ? pick(onScreen, filter.currency) : onScreen)

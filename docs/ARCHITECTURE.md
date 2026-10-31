@@ -158,7 +158,7 @@ Rules:
 - **A platform difference lives behind a `.web` / `.native` (or `.ios` / `.android`) pair in shared code,
   never inline.** Feature code may branch on a *capability* (share sheet, haptics, camera, OTA), never on a
   *style*. A split file comes as a full set, so no platform resolves to nothing (platformGap counter,
-  A-002). [Built] pattern in use (`data/store(.web)`, `exportCsv(.web)`, `env/index(.web)`).
+  A-002). [Built] pattern in use (`data/store(.web)`, `lib/export/saveFile(.web)`, `env/index(.web)`).
 - **Every PR says how iOS, Android and web were each checked.**
 - **A capability the platform lacks is a planned fallback, never a failure**: no Web Share API -> copy the
   link and toast; no camera -> file picker; no haptics -> silent. Each leaves a breadcrumb, never an issue.
@@ -1922,6 +1922,17 @@ Splito lessons (add newest last, dated, with PR):
   behind a row breaks every spec that clicks it**: the split chips, the charges and the cash-rounding switch now need
   `chooseSplitMode` / `openCharges` / `openMoreOptions` from `e2e/composer.ts` first; use those helpers rather than
   clicking the row inline.
+- 2026-10-31, F-275 (one export): **a shared label is a hook, not a function that takes `l`.** The Analytics scope chip and
+  the Export sheet's Group picker must name a scope the same way; passing Lingui's `t` into a helper does not extract
+  (the macro only rewrites the tag where it is destructured from `useLingui()`), so the wording lives in
+  `useScopeLabel`, which both call. Also: a header action that duplicated a Settings flow had drifted (INR and the period
+  only, no choice, a different file); an entry point to an existing sheet is a preset, never a second writer.
+- 2026-10-31, process (fan-out of seven builders): **an isolated builder worktree starts from `main`, not from the
+  orchestrator's branch.** Every builder of the round began at the last merged `main`, so each lacked the round's own
+  changes (Home removed, the Overview moved, the Bell icon) and every merge back conflicted on the generated catalogs and
+  on § 23 / BACKLOG. Rules: a builder brief names the base it must merge first (`git merge <orchestrator branch>`) before
+  it edits anything; the orchestrator merges catalogs by taking the union of both `.po` files, its own `messages.ts`,
+  then `intl:extract --clean` and `intl:compile`, and checks there are no conflict markers before staging.
 
 ## 24. Checklists
 
@@ -1955,10 +1966,25 @@ Rules that belong to one feature area rather than a layer.
 **Analytics and export.**
 - The table view pins the name column; figure columns scroll under one horizontal scroller with a fixed row
   height; widths come from one `tableScale` module.
-- [Built] Export CSV: `@splito/domain` `reportCsv`/`csvCell` (RFC 4180, CRLF, formula guard on text that is
-  not a plain number, so a refund's `-12.50` stays a number); web download with a UTF-8 BOM
-  (`screens/Analytics/exportCsv.web.ts`); native hands the text to the share sheet. Metric `export` with
+- [Built] **One export** (F-275, assistant ruling 2026-10-31, after the new-user audit's F-12): there is exactly one
+  Export sheet (`features/export/ExportSheet.tsx`), and every entry opens it: Settings > Your data, the Group and Person
+  overflows and the Analytics header icon (`analytics-export`, label "Export"). An entry only pre-sets it (`ExportPreset`:
+  format, group, friend, currency, a date range, or a scope of several groups): Analytics starts it as a CSV on its
+  current period (as a custom range), currency and scope (`screens/Analytics/exportPreset.ts`; one group is the group
+  filter, Everything is none, any other scope is `StatementFilter.scope` and is named like the scope chip,
+  `useScopeLabel`). The file is the statement CSV (`statementCsv`: RFC 4180, CRLF, formula guard on text that is not a
+  plain number, so a refund's `-12.50` stays a number; web download with a UTF-8 BOM through `lib/export/saveFile`;
+  native hands the text to the share sheet), so Analytics no longer has its own CSV writer; it lists payments and an
+  opening balance too, and ignores a selected chart bar (the old file followed it). `reportCsv`/`csvCell` stay in
+  `@splito/domain` for the report rows. The sheet's address on Analytics is `/analytics/export` (+ pickers, listed in
+  `lib/links/table.ts`); a pasted one waits for the report, then opens pre-set. Metric `export` with
   file and outcome; a cancel is silent; only a failed write or hand-over is an issue.
+  *Reads/writes*: the sheet's own (`loadStatement` by index up to the end date, `loadDisputeMarks`); nothing new.
+  *Cost*: the Analytics screen mounts one closed dialog control (no reads until opened); the old full `readRows` pass
+  and `report.exportRows` are gone; one preset object per report render. *Telemetry*: none added.
+  *Checks*: bun `statement.test.ts` (scope), `exportScope.test.ts`, `table.test.ts`; Playwright `analytics.spec.ts`
+  (header icon opens the shared sheet on the year, INR, everything, then on a group and on Non-group only, with the
+  files checked), `backup.spec.ts` and `settingsTab.spec.ts` for the other entries; web only, iOS and Android not yet.
 - Grouping after a category rename uses a normalised `categoryKey()`; stored ids stay as written.
 
 **Import (backup JSON, v2 Splitwise CSV).** Two steps: parse and preview (schema validation, duplicates,
@@ -2451,7 +2477,7 @@ show what: centre may be page name, right maybe some basic action, and left may 
   |---|---|
   | People | Add friend (+ Search & Ask while it is the start tab, owner 218) |
   | Groups | Create group (+ Search & Ask while it is the start tab) |
-  | Analytics | overflow (Export CSV) (+ Search & Ask while it is the start tab) |
+  | Analytics | Export (opens the shared Export sheet) (+ Search & Ask while it is the start tab) |
   | Activity | Mark all read (+ Search & Ask while it is the start tab) |
   | Person | Settle up + overflow (Remind, Export statement, Edit, Remove friend) |
   | Group | Settle up + overflow (Edit group, Members, Payment rules, Export) |
@@ -3303,7 +3329,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   analytics everything changes according to filters it should not have something which is not affected by these".
 - **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
-  Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
+  Export (the shared Export sheet, § 25, pre-set to the filters on screen). One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
   graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
 - **All Analytics filters sit on one line** (owner 171): currency, scope, period (‹ 2026 ›) and the Charts/Table
   switch in one row that scrolls sideways on narrow screens rather than wrapping. *Why:* "all filters to be in one
@@ -3520,7 +3546,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   Gentle limits: one in-app reminder per person per 3 days; every reminder is logged in Activity.
 - **Export:** Settings > Data > Export (CSV, PDF statement, full JSON backup; filters: date range, group,
   person, currency) with Import (JSON backup restore); plus Group overflow "Export", Person overflow "Export
-  statement", Analytics overflow "Export CSV". Exports are generated on the device; amounts exact, per
+  statement", the Analytics header's Export icon (one shared sheet, pre-set to its period, currency and scope; § 25). Exports are generated on the device; amounts exact, per
   currency.
 
 - **Disputes and holds** (owner 119; F-1210, Wave C after comments merge). Anyone in a shared record can say
