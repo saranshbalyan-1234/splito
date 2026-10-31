@@ -1710,9 +1710,10 @@ Splito lessons (add newest last, dated, with PR):
   caught it. The footer now draws Saved first, disables Cancel while saved and clears the sheet's dirty flag, so a drag
   in the 300 ms before it closes never asks "Discard changes?". Also: (1) an audit finding cannot change an owner rule:
   the branch swapped the Search & Ask Sparkles for a magnifier citing the UX audit, against decision 74; restored, and
-  the question goes to the owner; (2) an empty state's "Add expense" next to the FAB on phones is a second primary
-  action (owner 213): Group, Person and Activity show it on wide screens only, Settle (no FAB) keeps it unless the
-  group is inactive; (3) the dead `SuccessCheck` went with the change that replaced it (section 1).
+  the question goes to the owner; (2) an empty state keeps its one small secondary next step (owners 146, 213) even
+  beside the FAB, which stays the primary action: hiding it on phones (tried 2026-10-31) failed `emptyArt.spec`
+  and owner 213's "every list has an empty state with one clear call to action"; an inactive group or a deleted
+  friend gets none, since they take no new expenses; (3) the dead `SuccessCheck` went with the change that replaced it (section 1).
 - 2026-10-31, F-271/F-272 (c-nohome): **renders baseline re-recorded for the start tab; the median of three runs came out identical.**
   Removing Home moved the launch end point to `splito:people-ready` (People, the start tab) and the tab round to People,
   Groups, Analytics, Activity; the gate was recorded three times after the large demo had loaded and the median kept
