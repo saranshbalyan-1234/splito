@@ -390,3 +390,25 @@ branch); the counts above came from a local run with the scroll target lowered t
 
 Not verified: WebKit (not installed in this container), iOS and Android (native paths unchanged: the Reanimated patch and
 the exit scope touch web code only; `LayoutAnimationConfig skipExiting` still does the native job).
+
+## F-266 search: a broad query's first page from a newest-first walk (ARCHITECTURE 17.1 "Narrow first", measured 2026-10-31)
+
+Machine load 27-40 from other builders for the whole session, so every wall-clock number below is indicative only (the
+rule counts numbers at load under 10); the key and row counts are exact and are the proof.
+
+| Query (bulk ledger, 10,000 expenses, 60 friends) | Keys + rows to the first page, before | After | Keys to counts and totals, after |
+|---|---|---|---|
+| "Bulk expense 9993" (narrow) | 651 + 74 | 651 + 74 | (same, known at once) |
+| "> 90" | 30,004 + 30 | 505 + 180 | 30,505 |
+| "Bulk Friend 4" | 69,345 + 245 | 1,985 + 635 | 69,489 |
+| "bulk" | 49,812 + 174 | 645 + 324 | 49,884 |
+
+Chromium (`perf/schema-v2.spec.ts`, 10,000 expenses, CPU x1, median of five, base build `dist-base` vs this branch,
+alternated, two rounds each, load 27-37): first page "> 90" 1,256 / 1,005 -> 282 / 141 ms; "Bulk Friend 4" 2,751 /
+2,084 -> 338 / 289 ms; "Bulk expense 9993" 178 / 176 -> 123 / 90 ms; "perf write" 120 / 224 -> 62 / 127 ms. Counts and
+totals (no budget) arrive later than before: "> 90" 1,256 / 1,005 -> 1,754 / 823 ms, "Bulk Friend 4" 3,036 / 2,174 ->
+3,748 / 2,580 ms. The 50 ms budget failed on both builds at this load. bun SQLite, the speed test's ledger (10,000
+expenses + 600 payments, 33 queries, load 32-39): worst first page 24 ms CPU (before, the whole answer: 51 ms CPU);
+the wall-clock check (`search.test.ts` speed, first page and counts each under 50 ms) failed on wall time at load 32
+and needs a quiet machine. Web only; native not run.
+

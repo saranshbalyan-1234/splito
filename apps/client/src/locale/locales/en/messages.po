@@ -2135,7 +2135,7 @@ msgstr "Can’t open this invite yet"
 #: src/components/Prompt.tsx:155
 #: src/components/SearchAsk/SearchHistory.tsx:191
 #: src/features/searchAsk/AskChat.tsx:252
-#: src/features/searchAsk/SearchAskBody.tsx:392
+#: src/features/searchAsk/SearchAskBody.tsx:393
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -2405,7 +2405,7 @@ msgstr "Close alert"
 msgid "Close other Splito tabs to finish updating. Nothing is lost, and this page opens by itself when they are closed."
 msgstr "Close other Splito tabs to finish updating. Nothing is lost, and this page opens by itself when they are closed."
 
-#: src/features/searchAsk/SearchAskBody.tsx:386
+#: src/features/searchAsk/SearchAskBody.tsx:387
 msgid "Close search"
 msgstr "Close search"
 
@@ -6890,14 +6890,14 @@ msgstr "Search isn’t ready on this device."
 msgid "Search or add a name"
 msgstr "Search or add a name"
 
-#: src/features/searchAsk/SearchAskBody.tsx:346
 #: src/features/searchAsk/SearchAskBody.tsx:347
+#: src/features/searchAsk/SearchAskBody.tsx:348
 #: src/screens/Welcome/index.tsx:52
 msgid "Search or ask anything"
 msgstr "Search or ask anything"
 
 #: src/components/SearchAsk/SearchAskButton.tsx:38
-#: src/features/searchAsk/SearchAskBody.tsx:405
+#: src/features/searchAsk/SearchAskBody.tsx:406
 msgid "Search or ask Splito"
 msgstr "Search or ask Splito"
 
@@ -7304,16 +7304,16 @@ msgstr "Show hidden changes"
 msgid "Show me how"
 msgstr "Show me how"
 
-#: src/features/searchAsk/SearchAskBody.tsx:252
-#: src/features/searchAsk/SearchAskBody.tsx:447
+#: src/features/searchAsk/SearchAskBody.tsx:253
+#: src/features/searchAsk/SearchAskBody.tsx:448
 msgid "Show more"
 msgstr "Show more"
 
-#: src/features/searchAsk/SearchAskBody.tsx:246
+#: src/features/searchAsk/SearchAskBody.tsx:247
 msgid "Show more payments"
 msgstr "Show more payments"
 
-#: src/features/searchAsk/SearchAskBody.tsx:441
+#: src/features/searchAsk/SearchAskBody.tsx:442
 msgid "Show more results"
 msgstr "Show more results"
 

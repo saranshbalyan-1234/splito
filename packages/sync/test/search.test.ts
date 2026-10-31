@@ -203,13 +203,17 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
       .map(e => e.id)
   }
 
-  test('the first page is read on open, in the final order, and the count is known at once', async () => {
+  test('the first page is read on open, in the final order (from the walk), and the count comes after it', async () => {
     const want = await expected('broad')
     expect(want.length).toBeGreaterThan(500)
     const session = await openSearch(store, 'broad', opts)
-    expect(session.summary.count).toBe(want.length)
     expect(session.isDone()).toBe(false)
     expect(session.found().map(e => e.id)).toEqual(want.slice(0, SEARCH_PAGE))
+    // Until counted, the count is what has been read and no total is shown.
+    expect([session.isCounted(), session.summary]).toEqual([false, {count: SEARCH_PAGE, totals: {}}])
+    await session.whenCounted()
+    expect(session.isCounted()).toBe(true)
+    expect(session.summary.count).toBe(want.length)
   })
 
   test('walking to the end gives every match once, newest first, equal to the whole answer', async () => {
@@ -231,6 +235,7 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
     const want = await expected('broad')
     const session = await openSearch(store, 'broad', opts)
     const rows = (await store.getMany<Expense>('expense', want)).filter(e => !e.deleted)
+    await session.whenCounted()
     // b0 is deleted: listed and counted as a row, never added up.
     expect(session.summary.count).toBe(want.length)
     const sum = (c: string) => rows.filter(e => e.data.currency === c).reduce((a, e) => a + e.data.total, 0n)
@@ -251,6 +256,7 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
       ['< 14', 400, (t: bigint) => t < 1400n],
     ] as const) {
       const session = await openSearch(store, q, opts)
+      await session.whenCounted()
       expect(session.summary.count).toBe(count)
       while (!session.isDone()) await session.step()
       expect(session.found().length).toBe(count)
@@ -309,8 +315,8 @@ describe('highlightRanges', () => {
 
 describe('speed', () => {
   /*
-   * What the drawer waits for: people, groups, the counts and per-currency totals of every match, and the first page
-   * of payments and of expenses. A wall-clock budget for a dev machine at load under 10 (docs/ARCHITECTURE 17.1): shared
+   * What the drawer waits for: people, groups and the first page of payments and of expenses, then the counts and
+   * per-currency totals of every match (a broad query's come after its first page, F-266). A wall-clock budget for a dev machine at load under 10 (docs/ARCHITECTURE 17.1): shared
    * CI runners are several times slower and noisy (170 ms on GitHub's). The median of three runs of each query is
    * judged, after one warm-up; CPU time is printed beside it (on a loaded machine the wall time is the scheduler's).
    */
@@ -394,30 +400,40 @@ describe('speed', () => {
     ['SQLite', 10000, () => openSqlStore(bunExecutor(':memory:'))],
     ['IndexedDB', 10000, () => openIdbStore('speed', new IDBFactory())],
   ]
-  describe.skipIf(!!process.env.CI).each(SPEED)('%s, %d expenses and 600 payments: every query under 50 ms', (engine, size, open) => {
-    test('openSearch with the counts, totals and first pages', async () => {
+  describe.skipIf(!!process.env.CI).each(SPEED)('%s, %d expenses and 600 payments: every query under 50 ms to its first page and again to its totals', (engine, size, open) => {
+    test('openSearch to the first pages, then the counts and totals', async () => {
       const store = await open()
       await seed(store, size)
       const opts = {today, categories, me: 'me', hiddenGroups: ['lis'], hiddenItems: ['e7', 'p3']}
       await openSearch(store, 'warm up', opts)
-      const timings: Array<[string, number, number]> = []
+      /* Per query, the medians of three: open to the first pages, then from there to the counts and totals (each a wait of its own in the drawer, F-266). */
+      const timings: Array<{q: string; first: number; cpu: number; counted: number}> = []
       for (const q of queries) {
-        const runs: Array<[wall: number, cpu: number]> = []
+        const runs: Array<[first: number, cpu: number, counted: number]> = []
         for (let k = 0; k < 3; k++) {
           const c0 = process.cpuUsage()
           const t0 = performance.now()
-          await openSearch(store, q, opts)
+          const session = await openSearch(store, q, opts)
+          const t1 = performance.now()
           const c = process.cpuUsage(c0)
-          runs.push([performance.now() - t0, (c.user + c.system) / 1000])
+          await session.whenCounted()
+          runs.push([t1 - t0, (c.user + c.system) / 1000, performance.now() - t1])
         }
-        timings.push([q, runs.map(r => r[0]).sort((x, y) => x - y)[1]!, runs.map(r => r[1]).sort((x, y) => x - y)[1]!])
+        const median = (i: 0 | 1 | 2) => runs.map(r => r[i]).sort((x, y) => x - y)[1]!
+        timings.push({q, first: median(0), cpu: median(1), counted: median(2)})
       }
-      const [slowest, worst, cpu] = timings.reduce((a, b) => (b[1] > a[1] ? b : a))
-      console.log(`search ${engine}: worst query ${worst.toFixed(1)} ms wall, ${cpu.toFixed(1)} ms cpu ("${slowest}") over ${queries.length} queries on ${size} expenses (median of 3, load ${os.loadavg()[0]!.toFixed(1)})`)
-      expect(worst).toBeLessThan(50)
+      const worstFirst = timings.reduce((a, b) => (b.first > a.first ? b : a))
+      const worstCounted = timings.reduce((a, b) => (b.counted > a.counted ? b : a))
+      console.log(
+        `search ${engine}: worst first page ${worstFirst.first.toFixed(1)} ms wall, ${worstFirst.cpu.toFixed(1)} ms cpu ("${worstFirst.q}"); worst counts and totals after it ${worstCounted.counted.toFixed(1)} ms ("${worstCounted.q}") over ${queries.length} queries on ${size} expenses (median of 3, load ${os.loadavg()[0]!.toFixed(1)})`,
+      )
+      expect(worstFirst.first).toBeLessThan(50)
+      expect(worstCounted.counted).toBeLessThan(50)
       // The keys give the same answer as the rows: "> 1000" is every INR/EUR expense above 10.00.
       const all = await store.page<Expense>('expense', {index: 'byDate', limit: size + 1})
-      expect((await openSearch(store, '> 1000', opts)).summary.count).toBe(all.items.filter(e => e.data.total > 100000n).length)
+      const over = await openSearch(store, '> 1000', opts)
+      await over.whenCounted()
+      expect(over.summary.count).toBe(all.items.filter(e => e.data.total > 100000n).length)
       await store.close()
     }, 300_000)
   })
@@ -452,7 +468,9 @@ describe('speed', () => {
     // About 22 chunks of 500 rows (plus people, groups, comments): the timer ran between them.
     expect(ticks).toBeGreaterThan(10)
     expect((await openSearch(store, 'zanzibar', {today, categories})).found().map(e => e.id)).toEqual(['e777'])
-    expect((await openSearch(store, 'payments', {today, categories})).paymentCount).toBe(500)
+    const payments = await openSearch(store, 'payments', {today, categories})
+    await payments.whenCounted()
+    expect(payments.paymentCount).toBe(500)
     await store.close()
   }, 300_000)
 })
