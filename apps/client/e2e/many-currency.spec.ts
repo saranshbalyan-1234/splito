@@ -197,19 +197,21 @@ test('M12, m2: Recently active groups shows a chip per open currency, with exact
   expect(label).toMatch(/you owe (US)?\$/)
 })
 
-test('m21: an Overview currency card (top of Analytics) opens the rest of Analytics in that currency, every time', async ({
+test('m21: an Overview currency card (People) opens Analytics in that currency, every time (owners 219, 221)', async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openDemo(page, '/analytics')
-  await expect(page.getByTestId('summary-EUR')).toBeVisible()
-  await page.getByTestId('summary-EUR').click()
+  await openDemo(page, '/people')
+  const card = page.getByTestId('screen-people').getByTestId('summary-EUR')
+  await expect(card).toBeVisible()
+  await card.click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
-  // Pick another currency in the filter row, then tap the same card again: it must seed again.
+  // Pick another currency in the filter row, go back and tap the same card again: it must seed again.
   await page.getByTestId('analytics-currency').click()
   await page.getByTestId('analytics-currency-INR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('INR')
-  await page.getByTestId('summary-EUR').click()
+  await page.getByTestId('tab-people').click()
+  await card.click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
 })
 

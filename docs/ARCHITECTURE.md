@@ -2003,6 +2003,13 @@ Splito lessons (add newest last, dated, with PR):
   ignored `qa/`, never over tracked files; and a spec that calls the dev hook waits for the hook itself
   (`window.splito?.createPerson`), not for the `splito` key, which outlives an account switch.
 
+- 2026-10-31, full e2e on PR #4: **a hand-over between two stores removes the source only after the target has
+  committed.** `LocaleFromPrefs` took the language picked while signed out into the account and deleted the device
+  copy in the same tick; the account write is an IndexedDB transaction, so a reload in that window (the spec's `goto`
+  right after sign-in, or a person refreshing) lost the choice for good. The device copy now goes in the write's
+  `then`, and a failed write leaves it for the next launch. Same rule as "never `goto` right after a click that
+  writes", from the app's side.
+
 ## 24. Checklists
 
 **Adding a split mode:** domain `SplitInput` union + `computeShares` + `validateExpense` codes + Lingui
