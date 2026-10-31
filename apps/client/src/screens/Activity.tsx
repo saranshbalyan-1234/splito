@@ -44,7 +44,7 @@ import {TabScreen} from '#/components/TabScreen'
 import {TabBar} from '#/components/TabBar'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
-import {useListAnimations} from '#/motion/listAnimations'
+import {AnimatedListRow} from '#/motion/listAnimations'
 
 const NO_TYPES: readonly ActivityTypeId[] = []
 /** A narrowed list reads older history until it shows this many changes. */
@@ -67,7 +67,6 @@ export function ActivityScreen() {
   const t = useTheme()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
-  const listAnimations = useListAnimations()
   /*
    * The tab and the types are the address (`/activity/me?type=transactions&group=<id>`, F-241): written on a tap or
    * an Apply, read from the route; what the address leaves out falls back to the saved choice (F-1213, F-259).
@@ -171,9 +170,9 @@ export function ActivityScreen() {
         />
       )
     }
+    /* The row reads its animations inside the screen's exit scope (this component renders the scope, so it sits above it). */
     return (
-      <Animated.View
-        {...listAnimations}
+      <AnimatedListRow
         style={[
           row.hasDivider && [
             a.border_t,
@@ -190,7 +189,7 @@ export function ActivityScreen() {
           renderInviteActions={request => <OutgoingActions request={request} />}
           renderGroupRequestActions={request => <GroupRequestActions request={request} />}
         />
-      </Animated.View>
+      </AnimatedListRow>
     )
   }
 

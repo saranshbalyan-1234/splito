@@ -73,6 +73,45 @@ export function useScreenExiting() {
   return useContext(ScreenExitingContext)
 }
 
+type RowMotion = {entering: typeof LIST_ENTERING; exiting: typeof LIST_EXITING}
+
+/*
+ * A list whose rows a search swaps: typing narrows or widens the list, which is not a change to explain (owner 213), and
+ * on web every row a keystroke removed ran Reanimated's exit (a clone of the row plus a scroll read of every node in it,
+ * a forced layout each): 46 clones over one 16-key search of the friends list. `hush()`, called by the handler that
+ * changes the query (before React renders it), makes the rows the next commits remove or add skip their exit and enter;
+ * `settle()` (once the list shows the query) gives them back, so a delete or a filter's Apply still fades. The flag is
+ * read live, at unmount and mount, as the screen exit scope's is; the leaving screen's own scope still wins.
+ */
+function makeQuietRows(outer: typeof LIST_EXITING) {
+  let isQuiet = false
+  const live = (fallback: () => ReduceMotion | undefined) => ({
+    get: () => (isQuiet ? ReduceMotion.Always : fallback()),
+    set: () => {},
+  })
+  const entering = FadeIn.duration(200).easing(EASE_OUT)
+  const exiting = FadeOut.duration(150)
+  Object.defineProperty(entering, 'reduceMotionV', live(() => ReduceMotion.System))
+  Object.defineProperty(exiting, 'reduceMotionV', live(() => (outer as {reduceMotionV?: ReduceMotion}).reduceMotionV))
+  return {entering, exiting, hush: () => void (isQuiet = true), settle: () => void (isQuiet = false)}
+}
+
+const QuietRowsContext = createContext<RowMotion | null>(null)
+
+/**
+ * The quiet-rows scope of one searchable list (`makeQuietRows`): call it in the component that holds the query, hand the
+ * result to `<QuietRowsProvider value={...}>` around the list, and call `hush()` in the query's change handler and
+ * `settle()` once the list shows that query.
+ */
+export function useQuietRows() {
+  const outer = useScreenExiting()
+  const [rows] = useState(() => makeQuietRows(outer))
+  return rows
+}
+
+/** Provides `useQuietRows()`'s configs to the list's rows. */
+export const QuietRowsProvider = QuietRowsContext.Provider
+
 /**
  * Props for an `Animated.View` row: `<Animated.View {...useListAnimations()}>`.
  * Every field is undefined under reduce motion (OS or the Animations
@@ -81,9 +120,10 @@ export function useScreenExiting() {
 export function useListAnimations() {
   const shouldReduceMotion = useShouldReduceMotion()
   const exiting = useScreenExiting()
+  const quiet = useContext(QuietRowsContext)
   if (shouldReduceMotion)
     return {entering: undefined, exiting: undefined, layout: undefined}
-  return {entering: LIST_ENTERING, exiting, layout: LIST_LAYOUT}
+  return {entering: quiet?.entering ?? LIST_ENTERING, exiting: quiet?.exiting ?? exiting, layout: LIST_LAYOUT}
 }
 
 /**
