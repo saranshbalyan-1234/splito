@@ -2355,6 +2355,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   bar.
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
+- **The bottom bar keeps a little air under its labels** (owner 222): on phone web the bar pads its bottom by the
+  home-indicator inset, or 8 px when the browser reports none (Safari with its toolbar shown), so the labels never sit
+  on the screen's edge (`BAR_BOTTOM_PAD`, `BottomBarWeb.tsx`); native keeps Bluesky's `clamp(inset, 15, 60)`. Content
+  follows the bar's measured height. *Why:* "Add a little padding from bottom on navigation bar".
 - **Every place has a URL, so a copied link lands on the same screen** (owner 100; F-241, built; Expensify's model, where every side panel and modal is a route). Every page, every in-page tab (Group
   Expenses / Balances / Members, Activity tabs, Analytics views), every sheet and popup (Add / Edit expense,
   Record payment, Settle up, Add friend / Invite people, Create / Edit group, Members, Payment rules, Filters,
@@ -3922,6 +3926,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 219 | "On the analytics tab, all group and direct filter is at top already, it shows up again in filter"; "overview section to be on people and groups as well, think about it properly" | Analytics' Overview loses its All / Groups / Direct chips and follows the filter row's one scope; People gets an Overview of balances with friends that follows its Include groups filter; Groups gets an Overview of my balances in groups (inactive and hidden counted); cards open Analytics in that currency and scope | § 26.3, § 26.12, § 26.16 | Overview only on Analytics with its own scope chips (176, 198) |
 | 220 | "Remove settings from navigation and merge with profile"; "Fanout max" | Settings leaves the bottom bar and the sidebar; Profile (the avatar, `/profile`) holds the person then every Settings row, Log out last; `/settings` opens Profile, sections keep their addresses with Back to Profile; a saved bar loses `settings`; builders fan out as wide as the independent work allows | § 26.3, § 26.4, § 26.7, § 26.15 | Settings as its own tab and nav item, Profile without Settings (203, 206, 217's locked Settings) |
 | 221 | "Make sure analytics everything changes according to filters it should not have something which is not affected by these" | Every figure on Analytics follows its period, currency and scope; the balances-right-now Overview leaves Analytics (it stays on People and Groups); old `?overview=` links map to Analytics' scope | § 26.12, § 26.16 | Analytics Overview of balances right now that ignored period and currency (198, 219) |
+| 222 | "Add a little padding from bottom on navigation bar" | Phone-web bottom bar pads its bottom by the home-indicator inset or at least 8 px; native unchanged | § 26.3 | No bottom padding on the phone-web bar |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

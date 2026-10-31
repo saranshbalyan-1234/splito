@@ -628,6 +628,17 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     expect(box.y + box.height).toBeLessThan(bar.y)
   })
 
+  test('owner 222: the bar keeps a little air under its labels', async ({page}) => {
+    await page.setViewportSize(PHONE)
+    await openDemo(page)
+    const nav = page.getByRole('navigation')
+    const pad = await nav.evaluate(el => parseFloat(getComputedStyle(el).paddingBottom))
+    expect(pad).toBeGreaterThanOrEqual(8)
+    const bar = (await nav.boundingBox())!
+    const label = (await nav.getByTestId('tab-people').getByText('People').boundingBox())!
+    expect(bar.y + bar.height - (label.y + label.height)).toBeGreaterThanOrEqual(14)
+  })
+
   test('the FAB is on every top-level page (Analytics too), empty People included (F-275)', async ({
     page,
   }) => {

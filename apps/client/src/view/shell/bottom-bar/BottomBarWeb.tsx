@@ -2,6 +2,7 @@
 import {useCallback, useEffect, useState} from 'react'
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
+import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {useLingui} from '@lingui/react'
 import {useNavigationState} from '@react-navigation/native'
 import {type NavItemId} from '@splito/sync'
@@ -30,6 +31,8 @@ type NavItemValue = NavItemId
 
 /** A net only: a pending highlight whose navigation was dropped is released after this. */
 const PENDING_NET_MS = 3000
+/* Px under the bar's labels on phone web when the browser reports no bottom inset (owner 222). */
+const BAR_BOTTOM_PAD = 8
 
 /*
  * Bluesky's signed-in mobile-web bottom bar with the items the `tabs`
@@ -40,6 +43,7 @@ const PENDING_NET_MS = 3000
 export function BottomBarWeb() {
   const {_} = useLingui()
   const t = useTheme()
+  const insets = useSafeAreaInsets()
   const footerMinimalShellTransform = useMinimalShellFooterTransform()
   const {footerHeight} = useShellLayout()
   const tabs = useTabs()
@@ -71,6 +75,8 @@ export function BottomBarWeb() {
           styles.bottomBarWeb,
           t.atoms.bg,
           t.atoms.border_contrast_low,
+          /* A little air under the labels (owner 222), or the home indicator's inset where it is larger. */
+          {paddingBottom: Math.max(insets.bottom, BAR_BOTTOM_PAD)},
           footerMinimalShellTransform,
         ]}
         onLayout={event => footerHeight.set(event.nativeEvent.layout.height)}>
