@@ -1750,9 +1750,10 @@ Splito lessons (add newest last, dated, with PR):
   caught it. The footer now draws Saved first, disables Cancel while saved and clears the sheet's dirty flag, so a drag
   in the 300 ms before it closes never asks "Discard changes?". Also: (1) an audit finding cannot change an owner rule:
   the branch swapped the Search & Ask Sparkles for a magnifier citing the UX audit, against decision 74; restored, and
-  the question goes to the owner; (2) an empty state's "Add expense" next to the FAB on phones is a second primary
-  action (owner 213): Group, Person and Activity show it on wide screens only, Settle (no FAB) keeps it unless the
-  group is inactive; (3) the dead `SuccessCheck` went with the change that replaced it (section 1).
+  the question goes to the owner; (2) an empty state keeps its one small secondary next step (owners 146, 213) even
+  beside the FAB, which stays the primary action: hiding it on phones (tried 2026-10-31) failed `emptyArt.spec`
+  and owner 213's "every list has an empty state with one clear call to action"; an inactive group or a deleted
+  friend gets none, since they take no new expenses; (3) the dead `SuccessCheck` went with the change that replaced it (section 1).
 - 2026-10-31, F-271/F-272 (c-nohome): **renders baseline re-recorded for the start tab; the median of three runs came out identical.**
   Removing Home moved the launch end point to `splito:people-ready` (People, the start tab) and the tab round to People,
   Groups, Analytics, Activity; the gate was recorded three times after the large demo had loaded and the median kept
@@ -1792,6 +1793,13 @@ Splito lessons (add newest last, dated, with PR):
   bar slips below the fold, § 23 fix/tab-taps). The sliding screen clips sideways (`overflow-x: clip` on the screen
   root only, never on `html` or `body`). Also: a `transform` on a screen's root would carry its `position: fixed` FAB
   with it, so the slide moves the screen's children except `[data-fab]`.
+- 2026-10-31, merge of c-nohome: **a projection rule that grows must grow its test oracle in the same change.** F-272
+  made a comment (and its edit or delete) bump its record's group and friends for "Last active" (owner 199) in both the
+  incremental write and `rebuildActivity`, but `test/projectionCheck.ts` `expectedActivity` still counted money
+  records only, so the 10 large-demo migration tests failed on one group (`demo-large-g-b-paris`, a comment 4 minutes
+  after its expense) on the branch itself, and nobody saw it because the builder ran only its touched specs. The
+  oracle now counts comments the same way. Rule: `pnpm test` (all packages) runs before a branch is called done, not
+  only the specs a change touches.
 
 - 2026-10-31, F-266 (c-perf port): **the wip/c-perf fixes, reviewed before they landed, and what the review changed.**
   (1) Reanimated 4.7.1's web `LayoutAnimationConfig skipExiting` does nothing (`JSReanimated.setShouldAnimateExitingForTag`
