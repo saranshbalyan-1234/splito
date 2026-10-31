@@ -9,6 +9,7 @@ import {
   type Entity,
   type FriendRequest,
   requestName,
+  requestState,
   resendFriendRequest,
 } from '@splito/sync'
 
@@ -140,7 +141,10 @@ export const OutgoingActions = memo(function OutgoingActions({request}: {request
   const act = useRowAction()
   const r = request.data
   const name = requestName(r)
+  const now = useTickEveryMinute()
 
+  // An invite past its 30 days has lapsed: Activity keeps its row, without Resend / Cancel (Invites sent leaves it out).
+  if (requestState(r, now) !== 'pending') return null
   return (
     <>
       <RequestAction

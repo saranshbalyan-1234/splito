@@ -1535,6 +1535,12 @@ Splito lessons (add newest last, dated, with PR):
   anyone blames the change under test. Also: merging branches that each regenerated the Lingui catalogs is done by
   taking the union of both `.po` files (no translation is lost), then `intl:extract --clean` and `intl:compile`; never
   "take one side" of a `.po`, which drops the other side's Hindi strings.
+- 2026-10-31, merge of c-joins: **a request's stored `status` is not its state.** Activity's invite rows carried Resend /
+  Cancel whenever `status === 'pending'`, so a 40-day-old invite (expired by `requestState`, gone from Invites sent) still
+  offered Resend there; group requests had the same check. `main` only passed `friends.spec` "the demo set carries the
+  invites flow" because that row was not reached. Every place that offers an answer to a friend or group request asks
+  `requestState(r, now) === 'pending'` (with `now` from `useTickEveryMinute`), and the check lives in the action
+  component (`OutgoingActions`, `GroupRequestActions`), so only rows with buttons follow the minute clock.
 
 ## 24. Checklists
 

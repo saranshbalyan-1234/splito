@@ -9,6 +9,7 @@ import {
   type Group,
   type GroupRequest,
   joinGroup,
+  requestState,
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -42,7 +43,10 @@ export const GroupRequestActions = memo(function GroupRequestActions({request}: 
   const act = useRowAction()
   const {kind, direction, name: who} = request.data
   const group = useGroupName(request)
+  const now = useTickEveryMinute()
 
+  // A request past its 30 days has lapsed: Activity keeps its row, without buttons (the lists already leave it out).
+  if (requestState(request.data, now) !== 'pending') return null
   if (direction === 'outgoing')
     return (
       <RequestAction
