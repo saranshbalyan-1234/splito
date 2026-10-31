@@ -111,7 +111,7 @@ export function NavigationEditor() {
       pref={pref}
       icon={TabsIcon}
       title={l`Items`}
-      description={l`On items make the phone bottom bar; the rest stay in the menu behind your avatar. The sidebar on wide screens always lists every item, in this order.`}>
+      description={l`On items make the phone bottom bar; the rest stay in the side menu (swipe in from the left edge). The sidebar on wide screens always lists every item, in this order.`}>
       <View
         style={[
           a.w_full,

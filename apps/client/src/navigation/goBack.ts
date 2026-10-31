@@ -1,4 +1,4 @@
-import {fromTab} from '#/lib/routes/helpers'
+import {fromTab, navigateArgs} from '#/lib/routes/helpers'
 import {startPage} from '#/lib/routes/startTab'
 import {type AllNavigatorParams} from '#/lib/routes/types'
 
@@ -99,8 +99,15 @@ export function backChain<R extends {name: string; params?: object}>(route: R): 
   return parent.name === route.name && !parent.params ? [route] : [...backChain(parent), route]
 }
 
-/** Back one page, or to `fallback` when this page was opened directly. Every Back and close path uses it. */
-export function goBack(navigation: BackNavigation, fallback: Fallback) {
+/**
+ * Back one page, or to `fallback` when this page was opened directly. Every Back and close path uses it. `isWeb` is
+ * `IS_WEB`, passed in so this stays testable: a tab fallback is `('Tabs', {screen})` on native, or Back from Profile to
+ * Settings (a tab) does nothing there (`navigateArgs`).
+ */
+export function goBack(navigation: BackNavigation, fallback: Fallback, isWeb: boolean) {
   if (navigation.canGoBack()) navigation.goBack()
-  else (navigation.navigate as (name: string, params?: object) => void)(fallback.name, fallback.params)
+  else {
+    const to = navigateArgs(fallback.name, fallback.params, isWeb)
+    ;(navigation.navigate as (name: string, params?: object) => void)(to.name, to.params)
+  }
 }

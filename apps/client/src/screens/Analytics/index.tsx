@@ -39,6 +39,7 @@ import {seeAllTransactionsPath} from '#/lib/links/make'
 import {SectionHeader} from '#/components/SectionHeader'
 
 const PLACEHOLDER_ROWS = 4
+const NO_ROWS: ListedExpense[] = []
 
 /**
  * Analytics: one filter bar (period, currency, group, Include groups) drives
@@ -85,6 +86,9 @@ export function AnalyticsScreen() {
       <Deferred
         when={!!report}
         fallback={
+        <>
+        {/* Balances right now do not wait for the report (owner 198): they read their own data. */}
+        <OverviewSection />
         <Shimmer testID="analytics-loading">
           <SummaryPlaceholder />
           <ChartsPlaceholder />
@@ -92,13 +96,23 @@ export function AnalyticsScreen() {
             <ExpenseRowPlaceholder key={i} />
           ))}
         </Shimmer>
+        </>
         }>
         {() => !report ? null : !report.hasExpenses ? (
-        <EmptyState
-          testID="analytics-empty"
-          illustration="empty-analytics"
-          message={l`Your spending shows up here – by month, category, person and group – once you add an expense.`}
-          /* No button of its own (F-275): the FAB is the one Add expense. */
+        /* No expenses yet, but payments can still leave balances: the Overview shows above the empty state. */
+        <List
+          data={NO_ROWS}
+          keyExtractor={(e: ListedExpense) => e.id}
+          renderItem={() => null}
+          ListHeaderComponent={<OverviewSection />}
+          ListFooterComponent={
+            <EmptyState
+              testID="analytics-empty"
+              illustration="empty-analytics"
+              message={l`Your spending shows up here – by month, category, person and group – once you add an expense.`}
+              /* No button of its own (F-275): the FAB is the one Add expense. */
+            />
+          }
         />
       ) : (
         <LayoutAnimationConfig skipEntering skipExiting>

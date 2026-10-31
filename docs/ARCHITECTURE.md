@@ -1759,6 +1759,19 @@ Splito lessons (add newest last, dated, with PR):
   after its expense) on the branch itself, and nobody saw it because the builder ran only its touched specs. The
   oracle now counts comments the same way. Rule: `pnpm test` (all packages) runs before a branch is called done, not
   only the specs a change touches.
+- 2026-10-31, c-nohome review: three rules from what the review found. (1) **A module-level "current value" needs a
+  writer on every path that changes it.** The start tab (`setStartTab`) was set at launch from the device mirror but not
+  when the preference changed or the tab list was migrated, so Back fallbacks named a stale tab; every path that changes the
+  source (launch, preference write, migration) calls the writer, and a test pins each. (2) **A migration that
+  drops a fixed item keeps what it guaranteed.** Removing Home from a saved tab list had also removed the one tab the app
+  could always open on and the place "Home" fallbacks pointed at; the migration now names the new guarantee (the start tab
+  is People, a saved bar keeps People and Settings) instead of only deleting. (3) **Moving a screen from the root stack
+  into the tabs breaks every plain `navigate(name)` on native** (React Navigation 7 does not navigate into a child
+  navigator; see the fix/ios-wB lesson): Settings became a tab and `navigate('Settings')`, `replace('Settings')`, the drawer's
+  sync dot, the dev tour and the Back fallbacks did nothing on native while web worked. In the same change as the move, grep
+  every `navigate(`, `replace(`, `popTo(` and `goBack` fallback for the route's name; tab names go through
+  `navigateArgs()` (`lib/routes/helpers.ts`), and `goBack(navigation, fallback, IS_WEB)` applies it to every fallback. A bun
+  test (`linkNavigation.test`, `goBack.test`) pins the native shape. Not checked on a simulator here.
 
 ## 24. Checklists
 
@@ -3405,6 +3418,10 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   payment I am in), "Invites" and "Reminders I set". Like the others, Comments only notifies once sync exists
   (§ 0 rule 6), and the page says so. *Why:* "new expense and payment should be one, make it payment, add one
   more notification for comments".
+  *Assistant ruling, 2026-10-31 (not yet seen by the owner; after the c-nohome review):* until sync exists,
+  Settings > Notifications shows only "Reminders I set"; the Payments, Comments and Invites switches (and Privacy's
+  "find me by email / phone") are hidden (`NOT_BUILT` in `SettingsSection.tsx`), under owner 212 ("nothing shown that
+  they cannot act on") and § 0 rule 6. Their preferences stay in the registry and the rows come back with sync.
 
 - **Push notifications on every platform** (owner 137; F-2201, in the first backend batch right after sign-in
   and sync, F-2101..F-2103). Real push, not only local alerts: iOS (APNs) and Android (FCM) through

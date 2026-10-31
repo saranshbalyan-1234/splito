@@ -153,10 +153,7 @@ function DrawerContentInner(): React.ReactNode {
               setDrawerOpen(false)
               navigation.navigate('Profile')
             }}
-            onPressSync={() => {
-              setDrawerOpen(false)
-              navigation.navigate('Settings')
-            }}
+            onPressSync={() => onPressItem('settings')}
           />
           <Divider style={[a.mt_xl, a.mb_sm]} />
         </View>

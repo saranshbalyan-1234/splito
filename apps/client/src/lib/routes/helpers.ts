@@ -197,6 +197,22 @@ export function tabLink(
     : {kind: 'push', name: `${PUSHED_PREFIX}${routeName}`, params}
 }
 
+/**
+ * What to hand `navigate()` to reach a route from a screen of the root stack (§ 23, fix/ios-wB and c-nohome review). Native
+ * nests the tabs (People, Groups, Analytics, Activity, Settings) in the `Tabs` route and React Navigation 7 does not send
+ * NAVIGATE into a child navigator, so a tab is `('Tabs', {screen, params})` there; on web the tabs sit in the one flat
+ * stack and every route is `(name, params)`. Every plain `navigate(<tab>)`, `replace(<tab>)` and Back fallback goes through
+ * this (`goBack` does), so moving a screen into or out of the tabs cannot silently break a link.
+ */
+export function navigateArgs(
+  routeName: string,
+  params: object | undefined,
+  isWeb: boolean,
+): {name: string; params: object | undefined} {
+  if (isWeb || !TAB_ROUTES.includes(routeName)) return {name: routeName, params}
+  return {name: 'Tabs', params: {screen: routeName, params}}
+}
+
 /** The tab a link pressed on `state`'s page counts as opened from (its section, lower-cased); the start tab when the page is outside the tabs. */
 export function originTab(state: State | undefined): string {
   const route = state ? getCurrentRoute(state) : undefined

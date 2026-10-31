@@ -8,7 +8,6 @@ import {
   cellTotals,
   formatAmountCompact,
   personSummary,
-  todayIn,
 } from '@splito/domain'
 import {type Entity, type Group, type Person} from '@splito/sync'
 
@@ -20,7 +19,7 @@ import {
   useAnalyticsCells,
   useAnalyticsOverview,
   useBalanceRows,
-  useCount,
+  useMyExpenseCount,
   useEntities,
   useMe,
   useSortedInviteLinks,
@@ -29,7 +28,7 @@ import {inviteUrl} from '#/data/friends'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
 import {requestLogOut} from '#/features/account/LogOutPrompt'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useTimeZone} from '#/locale/useDates'
+import {useToday} from '#/locale/useDates'
 import {useSession} from '#/state/session'
 import {useDemoMode} from '#/state/demo'
 import {Link} from '#/view/com/util/Link'
@@ -276,23 +275,25 @@ function ProfileStats({me}: {me: Entity<Person>}) {
   const {t: l, i18n} = useLingui()
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
-  const tz = useTimeZone()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
-  const expenseCount = useCount('expense', {index: 'byDeleted', eq: [0]})
-  /* This year's paying, in the currency I use most: stored month sums, no ledger read. */
-  const currency = useAnalyticsOverview()?.currencies[0]
-  const year = yearRange(todayIn(tz, Date.now()))
+  /* Expenses I am part of (my share), from the stored per-person sums: not every expense on the device. */
+  const expenseCount = useMyExpenseCount(me.id)
+  /* This year's paying, in the currency I use most: stored month sums, no ledger read. `...` while loading, `-` when unknown (§ 7). */
+  const overview = useAnalyticsOverview()
+  const currency = overview?.currencies[0]
+  const year = yearRange(useToday())
   const cells = useAnalyticsCells(currency ? {currency, ...year, exact: false} : null)
-  const paid = currency && cells ? formatAmountCompact(cellTotals(cells.period, me.id).paid, currency, locale) : i18n.number(0)
+  const paid = currency && cells ? formatAmountCompact(cellTotals(cells.period, me.id).paid, currency, locale) : overview ? '-' : '...'
+  const count = (n: number | undefined) => (n === undefined ? '...' : i18n.number(n))
   const stats = [
-    {key: 'friends', to: '/people', label: l`Friends`, value: i18n.number(countFriends(people ?? []))},
-    {key: 'groups', to: '/groups', label: l`Groups`, value: i18n.number(countGroups(groups ?? []))},
+    {key: 'friends', to: '/people', label: l`Friends`, value: count(people && countFriends(people))},
+    {key: 'groups', to: '/groups', label: l`Groups`, value: count(groups && countGroups(groups))},
     {
       key: 'expenses',
       to: activityPath({tab: 'me', types: ['expenses', 'payments']}),
       label: l`Expenses`,
-      value: i18n.number(expenseCount ?? 0),
+      value: count(expenseCount),
     },
     {
       key: 'paid',
