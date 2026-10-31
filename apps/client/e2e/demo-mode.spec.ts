@@ -149,10 +149,14 @@ test('the store swapping under an open Add friend sheet drops the sheet and writ
   await expect(page.getByTestId('screen-add-friend')).toBeVisible()
   await page.getByTestId('add-friend-contact').fill('zed.mid.swap@example.com')
 
-  // On: the first seeding covers the app with a blocking dialog, then the sheet is gone and People is showing.
+  // On: the seeding runs behind a progress pill and the sheet stays usable meanwhile; the swap then drops it.
   const on = page.evaluate(() => (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest.demoMode(true))
-  await expect(page.getByTestId('demo-busy')).toBeVisible()
+  await expect(page.getByTestId('demo-progress')).toBeVisible()
+  await expect(page.getByTestId('demo-busy')).toHaveCount(0)
+  await page.getByTestId('add-friend-contact').fill('zed.mid.swap2@example.com')
+  await expect(page.getByTestId('add-friend-contact')).toHaveValue('zed.mid.swap2@example.com')
   await on
+  await expect(page.getByTestId('demo-progress')).toHaveCount(0)
   await expect(page.getByTestId('demo-busy')).toHaveCount(0)
   await expect(page.getByTestId('screen-add-friend')).toHaveCount(0)
   await expect(page.getByTestId('screen-people')).toBeVisible()

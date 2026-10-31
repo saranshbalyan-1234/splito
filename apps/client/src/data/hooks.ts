@@ -1,5 +1,5 @@
 import {useEffect, useState, useSyncExternalStore} from 'react'
-import {type BalanceRow, pairBalance, type WeekStart, ZERO} from '@splito/domain'
+import {type BalanceRow, pairBalance, type PersonSummary, personSummary, type WeekStart, ZERO} from '@splito/domain'
 import {
   acceptFriendRequest,
   declineFriendRequest,
@@ -147,6 +147,22 @@ export function useEntity<T>(type: EntityType, id: string): Entity<T> | null | u
 export function useBalanceRows(): BalanceRow[] | undefined {
   const {actor} = useMutationCtx()
   return useProjection(balanceRowsQuery(actor))
+}
+
+/* One summary per balance snapshot (snapshots keep their identity while unchanged), shared by every reader. */
+const summaryByRows = new WeakMap<BalanceRow[], Map<string, PersonSummary>>()
+
+/**
+ * One friend's balances, groups included. Rows of a list each asked `personSummary` over every balance row, which is
+ * rows x friends work on every render and every keystroke (45 friends: the largest part of opening Friends and
+ * invites); the summary is now built once per snapshot.
+ */
+export function usePersonSummary(personId: string | undefined): PersonSummary | undefined {
+  const rows = useBalanceRows()
+  if (!rows || !personId) return undefined
+  let byPerson = summaryByRows.get(rows)
+  if (!byPerson) summaryByRows.set(rows, (byPerson = new Map(personSummary(rows, {includeGroups: true}).map(s => [s.person, s]))))
+  return byPerson.get(personId)
 }
 
 /** My net in each group I am not settled in, per currency. */

@@ -13,7 +13,7 @@ export type DemoModeValue = {
   demo: boolean
   /** A directory answers (demo mode today, the backend later); false offline, where invite links fail closed. Read here, never from a module variable during render. */
   hasDirectory: boolean
-  /** A switch is running (a blocking dialog covers the app meanwhile). */
+  /** A switch is running: the first seeding behind a progress pill (the app stays usable), then the swap under a cover (`useIsStoreCovered`). */
   busy: boolean
   /** Turns demo mode on (seeding a fresh dataset) or off (erasing the demo database and everything it kept); resolves when the other store is showing. */
   setDemo: (on: boolean, onProgress?: (done: number) => void) => Promise<void>
@@ -41,3 +41,14 @@ const subscribe = (l: () => void) => (
   () => void listeners.delete(l)
 )
 export const useDemoProgress = () => useSyncExternalStore(subscribe, () => progress)
+
+const isCovered = () => progress === null
+/**
+ * The app is covered while a switch swaps the store (busy, and no seeding is running behind the pill). Only the cover
+ * may drop a dirty sheet without asking: while the seeding runs the person can still type, and Back must ask as usual.
+ */
+export function useIsStoreCovered() {
+  const {busy} = useDemoMode()
+  const notSeeding = useSyncExternalStore(subscribe, isCovered)
+  return busy && notSeeding
+}

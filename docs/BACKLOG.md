@@ -651,6 +651,10 @@ A perf sweep spec walks every route and interaction in WebKit and Chrome at 6x C
   1. `perf/sweep.spec.ts` covers every link-table route (open, close, revisit) and every interaction listed in § 26.10 owner 189, on the large demo set and the 10,000-expense fixture, in WebKit and Chrome 6x; it fails above budget.
   2. Known misses fixed: Analytics revisit (330 ms at 6x), row exit animations on popped pushed pages (Person, Group, Expense), Activity narrowed paging (F-1213 review C1).
   3. Per-screen table in COMPLETION_MATRIX taken at load under 10; the sweep is part of the merge gate from then on.
+- **Progress (2026-10-31, c-perf port):** the sweep runs on the current routes (Chrome; the demo set); row exits on popped
+  pages fixed (Person, Group, Friends and invites; sheets and popups too), Analytics paging landed (89bf12a). Open: WebKit and
+  the 10,000-expense run, the x6 misses listed in COMPLETION_MATRIX (tab switches 236-441 ms, Friends and invites open,
+  Add expense body, search typing, Activity's first fling), and making the sweep part of the merge gate.
 
 ### F-268 Disputed links open Activity filtered `spec: owner § 26.14 (decision 192)`
 

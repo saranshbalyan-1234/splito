@@ -42,6 +42,7 @@ import {
   MainScrollProvider,
 } from '#/components/Layout/MainScrollProvider'
 import {IS_IPAD, IS_WEB} from '#/env'
+import {ScreenExitingProvider, useScreenExitScope} from '#/motion/listAnimations'
 
 export * from '#/components/Layout/const'
 export * as Header from '#/components/Layout/Header'
@@ -71,6 +72,8 @@ export const Screen = memo(function Screen({
   useEnableMinimalShellModeForScreen({enabled: minimalShell})
   /* Native: heavy bodies in this screen mount after its transition ends (owner 168); undefined on web. */
   const opened = useScreenOpened()
+  /* Rows of a page that is leaving skip their web exit animations (owner 189, ARCHITECTURE 17.1). */
+  const exiting = useScreenExitScope()
   /* A tab switch or a page opening shows the header, bottom bar and FAB again (ARCHITECTURE 26.4). */
   const showShell = useShowShell()
   /* Web: a bar tap's slide plays on the screen it opens (owner 174; CSS on `data-tab-in`, no render, tabSlide.ts). */
@@ -108,13 +111,15 @@ export const Screen = memo(function Screen({
         style,
       ]}
       {...props}>
-      <HeaderModeProvider>
-        <MainScrollProvider>
-          <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
-        </MainScrollProvider>
-        {/* The FAB is decided here, once, from the route (owner 190, § 26.6); a screen can only hold it back. */}
-        <RouteFAB />
-      </HeaderModeProvider>
+      <ScreenExitingProvider value={exiting}>
+        <HeaderModeProvider>
+          <MainScrollProvider>
+            <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
+          </MainScrollProvider>
+          {/* The FAB is decided here, once, from the route (owner 190, § 26.6); a screen can only hold it back. */}
+          <RouteFAB />
+        </HeaderModeProvider>
+      </ScreenExitingProvider>
     </View>
   )
 })
