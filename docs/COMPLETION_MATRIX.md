@@ -301,3 +301,9 @@ Checks, 2026-10-30, machine load under 6 for the perf runs (e2e at load 5-135 fr
 - Perf `schema-v2` (Home now shows recent transactions in its body): large demo set (1,590 expenses) Home cold open 27 ms (was 25),
   write + UI 16 ms; 10,000 expenses cold open 25 ms (24), write + UI 16-32 ms (16), Analytics 43 ms (44), search 20-25 ms; Ask open 35 ms, answer 30 ms.
 - Screenshots: apps/client/qa/home2/ (Home, People, Groups; light and Dim; 390 and 1440; demo on).
+
+### F-261 PersonLink (c-personlink, 2026-10-31)
+
+Renders gate re-recorded on purpose (median of three, machine at load 30-80, mount counts are not timing dependent): the scroll phase (1,000 Activity rows) mounts about 364 `PersonLink` and `Link`, and `Pressable` 2,218 to about 2,950 (one actor-avatar link per row); launch 10 and Ask 19 more `PersonLink`. No wasted-render report was added. People rows and Members pass `isInsideLink` and mount nothing extra.
+
+Activity scroll at 6x CPU (large demo, 60 wheel steps), long tasks over 50 ms, with / without the actor-avatar links: 54 and 53 against 46 and 42 (total 9.3 s and 10.3 s against 10.5 s and 9.2 s; largest 592 and 835 ms against 963 and 728 ms); machine load 37-57, two runs each. No clear difference in time; the same over-50 ms tasks occur without any links.

@@ -14,7 +14,7 @@ import {
   resendFriendRequest,
 } from '@splito/sync'
 
-import {seeRequestsPath} from '#/lib/links/make'
+import {openPerson, seeRequestsPath} from '#/lib/links/make'
 import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
@@ -121,6 +121,7 @@ export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
   return (
     <RequestRow
       testID={`request-${name}`}
+      personId={request.data.personId}
       name={name}
       sync={request}
       detail={
@@ -140,7 +141,7 @@ export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
             Toast.show(l`You and ${person.data.name} are friends now`, {
               type: 'success',
             })
-            navigation.navigate('Person', {personId: person.id})
+            openPerson(navigation, person.id, ctx.actor, 'navigate')
           })
         }
       />
@@ -178,6 +179,7 @@ export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
   return (
     <RequestRow
       testID={`invite-sent-${requestName(r)}`}
+      personId={r.personId}
       name={requestName(r)}
       sync={request}
       detail={detail}>

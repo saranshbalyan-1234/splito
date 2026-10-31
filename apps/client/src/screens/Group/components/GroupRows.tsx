@@ -5,7 +5,7 @@ import {formatAmount, magnitude, ZERO} from '@splito/domain'
 
 import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
 import {Link} from '#/view/com/util/Link'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink, personHref} from '#/components/PersonLink'
 import {atoms as a, useTheme} from '#/alf'
 import {DisputedLine} from '#/components/disputes/DisputedLine'
 import {Button, ButtonIcon} from '#/components/Button'
@@ -69,6 +69,7 @@ export function CurrencyHeader({currency, disputed, disputedHref}: {currency: st
  * me), coloured by direction.
  */
 export function MemberBalanceRow({
+  personId,
   name,
   avatarName = name,
   isMe,
@@ -76,6 +77,7 @@ export function MemberBalanceRow({
   currency,
   locale,
 }: {
+  personId: string
   name: string
   /** The name the avatar draws from ("You" reads the account's own name). */
   avatarName?: string
@@ -101,13 +103,7 @@ export function MemberBalanceRow({
         a.border_t,
         t.atoms.border_contrast_low,
       ]}>
-      <UserAvatar size={42} name={avatarName} type="user" />
-      <Text
-        emoji
-        numberOfLines={1}
-        style={[a.flex_1, a.text_md, a.font_semi_bold]}>
-        {name}
-      </Text>
+      <PersonLink id={personId} name={name} avatarName={avatarName} size={42} style={a.flex_1} />
       <Text
         testID={`group-net-${currency}-${name}-text`}
         numberOfLines={1}
@@ -141,6 +137,7 @@ export function MemberBalanceRow({
 /** One payment of the group's direct settle-up plan: who owes whom, and how much. */
 export function OweRow({
   sentence,
+  personId,
   avatarName,
   direction,
   amount,
@@ -152,6 +149,8 @@ export function OweRow({
 }: {
   /** "Arjun owes you", "You owe Riya", "Sam owes Priya". */
   sentence: string
+  /** Whose face the row shows (who pays). */
+  personId: string
   avatarName: string
   /** My side of the payment, for its colour; `null` when I am not in it. */
   direction: 'toMe' | 'fromMe' | null
@@ -186,7 +185,7 @@ export function OweRow({
         a.border_t,
         t.atoms.border_contrast_low,
       ]}>
-      <UserAvatar size={42} name={avatarName} type="user" />
+      <PersonLink id={personId} name={avatarName} show="avatar" size={42} />
       <Text
         emoji
         numberOfLines={1}
@@ -272,13 +271,9 @@ export function MemberRow({
   const hasMenu = !!onExitPressed && !hasLeft
   const content = (
     <Animated.View style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
-      <UserAvatar size={42} name={avatarName} type="user" />
-      <Text
-        emoji
-        numberOfLines={1}
-        style={[a.flex_1, a.text_md, a.font_semi_bold]}>
-        {name}
-      </Text>
+      {/* The whole row opens this person (Me opens Profile), so the avatar and name are the same target. */}
+      <PersonLink id={personId} name={name} avatarName={avatarName} show="avatar" size={42} isInsideLink />
+      <PersonLink id={personId} name={name} show="name" style={a.flex_1} isInsideLink />
       {isAdmin && !hasLeft && (
         <Pills.Tag>
           <Trans>Admin</Trans>
@@ -306,25 +301,19 @@ export function MemberRow({
           t.atoms.border_contrast_low,
         ]}>
         <View style={[a.flex_1]}>
-          {isMe ? (
-            <View testID={`member-${name}`} style={rowStyle}>
-              {content}
-            </View>
-          ) : (
-            <Link
-              testID={`member-${name}`}
-              href={`/people/${personId}`}
-              asAnchor
-              anchorNoUnderline
-              onPressIn={press.onPressIn}
-              onPressOut={press.onPressOut}
-              accessibilityLabel={name}
-              accessibilityHint=""
-              hoverStyle={t.atoms.bg_contrast_25}
-              style={[rowStyle, a.transition_color]}>
-              {content}
-            </Link>
-          )}
+          <Link
+            testID={`member-${name}`}
+            href={personHref(personId, isMe)}
+            asAnchor
+            anchorNoUnderline
+            onPressIn={press.onPressIn}
+            onPressOut={press.onPressOut}
+            accessibilityLabel={name}
+            accessibilityHint=""
+            hoverStyle={t.atoms.bg_contrast_25}
+            style={[rowStyle, a.transition_color]}>
+            {content}
+          </Link>
         </View>
         {hasMenu && (
           <Menu.Root>

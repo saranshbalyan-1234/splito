@@ -62,7 +62,6 @@
         "mount:Path": 25,
         "mount:PeopleRanking": 6,
         "mount:Pressable": 79,
-        "mount:PressableWithState": 19,
         "mount:Primitive.div": 4,
         "mount:QuestionChip": 7,
         "mount:RenderChildren": 13,
@@ -75,7 +74,7 @@
         "mount:UITextView": 86,
         "mount:Unknown": 13,
         "mount:UserAvatar": 19,
-        "mount:View": 248,
+        "mount:View": 267,
         "mount:VirtualizedListCellContextProvider": 9,
         "update:AnimatedComponent(Pressable)": 3,
         "update:AnimatedComponent(View)": 14,
@@ -133,9 +132,13 @@
         "update:View": 235,
         "update:VirtualizedList": 10,
         "update:VirtualizedListCellContextProvider": 25,
-        "update:VirtualizedListContextProvider": 10
+        "update:VirtualizedListContextProvider": 10,
+        "mount:PersonLink": 19,
+        "mount:Target": 19,
+        "mount:Link": 19,
+        "mount:Content": 19
       },
-      "mounts": 1018,
+      "mounts": 1094,
       "updates": 944
     },
     "closeAdd": {
@@ -252,9 +255,11 @@
         "update:TabScreen": 6,
         "update:Text": 13,
         "update:UITextView": 6,
-        "update:View": 82
+        "update:View": 82,
+        "mount:Content": 11,
+        "mount:PersonLink": 10
       },
-      "mounts": 2090,
+      "mounts": 2110,
       "updates": 298
     },
     "scroll": {
@@ -311,7 +316,7 @@
         "mount:PopperAnchor": 346,
         "mount:PopperProvider": 346,
         "mount:Presence": 346,
-        "mount:Pressable": 2218,
+        "mount:Pressable": 2946,
         "mount:Primitive.button": 346,
         "mount:Primitive.button.Slot": 346,
         "mount:Primitive.button.SlotClone": 346,
@@ -343,7 +348,7 @@
         "mount:UserRoundMinus": 3,
         "mount:UserRoundPlus": 8,
         "mount:Users": 6,
-        "mount:View": 7711,
+        "mount:View": 8075,
         "mount:Visibility": 17,
         "update:ActionButton": 3,
         "update:ActivityItem": 639,
@@ -416,9 +421,13 @@
         "update:UITextView": 430,
         "update:View": 6345,
         "update:Visibility": 16,
-        "update:VisibleTreeEffects": 18
+        "update:VisibleTreeEffects": 18,
+        "mount:PersonLink": 364,
+        "mount:Target": 364,
+        "mount:Link": 364,
+        "mount:Content": 364
       },
-      "mounts": 43735,
+      "mounts": 46283,
       "updates": 32103
     },
     "tabs": {

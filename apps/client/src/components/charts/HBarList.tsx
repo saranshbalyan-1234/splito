@@ -49,27 +49,8 @@ export function HBarList({
         const isSelected = b.key === selectedKey
         const isDimmed = selectedKey !== undefined && !isSelected
         const amount = formatAmount(b.value, currency, locale)
-        return (
-          <Pressable
-            key={b.key}
-            testID={`${testID}-${b.label}`}
-            role="listitem"
-            accessibilityRole={onSelect ? 'button' : 'text'}
-            accessibilityLabel={`${b.label}: ${amount}`}
-            accessibilityHint=""
-            accessibilityState={onSelect ? {selected: isSelected} : undefined}
-            disabled={!onSelect}
-            onPress={() => onSelect?.(isSelected ? null : b.key)}
-            style={({hovered, focused}) => [
-              a.px_sm,
-              a.py_sm,
-              a.gap_xs,
-              a.rounded_sm,
-              onSelect &&
-                (hovered || focused || isSelected) &&
-                t.atoms.bg_contrast_25,
-              {opacity: isDimmed ? 0.55 : 1},
-            ]}>
+        const content = (
+          <>
             <View style={[a.flex_row, a.align_center, a.gap_sm]}>
               {b.leading}
               <Text
@@ -109,7 +90,40 @@ export function HBarList({
                 ]}
               />
             </View>
+          </>
+        )
+        const rowStyle = [
+          a.px_sm,
+          a.py_sm,
+          a.gap_xs,
+          a.rounded_sm,
+          {opacity: isDimmed ? 0.55 : 1},
+        ]
+        /* A row nobody selects is a plain View, not a disabled Pressable: a disabled one would also disable a link inside it (a person's avatar, F-261). */
+        return onSelect ? (
+          <Pressable
+            key={b.key}
+            testID={`${testID}-${b.label}`}
+            role="listitem"
+            accessibilityRole="button"
+            accessibilityLabel={`${b.label}: ${amount}`}
+            accessibilityHint=""
+            accessibilityState={{selected: isSelected}}
+            onPress={() => onSelect(isSelected ? null : b.key)}
+            style={({hovered, focused}) => [
+              ...rowStyle,
+              (hovered || focused || isSelected) && t.atoms.bg_contrast_25,
+            ]}>
+            {content}
           </Pressable>
+        ) : (
+          <View
+            key={b.key}
+            testID={`${testID}-${b.label}`}
+            role="listitem"
+            style={rowStyle}>
+            {content}
+          </View>
         )
       })}
     </View>

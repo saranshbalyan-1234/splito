@@ -2,7 +2,7 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {participantId, participantWeight, type SplitInput} from '@splito/domain'
 
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {DisputeBadge} from '#/components/disputes/DisputeBadge'
@@ -103,10 +103,14 @@ export function ItemRow({
                 a.py_2xs,
                 t.atoms.bg_contrast_25,
               ]}>
-              <UserAvatar size={18} name={avatarName(id)} type="user" />
-              <Text style={[a.text_sm, a.font_medium]} numberOfLines={1}>
-                {name(id)}
-              </Text>
+              <PersonLink
+                id={id}
+                name={name(id)}
+                avatarName={avatarName(id)}
+                size={18}
+                style={a.flex_shrink}
+                textStyle={[a.text_sm, a.font_medium]}
+              />
               {weight > 1 ? <PortionBadge portions={weight} /> : null}
               <Text
                 style={[

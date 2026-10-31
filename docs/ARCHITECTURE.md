@@ -1067,6 +1067,21 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   as `FIRSTVISIT` without gating it, and gates the second round, where every tab is mounted and parked
   (69 mounts + 468 updates in 4 of 4 runs). Median of three, taken on a quiet machine, as below.
 
+- **Every person target adds components to every row that draws one, so make each one the cheapest it can be.** `PersonLink`
+  (F-261) puts a `Link` and a `Pressable` behind each avatar and name: the renders gate's scroll phase (1,000 Activity
+  rows) mounts about 360 more of each (`Pressable` 2,218 -> about 2,950), the Ask phase 19. It subscribes to nothing (the
+  ids and names come down as props; "is this me" is one context read, `state/me.ts`, never a store hook), an avatar-only link
+  (about 95 % of them) holds no state and no hover handlers (only a link that shows the name tracks hover and focus for its
+  underline), it grows to a 44 px target with padding and an equal negative margin (no wrapper, no layout change), and it is
+  memoised. Where a whole row already opens the person (People rows, Members) the avatar and name use `isInsideLink` and mount
+  no extra `Link`. A row of bars nobody selects is a `View`, never a disabled `Pressable` (a disabled ancestor disables a link
+  inside it: the Ask ranking avatar was unclickable). Measured, Activity scroll of the large demo at 6x CPU, 60 wheel steps,
+  with and without the actor-avatar links: 53 and 54 long tasks over 50 ms (total 10.3 s and 9.3 s) against 42 and 46 (9.2 s and
+  10.5 s) without; largest 835 and 592 ms against 728 and 963 ms; machine load 37-57, so read it as "no clear difference in time,
+  a few more tasks", not as a budget pass. The same over-50 ms tasks occur with no links at all (row mounts dominate), so a
+  lighter non-Pressable anchor was not built; revisit it when the Activity row mount itself is cut. The new mounts are the
+  feature's cost, recorded once in the renders baseline; no wasted render was added.
+
 - **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
   Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
   72 ms per new expense); it now keeps its pool, cursor and sorted events and merges each page in (0.35 s SQLite /
@@ -1450,6 +1465,19 @@ Splito lessons (add newest last, dated, with PR):
   updates on the same build: the first visit of a tab lets background history loading and the Analytics report land
   inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
   frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
+
+- 2026-10-31, F-261 (c-personlink): **making every avatar a link is a mount cost, and nested links need care.** (1) The renders gate's
+  scroll phase counted about 360 more `PersonLink` / `Link` and about 730 more `Pressable` mounts (one per Activity row), so the
+  baseline was re-recorded on purpose (median of three; the machine was at load 30-80, not quiet; mount counts are not timing
+  dependent). (2) **A link nested in a row must still be an anchor**: a `div role=link` is never activated by Enter or Space in
+  react-native-web, so the first version (no `href` when nested) could not be opened from the keyboard; an anchor inside a
+  Pressable `div` is valid HTML. react-native-web also does not take Space for a role=link, so `PersonLink` adds one shared
+  `onKeyDown` that clicks on Space. (3) **A disabled `Pressable` disables everything inside it**: the Ask ranking rows were
+  disabled Pressables, so the avatar link in them was "not enabled"; a row nobody selects is a `View`. (4) Keyboard order: a nested
+  link is a tab stop between the row and its buttons (`activity.spec` "hide works from the keyboard" waits for the avatar first).
+  (5) Demo mode asks "Switch back to your data?" for a link naming an id the demo data lacks, so test "Not on this device yet"
+  outside demo. (6) `components/` may not import `data/`: a one-line `state/me.ts` hook gives them my id. (7) A baseline written by
+  a script must keep a phase's `"mounts": 0` (a pruned zero made the gate compare against NaN): only drop zero component counts.
 
 
 ## 24. Checklists
@@ -1884,6 +1912,13 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
   *Why:* "clicking on avatar or name anywhere on the website should open that friend's details"; repeated
   2026-10-31: "on click of others avatar, it should open up them as people" (own avatar opens Profile, owner 206).
+  [Built, F-261, web; native unverified: `components/PersonLink.tsx` (an anchor with an `href`: Enter, Space and Cmd-click work;
+  avatar-only links hold no state), `personPath` / `openPerson` in `lib/links/make.ts` for every push that names a person.
+  People rows, Members and requests reuse it (`isInsideLink` where the whole row already opens the person); the group header's
+  member stack is one control that opens Members, not a link per face; Settings > Friends rows have no "Open" button because the
+  avatar and name do that job (owner 213). The architecture rule `personAvatarOutsideLink` fails a new `<UserAvatar` outside it,
+  and its baseline lists only what is not a link to a person: own avatars, selection rows and dialogs, the member stack, an
+  invitee who is not a person yet.]
 - **Person names are capitalised word by word** (owner 181): every word of a person's full name starts with a
   capital letter ("saransh balyan" -> "Saransh Balyan"); the rest of each word stays as typed, so "McDonald" and
   "D'Souza" survive. Saved that way on every path (add friend, own profile name, contacts, invites, join, demo

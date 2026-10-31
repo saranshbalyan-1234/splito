@@ -262,7 +262,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
               <PlanRows
                 testID="ask-plan"
                 locale={locale}
-                rows={answer.owes.map(o => ({key: `${o.currency}-${o.from.id}-${o.to.id}`, from: name(o.from), to: name(o.to), fromAvatar: avatarName(o.from), toAvatar: avatarName(o.to), currency: o.currency, amount: o.amount}))}
+                rows={answer.owes.map(o => ({key: `${o.currency}-${o.from.id}-${o.to.id}`, fromId: o.from.id, toId: o.to.id, from: name(o.from), to: name(o.to), fromAvatar: avatarName(o.from), toAvatar: avatarName(o.to), currency: o.currency, amount: o.amount}))}
               />
             </Card>
           )}

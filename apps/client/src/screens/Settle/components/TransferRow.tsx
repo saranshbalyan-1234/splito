@@ -6,7 +6,7 @@ import {formatAmount, repaymentFlow, type Transfer, ZERO} from '@splito/domain'
 
 import {type AllNavigatorParams} from '#/lib/routes/types'
 import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
@@ -72,16 +72,18 @@ export function TransferRow({
         t.atoms.border_contrast_low,
       ]}>
       {isIncoming || isOutgoing ? (
-        <UserAvatar
+        <PersonLink
+          id={isIncoming ? from : to}
+          name={name(isIncoming ? from : to)}
+          avatarName={avatarName(isIncoming ? from : to)}
+          show="avatar"
           size={42}
-          name={avatarName(isIncoming ? from : to)}
-          type="user"
         />
       ) : (
         <View style={[a.flex_row, a.align_center, a.gap_2xs]}>
-          <UserAvatar size={32} name={avatarName(from)} type="user" />
+          <PersonLink id={from} name={name(from)} avatarName={avatarName(from)} show="avatar" size={32} />
           <ArrowRightIcon size="sm" fill={t.atoms.text_contrast_medium.color} />
-          <UserAvatar size={32} name={avatarName(to)} type="user" />
+          <PersonLink id={to} name={name(to)} avatarName={avatarName(to)} show="avatar" size={32} />
         </View>
       )}
       <View style={[a.flex_1, a.gap_2xs]}>

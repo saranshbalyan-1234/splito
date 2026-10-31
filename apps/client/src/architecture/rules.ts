@@ -496,6 +496,11 @@ export const RULES = {
     appliesTo: p => (isClient(p) || p.startsWith(SYNC)) && !HARD_DELETE_ALLOWED.has(p),
     count: (_p, s) => hardDeletes(s),
   },
+  personAvatarOutsideLink: {
+    why: 'A `<UserAvatar` outside PersonLink (owner 178, F-261): a person\'s avatar is drawn and pressed by the one `PersonLink` so it always opens that person (Me -> Profile). What is left in the baseline is not a link to a person: the signed-in user\'s own header/drawer/settings avatars, a selection row whose whole row picks (pickers, dialogs), an invitee or contact who is not a person yet, and avatar previews.',
+    appliesTo: p => isClient(p) && !/\/(?:components\/PersonLink|view\/com\/util\/UserAvatar)\.tsx$/.test(p),
+    count: (_p, s) => countMatches(code(s), /<UserAvatar\b/g),
+  },
   externalHandOff: {
     why: 'A link or text handed to another app (mailto, tel, sms, whatsapp, upi, https out, the share sheet) without the one gate. Linking.openURL lives only in lib/openExternal.ts and Share.share / navigator.share only in lib/sharing.ts, because an e2e build records the hand-off instead of opening Mail, Messages, WhatsApp or a UPI app (owner 118). Linking.openSettings is not a hand-off of content.',
     appliesTo: p => isClient(p) && !/\/lib\/(?:openExternal|sharing)\.ts$/.test(p),
