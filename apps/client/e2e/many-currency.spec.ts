@@ -1,5 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openMoreOptions} from './composer'
 import {openDemo} from './openDemo'
 
 /*
@@ -229,6 +230,7 @@ test('M15: the expense\'s round control remembers the switch and the unit per cu
   await page.getByTestId('expense-people').click()
   await page.getByTestId('person-option-Riya Sharma').click()
   await page.getByTestId('people-dialog').getByTestId('sheet-close').click()
+  await openMoreOptions(page)
   await expect(page.getByTestId('cash-rounding')).toBeVisible()
   // Showing the control writes nothing.
   await page.waitForTimeout(500)

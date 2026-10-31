@@ -1,7 +1,7 @@
 /** Phone drawers: the page behind is usable the moment a sheet starts to leave. */
 import {expect, test} from '@playwright/test'
 
-import {openAddExpense} from './composer'
+import {chooseSplitMode, openAddExpense} from './composer'
 import {DESKTOP, PHONE} from './viewports'
 
 test.describe('phone', () => {
@@ -11,7 +11,7 @@ test('typing into the page right after a sheet is closed is not lost to the exit
   await openAddExpense(page, PHONE)
   await page.getByTestId('expense-title').fill('Race')
   await page.getByTestId('amount-input').fill('500')
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   await page.getByTestId('item-add').click()
   await page.getByTestId('expense-people').click()
   await page.getByTestId('person-option-Riya Sharma').click()

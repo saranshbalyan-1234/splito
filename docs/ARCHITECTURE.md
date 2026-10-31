@@ -1909,6 +1909,20 @@ Splito lessons (add newest last, dated, with PR):
   (People and Groups carry it). `overviewLayout.spec` checks Analytics has no Overview and that the People and Groups
   Overviews add up per currency (all = groups + non-group).
 
+- 2026-10-31, F-275 (Add expense essentials, itemize): four things to remember. (1) **A total the person did not type is
+  still a total the domain makes**: `evaluateForm` reads an itemised bill once with the amount empty (the domain gives
+  `itemsTotal`), then runs again with that figure as the amount text, so payers, shares, the readout and `validateExpense`
+  all see an ordinary total and the client adds nothing (`moneyArithmetic` stays at zero). The old chargeForm test that
+  said "no printed total: gap undefined" changed on purpose. (2) **A disclosure must put what a control changes next to
+  the control**: the first sketch kept the person rows above a "More options" row that held the split chips, so choosing
+  Itemize grew the page above the finger and pushed the chips off screen; a non-equal split's editor therefore renders
+  under the chips inside the disclosure, and only the equal list (who is in) stays outside. (3) **A tap that toggles
+  needs a rule for an item that starts as "Everyone"**: tap-to-toggle on a full set would remove the person tapped (the
+  audit's "my beer was charged to Riya"), so an untouched Everyone narrows to the person tapped. (4) **Moving a control
+  behind a row breaks every spec that clicks it**: the split chips, the charges and the cash-rounding switch now need
+  `chooseSplitMode` / `openCharges` / `openMoreOptions` from `e2e/composer.ts` first; use those helpers rather than
+  clicking the row inline.
+
 ## 24. Checklists
 
 **Adding a split mode:** domain `SplitInput` union + `computeShares` + `validateExpense` codes + Lingui
@@ -2910,6 +2924,16 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   remembered or predicted payer, until the person picks someone else (an Ask prefill that names a payer, "Riya
   paid", is the only exception). Editing keeps the saved payer. *Why:* "add expense should have paid by always,
   by default to me".
+- **Add expense shows the essentials first** [Built, F-275, web; native not run] (assistant's ruling 2026-10-31 from the
+  new-user audit, owners 129/212; not yet seen by the owner). Top to bottom: title (with its category), amount, Split
+  with, Paid by (always, starts as me), Group, Date; then, only when two or more people are on it and the split is
+  equal, the "Split" list of who is in; then ONE "More options" row. Focus lands on the amount when a new expense
+  opens (an edit does not steal focus). There is no "Add people" button inside the split (the Split with row is the
+  one way in). "More options" holds the chips that choose how to split (Equally, Exact, Percent, Shares, Equal + extra,
+  Itemize), the editor of any split other than equal, cash rounding and Notes; it opens by itself for a form that
+  already uses one of them (an edit, a restored draft) and, closed, its row summarises what is set ("Itemize · Note").
+  The chips wrap (no sideways scroll). `components/split/ExpenseComposer.tsx`, `SplitEditor.tsx` (`SplitModeChips`,
+  `SplitRows`, `CashRounding`), `fields.tsx` (`DisclosureRow`).
 
 *Why:* "an expense can be one expense or with multiple expense, like dinner $100, but can be divided into
 dishes etc and each item can be assigned to each in split"; "in itemize don't show default tax tip discount"
@@ -2917,13 +2941,24 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 `components/split/`, `packages/domain`.
 
 - **An expense is one amount or a bill of items** (the Itemize split). Each item has a name, an amount and who
-  had it. Tapping a person's chip again adds a portion (x2, x3; long-press or right-click resets), so one item
-  can be shared unequally (2 of 3 beers); each item has an "Everyone" shortcut; items reorder and delete.
+  had it. **A tap on a person's chip assigns them (one portion); a tap on someone already on the item takes them
+  off** (long-press or right-click takes them off too), and an item still on its untouched "Everyone" narrows to the
+  person tapped, so a first tap never leaves the others charged. A portion stepper (x2, x3) per person shows only
+  once two or more people are on the item, so one item can be shared unequally (2 of 3 beers); each item has an
+  "Everyone" shortcut that resets portions; items reorder and delete (F-275, assistant's ruling 2026-10-31).
+- **An itemised bill takes its total from the items when none is typed** (F-275): with the amount left empty, the
+  total is the items plus charges as `@splito/domain` works them out (`evaluateForm` re-reads the form with the
+  domain's `itemsTotal` as the amount and sets `isTotalFromItems`; the client adds nothing), the amount field says
+  "Total from the items: X" under itself, and Save needs nothing else. A typed total always wins and keeps the
+  "left to assign" check and "Use as total".
 - **Domain:** `SplitInput` item participants may carry integer weights (`participants: Array<string | {id:
   string; weight: number}>`, a plain string = weight 1), allocated exactly with `allocate` (bigint, stable
   tie-break). Bun tests: conservation, 2-of-3 portions, tax pro-rata with weights.
-- **Tax, tip, service charge and discount are visible by default** (the owner withdrew "don't show" with "it
-  should be there") and each has an amount / % toggle (segmented "INR | %"), remembered per kind in the
+- **Tax, tip, service charge and discount sit behind one row, "Tax, tip and discounts"** (F-275, assistant's
+  ruling 2026-10-31 that narrows owner 40's "it should be there" from always-open controls to one always-visible row;
+  to be confirmed by the owner): collapsed, the row shows a one-line summary when any is set ("Tax ₹30.00 · Discount
+  ₹150.00", or "3 charges" for a charge list); it opens by itself on a bill that already has some, and expanding it
+  shows the presets, the charge list or the four plain rows. Each plain row has an amount / % toggle (segmented "INR | %"), remembered per kind in the
   `itemizeAdjustmentModes` preference (defaults: tax %, tip %, service %, discount amount). Percentages take up
   to 2 decimals and are stored as integer basis points. Order: discount on the items subtotal; then service
   charge and tax on the discounted subtotal; then tip on the discounted, pre-tax subtotal (said in the UI help
