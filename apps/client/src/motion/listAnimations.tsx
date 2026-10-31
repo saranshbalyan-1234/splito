@@ -31,8 +31,8 @@ export const LIST_LAYOUT = native(
  * exit when the row unmounts: it clones the node and forces a layout per row, so a page of 60 rows popping cost
  * 130 ms of one blocked frame (a tab switch used to cost 600 ms the same way, F-255). Reanimated's own
  * `LayoutAnimationConfig skipExiting` (which the lists use) is a no-op on web (`JSReanimated.setShouldAnimateExitingForTag`),
- * and on native the exit is configured when the row mounts, so this matters on web only. `ScreenExitScope` wraps every
- * screen (`Layout.Screen`) and every web sheet, popup and composer (`OpenedProvider`) once; their rows read their
+ * and on native the exit is configured when the row mounts, so this matters on web only. The exit scope wraps every
+ * screen (`Layout.Screen`) and every web sheet, popup and composer (`OpenedProvider`) once (`useScreenExitScope`); their rows read their
  * `exiting` from this context. The config's
  * `reduceMotionV`, which Reanimated reads at unmount (`getReducedMotionFromConfig`), is live: it says "always" once
  * the scope itself is unmounting. A parent's layout-effect cleanup runs before its children's componentWillUnmount, so
@@ -50,20 +50,23 @@ function makeScreenExiting() {
 
 const ScreenExitingContext = createContext<typeof LIST_EXITING>(LIST_EXITING)
 
-/** Wraps one screen: its rows skip their exit animations when the whole screen goes. */
-export function ScreenExitScope({children}: {children: React.ReactNode}) {
+/**
+ * The exit scope of one screen, sheet, popup or composer: call it in the component that owns the surface and give its
+ * tree `<ScreenExitingProvider value={...}>`; the rows inside skip their exit animations when that component unmounts.
+ * A hook and a bare provider, not a wrapper component, so a re-render of the surface renders nothing extra.
+ */
+export function useScreenExitScope() {
   const [exiting] = useState(makeScreenExiting)
   /* The set-up half is for StrictMode, which runs a cleanup and re-runs the effect in development. */
   useLayoutEffect(() => {
     exiting.setLeaving(false)
     return () => exiting.setLeaving(true)
   }, [exiting])
-  return (
-    <ScreenExitingContext.Provider value={exiting.config}>
-      {children}
-    </ScreenExitingContext.Provider>
-  )
+  return exiting.config
 }
+
+/** Provides `useScreenExitScope()`'s config to the surface's rows. */
+export const ScreenExitingProvider = ScreenExitingContext.Provider
 
 /** `exiting` for a row that leaves with its list but not with its screen. */
 export function useScreenExiting() {
@@ -85,7 +88,7 @@ export function useListAnimations() {
 
 /**
  * A row for code that builds rows in a hook or helper above the screen's own tree (`useInviteLinkRows` runs in the
- * screen component, outside its `ScreenExitScope`): the animation props are read here, inside the scope.
+ * screen component, outside its exit scope): the animation props are read here, inside the scope.
  */
 export function AnimatedListRow(props: React.ComponentProps<typeof Animated.View>) {
   return <Animated.View {...useListAnimations()} {...props} />

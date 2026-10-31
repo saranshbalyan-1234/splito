@@ -9,17 +9,26 @@ export {type Breakpoint, BreakpointWidthContext} from '#/alf/breakpoints.shared'
 /*
  * One `matchMedia` list per width, shared by every reader. `react-responsive`'s hook made a query, a listener and
  * state per call, and `useBreakpoints` is called by rows and menus: three per row, 5 % of opening a 45-row list at 6x CPU.
+ * The answer is kept here and changed by the one listener, so a render reads a boolean, never `MediaQueryList.matches`
+ * (which the browser may answer by bringing style up to date first).
  */
-const minWidths = new Map<number, {matches: () => boolean; subscribe: (onChange: () => void) => () => void}>()
-function minWidth(px: number) {
+type MinWidth = {matches: () => boolean; subscribe: (onChange: () => void) => () => void}
+const minWidths = new Map<number, MinWidth>()
+function minWidth(px: number): MinWidth {
   let q = minWidths.get(px)
   if (!q) {
     const list = window.matchMedia(`(min-width: ${px}px)`)
+    let value = list.matches
+    const listeners = new Set<() => void>()
+    list.addEventListener('change', () => {
+      value = list.matches
+      listeners.forEach(l => l())
+    })
     q = {
-      matches: () => list.matches,
+      matches: () => value,
       subscribe: onChange => {
-        list.addEventListener('change', onChange)
-        return () => list.removeEventListener('change', onChange)
+        listeners.add(onChange)
+        return () => void listeners.delete(onChange)
       },
     }
     minWidths.set(px, q)

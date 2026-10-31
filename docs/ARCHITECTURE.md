@@ -1075,6 +1075,46 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **An animated row measures nothing while it mounts or updates; its exit reads the box when it starts.** Reanimated
+  4.7.1 on web called `saveSnapshot` (`getBoundingClientRect` plus every ancestor's `scrollTop`) in `componentDidMount`
+  and `componentDidUpdate` of every component with an `exiting` prop, so each list row forced a style and layout pass
+  as it mounted and on every re-render (c-perf counted 191 forced reads opening Friends and invites, one per row per
+  keystroke in a list search). `patches/react-native-reanimated@4.7.1.patch` drops both calls and reads the box at the
+  top of `handleExitingAnimation`, while the element still holds its children: c-perf's first cut leaned on
+  `getSnapshotForElement`'s fallback, which runs after the children have moved into the clone, so the clone was sized
+  from an emptied element. `e2e/animations.spec.ts` fails if opening a page measures its rows again, if a leaving page
+  clones a row, if a filtered-out row stops fading out, or if an exit clone is smaller than its row.
+- **Nothing that leaves runs its rows' exit animations on web: pages, sheets, popups and composers.** Reanimated's
+  `LayoutAnimationConfig skipExiting` is a no-op on web (`JSReanimated.setShouldAnimateExitingForTag`), so the lists'
+  wrappers never stopped it there. The exit scope (`useScreenExitScope`, `motion/listAnimations.tsx`) is taken in `Layout.Screen` and
+  `OpenedProvider` and makes the shared exit config read "reduce motion" once its scope unmounts (a parent's
+  layout-effect cleanup runs before its children's `componentWillUnmount`); a row a filter or delete takes off a list
+  that stays still fades out. Rows read `exiting` through `useListAnimations()` / `AnimatedListRow`, inside the scope.
+  It is a hook plus a bare context provider, not a wrapper component: c-perf's `<ScreenExitScope>` re-rendered with
+  every screen render (the renders gate counted 6 to 11 more updates per phase). Measured 2026-10-31 (Chromium, 390 px,
+  touch, large demo, median of three, load under 4.5): popping Person cloned 60 rows (124 ms at 1x, 1,046 ms at 6x),
+  Group 20 and Friends and invites 106 (264 ms at 1x, 2,077 ms at 6x); now none, and those Backs take 40, 37 and 38 ms
+  at 1x, 279, 171 and 209 ms at 6x.
+- **A row reads nothing per row that is the same for every row.** The device locale (`deviceLocale()`, not
+  expo-localization's `getLocales()`, which builds `Intl` objects per call on web), breakpoints (one shared
+  `matchMedia` list per width, not `react-responsive`'s per-call query and listener) and a friend's balance summary
+  (`usePersonSummary`, one `personSummary` per balance snapshot, not one per row over every balance row) are read once
+  and shared. A shared answer is kept by its listener and read as a plain value in render: the first port read
+  `MediaQueryList.matches` in `useSyncExternalStore`'s snapshot, which the browser may answer by bringing style up to
+  date in the middle of a render (an Analytics revisit at x6 read 439-484 ms against a base of 356-488; with the cached
+  answer 421-444, inside the base's range).
+- **Long writes run behind progress, never a cover, and a write batch writes each rewritten row once.** The demo seed's
+  main thread is mostly idle (IndexedDB works in another process); what blocked the app was the full-screen cover.
+  Seeding shows a pill and the app stays usable; only the store swap covers it, and only the cover may drop a dirty
+  sheet without asking (`useIsStoreCovered`). `txRows` holds the rows a batch rewrites (projection sums, people and
+  group activity times) and writes them once; every other store writes through at once so IndexedDB works while
+  JavaScript runs (holding every store made the seed slower).
+- **Measure Chrome with its accessibility tree off, and name the surface a probe waits for.** Playwright's CDP session
+  turns Chrome's accessibility on and every commit then rebuilds the tree (about a third of a tab revisit at 6x); the
+  sweep sends `Accessibility.disable` before each measured step, at every CPU rate. "A dialog is on screen" was true at
+  once for a picker over its sheet: the probe watches the topmost dialog and waits for one that was not there when it
+  armed.
+
 - **A gesture moves DOM nodes, not React state, never trusts a touchend to arrive, and costs nothing when idle.**
   Phone-web pull to refresh (F-258) writes a transform and the spinner straight to the list's nodes; a pull renders
   nothing, the header never moves (only the list's content is translated), and the transform is removed at rest so no
@@ -1752,6 +1792,25 @@ Splito lessons (add newest last, dated, with PR):
   bar slips below the fold, § 23 fix/tab-taps). The sliding screen clips sideways (`overflow-x: clip` on the screen
   root only, never on `html` or `body`). Also: a `transform` on a screen's root would carry its `position: fixed` FAB
   with it, so the slide moves the screen's children except `[data-fab]`.
+
+- 2026-10-31, F-266 (c-perf port): **the wip/c-perf fixes, reviewed before they landed, and what the review changed.**
+  (1) Reanimated 4.7.1's web `LayoutAnimationConfig skipExiting` does nothing (`JSReanimated.setShouldAnimateExitingForTag`
+  is a no-op), so the screens' `<LayoutAnimationConfig skipExiting>` never stopped a popped page's rows from cloning
+  themselves out: Person 60 clones, Group 20, Friends and invites 106 (a 2 s Back at x6). The exit scope fixes it on web.
+  (2) c-perf's Reanimated patch dropped the mount/update box reads and let the exit fall back to
+  `getSnapshotForElement`, but that fallback runs after `handleExitingAnimation` has moved the children into the clone:
+  every exit clone was 0 px tall. The patch now reads the box first; `e2e/animations.spec.ts` checks the clone height and
+  fails on c-perf's version (checked by editing the built bundle). A patch's test must fail on the version it replaces,
+  not only on upstream. (3) The test that counted every `getBoundingClientRect` read 10, 15 or 20 on the same build
+  (onLayout reads vary with timing); it now counts reads made from a class component's mount or update: 0 patched, 10
+  unpatched, every run. (4) A wrapper component around every screen adds a render per screen render (renders gate +6 to
+  +11 updates per phase): a scope that only provides a value is a hook plus a bare provider. (5) The demo pill made the
+  app usable during the seed, which also made `FormSheet.Screen`'s "busy means the store is going away, drop the sheet
+  without asking" wrong for the seeding part: only the swap cover (`useIsStoreCovered`) may drop a dirty sheet. (6) The
+  renders gate is red on this base before any change (806 Activity rows scrolled of 1,000; baseline older than the People
+  start tab): compare counts against a base run on the same machine, never against a stale baseline. (7) Chrome refuses
+  to start when `TMPDIR` is long (`Socket path too long`); give Metro its own cache with a short `TMPDIR` (`/tmp/<name>`),
+  which also avoids the shared Metro cache pointing at another worktree's `.worklets` files.
 
 ## 24. Checklists
 

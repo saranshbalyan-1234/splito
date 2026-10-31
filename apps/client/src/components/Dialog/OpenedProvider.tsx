@@ -1,7 +1,7 @@
 import {useEffect, useLayoutEffect, useRef, useState} from 'react'
 
 import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
-import {ScreenExitScope} from '#/motion/listAnimations'
+import {ScreenExitingProvider, useScreenExitScope} from '#/motion/listAnimations'
 
 /**
  * Owns `opened` for one open sheet, popup or composer (it mounts and unmounts with it), so the flip when the
@@ -20,6 +20,7 @@ export function OpenedProvider({
   children: React.ReactNode
 }) {
   const [opened, setOpened] = useState(false)
+  const exiting = useScreenExitScope()
   const closingRef = useRef(closing)
   closingRef.current = closing
   useLayoutEffect(() => {
@@ -36,7 +37,7 @@ export function OpenedProvider({
   }, [])
   return (
     <OpenedContext.Provider value={opened}>
-      <ScreenExitScope>{children}</ScreenExitScope>
+      <ScreenExitingProvider value={exiting}>{children}</ScreenExitingProvider>
     </OpenedContext.Provider>
   )
 }

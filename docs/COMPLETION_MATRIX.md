@@ -323,3 +323,58 @@ Activity scroll at 6x CPU (large demo, 60 wheel steps), long tasks over 50 ms, w
   round) and its `Animated.View` (+7 mounts, +8 updates), the Activity tick glyph (`AnimatedIcon`, `Layer`, `Nodes`, `AnimatedPath`: 3 mounts), and two `View`/`Circle` mounts
   from the ContactRound and Users glyphs. No new wasted-render report. A first version that kept both the outline and filled glyph mounted cost 624 tab updates and one new
   wasted `Rect` report, so only the glyph in use is mounted.
+
+## F-266 perf sweep, c-perf port (owner 189; branch c-perf-port on `claude/repo-status-other-chat-xmr0l3` at 28f88d3, web, measured 2026-10-31)
+
+`perf/sweep.spec.ts` (from c-perf, on the current routes: no Home, Settings a tab, the avatar opens Profile, the drawer by
+its address, Support and Your data pages). Chromium (`channel: 'chrome'`), 390 x 844, touch, large demo, accessibility tree
+off, 4 laps per run (first lap = open, median of laps 2-4 = revisit), median of three runs per cell, base and after builds
+interleaved, 1-minute load 0.3-4.4 (x1) and 0.4-1.2 (x6). Cells: feedback / content / longest block, ms from `pointerdown`.
+Base = 28f88d3 (`e2e:build`), after = this branch. Run: `PERF_DIST=<dist> E2E_PORT=8262 SWEEP_DATA=demo SWEEP_CPU=6
+SWEEP_ONLY='^(tabs|Person|...)$' pnpm perf --project=sweep-chrome -g "demo data"`.
+
+| Interaction | x1 base | x1 after | x6 base | x6 after | Rows cloned on leave |
+|---|---|---|---|---|---|
+| Person: Back (revisit) | 124 / 124 / 95 | 40 / 40 / 0 | 1,046 / 1,046 / 792 | 279 / 279 / 145 | 60 -> 0 |
+| Group: Back (revisit) | 64 / 64 / 0 | 37 / 37 / 0 | 402 / 402 / 0 | 171 / 172 / 0 | 20 -> 0 |
+| Friends and invites: Back (revisit) | 264 / 264 / 235 | 38 / 38 / 0 | 2,077 / 2,077 / 0 | 209 / 209 / 135 | 106 -> 0 |
+| Friends and invites: open (revisit) | 220 / 220 / 181 | 148 / 148 / 123 | 1,486 / 1,486 / 0 | 1,097 / 1,097 / 0 | |
+| Add friend: close (revisit) | 50 | 51 | 294 | 301 | 2 -> 0 |
+| Person: open (revisit) | 48 / 112 / 0 | 40 / 116 / 0 | 304 / 875 / 188 | 260 / 784 / 202 | |
+| Group: open (revisit) | 55 / 113 / 0 | 33 / 73 / 0 | 266 / 617 / 205 | 252 / 618 / 175 | |
+| Add expense: open (revisit) | 59 / 485 / 0 | 54 / 484 / 0 | 364 / 953 / 167 | 306 / 881 / 145 | |
+| People filters sheet: open (revisit) | 70 / 70 / 0 | 69 / 69 / 0 | 498 / 498 / 239 | 453 / 453 / 254 | |
+| Search & Ask: open (revisit) | 72 / 72 / 0 | 72 / 72 / 0 | 524 / 526 / 240 | 399 / 399 / 181 | |
+| Profile: open (revisit) | 38 | 34 | 200 / 200 / 123 | 186 / 186 / 0 | |
+| Drawer: open (revisit) | 30 | 24 | 206 / 206 / 171 | 210 / 210 / 162 | |
+| Activity: fling scroll, worst frame (first / revisit) | 143 / 18 | 141 / 18 | 1,254 / 54 | 1,146 / 39 | |
+| People search, 16 keys, worst key-to-echo (revisit) | 75 | 75 | 1,152 | 1,139 | |
+| First load to the start tab's rows (revisit) | 190 / 375 | 171 / 345 | 1,138 / 3,472 | 1,135 / 3,501 | |
+
+Main tabs, revisit (tab highlight / content), x6: the sweep's tab round was taken again on the final code (cached breakpoint
+answers), 6 base and 3 after runs interleaved at load 0.7-1.5: Groups 259 / 287 -> 270 / 322, Analytics 403 / 452 -> 441 / 491,
+Activity 344 / 369 -> 360 / 396, Settings 239 / 262 -> 236 / 261, People 308 / 342 -> 314 / 340. Base Analytics ranged 356-488
+over its 6 runs; the after runs (421-444) sit inside that range, so no change is claimed either way. At x1 every tab is
+45-72 ms highlight and under 80 ms content on a revisit in both builds. The first build of this branch (breakpoints read
+`MediaQueryList.matches` in render) read Analytics 439-484: reading the answer from the listener instead is in 17.1.
+
+Demo mode on (seed a year, `demo-mode.spec` "under 10 s", alone): 9,058 ms base -> 8,029 ms after (median of three; held
+people and group activity writes), and the app stays usable behind the pill meanwhile. With two workers it read 13.4 s (the
+spec's 10 s bound is a timing test; run it alone).
+
+Still over budget at x6 (owner 189 sweep, not fixed here): every main-tab switch (236-441 ms highlight, budget 100), Friends
+and invites open (1.1 s, its 45-row list mounts in one task), Add expense body (881 ms), People search typing (1.1 s worst key,
+one long task per keystroke), Activity's first fling (1.1 s, the first page of rows mounting). At x1 the remaining misses are
+Friends and invites open (148 ms), the first Analytics visit (317 ms content) and the Add expense body (484 ms, under its
+500 ms moving-surface budget).
+
+Renders gate (`pnpm --filter @splito/client renders`, Metro dev, three runs each): identical counts on base and after,
+launch 3,632+308, tabs 75+474, addExpense 501+179, type 0+793, closeAdd 76+193, scroll 32,971+17,629, ask 1,095+824-851,
+7 wasted reports. A first version with a `<ScreenExitScope>` wrapper added 6-11 updates per phase (the wrapper re-rendered
+with every screen), so the scope is a hook plus a bare provider. The gate is red on base as well, for two reasons that
+predate this branch: the scroll phase stops at 806 Activity rows (the positive control wants 1,000) and `baseline.json` is
+from before People became the start tab (launch 3,632 against 2,110). Not re-recorded here (counts are unchanged by this
+branch); the counts above came from a local run with the scroll target lowered to 806.
+
+Not verified: WebKit (not installed in this container), iOS and Android (native paths unchanged: the Reanimated patch and
+the exit scope touch web code only; `LayoutAnimationConfig skipExiting` still does the native job).

@@ -347,8 +347,9 @@ async function firstTestId(page: Page, scope: string, re: RegExp, skip: RegExp =
   return page.locator(`[data-testid="${id}"]:visible`).first()
 }
 
-const personRow = (c: Ctx) => firstTestId(c.page, T('screen-people'), /^person-/, /^person-(row-|demo-)|-(chips|more|deleted|deleted-clock)$/)
-const groupRow = (c: Ctx) => firstTestId(c.page, T('screen-groups'), /^group-/, /^group-(balance|my-|demo-|bulk-)|-(more|deleted|deleted-clock)$/)
+/* The list rows are the anchors (`Link asAnchor`); request and invite rows above the list (owner 197) carry other ids. */
+const personRow = (c: Ctx) => Promise.resolve(c.page.locator(`${T('screen-people')} a${P('person-')}:visible`).first())
+const groupRow = (c: Ctx) => Promise.resolve(c.page.locator(`${T('screen-groups')} a${P('group-')}:visible`).first())
 const historyRow = (c: Ctx) => firstTestId(c.page, T('screen-group'), /^history-.*-e-|^history-bulk-/, /$^/)
 /* Kept-mounted screens behind the focused one hold copies of the same test ids, hidden: take the one on screen. */
 const tid = (id: string) => (c: Ctx) => Promise.resolve(c.page.locator(`${T(id)}:visible`).first())

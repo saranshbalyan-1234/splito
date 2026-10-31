@@ -246,7 +246,7 @@ test.describe('touch screens', () => {
 
 /*
  * Row exits (owner 189, ARCHITECTURE 17.1): Reanimated's web exit clones every row that unmounts. A row a filter takes
- * off a list that stays animates out; the rows of a page that is left do not (`ScreenExitScope`). And no animated row
+ * off a list that stays animates out; the rows of a page that is left do not (`useScreenExitScope`). And no animated row
  * measures itself while it mounts or updates (the patched `saveSnapshot`, patches/react-native-reanimated): 60 rows
  * forced 60 layouts on every open and every keystroke; the exit reads the box itself, so its clone keeps the row's size.
  * Each half fails when its workaround stops applying.
@@ -262,14 +262,14 @@ test('opening a page measures none of its rows, leaving it fades none out, and a
         for (const n of m.addedNodes) {
           if (!(n as unknown as {isDummy?: boolean}).isDummy) continue
           w.__dummies++
-          /* The clone is sized from the box read when the exit starts: it must hold the row it took over (a box read after the children left was a sliver). */
-          const d = n as HTMLElement
-          if (parseFloat(d.style.height) < d.scrollHeight - 1) w.__short++
+          /* The clone is sized from the box read when the exit starts: a row is at least a 44 px target; a box read after the children had left was 0 px. */
+          if (parseFloat((n as HTMLElement).style.height) < 40) w.__short++
         }
     }).observe(document, {childList: true, subtree: true})
     const rect = Element.prototype.getBoundingClientRect
     Element.prototype.getBoundingClientRect = function () {
-      w.__rects++
+      /* Only reads made from a class component's mount or update (Reanimated's AnimatedComponent is the one that did); onLayout reads vary with timing. */
+      if (/componentDid(Mount|Update)/.test(new Error().stack ?? '')) w.__rects++
       return rect.call(this)
     }
   })
@@ -287,8 +287,8 @@ test('opening a page measures none of its rows, leaving it fades none out, and a
   await expect(page.getByTestId('screen-group')).toBeVisible()
   await page.waitForTimeout(1000)
   const atOpen = await read()
-  console.log(`group page open: ${atOpen.__rects - start.__rects} getBoundingClientRect calls`)
-  expect(atOpen.__rects - start.__rects).toBeLessThan(15)
+  console.log(`group page open: ${atOpen.__rects - start.__rects} box reads from a mount or update`)
+  expect(atOpen.__rects - start.__rects, 'box reads from rows mounting (unpatched Reanimated: one per row)').toBe(0)
   await page.getByTestId('header-back').last().click()
   await expect(page.getByTestId('screen-group')).toHaveCount(0)
   await page.waitForTimeout(500)
