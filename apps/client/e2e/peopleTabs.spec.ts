@@ -102,15 +102,15 @@ test('navigation: phone bar, rail and desktop lists, in order', async ({page}) =
   await page.setViewportSize(PHONE)
   await openDemo(page)
   await expect(page.getByTestId('tab-people')).toBeVisible()
-  expect(await ids(page)).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-settings'])
-  // Five tabs show their labels.
-  await expect(page.getByTestId('tab-label')).toHaveCount(5)
+  expect(await ids(page)).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity'])
+  // Four tabs show their labels; Settings is in Profile, not a bar item (owner 220).
+  await expect(page.getByTestId('tab-label')).toHaveCount(4)
   await expect(page.getByTestId('tab-people')).toContainText('People')
   await page.getByTestId('tab-people').click()
   await expect(page.getByTestId('screen-people')).toBeVisible()
   await expect(page).toHaveURL(/\/people$/)
 
-  const everyItem = ['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-settings']
+  const everyItem = ['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity']
   for (const size of [RAIL, DESKTOP]) {
     await page.setViewportSize(size)
     await expect.poll(() => ids(page)).toEqual(everyItem)
@@ -128,19 +128,21 @@ test('navigation: phone bar, rail and desktop lists, in order', async ({page}) =
   await expect(page.getByTestId('drawer')).toHaveCount(0)
 })
 
-test('a saved bar naming home or ask loses them and keeps its order, with People and Settings; the old default bar becomes the new one (owners 198, 200, 206)', async ({page}) => {
+test('a saved bar naming home, ask or settings loses them and keeps its order, with People; the old default bars become the new one (owners 198, 200, 220)', async ({page}) => {
   await page.setViewportSize(PHONE)
   await page.goto('/')
   await page.waitForFunction(() => 'splito' in window)
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.putRawPref('tabs', ['home', 'people', 'activity', 'ask', 'groups']))
-  // A bar that held Home keeps People and gains Settings, reachable from no other row on phones (owner 206).
-  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-activity', 'tab-groups', 'tab-settings'])
+  // A bar that held Home keeps People; Settings is no bar item (owner 220).
+  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-activity', 'tab-groups'])
   await page.reload()
-  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-activity', 'tab-groups', 'tab-settings'])
+  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-activity', 'tab-groups'])
   await expect(page.getByTestId('screen-people')).toBeVisible()
-  // A bar that is exactly the old default was never customised: it gains Settings.
+  // A bar that is exactly the old default, or the one with Settings (owner 206), was never customised: it reads as the four.
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.putRawPref('tabs', ['home', 'people', 'groups', 'analytics', 'activity']))
-  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-settings'])
+  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity'])
+  await page.evaluate(() => (window as unknown as {splito: Splito}).splito.putRawPref('tabs', ['people', 'groups', 'analytics', 'activity', 'settings']))
+  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity'])
 })
 
 test('the right column shows on every page at 1440, People included (there is no Home to leave it out of)', async ({page}) => {
@@ -242,7 +244,7 @@ test('the FAB on a Person and a Group page pre-selects that friend or group; Set
   await page.getByTestId('screen-group').getByTestId('fab-add').click()
   await expect(page).toHaveURL(new RegExp(`/expense/new\\?groupId=${ids.group}`))
   // Where adding an expense makes no sense there is none.
-  for (const [path, screen] of [['/settings', 'screen-settings'], ['/settings/appearance', 'screen-settings-section'], ['/profile', 'screen-profile']] as const) {
+  for (const [path, screen] of [['/settings/appearance', 'screen-settings-section'], ['/profile', 'screen-profile']] as const) {
     await page.goto(path)
     await expect(page.getByTestId(screen)).toBeVisible()
     await expect(page.getByTestId('fab-add')).toHaveCount(0)
@@ -296,7 +298,7 @@ test('a link the running app opens (a Search & Ask suggestion, a deep link) to a
 })
 
 /* Owner 184 (F-263): every page has a fixed parent. Refreshed or pasted, Back goes to it, and a second Back keeps climbing. */
-const TAB_SCREENS = ['screen-people', 'screen-groups', 'screen-analytics', 'screen-activity', 'screen-settings']
+const TAB_SCREENS = ['screen-people', 'screen-groups', 'screen-analytics', 'screen-activity']
 /* From `from`, one Back per screen: the header's Back where the page has one, the browser's where it is a main tab (a tab shows the avatar). */
 async function backUp(page: Page, from: string, screens: string[]) {
   let leaving = from
@@ -322,10 +324,10 @@ test('refreshed or pasted, Back climbs to the fixed parent and on to the start t
       directExpense: expenses.find(e => !e.data.groupId && others(e).length === 1)!.id,
     }
   })
-  // Settings > Appearance: Settings, then the start tab.
+  // Settings > Appearance: Profile (which holds Settings, owner 220), then the start tab.
   await page.goto('/settings/appearance')
   await expect(page.getByTestId('screen-settings-section')).toBeVisible()
-  await backUp(page, 'screen-settings-section', ['screen-settings', 'screen-people'])
+  await backUp(page, 'screen-settings-section', ['screen-profile', 'screen-people'])
   // A friend: People is the start tab, so one Back.
   await page.goto(`/people/${ids.person}`)
   await expect(page.getByTestId('screen-person')).toBeVisible()

@@ -8,10 +8,9 @@ export const TAB_ROUTE = {
   groups: 'Groups',
   analytics: 'Analytics',
   activity: 'Activity',
-  settings: 'Settings',
 } as const satisfies Record<TabId, keyof TabParams>
 
-/** What the app can open on: Settings is a tab (owner 206) but not a place to start. */
+/** What the app can open on (owner 198: no Home). */
 const TAB_IDS: readonly string[] = START_TAB_IDS
 
 /**

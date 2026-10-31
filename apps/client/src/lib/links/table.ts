@@ -122,7 +122,6 @@ export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
   /* `type=transactions` (Recent transactions' "See all", owners 173, 179), `group=<id>` from a Group's "See all" (F-259); `from` is the tab a pushed copy opened from. */
   Activity: ['type', 'group', 'person', 'from'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
-  Settings: ['from'],
   SettingsSection: ['note'],
   FriendsAndInvites: ['section'],
   CreateInvite: ['kind', 'groupId'],

@@ -13,14 +13,13 @@ const SCREEN: Record<string, string> = {
   groups: 'screen-groups',
   analytics: 'screen-analytics',
   activity: 'screen-activity',
-  settings: 'screen-settings',
 }
 const GAP = 50
 /* From People (the start tab); the last tap repeats a tab tapped two taps (~100 ms) earlier, which a per-link debounce swallows. */
 const SIX = ['groups', 'analytics', 'activity', 'groups', 'analytics', 'groups']
 const TEN = [
-  'activity', 'groups', 'settings', 'analytics', 'people',
-  'activity', 'settings', 'groups', 'analytics', 'people',
+  'activity', 'groups', 'analytics', 'people', 'groups',
+  'activity', 'analytics', 'groups', 'analytics', 'people',
 ]
 
 async function ready(page: Page) {
@@ -88,7 +87,7 @@ for (const motion of ['full', 'reduced'] as const) {
           }
           requestAnimationFrame(frame)
         })
-        await tapAll(page, ['groups', 'analytics', 'activity', 'settings', 'people', 'groups'], true, 120)
+        await tapAll(page, ['groups', 'analytics', 'activity', 'people', 'analytics', 'groups'], true, 120)
         await expectLanded(page, 'groups')
         expect(await page.evaluate(() => (window as unknown as {__widest: number}).__widest)).toBeLessThanOrEqual(390)
       })

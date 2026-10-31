@@ -142,7 +142,7 @@ const NavItem: React.FC<{
   const ax = useAnalytics()
   /* The guided tour points at the Groups tab (F-253). */
   const groupsTourRef = useTourRef('tab-groups')
-  /* Under a page that is not in the bar (Settings, unless added) the tab it was opened from stays lit, as Bluesky's does. */
+  /* Under a page that is not in the bar (Profile, Settings sections) the tab it was opened from stays lit, as Bluesky's does. */
   const section = useNavigationState(state => currentSection(state, sections))
   const isReducedMotion = useShouldReduceMotion()
 

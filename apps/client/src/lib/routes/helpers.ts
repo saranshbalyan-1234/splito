@@ -59,8 +59,7 @@ export function isStateAtTabRoot(state: State | undefined) {
     isTab(currentRoute.name, 'People') ||
     isTab(currentRoute.name, 'Groups') ||
     isTab(currentRoute.name, 'Analytics') ||
-    isTab(currentRoute.name, 'Activity') ||
-    isTab(currentRoute.name, 'Settings')
+    isTab(currentRoute.name, 'Activity')
   )
 }
 
@@ -136,10 +135,10 @@ export function buildStateObject(
 }
 
 /* Exhaustive on purpose: a tab added to TabParams (People came with decision 153) fails to compile here until it is listed. */
-const TAB_ROUTES: readonly string[] = Object.keys({People: 1, Groups: 1, Analytics: 1, Activity: 1, Settings: 1} satisfies Record<keyof TabParams, 1>)
+const TAB_ROUTES: readonly string[] = Object.keys({People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
 
 /** The main screens, as a link's `from` names them. */
-const FROM_TABS = {people: 'People', groups: 'Groups', analytics: 'Analytics', activity: 'Activity', settings: 'Settings'} as const
+const FROM_TABS = {people: 'People', groups: 'Groups', analytics: 'Analytics', activity: 'Activity'} as const
 
 /**
  * The tab a `from` value names (`/activity?from=people` -> People), else null (Analytics' custom range uses `from` for a
@@ -177,7 +176,7 @@ export function pushedCopyOf(state: State | undefined, tab: string): {params: ob
 
 /**
  * How a pressed link reaches its route (owner 179, § 26.3). A main screen (People, Groups, Analytics,
- * Activity, Settings) opened from a link, rather than from its own tab or sidebar item, is a pushed page: a stack copy of the
+ * Activity) opened from a link, rather than from its own tab or sidebar item, is a pushed page: a stack copy of the
  * screen carrying its params, with Back in the header (returning to where the link was) and no FAB; the tab itself
  * still gives the plain tab screen with the avatar. On web the tab routes live in the one flat stack, so the copy is
  * the same route pushed with `from=<the tab the link was pressed on>` (in the address, so a refresh keeps Back there,
@@ -199,7 +198,7 @@ export function tabLink(
 
 /**
  * What to hand `navigate()` to reach a route from a screen of the root stack (§ 23, fix/ios-wB and c-nohome review). Native
- * nests the tabs (People, Groups, Analytics, Activity, Settings) in the `Tabs` route and React Navigation 7 does not send
+ * nests the tabs (People, Groups, Analytics, Activity) in the `Tabs` route and React Navigation 7 does not send
  * NAVIGATE into a child navigator, so a tab is `('Tabs', {screen, params})` there; on web the tabs sit in the one flat
  * stack and every route is `(name, params)`. Every plain `navigate(<tab>)`, `replace(<tab>)` and Back fallback goes through
  * this (`goBack` does), so moving a screen into or out of the tabs cannot silently break a link.

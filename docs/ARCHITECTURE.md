@@ -1882,6 +1882,20 @@ Splito lessons (add newest last, dated, with PR):
   and `shell.spec` checks the selected bar icon is filled. The pulse redraw went with it, so the `tick` variant and
   `playKey` left `AnimatedIcon`; `react-native-drawer-layout` left the dependencies.
 
+- 2026-10-31, owner 220 (Settings merged into Profile): **removing a tab is caught by the types only where the route is a typed
+  key.** `TabId`, `TAB_ROUTE`, `TabParams`, `GLYPHS` and `NAV_LABELS` are `Record`s, so deleting `settings` from `TabId` made
+  tsc list every one. It did not list the untyped uses: `navigateArgs('Settings', ...)` in the Settings not-found page and the
+  moved-page redirect, `go('Tabs', {screen: 'Settings'})` in `DevTour`, the e2e/perf test ids (`tab-settings`,
+  `screen-settings`), the Android smoke script and the window-title tests; grep every string spelling of the route name, not
+  only the type. Rules: (1) an address that moves is a `redirectOldPath` rule shared by the resolver and `linking.web.ts`, and it
+  must match the exact path with its optional trailing slash (`/settings`, `/settings/`) so the longer section addresses
+  (`/settings/regional`, `/settings/friends`) keep working; (2) a saved list that names a removed item loses it on read in
+  `readRaw` and a list left empty reads as the default bar, never by a write (`tabs`: `['settings']` alone is the four-item
+  default; the old "add Settings back" rules and the editor's Settings lock went with the tab); (3) a page with no entry in
+  `section.ts` keeps the tab it was opened from lit, so Profile and the Settings sections need none; (4) a screen turned into
+  a component keeps its test ids (`settings-*`), and the page that now hosts it adds one wrapper id (`profile-settings`) for
+  the new tests to anchor on. Not run on a simulator or a device here.
+
 ## 24. Checklists
 
 **Adding a split mode:** domain `SplitInput` union + `computeShares` + `validateExpense` codes + Lingui
@@ -2360,9 +2374,9 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Every page has a fixed parent, so Back always goes somewhere specific** (owner 184): with history, Back
   returns to the page you came from; with none (a refresh, a pasted address, a notification, a new tab), Back
   goes to the page's parent and the parents are stacked under it, so a second Back keeps climbing. The parents:
-  a Settings section (Appearance, Language, Notifications ...) -> Settings; a person -> People; a group ->
+  a Settings section (Appearance, Language, Notifications ...) -> Profile (owner 220: Settings lives in Profile); a person -> People; a group ->
   Groups; an expense or payment -> its group, else the friend it is with, else Home; Edit -> the thing edited;
-  Settle -> its group or friend; Profile -> Settings; Friends and invites -> People; Analytics/Activity
+  Settle -> its group or friend; Profile -> the start tab; Friends and invites -> People; Analytics/Activity
   sub-addresses -> that tab. Back never disappears from a pushed page, refreshed or not. A main tab screen opened
   from a link (owner 179) keeps its Back after a refresh: the address carries its origin as a short `from`
   (`/activity/all?type=transactions&from=home`), and Back returns there; tapping the tab itself drops it. One
@@ -3042,7 +3056,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 ### 26.15 Settings, sign in and log out
 
-*Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings`, `state/session.ts`,
+*Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings` (the section pages; the list itself is `screens/Settings/components/SettingsRows.tsx`, rendered inside `screens/Profile`, owner 220), `state/session.ts`,
 `screens/Login/`, `lib/auth/`, `data/account.ts`. **[Built, F-250, front end against the dev AuthClient only]:**
 - **`useSession()`** (`state/session.ts`, Bluesky's hook shape on a module store; the account is in device storage,
   the API token joins it in the credential store, § 11) answers `hasSession`, `currentAccount`, `missingContact` and

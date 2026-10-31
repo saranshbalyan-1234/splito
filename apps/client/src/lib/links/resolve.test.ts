@@ -225,6 +225,13 @@ test('Support and Your data are Settings section pages; Export and Import are sh
   expect(resolveLink('/settings/export/period').target).toMatchObject({sheets: ['export', 'period']})
 })
 
-test('Profile is its own page at /profile, not a Settings page (owner 206)', () => {
+test('Profile is the page at /profile; /settings opens it, there is no Settings route (owner 220)', () => {
   expect(resolveLink('/profile').target).toEqual({name: 'Profile', params: {}, sheets: [], query: {}})
+  for (const input of ['/settings', '/settings/', '/settings?x=1', 'https://splito.app/settings', 'splito://settings']) {
+    expect(resolveLink(input).isKnown).toBe(true)
+    expect(resolveLink(input).target.name).toBe('Profile')
+  }
+  // The section pages keep their addresses.
+  expect(resolveLink('/settings/regional').target).toMatchObject({name: 'SettingsSection', params: {section: 'regional'}})
+  expect(resolveLink('/settings/friends').target).toMatchObject({name: 'FriendsAndInvites'})
 })

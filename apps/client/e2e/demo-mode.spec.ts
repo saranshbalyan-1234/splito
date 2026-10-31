@@ -41,7 +41,7 @@ test('turning it on seeds the demo database in under 10 s, shows "Demo" on the a
   await expect(page.getByTestId('settings-demo-reset')).toHaveCount(0)
 
   // Owner 133: no banner on any screen; the switch and the avatar's Demo dot are the only signs.
-  for (const path of ['/', '/groups', '/activity', '/analytics', '/settings', '/expense/new', '/friends/new', '/groups/new', '/invites', '/signin']) {
+  for (const path of ['/', '/groups', '/activity', '/analytics', '/profile', '/expense/new', '/friends/new', '/groups/new', '/invites', '/signin']) {
     await page.goto(path)
     await expect(page.getByTestId('demo-banner'), `${path}: no banner`).toHaveCount(0)
     await expect(page.getByText('Demo mode ·')).toHaveCount(0)
@@ -202,7 +202,7 @@ test('with demo mode on every header title ends in " - Demo" (and the window tit
   await openDemo(page)
   await expect(page.getByText('People - Demo', {exact: true}).first()).toBeVisible()
   await expect(page).toHaveTitle('People - Demo - Splito')
-  for (const [path, title] of [['/groups', 'Groups - Demo'], ['/settings', 'Settings - Demo']] as const) {
+  for (const [path, title] of [['/groups', 'Groups - Demo'], ['/profile', 'Profile - Demo']] as const) {
     await page.goto(path)
     await expect(page.getByText(title, {exact: true}).first()).toBeVisible()
     await expect(page).toHaveTitle(`${title} - Splito`)

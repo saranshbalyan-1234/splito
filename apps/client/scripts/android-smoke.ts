@@ -146,7 +146,7 @@ async function main() {
   )
   await byId('screen-people')
   /* Demo mode is a switch (ARCHITECTURE 26.1): Settings > Data > Demo mode seeds the separate demo database. */
-  await tap('tab-settings')
+  await tap('header-avatar')
   await tap('settings-demo-mode')
   await tap('tab-people')
   await waitFor(

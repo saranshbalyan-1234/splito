@@ -18,7 +18,7 @@ test.describe('signed out, nothing of the app exists', () => {
     test(`${path} shows the Continue screen, renders no screen and opens no database`, async ({page}) => {
       await page.setViewportSize(PHONE)
       await toContinue(page, path)
-      for (const id of ['screen-people', 'screen-groups', 'screen-settings', 'screen-activity', 'screen-analytics', 'screen-person', 'screen-expense', 'bottom-bar', 'sidebar', 'drawer', 'search-drawer'])
+      for (const id of ['screen-people', 'screen-groups', 'screen-profile', 'screen-activity', 'screen-analytics', 'screen-person', 'screen-expense', 'bottom-bar', 'sidebar', 'drawer', 'search-drawer'])
         await expect(page.getByTestId(id)).toHaveCount(0)
       expect(await databases(page)).toEqual([])
       // The page holds the sign-in and no ledger text at all.

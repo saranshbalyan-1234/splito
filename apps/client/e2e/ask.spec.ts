@@ -201,11 +201,11 @@ test('Ask Splito is not a nav item anywhere; the header icon, Cmd/Ctrl+K and the
   await openAsk(page)
 })
 
-test('the five-tab bar fits a phone: every tab is on screen, equal in width, with its badge', async ({page}) => {
+test('the four-tab bar fits a phone: every tab is on screen, equal in width, with its badge', async ({page}) => {
   await page.setViewportSize(PHONE)
   await openDemo(page, '/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-  const ids = ['people', 'groups', 'analytics', 'activity', 'settings']
+  const ids = ['people', 'groups', 'analytics', 'activity']
   const boxes = []
   for (const id of ids) {
     const box = await page.getByTestId(`tab-${id}`).boundingBox()
@@ -220,7 +220,7 @@ test('the five-tab bar fits a phone: every tab is on screen, equal in width, wit
   // Icons keep their size however many tabs there are.
   const icon = await page.getByTestId('tab-groups').locator('svg').first().boundingBox()
   await page.goto('/settings/navigation')
-  // Settings cannot leave the bar (owner 217); Analytics can.
+  // Analytics can leave the bar (Settings is no bar item, owner 220).
   await page.getByTestId('tabs-toggle-analytics').click()
   await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
   await page.goto('/people')
