@@ -15,7 +15,7 @@ import {
   type WeekStart,
   ZERO,
 } from '@splito/domain'
-import {type Group, isGroupInactive, type Person} from '@splito/sync'
+import {type AnalyticsScope, type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useCategoryLookup} from '#/components/split/shared'
@@ -37,6 +37,8 @@ import {
   scopeToPref,
 } from '#/screens/Analytics/scope'
 import {MAX_OFFSET, readAnalyticsParams, scopeToParam} from '#/screens/Analytics/urlState'
+import {overviewScopeParam} from '#/screens/Analytics/overviewScope'
+import {type Params} from '#/lib/links/listState'
 
 export type PeriodChoice = 'week' | 'month' | 'year' | 'all' | 'custom'
 
@@ -95,6 +97,25 @@ type View = {
  * loaded): charts, totals, the expense list and the CSV all read from here,
  * so the numbers agree everywhere. Undefined while the local store loads.
  */
+/**
+ * What Analytics counts, from the address (`scope=`, or an old `overview=` link, owner 219) or the saved
+ * `analyticsScope`, checked against the groups on this device. One scope for the whole page: the filter row's chip,
+ * the charts, the list and the Overview at the top (owner 219: no second All / Groups / Direct control).
+ */
+export function useAnalyticsScope(): Scope | undefined {
+  const groups = useEntities<Group>('group')
+  const [scopePref] = usePref('analyticsScope')
+  const route = useRoute()
+  if (!groups) return undefined
+  const params = route.params as Params
+  const urlScope = readAnalyticsParams(params as Record<string, string | undefined> | undefined).scope
+  return scopeOf(urlScope ?? overviewScopeParam(params), scopePref, groups.map(g => g.id))
+}
+
+function scopeOf(fromAddress: AnalyticsScope | undefined, saved: AnalyticsScope | undefined, groupIds: string[]): Scope {
+  return fromAddress ? scopeFromPref(fromAddress, groupIds) : scopeFromPref(saved, groupIds)
+}
+
 export function useReport() {
   const {t: l, i18n} = useLingui()
   const {actor: me} = useMutationCtx()
@@ -141,7 +162,7 @@ export function useReport() {
         x.name.localeCompare(y.name),
     )
   const groupIds = groupOptions.map(g => g.id)
-  const scope = urlState.scope ? scopeFromPref(urlState.scope, groupIds) : scopeFromPref(scopePref, groupIds)
+  const scope = scopeOf(urlState.scope ?? overviewScopeParam(route.params as Params), scopePref, groupIds)
   const scopeKey = JSON.stringify(scope)
   const isIn = (groupId: string | null) => inScope(groupId, scope)
 

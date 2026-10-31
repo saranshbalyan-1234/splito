@@ -213,7 +213,7 @@ test('Analytics: the Overview counts friends; People: the Friends list has its o
   await expect(people.getByTestId('list-search')).toBeVisible()
   await expect(people.getByTestId('list-filters')).toBeVisible()
   await expect(people.getByTestId('header-search-ask')).toBeVisible()
-  await expect(people.getByTestId('analytics-overview')).toHaveCount(0)
+  await expect(people.getByTestId('people-overview')).toBeVisible()
 })
 
 test('Groups: Overview, search by member, and type / status filters', async ({

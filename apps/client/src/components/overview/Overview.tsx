@@ -7,7 +7,6 @@ import {
   formatAmount,
   getCurrency,
   magnitude,
-  type SummaryScope,
   ZERO,
 } from '@splito/domain'
 
@@ -18,8 +17,7 @@ import {Text} from '#/components/Typography'
 import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
 import {usePressScale} from '#/motion/PressableScale'
-import {amountSize, overviewColumns} from '../overviewGrid'
-import {OVERVIEW_SCOPES} from '../overviewScope'
+import {amountSize, overviewColumns} from './overviewGrid'
 import {SectionHeader} from '#/components/SectionHeader'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
@@ -33,8 +31,8 @@ const ARROW_ROOM = 28
 const LEFT_ROOM = 124
 
 /**
- * The Overview, the first section of Analytics (owner 198), labelled as balances right now: it ignores the period
- * and currency filters below it. One separate compact card per currency (own border, radius and padding) in a
+ * The Overview (owners 198, 219): balances right now, at the top of People, Groups and Analytics; it ignores any
+ * period or currency filter. One separate compact card per currency (own border, radius and padding) in a
  * balanced grid whose column count comes from the measured width (ARCHITECTURE 26.12, owners 113/114, 156-161),
  * the counts as plain text under the grid. Currencies are never added together. A card opens the rest of Analytics
  * in its currency (`onCurrencyPress`).
@@ -43,8 +41,7 @@ export function Overview({
   totals,
   locale,
   counts,
-  scope,
-  onScopeChange,
+  title,
   onCurrencyPress,
   captions = {},
   testID = 'analytics-overview',
@@ -54,10 +51,9 @@ export function Overview({
   locale: string
   /** "6 friends · 2 settled", the plain line under the grid. */
   counts: string
-  /** Which balances the cards count (owner 176); it never changes the sections below. */
-  scope: SummaryScope
-  onScopeChange: (scope: SummaryScope) => void
-  /** A card was pressed: Analytics below narrows to this currency. */
+  /** The heading; "Balances right now" when absent. */
+  title?: string
+  /** A card was pressed: opens Analytics (or narrows it) to this currency. */
   onCurrencyPress: (currency: string) => void
   /** Per currency, who the card's figure comes from ("5 friends"). */
   captions?: Record<string, string>
@@ -75,8 +71,7 @@ export function Overview({
     <View testID={testID}>
       <SectionHeader
         testID={titleTestID}
-        title={l`Balances right now`}
-        action={<ScopeChips scope={scope} onChange={onScopeChange} />}
+        title={title ?? l`Balances right now`}
       />
       <View style={[a.px_lg, a.pb_sm, a.gap_sm]}>
         <View
@@ -122,42 +117,6 @@ export function Overview({
           {counts}
         </Text>
       </View>
-    </View>
-  )
-}
-
-/** All / Groups / Direct (owner 176): small chips on the heading's right; one is always on. */
-function ScopeChips({scope, onChange}: {scope: SummaryScope; onChange: (scope: SummaryScope) => void}) {
-  const t = useTheme()
-  const {t: l} = useLingui()
-  const names = {all: l`All`, groups: l`Groups`, direct: l`Direct`}
-  return (
-    <View testID="overview-scope" accessibilityRole="radiogroup" style={[a.flex_row, a.gap_2xs]}>
-      {OVERVIEW_SCOPES.map(value => {
-        const isOn = value === scope
-        return (
-          <Pressable
-            key={value}
-            testID={`overview-scope-${value}`}
-            role="radio"
-            aria-checked={isOn}
-            accessibilityLabel={names[value]}
-            onPress={() => onChange(value)}
-            /* A 44 px target (hitSlop does nothing on web): the chip is that tall, the pill inside is drawn smaller. */
-            style={[a.justify_center, {minHeight: 44}]}>
-            <View
-              style={[
-                a.rounded_full,
-                {paddingHorizontal: 9, paddingVertical: 4},
-                isOn ? {backgroundColor: t.palette.primary_500} : t.atoms.bg_contrast_50,
-              ]}>
-              <Text style={[a.text_xs, a.font_semi_bold, isOn ? {color: t.palette.white} : t.atoms.text_contrast_medium]}>
-                {names[value]}
-              </Text>
-            </View>
-          </Pressable>
-        )
-      })}
     </View>
   )
 }

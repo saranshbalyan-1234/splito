@@ -1,40 +1,46 @@
 import {plural} from '@lingui/core/macro'
-import {useNavigation, useRoute} from '@react-navigation/native'
-import {balanceTotals, isSettledBalance, personSummary, type SummaryScope} from '@splito/domain'
+import {useNavigation} from '@react-navigation/native'
+import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
 import {type Person} from '@splito/sync'
 import {useLingui} from '@lingui/react/macro'
 
-import {type Params} from '#/lib/links/listState'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
-import {useAllEntities, useBalanceRows, usePref} from '#/data/hooks'
+import {useAllEntities, useBalanceRows} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {listedFriends} from '#/screens/People/sort'
-import {Overview, OverviewPlaceholder} from './Overview'
-import {analyticsScopeParam, overviewParam, readOverviewScope} from '../overviewScope'
+import {Overview, OverviewPlaceholder} from '#/components/overview/Overview'
+import {inScope} from '../scope'
+import {useAnalyticsScope} from '../useReport'
 
 /**
- * The first section of Analytics (owner 198): every balance right now, one card per currency, with the All / Groups /
- * Direct choice (owner 176; the preference `home.overviewScope` and the address `?overview=`). It does not follow the
- * period, currency or scope filters below it; a card narrows them to its currency. Hidden with no friends.
+ * The balances with friends right now, one card per currency (owners 198, 219), counting only the balance rows
+ * `countsRow` keeps (by group: `null` is a non-group balance). People shows it with the Friends list's Include groups
+ * choice, Analytics with its one scope. A card opens `onCurrencyPress`. Hidden with no friends.
  */
-export function OverviewSection() {
+export function FriendsOverview({
+  countsRow,
+  onCurrencyPress,
+  testID,
+  titleTestID,
+}: {
+  countsRow: (groupId: string | null) => boolean
+  onCurrencyPress: (currency: string) => void
+  testID?: string
+  titleTestID?: string
+}) {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
-  const navigation = useNavigation<NavigationProp>()
-  const route = useRoute()
   /* Tombstones too: a removed friend with an open balance stays counted until it is settled (decision 103). */
   const people = useAllEntities<Person>('person')
   const balanceRows = useBalanceRows()
-  const [savedScope = 'all', setSavedScope] = usePref('home.overviewScope')
   const [showHidden] = useShowHidden()
   const hiddenIds = useHiddenItems()
-  /* The scope is the address (`/analytics?overview=groups`, owner 176); a param that is present wins over the saved choice. */
-  const scope: SummaryScope = readOverviewScope(route.params as Params) ?? savedScope
   if (!people || !balanceRows) return <OverviewPlaceholder />
 
   const byPerson = new Map(personSummary(balanceRows, {includeGroups: true}).map(s => [s.person, s]))
-  const scoped = new Map(personSummary(balanceRows, {includeGroups: true, scope}).map(s => [s.person, s]))
+  /* Choosing rows is not arithmetic: the sums stay in the domain (personSummary, balanceTotals). */
+  const scoped = new Map(personSummary(balanceRows.filter(r => countsRow(r.groupId)), {includeGroups: true}).map(s => [s.person, s]))
   /* A removed friend is in the list but is no friend now: the counts and figures cover the live rows. */
   const live = listedFriends(people, byPerson, hiddenIds).filter(f => (showHidden || !f.isHidden) && f.deletedAt === undefined)
   if (live.length === 0) return null
@@ -60,13 +66,26 @@ export function OverviewSection() {
       locale={locale}
       counts={counts}
       captions={captions}
-      scope={scope}
-      onScopeChange={next => {
-        navigation.setParams({overview: overviewParam(next, savedScope)} as never)
-        void setSavedScope(next)
-      }}
-      /* The card carries the Overview's scope as Analytics' scope (owner 176), written out so Analytics never keeps the one it saved last. */
-      onCurrencyPress={currency => navigation.setParams({currency, scope: analyticsScopeParam(scope)} as never)}
+      onCurrencyPress={onCurrencyPress}
+      {...(testID ? {testID} : {})}
+      {...(titleTestID ? {titleTestID} : {})}
+    />
+  )
+}
+
+/**
+ * The first section of Analytics (owner 198): balances right now under Analytics' one scope (owner 219: the scope chip
+ * in the filter row, no All / Groups / Direct of its own). It ignores the period and currency; a card narrows the page
+ * to its currency.
+ */
+export function OverviewSection() {
+  const navigation = useNavigation<NavigationProp>()
+  const scope = useAnalyticsScope()
+  if (!scope) return <OverviewPlaceholder />
+  return (
+    <FriendsOverview
+      countsRow={groupId => inScope(groupId, scope)}
+      onCurrencyPress={currency => navigation.setParams({currency} as never)}
     />
   )
 }

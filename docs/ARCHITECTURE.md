@@ -1885,6 +1885,11 @@ Splito lessons (add newest last, dated, with PR):
   kept an empty `Layout.Header.Slot` on the left to balance Search & Ask on the right; once the button showed on the
   start tab only, every other tab's title sat 20.5 px off centre (`shell.spec` "centred title"). `SearchAskSpacer`
   renders the left slot only while the button is there.
+- 2026-10-31, owner 219: **one question, one control per page.** Analytics' Overview had All / Groups / Direct chips
+  while the filter row already had a scope chip, so the page asked the same thing twice and the two could disagree.
+  The Overview now follows the page's own scope; on People it follows the list's Include groups switch, so a list and
+  its summary never differ. The shared card grid moved to `components/overview/` (People, Groups, Analytics and
+  Profile use it); choosing balance rows is selection, the sums stay in the domain (`personSummary`, `groupTotals`).
 
 ## 24. Checklists
 
@@ -2211,9 +2216,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **There is no Home tab; the Overview is the top of Analytics** [Built, F-271; web checked in e2e at 390 and 1440, native not run on a simulator] (owner 198, replaces the Home tab of 153 below):
   the tabs are **People, Groups, Analytics, Activity, Settings** (owner 206 makes Settings a tab in the default
   bar; Ask Splito is not a tab or a nav item, owner 200). The
-  Overview (per-currency balance cards with All / Groups / Direct, owners 113/114/120/161/176) is the first section of
-  Analytics, above its filter row, labelled as balances right now (it ignores the period and currency filters
-  below it); Recent transactions is Activity (Type = Expenses and Payments), and recently active people and groups
+  Overview (per-currency balance cards, owners 113/114/120/161) is the first section of Analytics, People and Groups
+  (owner 219, § 26.12), labelled as balances right now; Recent transactions is Activity (Type = Expenses and Payments), and recently active people and groups
   are People and Groups sorted by Last active (owner 199). The app opens on **People** (the start tab; Settings >
   Navigation can change it); `/` opens the start tab; the old `/?overview=` address redirects to
   `/analytics?overview=`; a saved tab list or start tab naming `home` is migrated (dropped, start tab People). The
@@ -2737,15 +2741,26 @@ pages". § 17 holds the engineering rules that meet these budgets.
 group there"; "add overview in both friends and groups, with search and filters as well, search icon only,
 expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Group`, `components/ListToolsHeader.tsx`.
 
-- **The Overview has a scope** (owner 176): small chips "All" (default) / "Groups" / "Direct" (non-group
-  expenses with friends) in its header beside "Analytics ›". It changes only the per-currency cards and their counts
-  line, never the sections below; currencies are never summed. The choice is the preference `home.overviewScope`
-  (decision 90) and the address (`/analytics?overview=groups|direct|all`, the old `/?overview=` redirects there; a
-  param that is present wins, `all` is written when a saved Groups/Direct would otherwise apply). Each card carries it
-  as Analytics' scope (`scope=` `0:all` for Groups, `1:` for Direct, `1:all` for All, written out so Analytics never
-  keeps the scope it saved last) together with its currency; there is no "Analytics ›" link, since the cards are on
-  Analytics. It does not follow the friends list's Include groups filter or Analytics' own filters.
-  `personSummary(rows, {includeGroups, scope})` in domain; `screens/Analytics/overviewScope.ts`, `OverviewSection`.
+- **An Overview tops People, Groups and Analytics, each counting what its page is about, with no scope control of
+  its own** (owner 219, replaces owner 176's All / Groups / Direct chips and 198's Analytics-only Overview). The same
+  card grid and counts line everywhere (`components/overview/Overview.tsx`), "Balances right now", ignoring any period
+  or currency filter, currencies never summed:
+  - **People:** my balances with friends, counted exactly as the Friends list counts them: Include groups on (the
+    default), every balance; off, the non-group ones (so the list and its summary always agree, one control). Counts
+    "N friends · M settled"; a card's caption "N friends". A card opens Analytics in that currency with the same scope
+    (everything / non-group only). Sits above the requests and the list (`FriendsOverview`).
+  - **Groups:** my balances inside groups (what each group owes me or I owe it, groups that owe me and groups I owe
+    summed apart, `groupTotals`). Money is never hidden (owner 89): inactive and hidden groups count whatever the list
+    filters show; deleted ones do not. Counts "N groups · M settled" (settled = everyone square); a card's caption "N
+    groups". A card opens Analytics in that currency scoped to groups. Above the requests and the list
+    (`GroupsOverview`).
+  - **Analytics:** follows the page's one scope chip in the filter row (Everything, Non-group only, chosen groups); no
+    chips of its own, so nothing on the page asks the same question twice. A card narrows Analytics to its currency.
+    An old `?overview=groups|direct|all` link still lands on the same balances, read as Analytics' scope
+    (`overviewScopeParam`); the `home.overviewScope` preference stays in the registry, unused.
+  Hidden while the page has nothing to count (no friends, no groups). *Why:* "On the analytics tab, all group and direct
+  filter is at top already, it shows up again in filter"; "overview section to be on people and groups as well, think
+  about it properly".
 - **Overview cards: only the net is coloured and on the right** (owners 156-161; with F-256). Each currency
   card reads:
   - line 1: "You are owed" / "You owe" / "Settled" with the currency chip on the LEFT ... the NET on the RIGHT,
@@ -2794,10 +2809,7 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   they are one line, two or more, and the avatar and the name block are centred the same way; never
   top-aligned. *Why:* "how much I owe or these things should always be vertically center, whether it's one row
   or two rows or any number of rows".
-- **Only Home has an "Overview" section** (owner 153, replaces owner 32's Overview on People and Groups): one
-  card per currency, "You are owed" / "You owe" (never summing currencies), a counts line ("6 friends - 2
-  settled"), and an "Analytics >" link. People and Groups start with their list. Each group row shows your
-  balance in that group per currency.
+- **Each group row shows your balance in that group per currency.** (The Overview's places: owner 219 above.)
 - **The list section header row** ("Friends 6" / "Groups 3") carries icon buttons on its RIGHT: on Groups,
   search (Lucide `Search`, testID `list-search`; on Home the global search field replaces it) and Filters (`list-filters`, with a dot/count when non-default
   filters are active). Both hide while the list is empty (§ 25).
@@ -3229,9 +3241,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 ### 26.16 Analytics
 
-- **The Overview opens Analytics** [Built, F-271] (owner 198): the per-currency balance cards (All / Groups / Direct) are its first
-  section, above the filter row, and show balances right now (not filtered by period or currency); a card opens the
-  rest of Analytics in that currency.
+- **The Overview opens Analytics** [Built, F-271] (owners 198, 219): the per-currency balance cards are its first
+  section, above the filter row, and show balances right now under the page's one scope (not its period or currency;
+  no All / Groups / Direct chips of their own, § 26.12); a card narrows the rest of Analytics to that currency.
 - **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
@@ -3824,6 +3836,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 216 | "People tab when selected is not correct"; "Sidebar opens up when swiping"; "Remove profile from settings"; "Swipe doesn't look good to go to last screen" (iPhone screenshots, 2026-10-31) | Selected People glyph is a solid card with the person cut out; no swipe opens the drawer (address only); no Profile row in Settings; Back (Safari's swipe) shows the page at its saved scroll from the first frame, no app gesture at the left edge | § 26.5, § 26.7, § 26.15 | Filled outline (a plain square); edge swipe opened the drawer (201); Settings Account row with Profile |
 | 217 | "Also we need to choose a diff icon for activity, it doesn't make any diff if it's selected or not"; "Remove the sidebar in mobile completely, either sidebar or bottom navigation" | Activity is a Lucide Bell, solid when selected; no side drawer anywhere (phone: bottom bar only; wide: sidebar only); Settings and the start tab cannot leave the bar; old `?drawer=menu` opens the page alone | § 26.3, § 26.7, § 26.14 | Activity pulse icon (unchanged when selected); phone drawer opened by its address (216) |
 | 218 | "Ask splito icon only on Home Screen" | The Search & Ask (sparkles) header button shows only on the start tab (the screen the app opens on, People by default, following Settings > Navigation "Open on"); no other tab or page draws it; Cmd/Ctrl+K and "/" still work everywhere on web | § 26.3, § 26.4, § 26.19 | Search & Ask in every top-level header (73, 74) |
+| 219 | "On the analytics tab, all group and direct filter is at top already, it shows up again in filter"; "overview section to be on people and groups as well, think about it properly" | Analytics' Overview loses its All / Groups / Direct chips and follows the filter row's one scope; People gets an Overview of balances with friends that follows its Include groups filter; Groups gets an Overview of my balances in groups (inactive and hidden counted); cards open Analytics in that currency and scope | § 26.3, § 26.12, § 26.16 | Overview only on Analytics with its own scope chips (176, 198) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

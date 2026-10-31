@@ -38,7 +38,6 @@ test('the app opens on People: / is the start tab, there is no Home anywhere, th
   await page.goto('/?overview=groups')
   await expect(page).toHaveURL(/\/analytics\?overview=groups$/)
   await expect(page.getByTestId('screen-analytics').getByTestId('analytics-overview')).toBeVisible()
-  await expect(page.getByTestId('overview-scope-groups')).toHaveAttribute('aria-checked', 'true')
   // The logo goes to the start tab.
   await page.setViewportSize(DESKTOP)
   await page.getByTestId('tab-activity').click()
@@ -67,7 +66,8 @@ test('People tab: requests, invites row, Friends with search, Filters, Sort and 
   expect(Math.abs(search!.width - gear!.width)).toBeLessThan(2)
   await expect(people.getByTestId('people-manage-friends')).toHaveAttribute('aria-label', 'Manage friends and invites')
   await expect(people.getByTestId('people-manage-friends')).toHaveText('')
-  await expect(people.getByTestId('analytics-overview')).toHaveCount(0)
+  // People has its own Overview of balances with friends (owner 219).
+  await expect(people.getByTestId('people-overview')).toBeVisible()
   await expect(people.getByTestId('people-add-friend')).toBeVisible()
   await expect(people.getByTestId('header-search-ask')).toBeVisible()
   await expect(people.getByTestId('fab-add')).toBeVisible()
@@ -85,13 +85,14 @@ test('People tab: requests, invites row, Friends with search, Filters, Sort and 
   await expect(page.getByTestId('screen-person')).toBeVisible()
 })
 
-test('Groups has no Overview', async ({page}) => {
+test('Groups has its own Overview of balances in groups, above the list (owner 219)', async ({page}) => {
   await page.setViewportSize(PHONE)
   await openDemo(page, '/groups')
   const groups = page.getByTestId('screen-groups')
   await expect(groups.getByTestId('groups-list-title')).toBeVisible()
   await expect(groups.getByTestId('groups-balances')).toHaveCount(0)
-  await expect(groups.getByTestId('analytics-overview')).toHaveCount(0)
+  await expect(groups.getByTestId('groups-overview')).toBeVisible()
+  expect((await groups.getByTestId('groups-overview').boundingBox())!.y).toBeLessThan((await groups.getByTestId('groups-list-title').boundingBox())!.y)
   // Groups has the same header as People: search, Filters, Sort.
   await expect(groups.getByTestId('list-filters')).toBeVisible()
   await expect(groups.getByTestId('list-sort')).toBeVisible()

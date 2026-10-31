@@ -4,8 +4,8 @@ import {openDemo} from './openDemo'
 import {pinClock} from './pinClock'
 
 /*
- * ARCHITECTURE 26.12, owners 113/114/120/198 (F-245, F-248, F-256, F-271): the Overview is the first section of
- * Analytics ("Balances right now"), above its filter row; nothing is cut off or crowded, the cards are separate equal
+ * ARCHITECTURE 26.12, owners 113/114/120/198/219 (F-245, F-248, F-256, F-271): the Overview ("Balances right now")
+ * is the first section of People, Groups and Analytics; nothing is cut off or crowded, the cards are separate equal
  * boxes in a balanced grid that re-lays out with the width. People reads requests, invites row, then the Friends list
  * (with its own search).
  */
@@ -284,8 +284,8 @@ test('Overview cards at 390: compact, the net alone is coloured and on the right
 
 
 /** The signed net of each Overview card, by currency: "You owe" is negative. */
-async function rawNets(page: Page) {
-  const cards = page.getByTestId('analytics-overview').locator('[data-testid$="-card"]')
+async function rawNets(page: Page, overview = 'analytics-overview') {
+  const cards = page.getByTestId(overview).locator('[data-testid$="-card"]')
   return cards.evaluateAll(els =>
     Object.fromEntries(
       els.map(card => {
@@ -300,65 +300,64 @@ async function rawNets(page: Page) {
 }
 
 /** The nets once the amounts have stopped counting to their new values. */
-async function overviewNets(page: Page) {
-  let last = JSON.stringify(await rawNets(page))
+async function overviewNets(page: Page, overview = 'analytics-overview') {
+  let last = JSON.stringify(await rawNets(page, overview))
   for (let i = 0; i < 20; i++) {
     await page.waitForTimeout(250)
-    const now = JSON.stringify(await rawNets(page))
+    const now = JSON.stringify(await rawNets(page, overview))
     if (now === last) break
     last = now
   }
   return JSON.parse(last) as Record<string, number>
 }
 
-test('Overview scope: All, Groups and Direct change only the cards; it is in the address and remembered; a card narrows Analytics (owners 176, 198)', async ({page}) => {
+test('one scope on Analytics; People and Groups have their own Overview (owner 219)', async ({page}) => {
   await page.setViewportSize(PHONE)
   await openDemo(page, '/analytics')
-  const overview = page.getByTestId('screen-analytics').getByTestId('analytics-overview')
-  await expect(overview.getByTestId('overview-scope-all')).toHaveAttribute('aria-checked', 'true')
+  const analytics = page.getByTestId('screen-analytics')
+  // No All / Groups / Direct chips of its own: the filter row's scope chip is the one control.
+  await expect(analytics.getByTestId('analytics-overview')).toBeVisible()
+  await expect(page.getByTestId('overview-scope')).toHaveCount(0)
   const all = await overviewNets(page)
   expect(Object.keys(all).length).toBeGreaterThanOrEqual(3)
-  // The chips are 44 px targets.
-  for (const id of ['all', 'groups', 'direct']) expect((await overview.getByTestId(`overview-scope-${id}`).boundingBox())!.height).toBeGreaterThanOrEqual(44)
-
-  await overview.getByTestId('overview-scope-groups').click()
-  await expect(page).toHaveURL(/\/analytics\?overview=groups$/)
-  await expect(overview.getByTestId('overview-scope-groups')).toHaveAttribute('aria-checked', 'true')
+  await page.goto('/analytics?scope=0:all')
   const groups = await overviewNets(page)
-  await overview.getByTestId('overview-scope-direct').click()
-  await expect(page).toHaveURL(/\/analytics\?overview=direct$/)
-  await expect(overview.getByTestId('overview-scope-direct')).toHaveAttribute('aria-checked', 'true')
+  await page.goto('/analytics?scope=1:')
   const direct = await overviewNets(page)
-
-  // Both views have balances in two or more currencies, and they differ from All.
   expect(Object.keys(groups).length).toBeGreaterThanOrEqual(2)
   expect(Object.keys(direct).length).toBeGreaterThanOrEqual(2)
   expect(groups).not.toEqual(all)
   expect(direct).not.toEqual(all)
   // Per currency, never summed across currencies: all = groups + direct.
   for (const code of Object.keys(all)) expect(all[code]!, code).toBeCloseTo((groups[code] ?? 0) + (direct[code] ?? 0), 2)
-
-  // Remembered (a preference), so the bare address reads the same; the old Home address redirects here.
-  await page.goto('/analytics')
-  await expect(page.getByTestId('screen-analytics').getByTestId('overview-scope-direct')).toHaveAttribute('aria-checked', 'true')
-  expect(await overviewNets(page)).toEqual(direct)
+  // An old link with the Overview's own scope still lands on the same balances.
   await page.goto('/?overview=groups')
   await expect(page).toHaveURL(/\/analytics\?overview=groups$/)
-  await expect(page.getByTestId('screen-analytics').getByTestId('overview-scope-groups')).toHaveAttribute('aria-checked', 'true')
   expect(await overviewNets(page)).toEqual(groups)
-  // All, from a saved Groups, is written out or the address would fall back to Groups.
-  await page.getByTestId('screen-analytics').getByTestId('overview-scope-all').click()
-  await expect(page).toHaveURL(/\/analytics\?overview=all$/)
-  expect(await overviewNets(page)).toEqual(all)
-
-  // A card opens the rest of Analytics in its currency and carries the scope (owner 176); the cards ignore currency.
-  await page.getByTestId('screen-analytics').getByTestId('overview-scope-groups').click()
+  // A card narrows Analytics to its currency and keeps its scope.
+  await page.goto('/analytics?scope=0:all')
   const code = Object.keys(groups)[0]!
-  await page.getByTestId('screen-analytics').getByTestId(`summary-${code}`).click()
+  await analytics.getByTestId(`summary-${code}`).click()
   await expect.poll(() => new URL(page.url()).searchParams.get('currency')).toBe(code)
-  const q = new URL(page.url()).searchParams
-  expect(q.get('scope')).toBe('0:all')
-  expect(q.get('overview')).toBe('groups')
-  await expect(page.getByTestId('screen-analytics').getByTestId('analytics-currency')).toHaveText(code)
+  await expect(analytics.getByTestId('analytics-currency')).toHaveText(code)
   expect(await overviewNets(page)).toEqual(groups)
+
+  // People: every balance with friends while Include groups is on (the list's default), the non-group ones when off.
+  await page.goto('/people')
+  await expect(page.getByTestId('screen-people').getByTestId('people-overview')).toBeVisible()
+  expect(await overviewNets(page, 'people-overview')).toEqual(all)
+  await page.goto('/people?groups=0')
+  expect(await overviewNets(page, 'people-overview')).toEqual(direct)
+  // A People card opens Analytics in its currency with the matching scope.
+  await page.getByTestId('screen-people').getByTestId(`summary-${Object.keys(direct)[0]!}`).click()
+  await expect(page.getByTestId('screen-analytics').last()).toBeVisible()
+  await expect.poll(() => new URL(page.url()).searchParams.get('scope')).toBe('1:')
+
+  // Groups: my balances inside groups; the net per currency is what Analytics counts for all groups.
+  await page.goto('/groups')
+  await expect(page.getByTestId('screen-groups').getByTestId('groups-overview')).toBeVisible()
+  await expect(page.getByTestId('screen-groups').getByTestId('groups-overview-counts')).toContainText(/\d+ groups · \d+ settled/)
+  expect(await overviewNets(page, 'groups-overview')).toEqual(groups)
+  await page.getByTestId('screen-groups').getByTestId(`summary-${code}`).click()
+  await expect.poll(() => new URL(page.url()).searchParams.get('scope')).toBe('0:all')
 })

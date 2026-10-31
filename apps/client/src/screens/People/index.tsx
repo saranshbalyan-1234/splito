@@ -47,6 +47,9 @@ import {
   type PeopleFilters,
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
+import {FriendsOverview} from '#/screens/Analytics/components/OverviewSection'
+import {analyticsHref} from '#/screens/Analytics/overviewScope'
+import {openLink} from '#/lib/links/open'
 import {SectionHeader} from '#/components/SectionHeader'
 import {peopleParams, readPeopleParams} from './urlState'
 import {filterFriends, listedFriends, searchFriends, seenByPerson, sortFriends} from './sort'
@@ -183,6 +186,14 @@ export function PeopleScreen() {
             ListHeaderComponent={
               friends.length > 0 ? (
                 <>
+                  {/* Balances with friends right now (owner 219), counted as the list counts them: Include groups on, every
+                      balance; off, the non-group ones. A card opens Analytics in that currency and scope. */}
+                  <FriendsOverview
+                    testID="people-overview"
+                    titleTestID="people-overview-title"
+                    countsRow={groupId => includeGroups || groupId === null}
+                    onCurrencyPress={currency => openLink(analyticsHref(includeGroups ? 'all' : 'direct', currency))}
+                  />
                   <RequestsSection />
                   <ListToolsHeader
                     title={l`Friends`}

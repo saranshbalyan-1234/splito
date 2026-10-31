@@ -43,6 +43,7 @@ import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
 import {SectionHeader} from '#/components/SectionHeader'
 import {GroupRequestsSection} from './components/GroupRequestsSection'
+import {GroupsOverview} from './components/GroupsOverview'
 import {GroupRow, GroupRowPlaceholder} from './components/GroupRow'
 import {GroupsFilterDialog} from './components/GroupsFilterDialog'
 import {
@@ -59,9 +60,8 @@ const PLACEHOLDER_ROWS = 4
 
 /**
  * Groups list: Bluesky's Lists screen (list-card rows); Create group is the
- * header's action, and the FAB adds an expense as on every tab. No Overview
- * (it is the top of Analytics, owner 198); search, filters and the Sort button sit on the list's
- * heading.
+ * header's action, and the FAB adds an expense as on every tab. The Overview of my balances in groups sits at the
+ * top (owner 219); search, filters and the Sort button sit on the list's heading.
  */
 export function GroupsScreen() {
   const t = useTheme()
@@ -190,6 +190,8 @@ export function GroupsScreen() {
             )}
             ListHeaderComponent={
               <>
+                {/* My balances inside groups right now (owner 219), above the requests and the list. */}
+                <GroupsOverview rows={all} />
                 <GroupRequestsSection />
                 {all.length > 0 ? (
                   <ListToolsHeader
