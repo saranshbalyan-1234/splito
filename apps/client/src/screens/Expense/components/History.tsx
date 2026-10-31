@@ -9,7 +9,7 @@ import {
 } from '@splito/sync'
 
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useFormatDay, useTimeZone} from '#/locale/useDates'
+import {useFormatDay, useFormatTime} from '#/locale/useDates'
 import {atoms as a, useTheme} from '#/alf'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
 import {CirclePlus_Stroke2_Corner0_Rounded as CreatedIcon} from '#/components/icons/CirclePlus'
@@ -98,8 +98,8 @@ export function HistoryLine({
   titles?: (who: string) => Record<HistoryKind, string>
 }) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
-  const tz = useTimeZone()
+  const {t: l} = useLingui()
+  const formatTime = useFormatTime()
   const name = useDisplayName()
   const who = name(line.actor)
   const title = (titles?.(who) ?? {
@@ -146,7 +146,7 @@ export function HistoryLine({
           {title}
           <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
             {' · '}
-            {i18n.date(new Date(line.at), {timeStyle: 'short', timeZone: tz})}
+            {formatTime(line.at)}
           </Text>
         </Text>
       </View>

@@ -98,6 +98,23 @@ describe('counters', () => {
     expect(count('externalHandOff', '// Linking.openURL(url) is forbidden here', screen)).toBe(0)
   })
 
+  test('clipboardOutsideSharing: expo-clipboard and navigator.clipboard outside lib/sharing.ts', () => {
+    const screen = `${CLIENT}components/comments/CommentRow.tsx`
+    expect(count('clipboardOutsideSharing', "import {setStringAsync} from 'expo-clipboard'", screen)).toBe(1)
+    expect(count('clipboardOutsideSharing', 'await navigator.clipboard.writeText(text)', screen)).toBe(1)
+    expect(count('clipboardOutsideSharing', "import {setStringAsync} from 'expo-clipboard'", `${CLIENT}lib/sharing.ts`)).toBe(0)
+    expect(count('clipboardOutsideSharing', "import {copyText} from '#/lib/sharing'\n// navigator.clipboard is not used here", screen)).toBe(0)
+  })
+
+  test('timeFormatOutsideLocale: a time of day written by hand outside locale/', () => {
+    const screen = `${CLIENT}screens/Expense/components/History.tsx`
+    expect(count('timeFormatOutsideLocale', "i18n.date(d, {timeStyle: 'short', timeZone})", screen)).toBe(1)
+    expect(count('timeFormatOutsideLocale', "i18n.date(d, {hour: 'numeric', minute: '2-digit'})", screen)).toBe(1)
+    expect(count('timeFormatOutsideLocale', 'd.toLocaleTimeString()', screen)).toBe(1)
+    expect(count('timeFormatOutsideLocale', "i18n.date(d, {timeStyle: 'short'})", `${CLIENT}locale/useDates.ts`)).toBe(0)
+    expect(count('timeFormatOutsideLocale', "const time = useFormatTime()(d) // timeStyle: 'short' lives in locale/", screen)).toBe(0)
+  })
+
   test('moneyFullRead', () => {
     const screen = `${CLIENT}screens/People/index.tsx`
     expect(count('moneyFullRead', "const all = await store.getAll<Expense>('expense')", screen)).toBe(1)

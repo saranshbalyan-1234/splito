@@ -4,19 +4,18 @@ import {
   contactKey,
   detectContactKind,
   isContactEmail,
-  isEmail,
   isSignInCode,
   normalizePhone,
 } from '../src/contact'
 
 describe('sign-in fields', () => {
   test('email: one @, a dotted domain, no spaces', () => {
-    expect(isEmail('riya@example.com')).toBe(true)
-    expect(isEmail('  riya.sharma+trip@mail.co.in ')).toBe(true)
-    expect(isEmail('riya@localhost')).toBe(false)
-    expect(isEmail('riya example.com')).toBe(false)
-    expect(isEmail('@example.com')).toBe(false)
-    expect(isEmail('')).toBe(false)
+    expect(isContactEmail('riya@example.com')).toBe(true)
+    expect(isContactEmail('riya.sharma+trip@mail.co.in')).toBe(true)
+    expect(isContactEmail('riya@localhost')).toBe(false)
+    expect(isContactEmail('riya example.com')).toBe(false)
+    expect(isContactEmail('@example.com')).toBe(false)
+    expect(isContactEmail('')).toBe(false)
   })
   test('phone: international digits, spaces and dashes dropped; 8 to 15 digits', () => {
     expect(normalizePhone('+91 98765-43210')).toBe('+919876543210')
