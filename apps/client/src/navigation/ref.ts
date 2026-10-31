@@ -1,5 +1,6 @@
 import {createNavigationContainerRef} from '@react-navigation/native'
 
+import {startPage} from '#/lib/routes/startTab'
 import {type RootStackParams} from '#/lib/routes/types'
 import {IS_WEB} from '#/env'
 
@@ -15,7 +16,7 @@ export function resetToRoot() {
   if (!navigationRef.isReady()) return
   navigationRef.resetRoot(
     IS_WEB
-      ? {index: 0, routes: [{name: 'Home'}]}
-      : {index: 0, routes: [{name: 'Tabs', state: {index: 0, routes: [{name: 'Home'}]}}]},
+      ? {index: 0, routes: [{name: startPage()}]}
+      : {index: 0, routes: [{name: 'Tabs', state: {index: 0, routes: [{name: startPage()}]}}]},
   )
 }

@@ -428,10 +428,10 @@ export function createStore(engine: Engine): Store {
           for (const h of await rows.range('history', {eq: [type, id]})) await rows.delete('history', [type, id, h.version as number])
           for (const o of await rows.range('outbox', {index: 'byEntity', eq: [type, id]})) await rows.delete('outbox', [o.seq as number])
           // A person who goes ("me" included) changes whose records count as activity (audit m20) as well as a record.
-          isMoney ||= type === 'person' || (MONEY_TYPES as readonly string[]).includes(type)
+          isMoney ||= type === 'person' || type === 'comment' || (MONEY_TYPES as readonly string[]).includes(type)
         }
         // What was erased no longer counts as anyone's activity: recompute it from what remains.
-        if (isMoney) await rebuildActivity(rows, (await Promise.all(MONEY_TYPES.map(type => allOf(rows, type)))).flat())
+        if (isMoney) await rebuildActivity(rows, (await Promise.all(MONEY_TYPES.map(type => allOf(rows, type)))).flat(), await allOf(rows, 'comment'))
       }),
 
     subscribe(fn) {

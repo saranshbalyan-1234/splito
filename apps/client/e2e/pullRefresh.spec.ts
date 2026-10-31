@@ -122,7 +122,6 @@ const href = async (page: Page, from: string, selector: string) => {
 }
 
 const ROUTES: Array<[string, Route]> = [
-  ['Home', '/'],
   ['People', '/people'],
   ['Groups', '/groups'],
   ['Activity', '/activity'],

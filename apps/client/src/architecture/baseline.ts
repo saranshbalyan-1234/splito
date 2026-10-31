@@ -70,7 +70,7 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/App.tsx': 1,
     'apps/client/src/components/settings/PrefSection.tsx': 2,
     'apps/client/src/screens/Settings/SettingsSection.tsx': 2,
-    'apps/client/src/screens/Settings/index.tsx': 2,
+    'apps/client/src/screens/Settings/components/DataSettings.tsx': 2,
   },
   moneyFullRead: {},
   hardDelete: {},

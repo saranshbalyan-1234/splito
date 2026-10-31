@@ -95,7 +95,7 @@ test('an acknowledged row fades to full strength; a refused one keeps it and say
   await expect(row).not.toHaveAttribute('aria-label', /not synced yet/i)
 })
 
-test('a Home row is lighter while its friend record is unsynced and full strength once acknowledged', async ({page}) => {
+test('a People row is lighter while its friend record is unsynced and full strength once acknowledged', async ({page}) => {
   await seed(page)
   const lena = await page.evaluate(() => (window as unknown as {splito: Splito}).splito.createPerson('Lone Lena'))
   await page.goto('/people')

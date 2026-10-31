@@ -35,7 +35,7 @@ import {
 } from '#/lib/routes/helpers'
 import {currentSection} from '#/lib/routes/section'
 import {NAV_ITEM_HREF, splitNavigationItems} from '#/lib/routes/navigationItems'
-import {TAB_ROUTE, useTabs} from '#/lib/routes/tabs'
+import {TAB_ROUTE, tabHref, useTabs} from '#/lib/routes/tabs'
 import {
   type NavigationProp,
   type State,
@@ -74,7 +74,6 @@ import {type Props as SVGIconProps} from '#/components/icons/common'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
-import {useSearchAsk} from '#/components/SearchAsk/context'
 import {SyncToned} from '#/components/SyncTone'
 import {MorphIcon} from '#/components/anim/AnimatedIcon'
 import {badgeTick, GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
@@ -92,7 +91,7 @@ type NavClickItem = NavItemId
 
 const LARGE_ELEMENT_SIZE = 48
 const NAV_ICON_WIDTH = 28
-const NAV_ITEM_TO_TAB: Partial<Record<NavClickItem, SidebarTab>> = TAB_ROUTE
+const NAV_ITEM_TO_TAB: Record<NavClickItem, SidebarTab> = TAB_ROUTE
 const LOGO_SIZE = 40
 const RECENT_GROUPS = 5
 const INDICATOR_HEIGHT = 24
@@ -115,19 +114,20 @@ export function useLeftNavWidth() {
 
 /*
  * The Splito logo heads the sidebar (owner directive), with the wordmark
- * beside the mark except on the icon rail. It returns Home and is
- * inactive on Home (spec: App shell). Its row is the header's height from
+ * beside the mark except on the icon rail. It returns the start tab (owner 198) and is
+ * inactive on it (spec: App shell). Its row is the header's height from
  * the top edge, so the logo sits on the header's centre line.
  */
 function LogoCard({minimal}: {minimal: boolean}) {
   const {t: l} = useLingui()
+  const [start = 'people'] = usePref('startTab')
   const currentRouteName = useNavigationState(state => {
     if (!state) {
-      return 'Home'
+      return TAB_ROUTE[start]
     }
     return getCurrentRoute(state).name
   })
-  const isHome = isTab(currentRouteName, 'Home')
+  const isHome = isTab(currentRouteName, TAB_ROUTE[start])
 
   return (
     <View
@@ -143,9 +143,9 @@ function LogoCard({minimal}: {minimal: boolean}) {
       ]}>
       <Link
         testID="logo"
-        href="/"
+        href={tabHref(start)}
         navigationAction="navigate"
-        accessibilityLabel={l`Splito - Home`}
+        accessibilityLabel={l`Splito`}
         accessibilityHint=""
         aria-disabled={isHome}
         disabled={isHome}
@@ -163,18 +163,15 @@ function LogoCard({minimal}: {minimal: boolean}) {
 }
 
 /*
- * What pressing a nav item does, for the sidebar rows: Ask Splito opens the Search & Ask drawer, a tab switches tab on
+ * What pressing a nav item does, for the sidebar rows: a tab switches tab on
  * native, anything else navigates (pressing the current page is a no-op,
  * as Splito screens have no soft reset).
  */
 function useOpenNavItem(onNavigateTab?: (tab: SidebarTab) => void) {
   const navigation = useNavigation<NavigationProp>()
-  const searchAsk = useSearchAsk()
   return (navItem: NavClickItem, href: string, isCurrent: boolean) => {
     const tab = NAV_ITEM_TO_TAB[navItem]
-    if (navItem === 'ask') {
-      searchAsk.open({mode: 'ask'})
-    } else if (tab && onNavigateTab) {
+    if (onNavigateTab) {
       onNavigateTab(tab)
     } else if (!isCurrent) {
       const [screen, params] = router.matchPath(href)
@@ -469,7 +466,7 @@ export function RecentGroups() {
         members: [],
         syncStatus: g.syncStatus,
       })),
-      'recent',
+      'lastActive',
       {
         currency: defaultCurrency,
         activity: groupActivity,
@@ -687,7 +684,7 @@ export function DesktopLeftNav({
   const toItem = (id: NavClickItem) => ({
     navItem: id,
     label: _(NAV_LABELS[id]),
-    href: NAV_ITEM_HREF[id] ?? '',
+    href: NAV_ITEM_HREF[id],
     icons: {inactive: GLYPHS[id].icon, active: GLYPHS[id].filled},
     count: id === 'activity' ? activityBadge : undefined,
   })
@@ -750,11 +747,13 @@ export function DesktopLeftNav({
           ))}
         </View>
         <ComposeBtn minimal={leftNavMinimal} />
-        {/* The drawer's footer links directly under the pill, not pinned (26.5, owner 188); the icon rail has no room, its drawer has them. The row bleeds 12 px into the right padding so it fits the compact width. */}
-        {!leftNavMinimal && (
-          <NavFooterLinks style={[a.pt_lg, {marginRight: -tokens.space.md}]} />
-        )}
       </ScrollView>
+      {/* The drawer's footer links pinned at the bottom (26.5, owner 214; the logo, items and pill stay one block at the top); the icon rail has no room, its drawer has them. The row bleeds 12 px into the right padding so it fits the compact width. */}
+      {!leftNavMinimal && (
+        <View style={[a.px_lg, a.pb_lg]}>
+          <NavFooterLinks style={[a.pt_lg, {marginRight: -tokens.space.md}]} />
+        </View>
+      )}
     </View>
   )
 }

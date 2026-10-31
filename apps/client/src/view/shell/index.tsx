@@ -54,8 +54,7 @@ function ShellInner() {
 
 /*
  * Bluesky's drawer layout. Upstream closes the drawer at tablet widths,
- * where its sidebar takes over; Splito's avatar opens it at every width
- * (owner directive), so only the swipe-to-open stays phone-only.
+ * where its sidebar takes over; Splito opens it by a swipe on phones only (owner 201: the avatar opens Profile).
  */
 function DrawerLayout({children}: {children: React.ReactNode}) {
   const t = useTheme()

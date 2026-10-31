@@ -20,6 +20,7 @@ import {
   restoreRepayment,
   restoreWriteOff,
 } from '../src/mutations'
+import {createComment, deleteComment} from '../src/comments'
 import {searchStore} from '../src/search'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
@@ -202,4 +203,29 @@ test('m20: a record I am not on does not make a friend recently active', async (
   // The rebuilt projection agrees.
   await s.rebuildProjections()
   expect(await s.lastActivity()).toEqual(last)
+})
+
+test('a comment on a record is activity for its group and the friends on it, live and rebuilt (owner 199)', async () => {
+  const bob = await createPerson(s, ctx, {name: 'Bob'})
+  const carol = await createPerson(s, ctx, {name: 'Carol'})
+  const flat = await createGroup(s, ctx, {name: 'Flat', kind: 'home', currency: 'EUR', startDate: null, endDate: null, memberIds: [bob.id, carol.id]})
+  const trip = await createGroup(s, ctx, {name: 'Trip', kind: 'trip', currency: 'EUR', startDate: null, endDate: null, memberIds: [bob.id, carol.id]})
+  const e = await createExpense(s, ctx, expense({groupId: flat.id, split: {mode: 'equal', participants: ['me', bob.id]}}))
+  await createExpense(s, ctx, expense({groupId: trip.id, split: {mode: 'equal', participants: ['me', carol.id]}}))
+  expect([...(await s.groupActivity()).keys()][0]).toBe(trip.id)
+  const c = await createComment(s, ctx, {targetType: 'expense', targetId: e.id, body: 'ok?'})
+  const groups = await s.groupActivity()
+  expect([...groups.keys()][0]).toBe(flat.id)
+  expect(groups.get(flat.id)).toBe(c.updatedAt)
+  const people = await s.lastActivity()
+  expect(people.get(bob.id)).toBe(c.updatedAt)
+  expect(people.get(carol.id)).toBeLessThan(c.updatedAt)
+  // Deleting the comment is a change too.
+  await deleteComment(s, ctx, c.id)
+  const after = (await s.lastActivity()).get(bob.id)!
+  expect(after).toBeGreaterThan(c.updatedAt)
+  // The rebuilt projection agrees.
+  const live = [(await s.groupActivity()), (await s.lastActivity())]
+  await s.rebuildProjections()
+  expect([await s.groupActivity(), await s.lastActivity()]).toEqual(live)
 })

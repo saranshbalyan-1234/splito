@@ -112,11 +112,11 @@ test('People shows each friend with real words and the right balance per currenc
   await expectNoMessageIds(page)
 })
 
-test('the summary shows one card per currency, never summed across, and opens Analytics', async ({
+test('the summary (top of Analytics) shows one card per currency, never summed across, and narrows Analytics to the card', async ({
   page,
 }) => {
   await page.setViewportSize({width: 1280, height: 800})
-  await openDemo(page)
+  await openDemo(page, '/analytics')
   for (const {currency, net} of balanceTotals(summaries)) {
     await expect(page.getByTestId(`summary-${currency}-net`)).toHaveText(
       formatAmount(magnitude(net), currency, LOCALE),
@@ -124,6 +124,7 @@ test('the summary shows one card per currency, never summed across, and opens An
   }
   await page.getByTestId('summary-INR').click()
   await expect(page.getByTestId('screen-analytics')).toBeVisible()
+  await expect.poll(() => new URL(page.url()).searchParams.get('currency')).toBe('INR')
 })
 
 test('a person row opens that person', async ({page}) => {
@@ -145,7 +146,7 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
   await expect(
     page.getByTestId('group-Goa trip').getByTestId('group-balance-INR'),
   ).toHaveText(/^you are owed\s*↙\s₹/)
-  // No Overview on Groups: it lives on Home only (owner 153).
+  // No Overview on Groups: it is the top of Analytics (owner 198).
   await expect(page.getByTestId('groups-balances')).toHaveCount(0)
   await expectNoMessageIds(page)
 })
@@ -185,29 +186,31 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
   await expect(page.getByTestId('profile-analytics')).toHaveCount(0)
   await expect(page.getByText('Coming with sync')).toHaveCount(0)
   await expect(page.getByTestId('profile-sync-note')).toBeVisible()
-  await expect(page.getByTestId('profile-about')).toBeVisible()
-  await page.getByTestId('profile-settings').click()
-  await expect(page.getByTestId('screen-settings')).toBeVisible()
+  /* Profile holds only the person and Log out (owners 202, 203): no Settings or About rows. */
+  await expect(page.getByTestId('profile-log-out')).toBeVisible()
+  await expect(page.getByTestId('profile-settings')).toHaveCount(0)
+  await expect(page.getByTestId('profile-about')).toHaveCount(0)
 })
 
-test('Home: the Overview counts friends; People: the Friends list has its own search beside Filters', async ({
+test('Analytics: the Overview counts friends; People: the Friends list has its own search beside Filters', async ({
   page,
 }) => {
   await page.setViewportSize({width: 390, height: 844})
-  await openDemo(page)
-  const home = page.getByTestId('screen-home')
+  await openDemo(page, '/analytics')
+  const analytics = page.getByTestId('screen-analytics')
   const settled = FRIENDS - summaries.filter(s => s.person !== ME).length
-  await expect(home.getByTestId('home-overview-counts')).toHaveText(
+  await expect(analytics.getByTestId('analytics-overview-counts')).toHaveText(
     `${FRIENDS} friends · ${settled} settled`,
   )
-  await expect(home.getByTestId('overview-analytics')).toBeVisible()
+  // Balances right now come first, above the filter row they ignore (owner 198).
+  await expect(analytics.getByTestId('analytics-overview-title')).toHaveText('Balances right now')
   await page.goto('/people')
   const people = page.getByTestId('screen-people')
   // The list's own search (owner 91) sits beside Filters, besides the header's Search & Ask.
   await expect(people.getByTestId('list-search')).toBeVisible()
   await expect(people.getByTestId('list-filters')).toBeVisible()
   await expect(people.getByTestId('header-search-ask')).toBeVisible()
-  await expect(people.getByTestId('home-overview')).toHaveCount(0)
+  await expect(people.getByTestId('analytics-overview')).toHaveCount(0)
 })
 
 test('Groups: Overview, search by member, and type / status filters', async ({

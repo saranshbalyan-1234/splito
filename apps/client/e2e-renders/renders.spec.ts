@@ -9,7 +9,7 @@ import {pinClock} from '../e2e/pinClock'
 /*
  * The wasted-render gate (ARCHITECTURE 17, owner 108, decision 107). One
  * scenario on the DEV web build (why-did-you-render loaded, `pnpm renders`):
- * launch -> Home, a tab round, open Add expense, type 10 characters, close it,
+ * launch -> People, a tab round, open Add expense, type 10 characters, close it,
  * scroll 1,000 activity rows of the large demo, open Search & Ask and ask one
  * question. Per phase it counts every component render (DevTools-hook style,
  * as perf/save.spec.ts) and collects every why-did-you-render report.
@@ -109,13 +109,13 @@ function instrument() {
 }
 
 /**
- * The large demo has loaded: Home has its figures (the app's own `splito:home-ready` mark, the launch budget's end
+ * The large demo has loaded: People, the start tab, has its figures (the app's own `splito:people-ready` mark, the launch budget's end
  * point) and nothing has committed for a full second after it, so the history pages the demo keeps loading in the
  * background have landed. Without it the first phase counted a different amount of that loading on every run.
  */
 async function demoLoaded(page: Page) {
   await page.waitForFunction(
-    () => performance.getEntriesByName('splito:home-ready').length > 0,
+    () => performance.getEntriesByName('splito:people-ready').length > 0,
     undefined,
     {timeout: 60_000},
   )
@@ -216,7 +216,7 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
   // Switch the large demo on (a year of use: ~50 activity pages), then count a cold launch into it: the mode survives a reload.
   await openDemo(page)
   await page.reload()
-  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 60_000})
+  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
   await demoLoaded(page)
 
   // The first visit of a tab lets the demo's history loading and the Analytics report land inside whichever phase is
@@ -371,7 +371,7 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
 
 /*
  * Owner 166 (ARCHITECTURE 26.9): a tab you have visited is shown again as it was left, nothing in it re-renders.
- * Home > Groups > Home on a phone, both tabs already visited: the only renders allowed are the bottom bar's own
+ * People > Groups > People on a phone, both tabs already visited: the only renders allowed are the bottom bar's own
  * (its tab glyphs and links light up) and the navigator's. Any screen body component that renders fails.
  */
 test('switching back to a visited tab re-renders none of its content', async ({page}) => {
@@ -380,16 +380,16 @@ test('switching back to a visited tab re-renders none of its content', async ({p
   await page.addInitScript(instrument)
   await openDemo(page)
   await page.reload()
-  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 60_000})
+  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
   await demoLoaded(page)
   // Visit every tab once, so each switch below is a return to one that is kept.
-  for (const tab of ['groups', 'analytics', 'activity', 'home']) {
+  for (const tab of ['groups', 'analytics', 'activity', 'people']) {
     await page.getByTestId(`tab-${tab}`).click()
     await expect(page.getByTestId(`screen-${tab}`)).toBeVisible()
     await quiet(page)
   }
-  // Groups <-> Home, Analytics <-> Activity and Home <-> Analytics, each leg counted on its own.
-  const legs = ['groups', 'home', 'analytics', 'activity', 'analytics', 'home', 'analytics', 'home']
+  // Groups <-> People, Analytics <-> Activity and People <-> Analytics, each leg counted on its own.
+  const legs = ['groups', 'people', 'analytics', 'activity', 'analytics', 'people', 'analytics', 'people']
   for (const [i, tab] of legs.entries()) {
     await phase(page, `leg${i}:${tab}`)
     await page.getByTestId(`tab-${tab}`).click()
@@ -399,7 +399,7 @@ test('switching back to a visited tab re-renders none of its content', async ({p
   const all = await page.evaluate(() => (window as unknown as Win).__renders.counts)
   // The screens' own content: the bar and the navigator shell may render (they own the highlight and the visible
   // screen), none of these may.
-  const CONTENT = /^(mount|update):(HomeScreen|Overview|PeopleScreen|PersonRow|BalanceSummary|SummaryCard|RequestsSection|GroupsScreen|GroupRow|ListToolsHeader|ListImpl|RowImpl|ActivityScreen|AnalyticsScreen|ExpenseRow|ActivityRow|ChartCard|BarChart|LineChart)$/
+  const CONTENT = /^(mount|update):(OverviewSection|Overview|PeopleScreen|PersonRow|BalanceSummary|SummaryCard|RequestsSection|GroupsScreen|GroupRow|ListToolsHeader|ListImpl|RowImpl|ActivityScreen|AnalyticsScreen|ExpenseRow|ActivityRow|ChartCard|BarChart|LineChart)$/
   const problems: string[] = []
   for (const [leg, counts] of Object.entries(all)) {
     if (!leg.startsWith('leg')) continue

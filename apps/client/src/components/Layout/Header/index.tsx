@@ -1,4 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Layout/Header/index.tsx
+import {startPage} from '#/lib/routes/startTab'
 import {createContext, useCallback, useContext} from 'react'
 import {type GestureResponderEvent, View} from 'react-native'
 import Animated from 'react-native-reanimated'
@@ -143,7 +144,7 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
       if (evt.defaultPrevented) return
       // Opened directly (deep link, refresh): Back goes to this page's parent.
       const state = navigation.getState()
-      goBack(navigation, backFallback(state?.routes[state.index] ?? {name: 'Home'}))
+      goBack(navigation, backFallback(state?.routes[state.index] ?? {name: startPage()}))
     },
     [onPress, navigation],
   )

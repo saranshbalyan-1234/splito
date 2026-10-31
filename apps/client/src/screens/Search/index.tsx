@@ -1,4 +1,5 @@
 import {useEffect} from 'react'
+import {startPage} from '#/lib/routes/startTab'
 import {StackActions, useNavigation, useRoute} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
@@ -8,7 +9,7 @@ import {IS_WEB} from '#/env'
 
 /**
  * Search is not a page (ARCHITECTURE 26.3): the old `/search?q=` link opens
- * the Search & Ask drawer with the query typed in, over Home, or over the
+ * the Search & Ask drawer with the query typed in, over the start tab, or over the
  * page it was pushed from.
  */
 export function SearchScreen() {
@@ -23,8 +24,8 @@ export function SearchScreen() {
     else
       navigation.dispatch(
         IS_WEB
-          ? StackActions.replace('Home')
-          : StackActions.replace('Tabs', {screen: 'Home'}),
+          ? StackActions.replace(startPage())
+          : StackActions.replace('Tabs', {screen: startPage()}),
       )
     open({query})
   }, [navigation, open, query])

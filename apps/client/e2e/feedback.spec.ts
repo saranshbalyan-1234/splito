@@ -1,5 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDrawer} from './nav'
 import {openDemo} from './openDemo'
 
 /* F-226: Send feedback, Your feedback, the drawer item and the Settings Support section. */
@@ -14,14 +15,18 @@ async function send(page: Page, message: string, type = 'bug') {
   await expect(page.getByTestId('feedback-saved')).toBeVisible()
 }
 
-test('Settings has a Support section with Send feedback, Your feedback, Help and About', async ({
+test('Settings has one Support row; its page lists Send feedback, Your feedback, Help, Privacy and About (owner 204)', async ({
   page,
 }) => {
   await page.goto('/settings')
+  await expect(page.getByTestId('settings-send-feedback')).toHaveCount(0)
+  await page.getByTestId('settings-support').click()
+  await expect(page).toHaveURL(/\/settings\/support$/)
   for (const id of [
     'settings-send-feedback',
     'settings-your-feedback',
     'settings-help',
+    'settings-support-privacy',
     'settings-about',
   ]) {
     await expect(page.getByTestId(id)).toBeVisible()
@@ -37,7 +42,7 @@ test('the drawer footer opens the Send feedback sheet as a bottom drawer on phon
   await page.setViewportSize(PHONE)
   await openDemo(page, '/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-  await page.getByTestId('header-avatar').click()
+  await openDrawer(page)
   await page.getByTestId('nav-footer-feedback').click()
   const sheet = page.getByTestId('feedback-sheet')
   await expect(sheet).toBeVisible()
@@ -53,7 +58,7 @@ test('the drawer footer opens the Send feedback sheet as a bottom drawer on phon
 test('Save stays off until the message is long enough, and says why', async ({
   page,
 }) => {
-  await page.goto('/settings')
+  await page.goto('/settings/support')
   await page.getByTestId('settings-send-feedback').click()
   await expect(page.getByTestId('feedback-sheet')).toBeVisible()
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
@@ -72,7 +77,7 @@ test('Save stays off until the message is long enough, and says why', async ({
 })
 
 test('app info is shown exactly and can be switched off', async ({page}) => {
-  await page.goto('/settings')
+  await page.goto('/settings/support')
   await page.getByTestId('settings-send-feedback').click()
   const preview = page.getByTestId('feedback-info-preview')
   await expect(preview).toBeVisible()
@@ -88,7 +93,7 @@ test('saving keeps the feedback on this device and never says sent', async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/settings')
+  await page.goto('/settings/support')
   await page.getByTestId('settings-send-feedback').click()
   await send(page, 'The total on the group page looks off by a rupee')
   await expect(page.getByTestId('feedback-saved')).toContainText(
@@ -112,7 +117,7 @@ test('saving keeps the feedback on this device and never says sent', async ({
 })
 
 test('a feedback item can be deleted', async ({page}) => {
-  await page.goto('/settings')
+  await page.goto('/settings/support')
   await page.getByTestId('settings-send-feedback').click()
   await send(page, 'Delete me after the test run', 'other')
   await page.getByTestId('sheet-cancel').click()
@@ -125,7 +130,7 @@ test('a feedback item can be deleted', async ({page}) => {
 })
 
 test('a picture can be attached and removed', async ({page}) => {
-  await page.goto('/settings')
+  await page.goto('/settings/support')
   await page.getByTestId('settings-send-feedback').click()
   const chooser = page.waitForEvent('filechooser')
   await page.getByTestId('feedback-attach').click()

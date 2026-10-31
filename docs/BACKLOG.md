@@ -693,8 +693,8 @@ Home drops its Requests section; People shows friend requests and invites, Group
 
 The Home tab goes; its Overview becomes the first section of Analytics; the app opens on People.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress, Wave C · **Deps** F-256
-- **Prefs** start tab default `people`; `tabs` migration drops `home`
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** built on c-nohome (unmerged, 2026-10-31): criteria 1-9 met on web in e2e at 390 and 1440 (`peopleTabs`, `overviewLayout`, `settingsTab`, `profilePage`, `sidebar` specs); native not run on a simulator; the Profile avatar opens the edit sheet, because the data model has no avatar image (owner 209 "changeable" is the name only); "You paid this year" is in the currency used most · **Deps** F-256
+- **Prefs** start tab default `people`; `tabs` migration drops `home` and `ask` (the old default bar becomes the new one, which gains Settings, owner 206)
 - **Acceptance**
   1. Tabs People, Groups, Analytics, Activity (+ Ask, Settings); no Home route or screen; `/` opens the start tab; `/?overview=` -> `/analytics?overview=`; saved `tabs`/`startTab` naming home migrate (tests).
   2. Analytics shows the Overview cards (All / Groups / Direct, owner 161 layout) above its filter row, labelled as balances now, ignoring period/currency; a card opens Analytics in that currency.
@@ -710,7 +710,7 @@ The Home tab goes; its Overview becomes the first section of Analytics; the app 
 
 A Sort button beside Filters: Last active (default), Name, Amount, Newest; remembered and in the URL.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** built on c-nohome (unmerged, 2026-10-31): unit tests for each order (`People/sort.test`, `Groups/filter.test`), the comment projection (`historyIntegrity.test`), the preference migration (`preferences.test`); e2e at 390 and 1440 (`peopleTabs.spec`) · **Deps** -
 - **Prefs** `peopleSort` (default `lastActive`), `groupsSort` (default `lastActive`)
 - **Acceptance**
   1. People and Groups headers: search, Filters, Sort (and People's gear last); Sort opens a radio menu; non-default tints the button.

@@ -82,8 +82,10 @@ test('one currency keeps groups with a balance in it and trims the rest away', (
   expect(eur[0]!.balances).toEqual({EUR: -900n})
 })
 
-test('sort: name, biggest balance in the currency, latest activity', () => {
-  const active = filterGroups(rows, ALL).filter(g => !g.deleted)
+test('sort: name, biggest balance in the currency, last active, newest', () => {
+  const active = filterGroups(rows, ALL)
+    .filter(g => !g.deleted)
+    .map(g => ({...g, createdAt: ({goa: 20, flat: 30, date: 10} as Record<string, number>)[g.id]}))
   const ctx = {
     currency: 'INR',
     activity: new Map([
@@ -97,11 +99,15 @@ test('sort: name, biggest balance in the currency, latest activity', () => {
     'goa',
     'date',
   ])
-  expect(ids(sortGroups(active, 'recent', ctx))).toEqual([
+  expect(ids(sortGroups(active, 'lastActive', ctx))).toEqual([
     'date',
     'goa',
     'flat',
   ])
+  expect(ids(sortGroups(active, 'newest', ctx))).toEqual(['flat', 'goa', 'date'])
+  // Equal times go by name, a group with no activity yet last.
+  const tie = {currency: 'INR', activity: new Map([['goa', 5], ['flat', 5]])}
+  expect(ids(sortGroups(active, 'lastActive', tie))).toEqual(['flat', 'goa', 'date'])
 })
 
 test('search matches the group name or any member, ignoring case', () => {

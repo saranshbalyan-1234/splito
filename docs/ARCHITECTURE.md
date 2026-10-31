@@ -1694,6 +1694,34 @@ Splito lessons (add newest last, dated, with PR):
   the question goes to the owner; (2) an empty state's "Add expense" next to the FAB on phones is a second primary
   action (owner 213): Group, Person and Activity show it on wide screens only, Settle (no FAB) keeps it unless the
   group is inactive; (3) the dead `SuccessCheck` went with the change that replaced it (section 1).
+- 2026-10-31, F-271/F-272 (c-nohome): **renders baseline re-recorded for the start tab; the median of three runs came out identical.**
+  Removing Home moved the launch end point to `splito:people-ready` (People, the start tab) and the tab round to People,
+  Groups, Analytics, Activity; the gate was recorded three times after the large demo had loaded and the median kept
+  (`RENDERS_BASELINE=write` x3, one worker, the machine at a load of 20 to 200 from other builders' runs, which only
+  slowed it): launch 3,403 + 302 (301 in one run), tabs 69 + 442, addExpense 498 + 179, type 0 + 793, closeAdd 76 + 193,
+  scroll 43,735 + 32,097, ask 1,018 + 943, 7 reports, and the parked-tab test shows no content render on a switch. The
+  Analytics Overview now sits in the Analytics list header (`OverviewSection`, a child that reads its own data), so a
+  balance change re-renders that section and not the report.
+- 2026-10-31, F-271: **"Home" as a fallback is one function, not a literal.** `startPage()` (`lib/routes/startTab.ts`) is the
+  start tab's route, set at launch from the device mirror and by `PrefsMirror`; Back's parents (`backFallback`), the
+  cold chain (`realParentsFor`, which lists the start tab once when it is the list itself), the resolver's bare `/` and
+  unknown links, the logo and sign-in return all read it. A `from=home` in an old address reads as the start tab. A
+  saved `tabs` list loses `home` and `ask` on read; only the exact old default bar (`home, people, groups, analytics,
+  activity`) becomes the new default (Settings added, owner 206), because treating "People, Groups, Analytics, Activity"
+  as the old default made Settings come back every time a user turned it off.
+- 2026-10-31, F-272: **"last active" needs comments too, and the projection is the only place that knows.** The people and
+  groups projections (`people.lastActivityAt`, `groups.activityAt`) were bumped by money records only, so a comment did
+  not move a friend or group up; `projectEntity` now bumps the groups and friends a commented record names, and
+  `rebuildActivity` takes the comments, so a rebuilt projection equals the incremental one
+  (`historyIntegrity.test`). Screens only read the maps (`useLastActivity`, `useGroupActivity`) and sort.
+- 2026-10-31, F-271: **moving a screen moves its architecture baselines.** `screens/Profile.tsx` became
+  `screens/Profile/index.tsx`, and Settings' raw store reads moved into `DataSettings.tsx`: the per-file counts in
+  `architecture/baseline.ts` and the `docs/reuse` row are keyed by path, so the move fails `rules.test` until both
+  follow. A testID that contains a money word (`profile-balance`) is read as arithmetic (`profile - balance`) by
+  `moneyArithmetic`; name it for the thing, not the money.
+- 2026-10-31, process: **a worktree's `node_modules` links point at whoever ran `pnpm install` last.** A fork that installed
+  in a scratch copy re-pointed `@splito/*` and `@bsky.app/bottom-sheet` at its copy; typecheck then failed everywhere. Run
+  `pnpm install --frozen-lockfile --offline` once in the worktree only, and never in a copy that shares it.
 
 ## 24. Checklists
 
@@ -2002,7 +2030,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 
 ### 26.3 Shell and navigation
 
-- **There is no Home tab; the Overview is the top of Analytics** (owner 198, replaces the Home tab of 153 below):
+- **There is no Home tab; the Overview is the top of Analytics** [Built, F-271; web checked in e2e at 390 and 1440, native not run on a simulator] (owner 198, replaces the Home tab of 153 below):
   the tabs are **People, Groups, Analytics, Activity, Settings** (owner 206 makes Settings a tab in the default
   bar; Ask Splito is not a tab or a nav item, owner 200). The
   Overview (per-currency balance cards with All / Groups / Direct, owners 113/114/120/161/176) is the first section of
@@ -2526,11 +2554,12 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 - **The Overview has a scope** (owner 176): small chips "All" (default) / "Groups" / "Direct" (non-group
   expenses with friends) in its header beside "Analytics ›". It changes only the per-currency cards and their counts
   line, never the sections below; currencies are never summed. The choice is the preference `home.overviewScope`
-  (decision 90) and the address (`/?overview=groups|direct|all`; a param that is present wins, `all` is written when
-  a saved Groups/Direct would otherwise apply). "Analytics ›" and each card carry it as Analytics' scope
-  (`scope=` `0:all` for Groups, `1:` for Direct, `1:all` for All, written out so Analytics never keeps the scope it saved
-  last). It does not follow the friends list's Include groups filter, and it never changes Recently active people
-  or the other sections. `personSummary(rows, {includeGroups, scope})` in domain; `screens/Home/overviewScope.ts`.
+  (decision 90) and the address (`/analytics?overview=groups|direct|all`, the old `/?overview=` redirects there; a
+  param that is present wins, `all` is written when a saved Groups/Direct would otherwise apply). Each card carries it
+  as Analytics' scope (`scope=` `0:all` for Groups, `1:` for Direct, `1:all` for All, written out so Analytics never
+  keeps the scope it saved last) together with its currency; there is no "Analytics ›" link, since the cards are on
+  Analytics. It does not follow the friends list's Include groups filter or Analytics' own filters.
+  `personSummary(rows, {includeGroups, scope})` in domain; `screens/Analytics/overviewScope.ts`, `OverviewSection`.
 - **Overview cards: only the net is coloured and on the right** (owners 156-161; with F-256). Each currency
   card reads:
   - line 1: "You are owed" / "You owe" / "Settled" with the currency chip on the LEFT ... the NET on the RIGHT,
@@ -2597,7 +2626,7 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   (not the Overview on Home, which has its own scope, owner 176). Filters and search combine. Friends: "Include groups" (default from the
   `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
   Settled). Groups: type (Trip / Home / Couple / Other), status (Active / Inactive / All), show (Shown / Hidden /
-  All), currency, show (All / You are owed / You owe / Settled). **Sort is its own control** (owner 199): a Sort
+  All), currency, show (All / You are owed / You owe / Settled). **Sort is its own control** [Built, F-272] (owner 199): a Sort
   button beside Filters in the People and Groups list headers opens a menu (radio items): **Last active** (default:
   newest change first, any expense, payment, comment or edit involving them), Name, Amount (largest balance first),
   Newest (most recently added). The choice is remembered per list (`peopleSort`, `groupsSort`) and in the address
@@ -3012,7 +3041,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 ### 26.16 Analytics
 
-- **The Overview opens Analytics** (owner 198): the per-currency balance cards (All / Groups / Direct) are its first
+- **The Overview opens Analytics** [Built, F-271] (owner 198): the per-currency balance cards (All / Groups / Direct) are its first
   section, above the filter row, and show balances right now (not filtered by period or currency); a card opens the
   rest of Analytics in that currency.
 - **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and

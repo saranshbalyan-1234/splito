@@ -49,7 +49,6 @@ import {ExpenseScreen} from '#/screens/Expense'
 import {RepaymentScreen} from '#/screens/Repayment'
 import {GroupScreen} from '#/screens/Group'
 import {GroupsScreen} from '#/screens/Groups'
-import {HomeScreen} from '#/screens/Home'
 import {PeopleScreen} from '#/screens/People'
 import {PersonScreen} from '#/screens/Person'
 import {ProfileScreen} from '#/screens/Profile'
@@ -65,7 +64,7 @@ const Stack = createNativeStackNavigator<RootStackParams>()
 const Tab = createBottomTabNavigator<TabParams>()
 const Flat = createNativeStackNavigatorWithAuth<FlatNavigatorParams>()
 
-/** Window titles for web; Home has none, so it is just "Splito". */
+/** Window titles for web; a page without one is just "Splito". */
 const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   People: msg`People`,
   Groups: msg`Groups`,
@@ -164,7 +163,7 @@ function Tabs() {
   const {gtMobile} = useBreakpoints()
   return (
     <Tab.Navigator
-      // The Home tab preference (Settings > Defaults), mirrored for a synchronous read at launch.
+      // The start tab preference (Settings > Navigation), mirrored for a synchronous read at launch.
       initialRouteName={TAB_ROUTE[bootStartTab()]}
       backBehavior="initialRoute"
       screenOptions={{
@@ -174,11 +173,11 @@ function Tabs() {
         tabBarPosition: gtMobile ? 'left' : 'bottom',
       }}
       tabBar={props => <NativeTabBar {...props} />}>
-      <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="Groups" component={GroupsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
       <Tab.Screen name="Activity" component={ActivityScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   )
 }
@@ -208,13 +207,12 @@ export function TabsNavigator({
       }}>
       <Stack.Screen name="Tabs" component={Tabs} />
       {/* A main screen opened from a link: the same screen pushed above the tabs, with Back (owner 179). */}
-      <Stack.Screen name="PushedHome" component={HomeScreen} />
       <Stack.Screen name="PushedPeople" component={PeopleScreen} />
       <Stack.Screen name="PushedGroups" component={GroupsScreen} />
       <Stack.Screen name="PushedAnalytics" component={AnalyticsScreen} />
       <Stack.Screen name="PushedActivity" component={ActivityScreen} />
+      <Stack.Screen name="PushedSettings" component={SettingsScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
@@ -263,7 +261,7 @@ export function FlatNavigator({
     const page = TITLES[name]
     /* Demo mode follows the page name in the window title too (owner 134). */
     const demoTag = demo ? ` - ${_(msg`Demo`)}` : ''
-    if (!page) return demo ? `${_(msg`Home`)}${demoTag} - Splito` : 'Splito'
+    if (!page) return 'Splito'
     return `${_(page)}${demoTag} - Splito`
   }
 
@@ -272,12 +270,6 @@ export function FlatNavigator({
       layout={layout}
       screenListeners={screenListeners}
       screenOptions={screenOptions(t)}>
-      <Flat.Screen
-        name="Home"
-        component={HomeScreen}
-        getId={tabId}
-        options={{title: title('Home')}}
-      />
       <Flat.Screen
         name="People"
         component={PeopleScreen}
@@ -310,6 +302,7 @@ export function FlatNavigator({
       <Flat.Screen
         name="Settings"
         component={SettingsScreen}
+        getId={tabId}
         options={{title: title('Settings')}}
       />
       <Flat.Screen

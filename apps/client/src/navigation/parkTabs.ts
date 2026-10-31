@@ -1,10 +1,10 @@
 import {type Router} from '@react-navigation/native'
 
 /*
- * Tabs stay mounted (owner 166): popping back to Home used to unmount Groups, Analytics or Activity and
- * remount them on the next visit (and every row's exit animation ran: Analytics -> Home was 600 ms, 5.9 s at 6x
+ * Tabs stay mounted (owner 166): popping back to the start tab used to unmount Groups, Analytics or Activity and
+ * remount them on the next visit (and every row's exit animation ran: Analytics -> People was 600 ms, 5.9 s at 6x
  * CPU). A tab the stack drops is parked among the router's `preloadedRoutes` instead: the same key keeps its
- * tree, state and scroll, `NAVIGATE` / `PUSH` to it re-uses the key, and the view renders it hidden. Home is
+ * tree, state and scroll, `NAVIGATE` / `PUSH` to it re-uses the key, and the view renders it hidden. The start tab is
  * pinned already (the navigator keeps it mounted). Only `state.routes` is the URL, so history is unaffected.
  *
  * Pure (no React), so the rules are unit-tested with the real `StackRouter` (parkTabs.test.ts).
@@ -14,7 +14,7 @@ export type RouteLike = {key: string; name: string; path?: string; params?: obje
 type AnyRouter = Router<any, any>
 type Params = Record<string, unknown> | undefined
 
-export const PARKED_TABS: ReadonlySet<string> = new Set(['Home', 'People', 'Groups', 'Analytics', 'Activity'])
+export const PARKED_TABS: ReadonlySet<string> = new Set(['People', 'Groups', 'Analytics', 'Activity', 'Settings'])
 /** Actions that remove routes from the stack (a pushed page popped, a tab popped to, Back). */
 const DROPPING = new Set(['POP', 'POP_TO', 'POP_TO_TOP', 'GO_BACK', 'NAVIGATE'])
 

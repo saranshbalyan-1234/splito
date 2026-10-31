@@ -5,7 +5,7 @@ import {type RowSyncStatus} from '@splito/sync'
 
 import {useMe, useRecentTransactions} from '#/data/hooks'
 
-/** One of my newest expenses or payments, as a short list draws it (the right column and Home, F-1415). */
+/** One of my newest expenses or payments, as a short list draws it (the right column, F-1415). */
 export type RecentRow = {
   id: string
   href: string

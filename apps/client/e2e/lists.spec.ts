@@ -60,12 +60,12 @@ async function seedA04(page: Page) {
   })
 }
 
-test('A04: Include groups reads 150 with groups and 100 without on People; the Overview on Home counts everything (scope All)', async ({
+test('A04: Include groups reads 150 with groups and 100 without on People; the Overview at the top of Analytics counts everything (scope All)', async ({
   page,
 }) => {
   await seedA04(page)
-  await page.goto('/')
-  await expect(page.getByTestId('screen-home').getByTestId('summary-INR-net')).toHaveText('₹150.00')
+  await page.goto('/analytics')
+  await expect(page.getByTestId('screen-analytics').getByTestId('summary-INR-net')).toHaveText('₹150.00')
   await page.goto('/people')
   const people = page.getByTestId('screen-people')
   await expect(
@@ -80,10 +80,10 @@ test('A04: Include groups reads 150 with groups and 100 without on People; the O
   ).toHaveText('owes you ↙ ₹100.00')
   await expect(people.getByTestId('list-filters-dot')).toBeVisible()
   // The Overview has its own scope (owner 176): the friends filter never changes it.
-  await page.getByTestId('tab-home').click()
-  await expect(page.getByTestId('screen-home').getByTestId('summary-INR-net')).toHaveText('₹150.00')
-  await page.getByTestId('screen-home').getByTestId('overview-scope-direct').click()
-  await expect(page.getByTestId('screen-home').getByTestId('summary-INR-net')).toHaveText('₹100.00')
+  await page.getByTestId('tab-analytics').click()
+  await expect(page.getByTestId('screen-analytics').getByTestId('summary-INR-net')).toHaveText('₹150.00')
+  await page.getByTestId('screen-analytics').getByTestId('overview-scope-direct').click()
+  await expect(page.getByTestId('screen-analytics').getByTestId('summary-INR-net')).toHaveText('₹100.00')
 
   // Back on: the defaults again, so the dot goes.
   await page.getByTestId('tab-people').click()
@@ -109,7 +109,7 @@ test('search grows from the icon to the row width, Escape folds it, and it combi
   // Fully open, the field spans the row (16px gutters) up to the Filters button, which stays beside it.
   await expect
     .poll(async () => (await field.boundingBox())!.width)
-    .toBeGreaterThan(PHONE.width - 32 - 40 - 80)
+    .toBeGreaterThan(PHONE.width - 32 - 40 - 40 - 80) // the Sort button sits beside Filters now (owner 199)
   expect(icon.width).toBeLessThan(60)
   await expect(groups.getByTestId('list-filters')).toBeVisible()
   await field.fill('lena')
@@ -118,7 +118,7 @@ test('search grows from the icon to the row width, Escape folds it, and it combi
   await field.press('Escape')
   await expect(field).toHaveCount(0)
 
-  // Filters and search combine: only Home groups, then "flat" among them.
+  // Filters and search combine: only the Home-kind groups, then "flat" among them.
   await groups.getByTestId('list-filters').click()
   await page.getByTestId('filter-type-home').click()
   await page.getByTestId('sheet-save').click()
@@ -133,7 +133,7 @@ test('search grows from the icon to the row width, Escape folds it, and it combi
   await expect(groups.getByTestId('list-search')).toBeVisible()
 })
 
-test('Groups: Cancel leaves the filters as they were; Apply sets the dot', async ({
+test('Groups: Cancel leaves the filters as they were; Sort is its own button, not a filter (owner 199)', async ({
   page,
 }) => {
   await enterDemo(page, '/groups')
@@ -146,14 +146,15 @@ test('Groups: Cancel leaves the filters as they were; Apply sets the dot', async
   await page.getByTestId('sheet-cancel').click()
   await page.getByTestId('confirmBtn').click()
   await expect(rows.first()).toBeVisible()
-  // Cancelled: the groups that are not Home groups are still listed.
+  // Cancelled: the groups that are not Home-kind groups are still listed.
   await expect(groups.getByTestId('list-filters-dot')).toHaveCount(0)
   await expect(groups.getByTestId('list-filters-dot')).toHaveCount(0)
 
-  await groups.getByTestId('list-filters').click()
-  await page.getByTestId('filter-sort-name').click()
-  await page.getByTestId('sheet-save').click()
-  await expect(groups.getByTestId('list-filters-dot')).toBeVisible()
+  await groups.getByTestId('list-sort').click()
+  await page.getByTestId('list-sort-name').click()
+  // The order is in the address and tints Sort; it is not a filter, so the Filters dot stays off.
+  await expect(page).toHaveURL(/\/groups\?sort=name$/)
+  await expect(groups.getByTestId('list-filters-dot')).toHaveCount(0)
   // Name order (settled groups are hidden by default, F-1413).
   const names = (await groups
     .locator('[data-testid^="group-"][href]')
@@ -163,7 +164,6 @@ test('Groups: Cancel leaves the filters as they were; Apply sets the dot', async
 })
 
 for (const [name, path, screen] of [
-  ['Home', '/', 'screen-home'],
   ['People', '/people', 'screen-people'],
   ['Groups', '/groups', 'screen-groups'],
   ['Activity', '/activity', 'screen-activity'],

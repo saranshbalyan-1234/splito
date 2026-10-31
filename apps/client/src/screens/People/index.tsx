@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -6,7 +6,8 @@ import {useNavigation, useRoute} from '@react-navigation/native'
 import {personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
-import {type Params} from '#/lib/links/listState'
+import {type Params, readSort} from '#/lib/links/listState'
+import {perfMark} from '#/lib/perfMark'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useGroupChipNames} from '#/data/groupVisibility'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
@@ -23,7 +24,6 @@ import {
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
-import {useSuppressFab} from '#/components/RouteFAB'
 import {useDialogControl} from '#/components/Dialog'
 import {Button, ButtonIcon} from '#/components/Button'
 import {HITSLOP_10} from '#/lib/constants'
@@ -34,6 +34,7 @@ import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/com
 import * as Layout from '#/components/Layout'
 import {TabScreen} from '#/components/TabScreen'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
+import {DEFAULT_LIST_SORT} from '#/components/ListSortMenu'
 import {Shimmer} from '#/motion/Shimmer'
 import {
   PersonRow,
@@ -51,13 +52,13 @@ import {filterFriends, listedFriends, searchFriends, seenByPerson, sortFriends} 
 
 const PLACEHOLDER_ROWS = 6
 
-/* What the filter dot compares with: the stock choices. Sort and Include groups are saved on Apply (owner 128), so they are the defaults only until changed. */
-const STOCK = {includeGroups: true, currency: 'all', show: 'all', sort: 'amount', showHidden: false, showSettled: false} as const
+/* What the filter dot compares with: the stock choices. Include groups is saved on Apply (owner 128), so they are the defaults only until changed. */
+const STOCK = {includeGroups: true, currency: 'all', show: 'all', showHidden: false, showSettled: false} as const
 
 /**
  * People (F-256, owners 153, 175): the requests waiting for an answer and the Invites sent rows, then one row per
  * friend with their balance per currency and each group's part, under a heading with search and filters (Show
- * settled included). The Overview lives on Home only. The Include groups filter (default from preferences,
+ * settled included). The Overview is the top of Analytics (owner 198). The Include groups filter (default from preferences,
  * applied with Apply) drives the rows.
  */
 export function PeopleScreen() {
@@ -70,7 +71,7 @@ export function PeopleScreen() {
   const groups = useEntities<Group>('group')
   const balanceRows = useBalanceRows()
   const seen = useSeenCurrencies()
-  const [sortDefault = 'amount', setSortDefault] = usePref('peopleSort')
+  const [sortSaved = DEFAULT_LIST_SORT, setSortSaved] = usePref('peopleSort')
   const [currency = 'INR'] = usePref('defaultCurrency')
   const [includeDefault, setIncludeDefault] = usePref('includeGroupsDefault')
   const [showHidden, setShowHidden] = useShowHidden()
@@ -80,7 +81,6 @@ export function PeopleScreen() {
     includeGroups: includeDefault ?? true,
     currency: 'all',
     show: 'all',
-    sort: sortDefault,
     showHidden: false,
     showSettled: false,
   }
@@ -94,15 +94,21 @@ export function PeopleScreen() {
     showSettled,
     ...readPeopleParams(route.params as Params),
   }
-  const {includeGroups, sort} = filters
-  const lastActivity = useLastActivity(sort === 'recent')
+  const {includeGroups} = filters
+  /* The order is the address (`/people?sort=name`, owner 199): a param that is present wins over the saved preference. */
+  const sort = readSort((route.params as Params)?.sort) ?? sortSaved
+  const lastActivity = useLastActivity(sort === 'lastActive')
   /* The filter button counts what differs from the defaults (Settings › Sorting and filters). */
   const activeCount = (
-    ['includeGroups', 'currency', 'show', 'sort', 'showHidden', 'showSettled'] as const
+    ['includeGroups', 'currency', 'show', 'showHidden', 'showSettled'] as const
   ).filter(k => filters[k] !== STOCK[k]).length
   const filterControl = useDialogControl({url: 'filters'})
 
   const isLoading = !me || !people || !groups || !balanceRows
+  /* The launch budget's end point: People, the start tab, has its figures (the perf specs read the mark; Home used to carry it). */
+  useEffect(() => {
+    if (!isLoading) perfMark('splito:people-ready')
+  }, [isLoading])
   const summaries = balanceRows
     ? personSummary(balanceRows, {includeGroups})
     : []
@@ -127,9 +133,6 @@ export function PeopleScreen() {
   )
   /* Settled up friends leave the list only (owner 90, 112): a search still finds them. */
   const {listed, count: listedCount, total: searchTotal} = searchFriends(filtered, query, filters, seenCurrencies)
-
-  /* The empty state's own buttons are the actions; a FAB would be a third Add. */
-  useSuppressFab(!isLoading && friends.length === 0)
 
   return (
     <TabScreen testID="screen-people">
@@ -186,6 +189,14 @@ export function PeopleScreen() {
                     searchLabel={l`Search friends`}
                     activeFilterCount={activeCount}
                     onFiltersPress={() => filterControl.open()}
+                    sort={{
+                      value: sort,
+                      onChange: next => {
+                        /* Absent means the saved choice, and the saved choice is now `next`: only a non-stock order is written. */
+                        navigation.setParams({sort: next === DEFAULT_LIST_SORT ? undefined : next} as never)
+                        void setSortSaved(next)
+                      },
+                    }}
                     endAction={
                       <Button
                         testID="people-manage-friends"
@@ -247,7 +258,6 @@ export function PeopleScreen() {
                     text: l`Clear filters`,
                     onPress: () => {
                       navigation.setParams(peopleParams(STOCK as PeopleFilters, STOCK as PeopleFilters) as never)
-                      void setSortDefault('amount')
                       void setIncludeDefault(true)
                       void setShowSettled(false)
                       void setShowHidden(false)
@@ -270,7 +280,7 @@ export function PeopleScreen() {
                     icon: PersonPlusIcon,
                     onPress: () => navigation.navigate('AddFriend'),
                     size: 'small',
-                    color: 'secondary',
+                    color: 'primary',
                   }}
                 />
               )
@@ -285,11 +295,10 @@ export function PeopleScreen() {
         filters={filters}
         currencies={currencies}
         onFiltersApplied={f => {
-          navigation.setParams(peopleParams(f, STOCK as PeopleFilters, {sort: sortDefault, includeGroups: includeDefault ?? true, showSettled, showHidden}) as never)
+          navigation.setParams(peopleParams(f, STOCK as PeopleFilters, {includeGroups: includeDefault ?? true, showSettled, showHidden}) as never)
           if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
           if (f.showSettled !== showSettled) void setShowSettled(f.showSettled)
-          /* Sort and Include groups are saved too (owner 128): the choice is the new default and survives a reload. */
-          if (f.sort !== sortDefault) void setSortDefault(f.sort)
+          /* Include groups is saved too (owner 128): the choice is the new default and survives a reload. */
           if (f.includeGroups !== (includeDefault ?? true)) void setIncludeDefault(f.includeGroups)
         }}
       />

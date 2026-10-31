@@ -1,4 +1,5 @@
 import {useRef} from 'react'
+import {startPage} from '#/lib/routes/startTab'
 import {ScrollView, View} from 'react-native'
 import {useAnimatedRef} from 'react-native-reanimated'
 import type Animated from 'react-native-reanimated'
@@ -182,7 +183,7 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
       return
     }
     if (navigation.canGoBack()) navigation.goBack()
-    else navigation.navigate('Home')
+    else navigation.navigate(startPage() as never)
     Toast.show(
       <Toast.Outer>
         <Toast.Icon icon={TrashIcon} />

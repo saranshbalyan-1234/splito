@@ -1,10 +1,12 @@
 import {magnitude, ZERO} from '@splito/domain'
-import {type Group, type RowSyncStatus} from '@splito/sync'
+import {type Group, type ListSort, type RowSyncStatus} from '@splito/sync'
 
 /** One group on the Groups list: my balance in it per currency, and who is in it (for search). */
 export type GroupRowData = {
   id: string
   name: string
+  /** Epoch ms the group was created, for the Newest order. */
+  createdAt?: number
   kind: Group['kind']
   /** Inactive for every member (decision 89). */
   inactive?: boolean
@@ -33,7 +35,6 @@ export type GroupFilters = {
   showSettled: boolean
   currency: string | 'all'
   show: 'all' | 'owed' | 'owe' | 'settled'
-  sort: 'recent' | 'name' | 'amount'
 }
 
 export const DEFAULT_GROUP_FILTERS: GroupFilters = {
@@ -43,7 +44,6 @@ export const DEFAULT_GROUP_FILTERS: GroupFilters = {
   showSettled: false,
   currency: 'all',
   show: 'all',
-  sort: 'recent',
 }
 
 /**
@@ -91,13 +91,15 @@ export function filterGroups(
 }
 
 /**
- * `recent`: most recently active group first (the store's `groupActivity`: the newest change to the group or to a record in it, the change time, not the expense date). `amount`: biggest balance in
- * `currency` first (other currencies can't be ranked against it, so those
- * groups follow, open before settled). Ties, and `name`, go by name.
+ * The `groupsSort` order (owner 199). `lastActive`: most recently active group first (the store's `groupActivity`:
+ * the newest change to the group or to a record or comment in it, the change time, not the expense date, read by
+ * `useGroupActivity` and never computed here). `amount`: biggest balance in `currency` first (other currencies can't
+ * be ranked against it, so those groups follow, open before settled). `newest`: the group created last first.
+ * Ties, and `name`, go by name.
  */
 export function sortGroups(
   rows: GroupRowData[],
-  sort: GroupFilters['sort'],
+  sort: ListSort,
   {currency, activity}: {currency: string; activity: Map<string, number>},
 ): GroupRowData[] {
   const size = (row: GroupRowData) => magnitude(row.balances[currency] ?? ZERO)
@@ -109,10 +111,14 @@ export function sortGroups(
       const dy = size(y)
       if (dx !== dy) return dx > dy ? -1 : 1
       if (isOpen(x) !== isOpen(y)) return isOpen(x) ? -1 : 1
-    } else if (sort === 'recent') {
+    } else if (sort === 'lastActive') {
       const ax = activity.get(x.id) ?? 0
       const ay = activity.get(y.id) ?? 0
       if (ax !== ay) return ax > ay ? -1 : 1
+    } else if (sort === 'newest') {
+      const cx = x.createdAt ?? 0
+      const cy = y.createdAt ?? 0
+      if (cx !== cy) return cx > cy ? -1 : 1
     }
     return x.name.localeCompare(y.name)
   })

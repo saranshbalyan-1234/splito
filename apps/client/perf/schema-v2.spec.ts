@@ -3,13 +3,13 @@ import {type CDPSession, expect, type Page, test} from '@playwright/test'
 import {openDemo} from '../e2e/openDemo'
 
 /*
- * F-117 budgets (ARCHITECTURE 9.8, 26.10), measured on web: Home cold open
+ * F-117 budgets (ARCHITECTURE 9.8, 26.10), measured on web: People (the start tab) cold open
  * under 150 ms and a write plus the UI showing it under 50 ms, on the large
  * demo set (about 1,500 expenses) and on a 10,000-expense ledger.
  *
  * "Cold open" runs from the app opening its local database (the migration
- * check included) to Home holding its figures (the marks `splito:store-open`
- * and `splito:home-ready`); the JS bundle's own load is outside it. "Write +
+ * check included) to People holding its figures (the marks `splito:store-open`
+ * and `splito:people-ready`); the JS bundle's own load is outside it. "Write +
  * UI" runs from calling the mutation to the sidebar listing the new expense
  * (desktop width, so the right column and the Activity badge are mounted, the
  * worst case for re-reads). "Analytics open" runs from the tap on the Analytics
@@ -18,7 +18,7 @@ import {openDemo} from '../e2e/openDemo'
  * of results showing the query's matches, however many there are (budget 50 ms,
  * ARCHITECTURE 9.8, 17, 26.10); the per-currency totals of a broad match fill in
  * after that and are timed on their own (`totalsMs`, no budget). "Ask" (owner
- * decision 107): the Ask tab to the chat's composer on screen (`askOpenMs`, one
+ * decision 107, owner 200): the Search & Ask drawer opened in Ask mode (`/search?mode=ask`) to the chat's composer on screen (`askOpenMs`, one
  * frame) and Enter on "Who owes me the most?" to the answer on screen (`askAnswerMs`,
  * budget 150 ms), with typed text arriving whole in the field. Each is
  * the median of five runs. Run:
@@ -38,12 +38,12 @@ const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.len
 
 async function coldOpen(page: Page) {
   await page.reload()
-  await page.waitForFunction(() => performance.getEntriesByName('splito:home-ready').length > 0, undefined, {timeout: 120_000})
+  await page.waitForFunction(() => performance.getEntriesByName('splito:people-ready').length > 0, undefined, {timeout: 120_000})
   return page.evaluate(() => {
     const at = (name: string) => performance.getEntriesByName(name)[0]!.startTime
     return {
-      /** Store open to Home holding its figures. */
-      home: at('splito:home-ready') - at('splito:store-open'),
+      /** Store open to People holding its figures. */
+      people: at('splito:people-ready') - at('splito:store-open'),
       /** Of which: opening the database (the version check included), ensuring "me", the demo check. */
       open: at('splito:store-ready') - at('splito:store-open'),
     }
@@ -69,7 +69,7 @@ async function writeAndSee(page: Page, i: number) {
     })
     const committed = performance.now() - t0
     await new Promise<void>(resolve => {
-      const check = () => (document.querySelector('[data-testid="home-recent-transactions"]')?.textContent?.includes(title) ? resolve() : requestAnimationFrame(check))
+      const check = () => (document.querySelector('[data-testid="sidebar-recent-transactions"]')?.textContent?.includes(title) ? resolve() : requestAnimationFrame(check))
       check()
     })
     return {committed, ui: performance.now() - t0}
@@ -81,7 +81,7 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
   const expenses = await page.evaluate(() => (window as unknown as {splito: Splito}).splito.countExpenses())
   const opens: Awaited<ReturnType<typeof coldOpen>>[] = []
   for (let i = 0; i < RUNS; i++) opens.push(await coldOpen(page))
-  await expect(page.getByTestId('home-recent-transactions')).toBeVisible()
+  await expect(page.getByTestId('sidebar-recent-transactions')).toBeVisible()
   // The path this replaced: read every record, then work each balance out of the ledger.
   const legacy: number[] = []
   for (let i = 0; i < RUNS; i++) legacy.push(await page.evaluate(() => (window as unknown as {splito: Splito}).splito.legacyHomeMs()))
@@ -90,8 +90,8 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
   // Analytics: the tab to figures on screen (the default year, the busiest currency).
   const analytics: number[] = []
   for (let i = 0; i < RUNS; i++) {
-    await page.getByTestId('tab-home').click()
-    await expect(page.getByTestId('home-recent-transactions')).toBeVisible()
+    await page.getByTestId('tab-people').click()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
     analytics.push(await openTab(page, 'tab-analytics', 'analytics-expenses-title'))
   }
   // Search: one keystroke-sized change to the first page of results, for narrow and broad queries (the Search & Ask drawer).
@@ -113,9 +113,9 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
     cpu: Number(process.env.PERF_CPU ?? 1),
     expenses,
     ...extra,
-    coldOpenHomeMs: Math.round(median(opens.map(o => o.home))),
+    coldOpenPeopleMs: Math.round(median(opens.map(o => o.people))),
     coldOpenDbMs: Math.round(median(opens.map(o => o.open))),
-    /** Reading the whole ledger and computing balances from it: what Home's open cost before schema v2 (data read only, no render). */
+    /** Reading the whole ledger and computing balances from it: what the first screen's open cost before schema v2 (data read only, no render). */
     previousHomeReadMs: Math.round(median(legacy)),
     writeCommitMs: Math.round(median(writes.map(w => w.committed))),
     writeAndUiMs: Math.round(median(writes.map(w => w.ui))),
@@ -123,7 +123,7 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
     searchKeystrokeMs: searches,
     /** Of a broad match, the count and totals filling in after that first page (no budget; cancelled by the next keystroke). */
     searchTotalsMs: searchTotals,
-    runs: {coldOpen: opens.map(o => Math.round(o.home)), writeAndUi: writes.map(w => Math.round(w.ui))},
+    runs: {coldOpen: opens.map(o => Math.round(o.people)), writeAndUi: writes.map(w => Math.round(w.ui))},
   }
   console.log(`PERF ${JSON.stringify(result)}`)
   return result
@@ -191,11 +191,8 @@ function expectSearchBudget(r: {cpu: number; searchKeystrokeMs: Record<string, n
  * character is lost (decision 107: typing must never drop a character).
  */
 async function askCase(page: Page) {
-  // Ask Splito is off the default bar, so put it on the sidebar (26.3) to measure its tab.
-  await page.evaluate(() =>
-    (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('tabs', ['home', 'people', 'groups', 'analytics', 'ask', 'activity']),
-  )
-  await page.getByTestId('tab-ask').waitFor()
+  // Ask Splito is not a nav item (owner 200): its drawer opens in Ask mode by the same address the header's Ask row uses.
+  const openAsk = () => page.evaluate(() => (window as unknown as {__splitoTest: {openLink(u: string): void}}).__splitoTest.openLink('/search?mode=ask'))
   const question = 'Who owes me the most?'
   const opens: number[] = []
   const answers: number[] = []
@@ -205,7 +202,7 @@ async function askCase(page: Page) {
         () =>
           new Promise<number>((resolve, reject) => {
             const t0 = performance.now()
-            document.querySelector<HTMLElement>('[data-testid="tab-ask"]')!.click()
+            ;(window as unknown as {__splitoTest: {openLink(u: string): void}}).__splitoTest.openLink('/search?mode=ask')
             const deadline = t0 + 30_000
             const check = () => {
               if (document.querySelector('[data-testid="ask-input"]')) resolve(performance.now() - t0)
@@ -247,7 +244,7 @@ async function askCase(page: Page) {
   }
   // Typing at full speed: every character arrives, in the chat and in Search.
   const sentence = 'how much did I spend on food last month and who owes me the most 1,234.50'
-  await page.getByTestId('tab-ask').click()
+  await openAsk()
   await page.getByTestId('ask-input').pressSequentially(sentence, {delay: 0})
   const typedInChat = await page.getByTestId('ask-input').inputValue()
   await page.keyboard.press('Escape')
@@ -274,7 +271,7 @@ async function throttle(page: Page) {
   if (rate > 1) await cdp.send('Emulation.setCPUThrottlingRate', {rate})
 }
 
-test('demo mode (the large demo set): Home cold open and a write', async ({page}) => {
+test('demo mode (the large demo set): People cold open and a write', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
   await openDemo(page) // the one demo dataset: a year, ~1,500 expenses (F-227, F-228a)
   await throttle(page)
@@ -283,7 +280,7 @@ test('demo mode (the large demo set): Home cold open and a write', async ({page}
     {q: 'netflix', shows: 'Netflix'},
     {q: 'goa', shows: 'Goa'},
   ])
-  expect(r.coldOpenHomeMs).toBeGreaterThan(0)
+  expect(r.coldOpenPeopleMs).toBeGreaterThan(0)
   expectSearchBudget(r)
 })
 
@@ -298,19 +295,19 @@ test('switching demo mode on and off shows the new data within 100 ms of the oth
       const began = performance.now()
       await hooks.demoMode(on)
       const switchMs = performance.now() - began
-      // The newest `home-ready` after the store was adopted: Home holds its figures (a skeleton at most before that).
+      // The newest `people-ready` after the store was adopted: People holds its figures (a skeleton at most before that).
       await new Promise<void>(resolve => {
         const check = () => {
           const adopt = performance.getEntriesByName('splito:store-adopt').at(-1)
-          const ready = performance.getEntriesByName('splito:home-ready').at(-1)
+          const ready = performance.getEntriesByName('splito:people-ready').at(-1)
           if (adopt && ready && ready.startTime >= adopt.startTime) resolve()
           else requestAnimationFrame(check)
         }
         check()
       })
       return {
-        // adopt to Home holding its figures (the budget), and the whole switch: open, seed, adopt (the first one seeds a year).
-        adoptToReadyMs: performance.getEntriesByName('splito:home-ready').at(-1)!.startTime - performance.getEntriesByName('splito:store-adopt').at(-1)!.startTime,
+        // adopt to People holding its figures (the budget), and the whole switch: open, seed, adopt (the first one seeds a year).
+        adoptToReadyMs: performance.getEntriesByName('splito:people-ready').at(-1)!.startTime - performance.getEntriesByName('splito:store-adopt').at(-1)!.startTime,
         switchMs,
       }
     }, on)
@@ -327,7 +324,7 @@ test('switching demo mode on and off shows the new data within 100 ms of the oth
   expect(result.offMs).toBeLessThan(100)
 })
 
-test('a 10,000-expense ledger: Home cold open and a write', async ({page}) => {
+test('a 10,000-expense ledger: People cold open and a write', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
   await page.goto('/')
   await page.waitForFunction(() => 'splito' in window)
@@ -339,7 +336,7 @@ test('a 10,000-expense ledger: Home cold open and a write', async ({page}) => {
     {q: 'perf write', shows: 'Perf write'},
     {q: '> 90', shows: 'Bulk'},
   ])
-  expect(r.coldOpenHomeMs).toBeGreaterThan(0)
+  expect(r.coldOpenPeopleMs).toBeGreaterThan(0)
   expectSearchBudget(r)
   // Ask Splito on the same ledger (decision 107): under 150 ms from Enter to the answer, and no character lost.
   await page.keyboard.press('Escape')
