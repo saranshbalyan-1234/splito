@@ -5,7 +5,7 @@ import {listOpenDisputes} from './disputes'
 import {displayPerson, type Expense, type Group, isGroupInactive, type Person, type Repayment, type WriteOff} from './mutations'
 import {type Key} from './schema'
 import {type CompareOp, parseQuery, type ParsedQuery, type SearchChip, type SearchStatus, type SearchToken, type SearchType} from './searchQuery'
-import {amountBounds, amountOfTerm, amountTerm, dateTerm, fold, NO_GROUP, RECORD_TYPES, recordPeople, type RecordType, type SearchTerm, type TermKind, wordsOf} from './searchTerms'
+import {amountBounds, amountOfTerm, amountTerm, dateTerm, fold, NO_GROUP, RECORD_TYPES, recordPeople, type RecordType, type SearchTerm, type TermKind, termRows, wordsOf} from './searchTerms'
 import {type Store} from './store'
 import {type Entity} from './types'
 
@@ -193,9 +193,34 @@ export async function openSearch(store: Store, query: string, options: SearchOpt
   return first
 }
 
+/**
+ * A type word that is part of a name ("Bulk Friend 4", "Office group") is the name, not the type: when the query's
+ * words together start the words of one person's or group's name, its type words are read as plain words and their
+ * chips dropped. Alone ("friends", "groups in goa") a type word still narrows by kind.
+ */
+async function asNames(store: Store, parsed: ParsedQuery): Promise<ParsedQuery> {
+  const isTypeWord = (t: SearchToken) => t.kind === 'type' && t.type !== 'comment'
+  if (!parsed.tokens.some(isTypeWord) || !parsed.tokens.some(t => t.kind === 'text' || t.kind === 'amount')) return parsed
+  const words = parsed.tokens.flatMap(t => (t.kind === 'text' || t.kind === 'amount' ? [t.text] : t.kind === 'type' && isTypeWord(t) ? [t.word] : []))
+  for (const kind of ['p', 'g'] as const) {
+    let ids: Set<string> | undefined
+    for (const w of words) {
+      const hit = new Set((await store.terms({kind, min: w, max: w + END})).map(r => r.entityId))
+      ids = ids ? intersect(ids, hit) : hit
+      if (ids.size === 0) break
+    }
+    if (ids?.size)
+      return {
+        tokens: parsed.tokens.map(t => (t.kind === 'type' && isTypeWord(t) ? {kind: 'text', text: t.word} : t)),
+        chips: parsed.chips.filter(c => !(c.facet === 'type' && c.type !== 'comment')),
+      }
+  }
+  return parsed
+}
+
 async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): Promise<SearchSession> {
-  const {tokens, chips} = parsed
-  if (tokens.length === 0) return EMPTY
+  if (parsed.tokens.length === 0) return EMPTY
+  const {tokens, chips} = await asNames(store, parsed)
   const {today, categories = [], me, weekStart = 1} = options
 
   /* ------------------------------------------------------------------ */
@@ -341,6 +366,76 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
     }
   }
 
+  /*
+   * Narrow first (F-246, cloud perf check 2026-10-31): a broad word ("bulk" in every title, a friend in thousands of
+   * records) is not turned into its full set of ids when another token is narrow. Text and plain numbers are first
+   * read with a cap; one that names more than SMALL records is checked on the rows of the narrow answer instead,
+   * from their own terms (`termRows`) and the few people, groups and categories its word names.
+   */
+  const isTextLike = (t: SearchToken): t is Extract<SearchToken, {kind: 'text' | 'amount'}> => t.kind === 'text' || (t.kind === 'amount' && !/^(19|20)\d\d$/.test(t.text))
+
+  /** What a word finds besides the records' own words: the people, groups and categories it names, and the records whose comments have it. */
+  async function namedBy(p: string) {
+    const [comments, groupHits, personHits] = await Promise.all([prefix('n', p), prefix('g', p), prefix('p', p)])
+    for (const r of comments) commentOf.set(r.entityId, r.term.slice(r.term.indexOf('\u0000') + 1))
+    const [groups, people] = await Promise.all([liveGroups(idsOf(groupHits)), livePeople(idsOf(personHits))])
+    return {
+      commented: new Set(idsOf(comments)),
+      groups: new Set(groups.map(g => g.id)),
+      people: new Set(people.filter(x => !x.data.isMe).map(x => x.id)),
+      categories: new Set(categories.filter(c => startsWith(wordsOf(c.name), p)).map(c => c.id)),
+    }
+  }
+
+  /** The exact amounts a plain number can mean, as `a` key ranges. */
+  async function amountRanges(token: Extract<SearchToken, {kind: 'amount'}>): Promise<Array<[string, string]>> {
+    const out: Array<[string, string]> = []
+    for (const currency of token.currency ? [token.currency] : await knownCurrencies())
+      for (const [lo, hi] of compareBounds(token.amounts, '=')(currency)) out.push([amountTerm(currency, lo!), amountTerm(currency, hi!)])
+    return out
+  }
+
+  /** The ids a text-like token finds, or undefined when there are more than SMALL. */
+  async function capped(token: Extract<SearchToken, {kind: 'text' | 'amount'}>): Promise<Set<string> | undefined> {
+    const p = token.text
+    const own = await store.terms({kind: 'w', min: p, max: p + END, limit: SMALL + 1})
+    if (own.length > SMALL) return undefined
+    const out = new Set<string>()
+    const take = (rows: SearchTerm[]) => {
+      for (const r of rows) {
+        typeOf.set(r.entityId, r.entityType as RecordType)
+        out.add(r.entityId)
+      }
+      return out.size <= SMALL
+    }
+    if (!take(own)) return undefined
+    const named = await namedBy(p)
+    for (const id of named.commented) out.add(id)
+    const expansions: Array<[TermKind, string]> = [...[...named.groups].map(g => ['G', g] as [TermKind, string]), ...[...named.people].map(x => ['h', x] as [TermKind, string]), ...[...named.categories].map(c => ['c', c] as [TermKind, string])]
+    for (const [kind, value] of expansions) if (!take(await store.terms({kind, min: value, max: value, limit: SMALL + 1 - out.size}))) return undefined
+    if (token.kind === 'amount') for (const [min, max] of await amountRanges(token)) if (!take(await store.terms({kind: 'a', min, max, limit: SMALL + 1 - out.size}))) return undefined
+    return out.size > SMALL ? undefined : out
+  }
+
+  /** A text-like token as a check on a row in hand: the same answer `resolve` gives, from the row's own terms. */
+  async function tester(token: Extract<SearchToken, {kind: 'text' | 'amount'}>): Promise<(r: Entity<Rec>) => boolean> {
+    const p = token.text
+    const named = await namedBy(p)
+    const ranges = token.kind === 'amount' ? await amountRanges(token) : []
+    return r =>
+      named.commented.has(r.id) ||
+      termRows(r).some(row => {
+        const {kind, term} = row as unknown as SearchTerm
+        return (
+          (kind === 'w' && term.startsWith(p)) ||
+          (kind === 'G' && named.groups.has(term)) ||
+          (kind === 'h' && named.people.has(term)) ||
+          (kind === 'c' && named.categories.has(term)) ||
+          (kind === 'a' && ranges.some(([lo, hi]) => term >= lo && term <= hi))
+        )
+      })
+  }
+
   async function resolve(token: SearchToken): Promise<Set<string>> {
     switch (token.kind) {
       case 'text':
@@ -466,11 +561,24 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
   const rowStatuses = filters.filter(isRowStatus)
   const keyed = filters.filter(t => !isRowStatus(t))
   let acc: Set<string> | undefined
-  if (isRecordsWanted)
-    for (const set of (await Promise.all(keyed.map(resolve))).sort((x, y) => x.size - y.size)) {
+  /** Text-like tokens left to check on the rows of a narrow answer (see `capped`). */
+  let onRows: Array<Extract<SearchToken, {kind: 'text' | 'amount'}>> = []
+  if (isRecordsWanted) {
+    const first = await Promise.all(keyed.map(t => (isTextLike(t) ? capped(t) : resolve(t))))
+    for (const set of first.filter((x): x is Set<string> => !!x).sort((x, y) => x.size - y.size)) {
       acc = acc ? intersect(acc, set) : set
       if (acc.size === 0) break
     }
+    onRows = keyed.filter((t, i) => !first[i]).filter(isTextLike)
+    if (onRows.length && !(acc && acc.size <= SMALL)) {
+      // Nothing narrow to check them on: the full sets, as before.
+      for (const set of (await Promise.all(onRows.map(resolve))).sort((x, y) => x.size - y.size)) {
+        acc = acc ? intersect(acc, set) : set
+        if (acc.size === 0) break
+      }
+      onRows = []
+    }
+  }
   let inHand: Entity<Rec>[] | undefined
   if (isRecordsWanted) {
     const isNarrow = () => !!acc && acc.size <= SMALL
@@ -482,6 +590,10 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
       }
     if (isNarrow()) {
       inHand = await rowsOf(acc!)
+      if (onRows.length) {
+        const tests = await Promise.all(onRows.map(tester))
+        inHand = inHand.filter(r => tests.every(f => f(r)))
+      }
       if (isByRows) {
         const l = await ledgerStatus()
         inHand = inHand.filter(r => rowStatuses.every(t => recordFits(r, t.status, l, options)))

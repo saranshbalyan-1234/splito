@@ -1124,6 +1124,14 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
 - **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
   10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
   three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+- **Narrow first: a broad token is checked on the rows of a narrow answer, never turned into its full id set.**
+  Text and plain numbers are read with a cap (SMALL, 500); one that names more is tested on the rows the narrow
+  tokens found, from `termRows` plus the few people, groups and categories its word names (`capped`, `tester` in
+  `search.ts`). Measured in Chromium at 10,000 expenses, load under 2: "Bulk expense 9993" first page 350 -> 102 ms
+  (`main`: 63 ms). A query whose every token is broad ("> 90" 279 ms, "Bulk Friend 4" 709 ms; `main` 58 / 73 ms first
+  page, 1.0 / 1.3 s totals) still builds full sets: its first page must come from a newest-first walk with in-memory
+  checks and its count and totals after it (follow-up, F-266). Search speed is judged in the browser
+  (`perf/schema-v2.spec.ts`); bun's IndexedDB numbers are `fake-indexeddb`'s.
 - **Derived data that may be rebuilt is rebuilt at idle, in chunks, and a failure is forgotten.** The search index
   rebuild first ran inside the first search (during the first keystrokes) as one transaction, and a rejected rebuild
   was kept as a rejected promise, so search spun forever. Start such work at idle after open, run it in chunks of a
@@ -1558,13 +1566,20 @@ Splito lessons (add newest last, dated, with PR):
   outside demo. (6) `components/` may not import `data/`: a one-line `state/me.ts` hook gives them my id. (7) A baseline written by
   a script must keep a phase's `"mounts": 0` (a pruned zero made the gate compare against NaN): only drop zero component counts.
 
-- 2026-10-31, merge of c-personlink, c-refresh, c-joins (cloud session): **`search.test` "every query under 50 ms" fails
-  on a 4-core cloud container on `main` too** (worst 80-110 ms over three runs, load 0.1), so the 50 ms limit encodes the
-  Mac's speed, not a property of the code. The worst queries there were short prefixes (`d`, `di`, `march`), not the
-  amount range the Mac saw. Rule in § 17.1. A red speed test is first re-run on `main` on the same machine before
-  anyone blames the change under test. Also: merging branches that each regenerated the Lingui catalogs is done by
-  taking the union of both `.po` files (no translation is lost), then `intl:extract --clean` and `intl:compile`; never
-  "take one side" of a `.po`, which drops the other side's Hindi strings.
+- 2026-10-31, merge of c-personlink, c-refresh, c-joins and c-search (cloud session, load under 2, 4 cores, Chromium):
+  **measure search in the browser, not only in bun.** (1) Before c-search, `main`'s `search.test` read 80-110 ms here
+  (rows walked one by one); with c-search SQLite reads 20-36 ms at 10,000 expenses, but the IndexedDB case reads
+  about 190 ms for every query because `fake-indexeddb` is a slow pure-JS engine, so that number says nothing about
+  a browser. (2) The real check is `perf/schema-v2.spec.ts` in the browser: at 10,000 expenses c-search drew the first
+  page in 259-709 ms against `main`'s 58-73 ms, while its totals arrived sooner (`main` 1.0-1.3 s): every token was
+  turned into its full set of ids before intersecting, so "bulk" (in every title) read 10,000 keys plus every record of
+  60 friends. Rule in 17.1 (narrow first). (3) **A type word inside a name is the name:** "friend", "group",
+  "payment" are type words, so "Bulk Friend 4" meant "bulk, only friends, amount 4" and could never list an
+  expense; the perf spec waited 60 s for one. When the query's words together start one person's or group's name,
+  its type words are read as plain words (`asNames`, tested in `search.test` "a type word inside a name"). (4)
+  Merging branches that each regenerated the Lingui catalogs is done by taking the union of both `.po` files (no
+  translation is lost), then `intl:extract --clean` and `intl:compile`; never "take one side" of a `.po`, which drops
+  the other side's Hindi strings; resolve the compiled `messages.ts` to either side first, or extract fails to parse it.
 - 2026-10-31, merge of c-joins: **a request's stored `status` is not its state.** Activity's invite rows carried Resend /
   Cancel whenever `status === 'pending'`, so a 40-day-old invite (expired by `requestState`, gone from Invites sent) still
   offered Resend there; group requests had the same check. `main` only passed `friends.spec` "the demo set carries the

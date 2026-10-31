@@ -479,3 +479,28 @@ describe('F-111 M14: amounts in the user number format', () => {
   test('en "1.000" could be either, so both match', async () => expect(await found('1.000')).toEqual(['k', 'one']))
   test('comparisons read the format too', async () => expect(await found('>1.000,00', ',')).toEqual(['odd', 'rent']))
 })
+
+describe('a type word inside a name is the name', () => {
+  test('"Bulk Friend 4" finds the friend and their records; "friend" alone still means friends', async () => {
+    resetClock()
+    const store = await openSqlStore(bunExecutor(':memory:'))
+    await put(store, [
+      entity<Person>('person', 'me', {name: 'Asha Rao', isMe: true}),
+      entity<Person>('person', 'b4', {name: 'Bulk Friend 4', isMe: false}),
+      entity<Person>('person', 'b5', {name: 'Bulk Friend 5', isMe: false}),
+      entity<Group>('group', 'og', {name: 'Office group', kind: 'other', currency: 'INR', members: [], startDate: null, endDate: null, archived: false}),
+      expense('e1', {title: 'Bulk expense 1', total: 1000n, date: '2026-01-02', payers: {me: 1000n}, split: {mode: 'equal', participants: ['me', 'b4']}, shares: {me: 500n, b4: 500n}}),
+      expense('e2', {title: 'Lunch', total: 1000n, date: '2026-01-03', payers: {me: 1000n}, split: {mode: 'equal', participants: ['me', 'b4']}, shares: {me: 500n, b4: 500n}}),
+      expense('e3', {title: 'Bulk expense 3', total: 1000n, date: '2026-01-03', payers: {me: 1000n}, split: {mode: 'equal', participants: ['me', 'b5']}, shares: {me: 500n, b5: 500n}}),
+      expense('e4', {title: 'Printer ink', groupId: 'og', total: 1000n, date: '2026-01-04'}),
+    ])
+    const opts = {today: '2026-02-01', me: 'me'}
+    const named = await openSearch(store, 'Bulk Friend 4', opts)
+    expect(named.people.map(p => p.id)).toEqual(['b4'])
+    expect(named.found().map(e => e.id).sort()).toEqual(['e1', 'e2'])
+    expect(named.chips.some(c => c.facet === 'type')).toBe(false)
+    expect((await openSearch(store, 'office group', opts)).found().map(e => e.id)).toEqual(['e4'])
+    const kind = await openSearch(store, 'friend', opts)
+    expect(kind.people.map(p => p.id).sort()).toEqual(['b4', 'b5'])
+  })
+})
