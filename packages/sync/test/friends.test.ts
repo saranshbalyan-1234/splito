@@ -3,6 +3,7 @@ import {type Contact, DomainError} from '@splito/domain'
 
 import {activityFromHistory} from '../src/activity'
 import {demoDirectory, offlineDirectory} from '../src/directory'
+import {applyGroupRequestAccepted, type GroupRequest} from '../src/groupJoins'
 import {
   acceptFriendRequest,
   acceptInvite,
@@ -27,7 +28,7 @@ import {
   sendFriendRequest,
   usesLeft,
 } from '../src/friends'
-import {createExpense, createGroup, createPerson, ensureMe, type Person} from '../src/mutations'
+import {createExpense, createGroup, createPerson, ensureMe, type ExpenseDraft, type Person} from '../src/mutations'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {type MutationCtx} from '../src/types'
@@ -94,11 +95,16 @@ test('when they accept, a friend linked to their account appears and is selectab
   // Applied from their side: history, but nothing for this device to push.
   expect(await ops(r.id)).toEqual(['friendRequest.send'])
   expect(await ops(person.id)).toEqual([])
+  // Selectable everywhere: in a group once they accept its request (owner 196: a Splito friend is asked, not added).
   const g = await createGroup(s, ctx, {name: 'Trip', kind: 'trip', currency: 'INR', startDate: null, endDate: null, memberIds: [person.id]})
-  await createExpense(s, ctx, {
+  const taxi: ExpenseDraft = {
     title: 'Taxi', groupId: g.id, currency: 'INR', total: 200n, payers: {me: 200n},
     split: {mode: 'equal', participants: ['me', person.id]}, date: '2026-10-26', tz: 'Asia/Kolkata', category: 'transport', notes: '',
-  })
+  }
+  await expect(createExpense(s, ctx, taxi)).rejects.toThrow('NOT_A_MEMBER')
+  const [asked] = await s.getAll<GroupRequest>('groupRequest')
+  await applyGroupRequestAccepted(s, them('acc-a'), asked!.id, 'me')
+  await createExpense(s, ctx, taxi)
 })
 
 test('changes applied from their side never claim to be synced: nothing acknowledged them', async () => {

@@ -21,7 +21,7 @@ import {AnimatedAmount} from '#/motion/AnimatedAmount'
 import {usePressScale} from '#/motion/PressableScale'
 import {amountSize, overviewColumns} from '../overviewGrid'
 import {analyticsHref, OVERVIEW_SCOPES} from '../overviewScope'
-import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 import {SectionLink} from '#/components/SectionLink'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}

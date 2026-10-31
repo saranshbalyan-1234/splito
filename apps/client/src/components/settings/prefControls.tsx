@@ -507,18 +507,6 @@ function GroupInviteUsesPref() {
   )
 }
 
-function ApproveJoinsPref() {
-  const {t: l} = useLingui()
-  return (
-    <SwitchPref
-      pref={usePrefControl('invites.approveJoins')}
-      icon={GroupsIcon}
-      title={l`Approve group joins`}
-      label={l`Ask me before someone joins`}
-    />
-  )
-}
-
 function InviteExpiryPref() {
   const {t: l} = useLingui()
   return (
@@ -608,5 +596,4 @@ export const PREF_CONTROLS = {
   'invites.defaultMaxUses.friend': FriendInviteUsesPref,
   'invites.defaultMaxUses.group': GroupInviteUsesPref,
   'invites.defaultExpiry': InviteExpiryPref,
-  'invites.approveJoins': ApproveJoinsPref,
 } satisfies Record<PrefKey, React.ComponentType | null>

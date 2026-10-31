@@ -1,6 +1,6 @@
 import {createStore} from './core'
 import {type Engine, type RangeQuery, type RowAccess} from './engine'
-import {type LegacyV1, migrateFromV1, migrateToV4, migrateToV5, stampSchemaVersion} from './migrate'
+import {type LegacyV1, migrateFromV1, migrateToV4, migrateToV5, migrateToV6, stampSchemaVersion} from './migrate'
 import {type ColumnType, indexColumns, type Row, SCHEMA_VERSION, STORES, type StoreName, type StoreSpec} from './schema'
 import {type Store} from './store'
 
@@ -140,7 +140,7 @@ async function readV1(db: SqlExecutor): Promise<LegacyV1> {
 
 /**
  * Brings the database to the current layout, once: a fresh file gets the
- * tables; a v2 or v3 file gets the missing tables and the v4 rebuild, a v4 file the dispute tables; a v1 file (`PRAGMA user_version` 0 with an `entities` table) is
+ * tables; a v2 or v3 file gets the missing tables and the v4 rebuild, a v4 file the dispute tables, a v5 file the group requests table; a v1 file (`PRAGMA user_version` 0 with an `entities` table) is
  * read whole, its tables replaced and every row written back in the new
  * layout, all inside one transaction that also sets `user_version`, so a
  * crash leaves v1 untouched and a finished migration is never run again.
@@ -160,6 +160,7 @@ async function migrate(db: SqlExecutor) {
       const meta = await db.all<{value: string}>("SELECT value FROM meta WHERE key = 'schemaVersion'", []).catch(() => [])
       if (meta[0]?.value === '3') version = 3
       else if (meta[0]?.value === '4') version = 4
+      else if (meta[0]?.value === '5') version = 5
     }
   }
   await db.withTransaction(async () => {
@@ -177,6 +178,13 @@ async function migrate(db: SqlExecutor) {
     if (version === 4) {
       for (const sql of schemaSql()) await db.exec(sql)
       await migrateToV5(sqlRows(db))
+      await db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
+      return
+    }
+    // v5 -> v6: the group requests table (IF NOT EXISTS), empty.
+    if (version === 5) {
+      for (const sql of schemaSql()) await db.exec(sql)
+      await migrateToV6(sqlRows(db))
       await db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
       return
     }

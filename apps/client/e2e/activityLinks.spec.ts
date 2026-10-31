@@ -147,7 +147,7 @@ for (const [name, viewport] of SIZES) {
     test('requests and invites: People links to Activity on Friends and invites; Accept and Cancel work in place', async ({page}) => {
       await openDemo(page, '/people')
       await page.getByTestId('screen-people').getByTestId('people-requests-title-link').click()
-      await expectActivityCopy(page, {url: /type=friends/, types: ['friends'], families: ['friendRequest', 'person']})
+      await expectActivityCopy(page, {url: /type=friends/, types: ['friends'], families: ['friendRequest', 'groupRequest', 'person']})
       const kabir = () => screen(page).getByTestId('activity-friendRequest.sent').filter({hasText: 'Kabir'})
       await expect(kabir().getByTestId('invite-sent-resend')).toBeVisible()
       await kabir().getByTestId('invite-sent-cancel').click()

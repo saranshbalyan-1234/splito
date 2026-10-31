@@ -15,6 +15,8 @@ import {
   type Expense,
   type FriendRequest,
   type Group,
+  type GroupRequest,
+  joinPolicyOf,
   type InviteLink,
   inviteLinkState,
   type NetBalance,
@@ -57,6 +59,7 @@ type Demo = {
   repayments: Entity<Repayment>[]
   writeOffs: Entity<WriteOff>[]
   requests: Entity<FriendRequest>[]
+  groupRequests: Entity<GroupRequest>[]
   links: Entity<InviteLink>[]
   feedback: Entity[]
   /** Every group, deleted ones too (`groups` holds only the live ones). */
@@ -148,8 +151,20 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   ['a friend invite link with no limits', d => d.links.some(l => l.data.kind === 'friend' && l.data.maxUses === null && l.data.expiresAt === null)],
   ['a group invite link, active', d => linkStates(d, 'group').has('active')],
   ['a group invite link with a use limit', d => d.links.some(l => l.data.kind === 'group' && l.data.maxUses !== null)],
-  // ponytail: a "join request" is a use of a group link that needs approval; there is no pending-approval record until the server exists (F-2105).
-  ['a group join request (someone opened a link that needs my approval)', d => d.links.some(l => l.data.kind === 'group' && l.data.approveJoins && !l.data.revoked && l.data.uses > 0)],
+  // Who can join a group and consent to be added (F-269, owner 196)
+  ['a group that anyone with the link can join', d => d.groups.some(g => joinPolicyOf(g.data) === 'link' && d.links.some(l => l.data.groupId === g.id && !l.data.revoked && !l.data.approveJoins))],
+  ['a group where I approve each join (the default), with its link', d => d.groups.some(g => joinPolicyOf(g.data) === 'approve' && d.links.some(l => l.data.groupId === g.id && !l.data.revoked && l.data.approveJoins))],
+  ['an invite-only group (no working link)', d => d.groups.some(g => g.data.joinPolicy === 'invite' && !d.links.some(l => l.data.groupId === g.id && !l.data.revoked))],
+  ['a group join request waiting for my approval (someone opened the link)', d => d.groupRequests.some(r => r.data.kind === 'join' && r.data.direction === 'incoming' && requestState(r.data, d.now) === 'pending')],
+  ['a join request I approved (they are now a member)', d => d.groupRequests.some(r => r.data.kind === 'join' && r.data.status === 'accepted' && r.data.personId && d.groups.some(g => g.id === r.data.groupId && g.data.members.some(m => m.personId === r.data.personId)))],
+  ['a group request waiting for me ("X added you to G")', d => d.groupRequests.some(r => r.data.kind === 'invite' && r.data.direction === 'incoming' && requestState(r.data, d.now) === 'pending')],
+  ['a group request I declined', d => d.groupRequests.some(r => r.data.kind === 'invite' && r.data.direction === 'incoming' && r.data.status === 'declined')],
+  ['an invited member waiting on a group (shown "Invited", not a member)', d => d.groupRequests.some(r => r.data.kind === 'invite' && r.data.direction === 'outgoing' && requestState(r.data, d.now) === 'pending' && d.groups.some(g => g.id === r.data.groupId && !g.data.members.some(m => m.personId === r.data.personId)))],
+  ['my own join request waiting for an admin', d => d.groupRequests.some(r => r.data.kind === 'join' && r.data.direction === 'outgoing' && requestState(r.data, d.now) === 'pending')],
+  ['a group request in Activity: added you', d => d.activity.some(e => e.kind === 'groupRequest.invited')],
+  ['a group request in Activity: join requested', d => d.activity.some(e => e.kind === 'groupRequest.joinRequested')],
+  ['a group request in Activity: sent', d => d.activity.some(e => e.kind === 'groupRequest.sent')],
+  ['a group request in Activity: accepted (joined)', d => d.activity.some(e => e.kind === 'groupRequest.accepted')],
   ['a friend request in Activity: received', d => d.activity.some(e => e.kind === 'friendRequest.received')],
   ['a friend request in Activity: sent', d => d.activity.some(e => e.kind === 'friendRequest.sent')],
   ['a friend request in Activity: accepted (Joined)', d => d.activity.some(e => e.kind === 'friendRequest.accepted')],
@@ -250,6 +265,7 @@ async function readDemo(now: number): Promise<Demo> {
     repayments: of<Repayment>('repayment'),
     writeOffs: of<WriteOff>('writeoff'),
     requests: of<FriendRequest>('friendRequest'),
+    groupRequests: of<GroupRequest>('groupRequest'),
     links: of<InviteLink>('inviteLink'),
     feedback: of('feedback'),
     activity: activityFromHistory(dump.history),

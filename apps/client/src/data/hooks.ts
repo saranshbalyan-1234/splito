@@ -9,13 +9,18 @@ import {
   type Expense,
   type FriendRequest,
   type Group,
+  type GroupRequest,
   type HistoryRow,
+  incomingGroupRequests,
   incomingRequests,
+  invitedPeople,
+  joinRequestsForAdmin,
   type InviteLink,
   inviteLinkState,
   type Key,
   listOpenDisputes,
   type MutationCtx,
+  outgoingGroupRequests,
   outgoingRequests,
   type Person,
   type PrefKey,
@@ -73,7 +78,7 @@ import {
 } from '#/data/projections'
 import {useData, useMaybeData} from '#/data/StoreProvider'
 
-import {directory} from '#/data/friends'
+import {directory, answerGroupInvites, revokeGroupLinks} from '#/data/friends'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 
 export function useStore(): Store {
@@ -423,6 +428,43 @@ export function useFriendRequests() {
   return useEntities<FriendRequest>('friendRequest')
 }
 
+/** Every group request, all four kinds and any state. Undefined while loading. */
+export function useGroupRequests() {
+  return useEntities<GroupRequest>('groupRequest')
+}
+
+/**
+ * The Groups tab's top section (26.3, owner 197): group requests to me (Join), join requests for groups I run (Approve),
+ * and the invites and join requests I sent that wait. Expired ones drop out on the minute tick.
+ */
+export function usePendingGroupRequests() {
+  const requests = useGroupRequests()
+  const groups = useEntities<Group>('group')
+  const {actor} = useMutationCtx()
+  const now = useTickEveryMinute()
+  const all = requests ?? []
+  return {
+    isLoading: requests === undefined || groups === undefined,
+    toMe: incomingGroupRequests(all, now).filter(r => r.data.kind === 'invite'),
+    toApprove: joinRequestsForAdmin(all, groups ?? [], actor, now),
+    sent: outgoingGroupRequests(all, now),
+  }
+}
+
+/** The people one group has asked to join and who have not answered: the group page's "Invited" rows. */
+export function useInvitedPeople(groupId: string) {
+  const requests = useGroupRequests()
+  const now = useTickEveryMinute()
+  return invitedPeople(requests ?? [], groupId, now)
+}
+
+/** The join requests waiting on one group (only its admins act on them). */
+export function useGroupJoinRequests(groupId: string) {
+  const requests = useGroupRequests()
+  const now = useTickEveryMinute()
+  return incomingGroupRequests(requests ?? [], now).filter(r => r.data.kind === 'join' && r.data.groupId === groupId)
+}
+
 /** Every invite link you made. Undefined while loading. */
 export function useInviteLinks() {
   return useEntities<InviteLink>('inviteLink')
@@ -466,3 +508,12 @@ export function useAnswerFriendRequest() {
     await directory.accept(requestId)
   }
 }
+
+/** After friends were asked to join a group: lets the directory answer for them (demo mode; see `answerGroupInvites`). */
+export function useAnswerGroupInvites() {
+  const {store, ctx} = useData()
+  return (groupId: string) => answerGroupInvites(store, ctx, groupId)
+}
+
+/** The directory is told these group links stopped working (the group went invite only). */
+export {revokeGroupLinks}

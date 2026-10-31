@@ -1,4 +1,6 @@
-import {type Contact, contactKey} from '@splito/domain'
+import {type Contact, type CurrencyCode, contactKey} from '@splito/domain'
+
+import {type Group, type JoinPolicy} from './mutations'
 
 /*
  * The account directory and invite API (ARCHITECTURE 26.18). The backend
@@ -20,6 +22,8 @@ export type InvitePreview = {
   inviter: DirectoryAccount
   /** Group invites: the group's name. */
   groupName: string | null
+  /** Group links: the group, so opening the link can put me in it or ask (what the group's "Who can join" says, owner 196). */
+  group?: {id: string; kind: Group['kind']; currency: CurrencyCode; joinPolicy: JoinPolicy}
 }
 
 export interface DirectoryClient {
@@ -33,6 +37,11 @@ export interface DirectoryClient {
   /** Accepting an incoming request or an invite code. */
   accept(target: string): Promise<Delivery>
   openInvite(code: string): Promise<InvitePreview | 'not-found' | 'unavailable'>
+  /**
+   * Who answers a group request I sent, once they do: null while nobody has (production until the backend delivers
+   * answers). The demo directory's accounts say yes after the usual delay, so a demo friend is never "Invited" forever.
+   */
+  answerGroupRequest(accountId: string): Promise<DirectoryAccount | null>
 }
 
 /** Production until the backend batch lands. */
@@ -44,6 +53,7 @@ export const offlineDirectory: DirectoryClient = {
   revoke: async () => 'queued',
   accept: async () => 'queued',
   openInvite: async () => 'unavailable',
+  answerGroupRequest: async () => null,
 }
 
 /** A fake directory for demo mode, with a short delay so the checking state shows. */
@@ -53,7 +63,7 @@ export function demoDirectory({
   latencyMs = 700,
 }: {
   accounts: DirectoryAccount[]
-  invites: Record<string, {kind: InvitePreview['kind']; inviter: string; groupName: string | null}>
+  invites: Record<string, {kind: InvitePreview['kind']; inviter: string; groupName: string | null; group?: InvitePreview['group']}>
   latencyMs?: number
 }): DirectoryClient & {accountFor(contact: Contact): DirectoryAccount | undefined} {
   const byContact = new Map(accounts.flatMap(a => (a.contact ? [[contactKey(a.contact), a] as const] : [])))
@@ -70,7 +80,8 @@ export function demoDirectory({
     openInvite: code => {
       const invite = invites[code]
       const inviter = invite && byId.get(invite.inviter)
-      return later(invite && inviter ? {kind: invite.kind, inviter, groupName: invite.groupName} : 'not-found')
+      return later(invite && inviter ? {kind: invite.kind, inviter, groupName: invite.groupName, group: invite.group} : 'not-found')
     },
+    answerGroupRequest: accountId => later(byId.get(accountId) ?? null),
   }
 }

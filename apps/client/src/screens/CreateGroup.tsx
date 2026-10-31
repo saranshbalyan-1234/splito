@@ -3,8 +3,9 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {DomainError, parseLocalDate} from '@splito/domain'
-import {createGroup, createPerson, type Group, isRemovedFriend, type Person} from '@splito/sync'
+import {createGroup, createPerson, type Group, isRemovedFriend, type JoinPolicy, type Person} from '@splito/sync'
 
+import {answerGroupInvites} from '#/data/friends'
 import {useHaptics} from '#/lib/haptics'
 import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
 import {type NavigationProp} from '#/lib/routes/types'
@@ -26,6 +27,7 @@ import * as Toggle from '#/components/forms/Toggle'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as FormSheet from '#/components/FormSheet'
 import {GroupFields} from '#/components/groups/GroupFields'
+import {JoinPolicyField} from '#/components/groups/JoinPolicyField'
 import {AvatarPreview} from '#/components/people/AvatarPreview'
 import {PendingPeople} from '#/components/people/PendingPeople'
 import {CurrencyDialog} from '#/components/split/pickers'
@@ -57,6 +59,7 @@ export function CreateGroupScreen() {
   const [endDate, setEndDate] = useState('')
   const [location, setLocation] = useState('')
   const [memberIds, setMemberIds] = useState<string[]>([])
+  const [joinPolicy, setJoinPolicy] = useState<JoinPolicy>('approve')
   const [newName, setNewName] = useState('')
   const runOnce = useSingleFlight()
   const [error, setError] = useState<'name' | 'dates' | null>(null)
@@ -111,7 +114,9 @@ export function CreateGroupScreen() {
         endDate: isTrip && endDate ? endDate : null,
         location: isTrip ? location : null,
         memberIds,
+        joinPolicy,
       })
+      void answerGroupInvites(store, ctx, group.id)
       haptics.success()
       Toast.show(l`${group.data.name} created`, {type: 'success'})
       close()
@@ -219,9 +224,16 @@ export function CreateGroupScreen() {
                     t.atoms.border_contrast_low,
                   ]}>
                   <UserAvatar size={32} name={friend.data.name} type="user" />
-                  <Toggle.LabelText style={[a.flex_1, a.text_md]}>
-                    {friend.data.name}
-                  </Toggle.LabelText>
+                  <View style={[a.flex_1]}>
+                    <Toggle.LabelText style={[a.text_md]}>
+                      {friend.data.name}
+                    </Toggle.LabelText>
+                    {friend.data.accountId ? (
+                      <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+                        <Trans>Gets a request to join</Trans>
+                      </Text>
+                    ) : null}
+                  </View>
                   <Toggle.Checkbox />
                 </Toggle.Item>
               ))}
@@ -268,6 +280,8 @@ export function CreateGroupScreen() {
             </View>
           </View>
         </View>
+
+        <JoinPolicyField value={joinPolicy} onChange={setJoinPolicy} />
       </View>
     </FormSheet.Screen>
   )

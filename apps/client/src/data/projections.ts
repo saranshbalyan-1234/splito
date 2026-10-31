@@ -134,7 +134,7 @@ export function projectionFor<T>(store: Store, query: Query<T>): Projection<T> {
 
 /** Person names are capitalised word by word on display (owner 181), so rows saved lower-case read right. Every screen reads people and friend requests through these queries. */
 const shown = <T>(type: EntityType, e: Entity<T>): Entity<T> =>
-  type === 'person' || type === 'friendRequest' ? (displayPerson(e as unknown as Entity<Person>) as unknown as Entity<T>) : e
+  type === 'person' || type === 'friendRequest' || type === 'groupRequest' ? (displayPerson(e as unknown as Entity<Person>) as unknown as Entity<T>) : e
 
 /* The sync status counts: an acknowledgement changes only that, and the row must redraw at full strength (decision 111). */
 const isSameRow = (a: Entity, b: Entity) =>
@@ -231,6 +231,7 @@ export const activityQuery: Query<ActivityFeed> = {
     touches(change, 'repayment') ||
     touches(change, 'writeoff') ||
     touches(change, 'friendRequest') ||
+    touches(change, 'groupRequest') ||
     touches(change, 'reminder') ||
     touches(change, 'comment') ||
     touches(change, 'dispute'),

@@ -130,6 +130,7 @@ export function activityTypeOf(kind: string): ActivityTypeId | undefined {
       return 'groups'
     case 'person':
     case 'friendRequest':
+    case 'groupRequest':
       return 'friends'
     case 'reminder':
       return 'reminders'
@@ -161,6 +162,7 @@ function involves(e: ActivityEvent, person: string, partiesOfTarget?: PartiesOfT
     case 'reminder':
       return e.data.personId === person
     case 'friendRequest':
+    case 'groupRequest':
       return e.data.personId === person
     case 'person':
       return e.entityId === person

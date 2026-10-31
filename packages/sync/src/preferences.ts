@@ -253,7 +253,6 @@ export const PREFS = {
   'invites.defaultMaxUses.friend': def<InviteMaxUses>('invites.defaultMaxUses.friend', 'invites', 'account', 'Friend invite link uses', 1, oneOf(...MAX_USES)),
   'invites.defaultMaxUses.group': def<InviteMaxUses>('invites.defaultMaxUses.group', 'invites', 'account', 'Group invite link uses', 25, oneOf(...MAX_USES)),
   /** Groups: new invite links make each join wait for an admin (26.18, default off). */
-  'invites.approveJoins': def('invites.approveJoins', 'invites', 'account', 'Approve each group join', false, isBool),
   'invites.defaultExpiry': def<InviteExpiry>('invites.defaultExpiry', 'invites', 'account', 'Invite links expire after', '7d', oneOf('24h', '7d', '30d', 'never')),
 } as const
 

@@ -198,7 +198,7 @@ test('addGroupMembers adds new people once; their earlier splits are untouched',
   const g = await createGroup(s, ctx, {name: 'Goa', kind: 'trip', currency: 'INR', memberIds: [x.id], startDate: null, endDate: null})
   await createExpense(s, ctx, expense({groupId: g.id, split: {mode: 'equal', participants: ['me', x.id]}}))
   const before = groupNet(await loadLedger(s), g.id)
-  const u = await addGroupMembers(s, ctx, g.id, [y.id, y.id, x.id])
+  const u = (await addGroupMembers(s, ctx, g.id, [y.id, y.id, x.id])).group
   expect(u.data.members.map(m => m.personId)).toEqual(['me', x.id, y.id])
   expect(groupNet(await loadLedger(s), g.id)).toEqual(before)
   await createExpense(s, ctx, expense({groupId: g.id, payers: {[y.id]: 200n}, split: {mode: 'equal', participants: ['me', y.id]}}))

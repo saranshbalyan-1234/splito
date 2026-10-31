@@ -17,7 +17,7 @@ import {RemoveFriendDialog} from '#/features/friends/RemoveFriendDialog'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {List, type ListMethods} from '#/view/com/util/List'
 import {useInviteLinkRows} from '#/screens/Invites/InviteLinks'
-import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -44,7 +44,6 @@ const DEFAULT_PREFS = [
   'invites.defaultMaxUses.friend',
   'invites.defaultMaxUses.group',
   'invites.defaultExpiry',
-  'invites.approveJoins',
 ] as const
 
 type Item =

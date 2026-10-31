@@ -601,7 +601,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 
 - **One store / table per entity type** (IndexedDB object stores and SQLite tables share names and columns):
   `people`, `groups`, `group_members`, `expenses`, `expense_parties`, `repayments`, `writeoffs`, `comments`,
-  `friend_requests`, `invite_links`, `feedback`, `preferences`, `reminders`, `disputes`, plus infrastructure `history`, `outbox`,
+  `friend_requests`, `group_requests`, `invite_links`, `feedback`, `preferences`, `reminders`, `disputes`, plus infrastructure `history`, `outbox`,
   `meta`. A new entity type gets its own store and a migration; nothing is "clubbed" into a shared store.
 - **Every row** carries `id` (UUID), `version`, `createdAt` / `updatedAt` (UTC ms), `deleted` (+ `deletedAt`,
   `purgedAt`), and for money rows `currency` + amounts as bigint minor units encoded with the codec (§ 9.3);
@@ -634,7 +634,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   `byUpdatedAt`, `byArchived`; group_members `byPerson`; expenses `byGroupDate` `[groupId, date]`, `byDate`,
   `byUpdatedAt`, `byDeleted`; expense_parties `byPersonDate` `[personId, date]`, `byGroupPerson`; repayments and
   writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; disputes `byTarget` `[targetType, targetId]`, `byTargetStatus` `[targetType, targetId, status]` (a record's open ones: the badge, the one-open-per-person rule, the projection) and `byStatus` (every open one: the Disputed filter); friend_requests
-  `byStatus`; history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
+  `byStatus`; group_requests `byStatus` and `byGroup` `[groupId, status]` (a group's pending join requests and invited people); history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
 - **Materialised balance projection** `balances` (`[personId, groupId|'', currency]` -> net minor units),
   maintained in the SAME transaction as every money write (expense, repayment, write-off, delete, restore) by
   the sync mutations, so Home, People, Groups and the right column read balances in O(rows shown) instead of
@@ -660,7 +660,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   resolve at query time, so a rename rewrites no terms.
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
-  run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty); v1 -> v2 copies rows from `entities` into the per-type stores, builds
+  run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty; v6: the `group_requests` store, v5 -> v6 adds it empty, and a group's `joinPolicy` lives in its data, absent reads as 'approve'); v1 -> v2 copies rows from `entities` into the per-type stores, builds
   `group_members`, `expense_parties` and `balances`, then drops `entities`. Each migration has a test that
   loads a v1 fixture (incl. the large demo set) and checks every row and balance survives exactly.
 - **The Store interface stays the boundary** (§ 1): screens and hooks never touch IndexedDB/SQLite directly;
@@ -1496,6 +1496,21 @@ Splito lessons (add newest last, dated, with PR):
   updates on the same build: the first visit of a tab lets background history loading and the Analytics report land
   inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
   frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
+- 2026-10-31, F-269 (group requests): **someone who has been asked is not a member.** A pending group request is its own
+  record (like a friend request), so no split, expense or picker can use the person by construction; the group page,
+  the Add members sheet and the expense picker draw them greyed as "Invited" from the request, never from `members`.
+  A group's join rule (`joinPolicy`, absent reads as 'approve') is the one source for its link: the link's
+  `approveJoins` is derived from it when the link is made or the rule changes, and 'invite' revokes the links; the old
+  `invites.approveJoins` preference is gone. A new store is a schema step on both engines (checklist above, v6), and
+  a request component that reads data lives in `screens/` (Activity gets its buttons through a render prop, as for
+  friend invites). New messages must be extracted, translated and compiled before an e2e build, or the app prints the
+  message ids (`+EvjqO`) and every text assertion fails.
+- 2026-10-31, F-269 review: **removing a preference leaves its rows on devices.** `invites.approveJoins` is gone from the
+  registry (a group's own rule replaced it), but old devices still hold its row: readers look up by registry key and
+  skip unknown ids (`resetAllPrefs` filters them, backup exports only account-scope keys it knows), and a test keeps it
+  so. A request that lapsed (30 days) must not block asking again: every "is there already one" check reads
+  `requestState`, never the stored `pending`. Getting into a group by a request or a link marks the written version
+  (`Group.viaRequest`), so Activity shows the request's row and not "created" or "edited".
 
 - 2026-10-31, F-261 (c-personlink): **making every avatar a link is a mount cost, and nested links need care.** (1) The renders gate's
   scroll phase counted about 360 more `PersonLink` / `Link` and about 730 more `Pressable` mounts (one per Activity row), so the
@@ -2906,11 +2921,14 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   group, it lives only inside the group's "Add members / Invite people" sheet. No header overflow, menu or page
   shows invite links outside these flows (the Home "..." overflow and the Group overflow entries are removed;
   "Manage invite links" is reached from the invite-link sheet's "Manage links" button and from Settings).
-- **Every group says who can join, and adding someone asks them** (owner 196). New group, Edit group and the
-  group's "Add members / Invite people" sheet show one choice, "Who can join", with three options in plain words:
+- **Every group says who can join, and adding someone asks them** (owner 196). New group and Edit group
+  show one choice, "Who can join", with three options in plain words (radios; disabled for anyone but an admin); the
+  group's "Add members / Invite people" sheet shows only the current rule as one line ("Link, an admin approves each
+  join · Change"), and Change opens Edit group (owner 212: the options live in one place):
   - **Anyone with the link:** the group link and QR work, and whoever opens it joins at once.
-  - **Link, I approve each join** (the default): opening the link sends a join request; the group's admins see it
-    in Activity (Type = Friends and invites, owner 195) and Approve or Decline it in the row.
+  - **Link, I approve each join** (the default; everyone but an admin reads it as "Link, an admin approves each
+    join"): opening the link sends a join request; the group's admins see it in Activity (Type = Friends and invites,
+    owner 195) and Approve or Decline it in the row.
   - **Invite only:** no link exists (an existing link stops working); people join only when a member adds them.
   Adding someone to a group never puts them in without consent: adding a Splito friend whose account is linked
   (possible only once a directory or the backend can deliver the request) sends them a group request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as

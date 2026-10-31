@@ -16,6 +16,8 @@ import {
 
 import {formatContact, isContact} from './contact'
 import {type Dispute} from './disputes'
+import {type GroupRequest} from './groupJoins'
+import {requestState} from './requests'
 import {editIdsPref, unhideItems} from './preferences'
 import {type Key} from './schema'
 import {type Page, type Store, type Tx} from './store'
@@ -52,6 +54,19 @@ export interface GroupRemoval {
   writeoffs: number
 }
 
+/**
+ * Who can join a group (owner 196): 'link' anyone with the group link joins at once, 'approve' (the default) a link
+ * opens a join request an admin answers, 'invite' there is no link and people join only when a member adds them and
+ * they accept.
+ */
+export type JoinPolicy = 'link' | 'approve' | 'invite'
+export const JOIN_POLICIES: readonly JoinPolicy[] = ['link', 'approve', 'invite']
+
+/** A group's join rule; groups made before it existed read as 'approve' (read-time adapter, no schema change). */
+export function joinPolicyOf(g: Pick<Group, 'joinPolicy'>): JoinPolicy {
+  return g.joinPolicy ?? 'approve'
+}
+
 export interface Group {
   name: string
   kind: 'trip' | 'home' | 'couple' | 'other'
@@ -67,6 +82,10 @@ export interface Group {
   inactive?: boolean
   /** "Who you settle with" rules. Absent: every member pair is allowed. */
   rules?: SettlementRules
+  /** Who can join (owner 196). Absent: 'approve'. Only an admin changes it. */
+  joinPolicy?: JoinPolicy
+  /** The request (or link code) whose answer wrote this version: Activity tells the story with the request's own row, not as a group edit. */
+  viaRequest?: string
   /** Set on the tombstone by "Delete group"; cleared by restore. */
   removed?: GroupRemoval
 }
@@ -343,32 +362,127 @@ function namedIn(type: MoneyType | 'group', data: unknown): string[] {
   return [d?.from, d?.to].filter((p): p is string => typeof p === 'string')
 }
 
+/** The stored shape of a new group (name and place cleaned, active, the default rule): one builder for a group made here and one that arrives from a request. @internal */
+export function buildGroup(input: Omit<Group, 'members' | 'archived' | 'joinPolicy'> & {joinPolicy?: JoinPolicy}, members: Group['members']): Group {
+  return {...input, name: cleanName(input.name), location: cleanLocation(input.location), members, archived: false, joinPolicy: input.joinPolicy ?? 'approve'}
+}
+
 export async function createGroup(
   store: Store,
   ctx: MutationCtx,
-  input: Omit<Group, 'members' | 'archived'> & {memberIds: string[]},
+  input: Omit<Group, 'members' | 'archived' | 'joinPolicy'> & {memberIds: string[]; joinPolicy?: JoinPolicy},
 ): Promise<Entity<Group>> {
   getCurrency(input.currency)
   if (input.startDate) parseLocalDate(input.startDate)
   if (input.endDate) parseLocalDate(input.endDate)
   if (input.startDate && input.endDate && input.endDate < input.startDate) throw new DomainError('INVALID_DATE')
+  if (input.joinPolicy && !JOIN_POLICIES.includes(input.joinPolicy)) throw new DomainError('INVALID_POLICY')
   const ids = [...new Set([ctx.actor, ...input.memberIds])]
   return store.transaction(async tx => {
-    for (const pid of ids) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
+    // A Splito friend is asked, not added (owner 196); a private "only for you" friend joins at once.
+    const direct: string[] = []
+    const asked: Entity<Person>[] = []
+    for (const pid of ids) {
+      const p = await requireLive<Person>(tx, 'person', pid, 'UNKNOWN_PERSON')
+      if (pid !== ctx.actor && p.data.accountId) asked.push(p)
+      else direct.push(pid)
+    }
     const joinedAt = ctx.now()
     const {memberIds: _m, ...rest} = input
-    const members = ids.map(personId => ({personId, joinedAt, leftAt: null, role: personId === ctx.actor ? ('admin' as const) : ('member' as const)}))
-    const data: Group = {...rest, name: cleanName(input.name), location: cleanLocation(input.location), members, archived: false}
-    return write(tx, ctx, 'group', ctx.newId(), data, false, 'group.create')
+    const members = direct.map(personId => ({personId, joinedAt, leftAt: null, role: personId === ctx.actor ? ('admin' as const) : ('member' as const)}))
+    const groupId = ctx.newId()
+    const group = await write(tx, ctx, 'group', groupId, buildGroup(rest, members), false, 'group.create')
+    for (const p of asked) await inviteIn(tx, ctx, group, p)
+    return group
   })
 }
 
-/** Edits a group's name, type, currency, trip dates and place (`location` left out: unchanged); members, rules and history stay. */
+/**
+ * Asks a Splito friend to join a group: an outgoing group request. A request still waiting is not repeated; one that
+ * lapsed (30 days) does not block asking again. True when a request went out. @internal
+ */
+export async function inviteIn(tx: Tx, ctx: MutationCtx, group: Entity<Group>, person: Entity<Person>): Promise<boolean> {
+  const pending = await tx.page<GroupRequest>('groupRequest', {index: 'byGroup', eq: [group.id, 'pending'], limit: 200})
+  if (pending.items.some(r => !r.deleted && r.data.kind === 'invite' && r.data.direction === 'outgoing' && r.data.personId === person.id && requestState(r.data, ctx.now()) === 'pending')) return false
+  const g = group.data
+  const data: GroupRequest = {
+    kind: 'invite',
+    direction: 'outgoing',
+    status: 'pending',
+    groupId: group.id,
+    groupName: g.name,
+    groupKind: g.kind,
+    groupCurrency: g.currency,
+    groupJoinPolicy: joinPolicyOf(g),
+    name: person.data.name,
+    accountId: person.data.accountId ?? null,
+    contact: person.data.contact ?? null,
+    personId: person.id,
+    sentAt: ctx.now(),
+  }
+  await write(tx, ctx, 'groupRequest', ctx.newId(), data, false, 'groupRequest.send')
+  return true
+}
+
+/**
+ * The members with `personIds` in from `joinedAt`: new people as members, a former member back (the old exit choice is
+ * history now, and a returning admin comes back as a member). Roles are filled in first, so a group made before roles
+ * keeps its creator as admin. @internal
+ */
+export function withMembers(members: Group['members'], personIds: Iterable<string>, joinedAt: number): Group['members'] {
+  const out = [...normalizeRoles(members)]
+  for (const personId of new Set(personIds)) {
+    const i = out.findIndex(m => m.personId === personId)
+    if (i === -1) out.push({personId, joinedAt, leftAt: null, role: 'member'})
+    else if (out[i]!.leftAt !== null) {
+      const {exit: _exit, ...rest} = out[i]!
+      out[i] = {...rest, leftAt: null, role: 'member'}
+    }
+  }
+  return out
+}
+
+/**
+ * Applies a new join rule inside the caller's transaction (admins only). Invite only revokes every group link; the
+ * other two keep them and set whether each join waits for approval, so a link always says what the group says.
+ */
+async function applyJoinPolicy(tx: Tx, ctx: MutationCtx, g: Entity<Group>, policy: JoinPolicy): Promise<Group> {
+  if (!JOIN_POLICIES.includes(policy)) throw new DomainError('INVALID_POLICY')
+  if (!groupAdmins(g.data).includes(ctx.actor)) throw new DomainError('NOT_ADMIN')
+  const next: Group = {...g.data, joinPolicy: policy}
+  let after: Key | null = null
+  // ponytail: reads every invite link (a person has a handful); an indexed `byGroup` read if links ever number in the thousands.
+  do {
+    const page: Page<Entity<InviteLinkRow>> = await tx.page<InviteLinkRow>('inviteLink', {index: 'byUpdatedAt', after, limit: 100})
+    for (const l of page.items) {
+      if (l.deleted || l.data.kind !== 'group' || l.data.groupId !== g.id || l.data.revoked) continue
+      const approveJoins = policy === 'approve'
+      if (policy === 'invite') await write(tx, ctx, 'inviteLink', l.id, {...l.data, revoked: true}, false, 'inviteLink.revoke')
+      else if (l.data.approveJoins !== approveJoins) await write(tx, ctx, 'inviteLink', l.id, {...l.data, approveJoins}, false, 'inviteLink.update')
+    }
+    after = page.next
+  } while (after)
+  return next
+}
+
+/** Changes who can join a group and nothing else (the Add members sheet's "Who can join"); admins only. */
+export async function setJoinPolicy(store: Store, ctx: MutationCtx, groupId: string, policy: JoinPolicy): Promise<Entity<Group>> {
+  return store.transaction(async tx => {
+    const g = await requireLive<Group>(tx, 'group', groupId)
+    if (joinPolicyOf(g.data) === policy) return g
+    return write(tx, ctx, 'group', groupId, await applyJoinPolicy(tx, ctx, g, policy), false, 'group.joinPolicy')
+  })
+}
+
+/** The fields of an invite link this module touches (the whole type lives in `friends`). */
+type InviteLinkRow = {kind: 'friend' | 'group'; groupId: string | null; approveJoins: boolean; revoked: boolean}
+
+/** Edits a group's name, type, currency, trip dates, place and who can join (`location` and `joinPolicy` left out: unchanged; changing the rule is admin-only); members, rules and history stay. */
 export async function updateGroup(
   store: Store,
   ctx: MutationCtx,
   groupId: string,
-  input: Pick<Group, 'name' | 'kind' | 'currency' | 'startDate' | 'endDate' | 'location'>,
+  input: Pick<Group, 'name' | 'kind' | 'currency' | 'startDate' | 'endDate' | 'location' | 'joinPolicy'>,
 ): Promise<Entity<Group>> {
   const name = cleanName(input.name)
   getCurrency(input.currency)
@@ -379,7 +493,10 @@ export async function updateGroup(
     const g = await requireLive<Group>(tx, 'group', groupId)
     const {kind, currency, startDate, endDate} = input
     const location = input.location === undefined ? (g.data.location ?? null) : cleanLocation(input.location)
-    return write(tx, ctx, 'group', groupId, {...g.data, name, kind, currency, startDate, endDate, location}, false, 'group.update')
+    // Only a real change of the rule is admin-only and touches the links; saving the same rule is just an edit.
+    const joinPolicy = input.joinPolicy ?? joinPolicyOf(g.data)
+    const next = joinPolicy === joinPolicyOf(g.data) ? g.data : await applyJoinPolicy(tx, ctx, g, joinPolicy)
+    return write(tx, ctx, 'group', groupId, {...next, name, kind, currency, startDate, endDate, location}, false, 'group.update')
   })
 }
 
@@ -568,23 +685,33 @@ export async function updateGroupRules(store: Store, ctx: MutationCtx, groupId: 
   })
 }
 
-/** Adds people to a group from now on; earlier splits are untouched. A former member rejoins. */
-export async function addGroupMembers(store: Store, ctx: MutationCtx, groupId: string, personIds: string[]): Promise<Entity<Group>> {
+/** What `addGroupMembers` did: who is in now, and whom a request went out to (those show as "Invited"). */
+export interface AddedMembers {
+  group: Entity<Group>
+  added: string[]
+  asked: string[]
+}
+
+/**
+ * Adds people to a group from now on; earlier splits are untouched. A former member rejoins. A friend whose account is
+ * linked is asked, not added (owner 196): they get a group request and show as "Invited" until they join. Anyone with
+ * no account link (a private friend, or any friend before sync exists) joins at once.
+ */
+export async function addGroupMembers(store: Store, ctx: MutationCtx, groupId: string, personIds: string[]): Promise<AddedMembers> {
   return store.transaction(async tx => {
     const g = await requireLive<Group>(tx, 'group', groupId)
-    const joinedAt = ctx.now()
-    // Roles filled in first, so a group made before roles keeps its creator as admin (not demoted by the new member's 'member').
-    const members = [...normalizeRoles(g.data.members)]
+    const current = new Set(g.data.members.filter(m => m.leftAt === null).map(m => m.personId))
+    const added: string[] = []
+    const asked: string[] = []
     for (const personId of new Set(personIds)) {
-      await requireLive(tx, 'person', personId, 'UNKNOWN_PERSON')
-      const i = members.findIndex(m => m.personId === personId)
-      if (i === -1) members.push({personId, joinedAt, leftAt: null, role: 'member'})
-      else if (members[i]!.leftAt !== null) {
-        // Back in: the old exit choice is history now, and a returning admin comes back as a member.
-        const {exit: _exit, ...rest} = members[i]!
-        members[i] = {...rest, leftAt: null, role: 'member'}
-      }
+      const p = await requireLive<Person>(tx, 'person', personId, 'UNKNOWN_PERSON')
+      if (current.has(personId)) continue
+      if (!p.data.accountId) added.push(personId)
+      else if (await inviteIn(tx, ctx, g, p)) asked.push(personId)
     }
-    return write(tx, ctx, 'group', groupId, {...g.data, members}, false, 'group.members')
+    // Nobody joined (only requests went out, or all were in already): the group itself did not change.
+    if (added.length === 0) return {group: g, added, asked}
+    const group = await write(tx, ctx, 'group', groupId, {...g.data, members: withMembers(g.data.members, added, ctx.now())}, false, 'group.members')
+    return {group, added, asked}
   })
 }

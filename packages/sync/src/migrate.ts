@@ -94,5 +94,13 @@ export async function migrateToV5(rows: RowAccess): Promise<void> {
   await rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})
 }
 
+/**
+ * v5 -> v6: the `group_requests` store exists (the engine made it, empty). Nothing derives from it and no group is
+ * rewritten: a group without `joinPolicy` reads as 'approve' (the default), so only the version is stamped.
+ */
+export async function migrateToV6(rows: RowAccess): Promise<void> {
+  await rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})
+}
+
 /** A freshly created database starts at the current version. */
 export const stampSchemaVersion = (rows: RowAccess) => rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})

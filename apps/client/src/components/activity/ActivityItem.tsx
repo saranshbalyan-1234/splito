@@ -13,7 +13,7 @@ import {defineMessage} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
-import {type ActivityEvent, type Entity, type FriendRequest, requestName} from '@splito/sync'
+import {type ActivityEvent, type Entity, type FriendRequest, type GroupRequest, requestName} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {GestureActionView} from '#/lib/custom-animations/GestureActionView'
@@ -141,6 +141,7 @@ export function ActivityItem({
   locale,
   actions,
   renderInviteActions,
+  renderGroupRequestActions,
   style,
 }: {
   event: ActivityEvent
@@ -151,6 +152,8 @@ export function ActivityItem({
   actions: ActivityActions
   /** Resend / Cancel for an invite still waiting (owner 195); the screen supplies the buttons Home's Invites sent uses. */
   renderInviteActions?: (request: Entity<FriendRequest>) => React.ReactNode
+  /** Join / Approve / Decline / Cancel for a group request still waiting (F-269); the screen supplies the Groups tab's buttons. */
+  renderGroupRequestActions?: (request: Entity<GroupRequest>) => React.ReactNode
   style?: StyleProp<ViewStyle>
 }) {
   const t = useTheme()
@@ -170,7 +173,9 @@ export function ActivityItem({
           ? snapshot.people.get(event.entityId)
           : event.entityType === 'friendRequest'
             ? snapshot.requests.get(event.entityId)
-            : event.entityType === 'comment' || event.entityType === 'dispute'
+            : event.entityType === 'groupRequest'
+              ? snapshot.groupRequests.get(event.entityId)
+              : event.entityType === 'comment' || event.entityType === 'dispute'
               ? /* A comment or a dispute is about a record: that record's sync state tones the row. */
                 (event.data.targetType === 'expense' ? snapshot.expenses : snapshot.transfers).get(event.data.targetId)
               : undefined
@@ -180,7 +185,7 @@ export function ActivityItem({
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
   const avatarId = avatarPersonId(event, snapshot.requests)
-  const content = useDescribe(event, snapshot, me, locale, navigation, actions, renderInviteActions)
+  const content = useDescribe(event, snapshot, me, locale, navigation, actions, renderInviteActions, renderGroupRequestActions)
   const isDeletedEvent = DELETED_KINDS.has(event.kind)
   /* A request awaiting an answer is one line: the answers on the right in place of "...", whose items are long-press / right-click (ARCHITECTURE 26.18). */
   const isRequestRow = !!content.actions
@@ -511,6 +516,7 @@ function useDescribe(
   navigation: NavigationProp,
   actions: ActivityActions,
   renderInviteActions?: (request: Entity<FriendRequest>) => React.ReactNode,
+  renderGroupRequestActions?: (request: Entity<GroupRequest>) => React.ReactNode,
 ): {
   avatarName: string | undefined
   icon: React.ComponentType<SVGIconProps>
@@ -706,6 +712,84 @@ function useDescribe(
             </Trans>
           ),
         open: openFriend,
+      }
+    }
+    case 'groupRequest': {
+      /* Group requests carry their answers in the row, like friend requests (owners 195, 197): Join / Decline,
+         Approve / Decline, Cancel. The row shows the request's current state, so an answered one loses its buttons. */
+      const request = snapshot.groupRequests.get(event.entityId)
+      const current = request?.data ?? event.data
+      const group = <Strong>{snapshot.groups.get(current.groupId)?.data.name ?? current.groupName}</Strong>
+      const who = <Strong>{current.name}</Strong>
+      const isPending = !!request && !request.deleted && current.status === 'pending'
+      const actions = isPending ? renderGroupRequestActions?.(request) : undefined
+      const openGroup = snapshot.groups.get(current.groupId)
+        ? () => navigation.push('Group', {groupId: current.groupId})
+        : undefined
+      const answered =
+        current.status === 'accepted' ? (
+          <Trans>Joined</Trans>
+        ) : current.status === 'declined' ? (
+          <Trans>Declined</Trans>
+        ) : current.status === 'cancelled' ? (
+          <Trans>Cancelled</Trans>
+        ) : null
+      switch (event.kind) {
+        case 'groupRequest.invited':
+          return {
+            avatarName: current.name,
+            icon: FriendAddedBadge,
+            tone: 'primary',
+            headline: <Trans>{who} added you to {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Join to split expenses with the group</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.joinRequested':
+          return {
+            avatarName: current.name,
+            icon: FriendAddedBadge,
+            tone: 'primary',
+            headline: <Trans>{who} asked to join {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Approve to let them in</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.sent':
+          return {
+            avatarName: nameOf(event.actor),
+            icon: RequestSentBadge,
+            tone: 'neutral',
+            headline: <Trans>{actor} added {who} to {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Waiting for them to join</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.joinSent':
+          return {
+            avatarName: nameOf(event.actor),
+            icon: RequestSentBadge,
+            tone: 'neutral',
+            headline: <Trans>{actor} asked to join {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Waiting for an admin to approve</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.accepted':
+          return {
+            avatarName: current.name || nameOf(event.actor),
+            icon: FriendAcceptedBadge,
+            tone: 'primary',
+            headline:
+              current.direction === 'incoming' && current.kind === 'invite' ? (
+                <Trans>You joined {group}</Trans>
+              ) : current.kind === 'join' && current.direction === 'outgoing' ? (
+                <Trans>You’re in {group}</Trans>
+              ) : (
+                <Trans>{who} joined {group}</Trans>
+              ),
+            open: openGroup,
+          }
       }
     }
     case 'person': {
