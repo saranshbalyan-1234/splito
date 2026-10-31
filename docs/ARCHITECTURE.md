@@ -2214,8 +2214,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 ### 26.3 Shell and navigation
 
 - **There is no Home tab; the Overview is the top of Analytics** [Built, F-271; web checked in e2e at 390 and 1440, native not run on a simulator] (owner 198, replaces the Home tab of 153 below):
-  the tabs are **People, Groups, Analytics, Activity, Settings** (owner 206 makes Settings a tab in the default
-  bar; Ask Splito is not a tab or a nav item, owner 200). The
+  the tabs are **People, Groups, Analytics, Activity** (owner 220: Settings is not a tab or a nav item any more, it is
+  part of Profile, opened from the header avatar; Ask Splito is not a tab or a nav item, owner 200). The
   Overview (per-currency balance cards, owners 113/114/120/161) is the first section of Analytics, People and Groups
   (owner 219, § 26.12), labelled as balances right now; Recent transactions is Activity (Type = Expenses and Payments), and recently active people and groups
   are People and Groups sorted by Last active (owner 199). The app opens on **People** (the start tab; Settings >
@@ -2286,13 +2286,13 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   left of add people on the header, which expands on click"; "this search should open a drawer instead which
   would support ai as well".
 - **Settings > Navigation lets the user choose the phone bottom bar from every sidebar item.** All items of the
-  shared list (People, Groups, Analytics, Activity, Settings; owners 198, 200) are offered, each with a toggle
+  shared list (People, Groups, Analytics, Activity; owners 198, 200, 220) are offered, each with a toggle
   and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar, with **any number of
-  tabs** (the start tab and Settings cannot be turned off: a phone has no other navigation, owner 217, so the bar
-  always reaches Settings and a saved bar without it gets it back on read). Tabs share the bar width equally; with
+  tabs** (the start tab cannot be turned off; Settings is no item, it is in Profile behind the avatar, owner 220, and
+  a saved bar naming `settings` loses it on read). Tabs share the bar width equally; with
   more than 5 the labels hide and icons stay at Bluesky size with their badges. An item that is off is not on a phone
-  (its page still opens from links). Default bar: People, Groups, Analytics, Activity, Settings (owner 206). **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
-  screens): the sidebar and rail list all items (People, Groups, Analytics, Activity, Settings),
+  (its page still opens from links). Default bar: People, Groups, Analytics, Activity (owner 220). **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
+  screens): the sidebar and rail list all items (People, Groups, Analytics, Activity),
   in the order chosen in Settings > Navigation, with no "More" item; the on/off choice shapes only the phone bottom
   bar.
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
@@ -2398,10 +2398,11 @@ show what: centre may be page name, right maybe some basic action, and left may 
 
 - **Left:** the avatar (testID `header-avatar`) on top-level pages at every width, desktop included; Bluesky
   `BackButton` with `goBack(navigation, fallback)` on pushed pages. **At every width the avatar opens Profile**
-  (owner 201, replaces "on phone and rail the avatar opens the drawer"). **Profile and Settings are separate**
-  (owner 206): Profile is its own page at `/profile` (a pushed page; Back returns where you were, else the start
-  tab), and Settings is a tab of its own (`/settings`, in the default bottom bar and the sidebar). Labelled "Open
-  profile". No avatar on the right
+  (owner 201, replaces "on phone and rail the avatar opens the drawer"). **Profile and Settings are one page**
+  (owner 220, replaces owner 206's separate Settings tab): `/profile` (a pushed page; Back returns where you were,
+  else the start tab) holds the person first and then every Settings row (§ 26.15); `/settings` opens it too, and
+  `/settings/<section>` pages keep their addresses with Back to Profile. No Settings tab, sidebar or bar item.
+  Labelled "Open profile". No avatar on the right
   and no avatar dropdown menu. *Why:* "on click of avatar, now open profile inside settings" (owner 201; earlier: "it should open the drawer like Bluesky where all menu appears like the
   hamburger"), "and move this to left, where hamburger icon was there in Bluesky"; "on desktop when sidebar is
   opened completely don't open sidebar on avatar click".
@@ -2497,7 +2498,7 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   201 and 216's address-only drawer): a phone navigates with the bottom bar alone, rail and desktop with the sidebar
   alone (§ 26.3). Nothing opens a drawer; an old `?drawer=menu` address opens its page without one. What the drawer
   held lives elsewhere: the tabs in the bar, Profile on the header avatar (owners 201, 206), Feedback, Help, Privacy and
-  About in Settings > Support (owner 204), and Settings is always in the bar (§ 26.3). *Why:* "Remove the sidebar in
+  About in Settings > Support (owner 204), and Settings is in Profile, behind the header avatar (owner 220). *Why:* "Remove the sidebar in
   mobile completely, either sidebar or bottom navigation"; earlier "Sidebar opens up when swiping" (owner 216).
 - **The browser's Back gesture is the browser's** (owner 216): the app puts no gesture at the left edge of a phone
   screen, and the page Back returns to is drawn at its own saved scroll from the first frame
@@ -3128,7 +3129,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   a destructive "Log out" row opening a prompt "Log out?". **Log out lives on Profile** (owner 202): the "Log out"
   row is the last row of Profile (`/profile`) and nowhere else (not in the Settings list, the drawer footer
   or the sidebar); the blocking add-contact step keeps its own Log out. **Profile holds only the person** (owner
-  203): no "Settings" row on it (Settings is its own tab, owner 206). **Profile is a full page about you** (owner
+  203). **Profile holds Settings too** (owner 220, replaces 203/206's separate Settings tab): after the person's
+  sections come the Settings rows (Friends and invites, the preference sections, Support, Your data), then Log out
+  last; there is no separate Settings screen. **Profile is a full page about you** (owner
   209), Bluesky profile layout, top to bottom: the header (large avatar you can change, name, email and phone with
   a verified tick, "On Splito since <month year>", Edit profile); a stat row (Friends, Groups, Expenses, You paid
   this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics; **Your balance**
@@ -3837,6 +3840,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 217 | "Also we need to choose a diff icon for activity, it doesn't make any diff if it's selected or not"; "Remove the sidebar in mobile completely, either sidebar or bottom navigation" | Activity is a Lucide Bell, solid when selected; no side drawer anywhere (phone: bottom bar only; wide: sidebar only); Settings and the start tab cannot leave the bar; old `?drawer=menu` opens the page alone | § 26.3, § 26.7, § 26.14 | Activity pulse icon (unchanged when selected); phone drawer opened by its address (216) |
 | 218 | "Ask splito icon only on Home Screen" | The Search & Ask (sparkles) header button shows only on the start tab (the screen the app opens on, People by default, following Settings > Navigation "Open on"); no other tab or page draws it; Cmd/Ctrl+K and "/" still work everywhere on web | § 26.3, § 26.4, § 26.19 | Search & Ask in every top-level header (73, 74) |
 | 219 | "On the analytics tab, all group and direct filter is at top already, it shows up again in filter"; "overview section to be on people and groups as well, think about it properly" | Analytics' Overview loses its All / Groups / Direct chips and follows the filter row's one scope; People gets an Overview of balances with friends that follows its Include groups filter; Groups gets an Overview of my balances in groups (inactive and hidden counted); cards open Analytics in that currency and scope | § 26.3, § 26.12, § 26.16 | Overview only on Analytics with its own scope chips (176, 198) |
+| 220 | "Remove settings from navigation and merge with profile"; "Fanout max" | Settings leaves the bottom bar and the sidebar; Profile (the avatar, `/profile`) holds the person then every Settings row, Log out last; `/settings` opens Profile, sections keep their addresses with Back to Profile; a saved bar loses `settings`; builders fan out as wide as the independent work allows | § 26.3, § 26.4, § 26.7, § 26.15 | Settings as its own tab and nav item, Profile without Settings (203, 206, 217's locked Settings) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
