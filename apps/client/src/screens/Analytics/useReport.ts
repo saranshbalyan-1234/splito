@@ -97,21 +97,7 @@ type View = {
  * loaded): charts, totals, the expense list and the CSV all read from here,
  * so the numbers agree everywhere. Undefined while the local store loads.
  */
-/**
- * What Analytics counts, from the address (`scope=`, or an old `overview=` link, owner 219) or the saved
- * `analyticsScope`, checked against the groups on this device. One scope for the whole page: the filter row's chip,
- * the charts, the list and the Overview at the top (owner 219: no second All / Groups / Direct control).
- */
-export function useAnalyticsScope(): Scope | undefined {
-  const groups = useEntities<Group>('group')
-  const [scopePref] = usePref('analyticsScope')
-  const route = useRoute()
-  if (!groups) return undefined
-  const params = route.params as Params
-  const urlScope = readAnalyticsParams(params as Record<string, string | undefined> | undefined).scope
-  return scopeOf(urlScope ?? overviewScopeParam(params), scopePref, groups.map(g => g.id))
-}
-
+/** The address's scope (or an old `overview=` link's, owner 219) wins over the saved one; checked against the groups here. */
 function scopeOf(fromAddress: AnalyticsScope | undefined, saved: AnalyticsScope | undefined, groupIds: string[]): Scope {
   return fromAddress ? scopeFromPref(fromAddress, groupIds) : scopeFromPref(saved, groupIds)
 }

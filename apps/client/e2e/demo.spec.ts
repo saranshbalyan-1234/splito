@@ -115,17 +115,18 @@ test('People shows each friend with real words and the right balance per currenc
   await expectNoMessageIds(page)
 })
 
-test('the summary (top of Analytics) shows one card per currency, never summed across, and narrows Analytics to the card', async ({
+test('People\'s Overview shows one card per currency, never summed across, and a card opens Analytics in it (owner 219)', async ({
   page,
 }) => {
   await page.setViewportSize({width: 1280, height: 800})
-  await openDemo(page, '/analytics')
+  await openDemo(page, '/people')
+  const people = page.getByTestId('screen-people')
   for (const {currency, net} of balanceTotals(summaries)) {
-    await expect(page.getByTestId(`summary-${currency}-net`)).toHaveText(
+    await expect(people.getByTestId(`summary-${currency}-net`)).toHaveText(
       formatAmount(magnitude(net), currency, LOCALE),
     )
   }
-  await page.getByTestId('summary-INR').click()
+  await people.getByTestId('summary-INR').click()
   await expect(page.getByTestId('screen-analytics')).toBeVisible()
   await expect.poll(() => new URL(page.url()).searchParams.get('currency')).toBe('INR')
 })
@@ -149,8 +150,8 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
   await expect(
     page.getByTestId('group-Goa trip').getByTestId('group-balance-INR'),
   ).toHaveText(/^you are owed\s*↙\s₹/)
-  // No Overview on Groups: it is the top of Analytics (owner 198).
-  await expect(page.getByTestId('groups-balances')).toHaveCount(0)
+  // Groups has its own Overview of balances in groups (owner 219).
+  await expect(page.getByTestId('screen-groups').getByTestId('groups-overview')).toBeVisible()
   await expectNoMessageIds(page)
 })
 
@@ -195,20 +196,17 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
   await expect(page.getByTestId('profile-about')).toHaveCount(0)
 })
 
-test('Analytics: the Overview counts friends; People: the Friends list has its own search beside Filters', async ({
+test('People: the Overview counts friends, and the Friends list has its own search beside Filters', async ({
   page,
 }) => {
   await page.setViewportSize({width: 390, height: 844})
-  await openDemo(page, '/analytics')
-  const analytics = page.getByTestId('screen-analytics')
+  await openDemo(page, '/people')
+  const people = page.getByTestId('screen-people')
   const settled = FRIENDS - summaries.filter(s => s.person !== ME).length
-  await expect(analytics.getByTestId('analytics-overview-counts')).toHaveText(
+  await expect(people.getByTestId('people-overview-counts')).toHaveText(
     `${FRIENDS} friends · ${settled} settled`,
   )
-  // Balances right now come first, above the filter row they ignore (owner 198).
-  await expect(analytics.getByTestId('analytics-overview-title')).toHaveText('Balances right now')
-  await page.goto('/people')
-  const people = page.getByTestId('screen-people')
+  await expect(people.getByTestId('people-overview-title')).toHaveText('Balances right now')
   // The list's own search (owner 91) sits beside Filters, besides the header's Search & Ask.
   await expect(people.getByTestId('list-search')).toBeVisible()
   await expect(people.getByTestId('list-filters')).toBeVisible()

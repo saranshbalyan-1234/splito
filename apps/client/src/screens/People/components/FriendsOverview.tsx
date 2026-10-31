@@ -1,22 +1,19 @@
 import {plural} from '@lingui/core/macro'
-import {useNavigation} from '@react-navigation/native'
 import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
 import {type Person} from '@splito/sync'
 import {useLingui} from '@lingui/react/macro'
 
-import {type NavigationProp} from '#/lib/routes/types'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
 import {useAllEntities, useBalanceRows} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {listedFriends} from '#/screens/People/sort'
+import {listedFriends} from '../sort'
 import {Overview, OverviewPlaceholder} from '#/components/overview/Overview'
-import {inScope} from '../scope'
-import {useAnalyticsScope} from '../useReport'
 
 /**
- * The balances with friends right now, one card per currency (owners 198, 219), counting only the balance rows
- * `countsRow` keeps (by group: `null` is a non-group balance). People shows it with the Friends list's Include groups
- * choice, Analytics with its one scope. A card opens `onCurrencyPress`. Hidden with no friends.
+ * The balances with friends right now, one card per currency (owner 219), at the top of People, counting only the
+ * balance rows `countsRow` keeps (by group: `null` is a non-group balance), which People sets from the Friends list's
+ * Include groups choice. A card opens `onCurrencyPress`. Hidden with no friends. Not on Analytics (owner 221: everything
+ * there follows its filters, and balances right now cannot).
  */
 export function FriendsOverview({
   countsRow,
@@ -69,23 +66,6 @@ export function FriendsOverview({
       onCurrencyPress={onCurrencyPress}
       {...(testID ? {testID} : {})}
       {...(titleTestID ? {titleTestID} : {})}
-    />
-  )
-}
-
-/**
- * The first section of Analytics (owner 198): balances right now under Analytics' one scope (owner 219: the scope chip
- * in the filter row, no All / Groups / Direct of its own). It ignores the period and currency; a card narrows the page
- * to its currency.
- */
-export function OverviewSection() {
-  const navigation = useNavigation<NavigationProp>()
-  const scope = useAnalyticsScope()
-  if (!scope) return <OverviewPlaceholder />
-  return (
-    <FriendsOverview
-      countsRow={groupId => inScope(groupId, scope)}
-      onCurrencyPress={currency => navigation.setParams({currency} as never)}
     />
   )
 }

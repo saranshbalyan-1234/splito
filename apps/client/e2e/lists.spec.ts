@@ -81,16 +81,13 @@ test('A04: Include groups reads 150 with groups and 100 without on People; the O
   await expect(people.getByTestId('list-filters-dot')).toBeVisible()
   // People's Overview counts as its list does (owner 219): Include groups off, the non-group balance only.
   await expect(people.getByTestId('people-overview').getByTestId('summary-INR-net')).toHaveText('₹100.00')
-  // Analytics keeps its own scope (Everything), whatever the friends filter says.
-  await page.getByTestId('tab-analytics').click()
-  await expect(page.getByTestId('screen-analytics').getByTestId('summary-INR-net')).toHaveText('₹150.00')
 
-  // Back on: the defaults again, so the dot goes.
-  await page.getByTestId('tab-people').click()
+  // Back on: the defaults again, so the dot goes, and the Overview counts the group balance again.
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-include-groups').click()
   await page.getByTestId('sheet-save').click()
   await expect(people.getByTestId('list-filters-dot')).toHaveCount(0)
+  await expect(people.getByTestId('people-overview').getByTestId('summary-INR-net')).toHaveText('₹150.00')
 })
 
 test('search grows from the icon to the row width, Escape folds it, and it combines with filters', async ({

@@ -47,7 +47,7 @@ import {
   type PeopleFilters,
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
-import {FriendsOverview} from '#/screens/Analytics/components/OverviewSection'
+import {FriendsOverview} from './components/FriendsOverview'
 import {analyticsHref} from '#/screens/Analytics/overviewScope'
 import {openLink} from '#/lib/links/open'
 import {SectionHeader} from '#/components/SectionHeader'

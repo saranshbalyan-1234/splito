@@ -29,7 +29,7 @@ msgid "{0, plural, one {# expired, used or revoked link isn’t shown.} other {#
 msgstr "{0, plural, one {# expired, used or revoked link isn’t shown.} other {# expired, used or revoked links aren’t shown.}}"
 
 #. placeholder {0}: live.length
-#: src/screens/Analytics/components/OverviewSection.tsx:61
+#: src/screens/People/components/FriendsOverview.tsx:58
 msgid "{0, plural, one {# friend} other {# friends}}"
 msgstr "{0, plural, one {# friend} other {# friends}}"
 
@@ -474,13 +474,13 @@ msgid "{0}, settled up"
 msgstr "{0}, settled up"
 
 #. placeholder {0}: report.nameOfPerson(report.shareOf)
-#: src/screens/Analytics/index.tsx:146
+#: src/screens/Analytics/index.tsx:142
 msgid "{0}’s share"
 msgstr "{0}’s share"
 
 #. placeholder {0}: report.nameOfPerson(report.shareOf)
 #. placeholder {1}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:230
+#: src/screens/Analytics/index.tsx:224
 msgid "{0}’s share <0>{1}</0>"
 msgstr "{0}’s share <0>{1}</0>"
 
@@ -837,7 +837,7 @@ msgstr "{list} disputed or on hold, not included in Settle up or Call it even."
 msgid "{memberCount} members"
 msgstr "{memberCount} members"
 
-#: src/screens/Analytics/components/OverviewSection.tsx:58
+#: src/screens/People/components/FriendsOverview.tsx:55
 msgid "{n, plural, one {# friend} other {# friends}}"
 msgstr "{n, plural, one {# friend} other {# friends}}"
 
@@ -954,8 +954,8 @@ msgstr "{resolver} rejected it"
 msgid "{resolver} released it"
 msgstr "{resolver} released it"
 
-#: src/screens/Analytics/components/OverviewSection.tsx:61
 #: src/screens/Groups/components/GroupsOverview.tsx:33
+#: src/screens/People/components/FriendsOverview.tsx:58
 msgid "{settledCount} settled"
 msgstr "{settledCount} settled"
 
@@ -1505,8 +1505,8 @@ msgid "Add each item and who had it. Tap a name again for another portion; right
 msgstr "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 
 #: src/navigation/Navigation.tsx:82
-#: src/screens/Analytics/index.tsx:120
-#: src/screens/Analytics/index.tsx:121
+#: src/screens/Analytics/index.tsx:116
+#: src/screens/Analytics/index.tsx:117
 #: src/screens/Group/index.tsx:581
 #: src/screens/Group/index.tsx:582
 #: src/screens/Person/index.tsx:610
@@ -1730,7 +1730,7 @@ msgstr "All settled up"
 
 #: src/features/export/ExportSheet.tsx:108
 #: src/screens/Analytics/components/Summary.tsx:198
-#: src/screens/Analytics/useReport.ts:343
+#: src/screens/Analytics/useReport.ts:329
 msgid "All time"
 msgstr "All time"
 
@@ -1836,7 +1836,7 @@ msgstr "an expense"
 
 #: src/components/TabGlyph.tsx:38
 #: src/navigation/Navigation.tsx:71
-#: src/screens/Analytics/index.tsx:76
+#: src/screens/Analytics/index.tsx:75
 #: src/screens/Profile/index.tsx:363
 msgid "Analytics"
 msgstr "Analytics"
@@ -2179,7 +2179,7 @@ msgstr "Categories"
 #: src/components/SearchAsk/ResultRows.tsx:331
 #: src/components/split/pickers.tsx:67
 #: src/screens/Analytics/components/Charts.tsx:188
-#: src/screens/Analytics/index.tsx:255
+#: src/screens/Analytics/index.tsx:249
 msgid "Category"
 msgstr "Category"
 
@@ -2363,7 +2363,7 @@ msgid "Clear chat?"
 msgstr "Clear chat?"
 
 #. placeholder {0}: selection.label
-#: src/screens/Analytics/index.tsx:212
+#: src/screens/Analytics/index.tsx:206
 msgid "Clear filter: {0}"
 msgstr "Clear filter: {0}"
 
@@ -2620,7 +2620,7 @@ msgstr "Couldn't delete this expense"
 msgid "Couldn’t export. Nothing was changed. Try again."
 msgstr "Couldn’t export. Nothing was changed. Try again."
 
-#: src/screens/Analytics/index.tsx:277
+#: src/screens/Analytics/index.tsx:271
 msgid "Couldn’t export. Try again."
 msgstr "Couldn’t export. Try again."
 
@@ -2829,7 +2829,7 @@ msgstr "CSV"
 #: src/features/export/ExportSheet.tsx:262
 #: src/features/export/statementText.ts:47
 #: src/features/settlement/CallItEvenDialog.tsx:298
-#: src/screens/Analytics/index.tsx:257
+#: src/screens/Analytics/index.tsx:251
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:96
 #: src/screens/People/components/FriendsFilterDialog.tsx:107
 msgid "Currency"
@@ -2896,7 +2896,7 @@ msgstr "Dark mode style"
 #: src/features/export/statementText.ts:72
 #: src/features/remind/RemindMeSheet.tsx:183
 #: src/features/remind/RemindMeSheet.tsx:185
-#: src/screens/Analytics/index.tsx:253
+#: src/screens/Analytics/index.tsx:247
 #: src/screens/Repayment/index.tsx:214
 msgid "Date"
 msgstr "Date"
@@ -3067,7 +3067,7 @@ msgstr "Demo mode"
 
 #: src/features/export/statementText.ts:45
 #: src/features/export/statementText.ts:72
-#: src/screens/Analytics/index.tsx:254
+#: src/screens/Analytics/index.tsx:248
 msgid "Description"
 msgstr "Description"
 
@@ -3637,7 +3637,7 @@ msgstr "Expense options"
 #: src/screens/Analytics/components/Charts.tsx:280
 #: src/screens/Analytics/components/Charts.tsx:327
 #: src/screens/Analytics/components/Summary.tsx:137
-#: src/screens/Analytics/index.tsx:194
+#: src/screens/Analytics/index.tsx:188
 #: src/screens/Group/index.tsx:535
 #: src/screens/Group/index.tsx:542
 #: src/screens/Profile/index.tsx:295
@@ -3668,7 +3668,7 @@ msgid "Export"
 msgstr "Export"
 
 #: src/features/export/ExportSheet.tsx:177
-#: src/screens/Analytics/index.tsx:82
+#: src/screens/Analytics/index.tsx:81
 msgid "Export CSV"
 msgstr "Export CSV"
 
@@ -3681,7 +3681,7 @@ msgid "Export statement"
 msgstr "Export statement"
 
 #. placeholder {0}: rows.length
-#: src/screens/Analytics/index.tsx:272
+#: src/screens/Analytics/index.tsx:266
 msgid "Exported {0} expenses"
 msgstr "Exported {0} expenses"
 
@@ -3689,7 +3689,7 @@ msgstr "Exported {0} expenses"
 msgid "Exported {n} records"
 msgstr "Exported {n} records"
 
-#: src/screens/Analytics/index.tsx:271
+#: src/screens/Analytics/index.tsx:265
 msgid "Exported 1 expense"
 msgstr "Exported 1 expense"
 
@@ -3947,8 +3947,8 @@ msgstr "Groceries"
 #: src/features/settlement/CallItEvenDialog.tsx:157
 #: src/navigation/Navigation.tsx:80
 #: src/screens/Analytics/components/Charts.tsx:327
-#: src/screens/Analytics/index.tsx:256
-#: src/screens/Analytics/useReport.ts:354
+#: src/screens/Analytics/index.tsx:250
+#: src/screens/Analytics/useReport.ts:340
 #: src/screens/Group/index.tsx:217
 #: src/screens/Group/index.tsx:376
 #: src/screens/Group/index.tsx:626
@@ -4741,7 +4741,7 @@ msgid "Liquor VAT"
 msgstr "Liquor VAT"
 
 #: src/features/export/statementText.ts:54
-#: src/screens/Analytics/index.tsx:261
+#: src/screens/Analytics/index.tsx:255
 msgid "Location"
 msgstr "Location"
 
@@ -5316,7 +5316,7 @@ msgid "Nobody’s balance changes. {who} stays in the group’s balances, marked
 msgstr "Nobody’s balance changes. {who} stays in the group’s balances, marked as having left."
 
 #: src/features/searchAsk/AskAnswer.tsx:329
-#: src/screens/Analytics/useReport.ts:354
+#: src/screens/Analytics/useReport.ts:340
 msgid "Non-group"
 msgstr "Non-group"
 
@@ -6928,7 +6928,7 @@ msgstr "See all groups"
 msgid "See all requests and invites"
 msgstr "See all requests and invites"
 
-#: src/screens/Analytics/index.tsx:198
+#: src/screens/Analytics/index.tsx:192
 #: src/screens/Group/index.tsx:545
 #: src/screens/Person/index.tsx:432
 #: src/view/shell/desktop/RecentTransactions.tsx:34
@@ -7426,7 +7426,7 @@ msgstr "Soft drinks"
 #: src/features/remind/RemindSheet.tsx:68
 #: src/features/searchAsk/AskAnswer.tsx:60
 #: src/features/settlement/CallItEvenDialog.tsx:129
-#: src/screens/Analytics/useReport.ts:352
+#: src/screens/Analytics/useReport.ts:338
 #: src/screens/Group/components/MemberExitDialog.tsx:99
 #: src/screens/Group/index.tsx:749
 #: src/screens/Group/index.tsx:801
@@ -8266,7 +8266,7 @@ msgid "Too short: use at least 8 characters"
 msgstr "Too short: use at least 8 characters"
 
 #: src/components/split/charges/Reconciliation.tsx:132
-#: src/screens/Analytics/index.tsx:258
+#: src/screens/Analytics/index.tsx:252
 #: src/screens/Expense/components/ChargedBreakdown.tsx:192
 msgid "Total"
 msgstr "Total"
@@ -8926,7 +8926,7 @@ msgstr "you"
 #: src/components/split/shared.tsx:23
 #: src/features/export/statementText.ts:23
 #: src/features/searchAsk/AskAnswer.tsx:60
-#: src/screens/Analytics/useReport.ts:352
+#: src/screens/Analytics/useReport.ts:338
 #: src/screens/CreateGroup.tsx:203
 #: src/screens/Group/components/MemberExitDialog.tsx:99
 #: src/screens/Group/index.tsx:239
@@ -9184,7 +9184,7 @@ msgstr "You owe in group"
 #: src/screens/Analytics/components/Charts.tsx:249
 #: src/screens/Analytics/components/Charts.tsx:259
 #: src/screens/Analytics/components/Summary.tsx:124
-#: src/screens/Analytics/index.tsx:259
+#: src/screens/Analytics/index.tsx:253
 msgid "You paid"
 msgstr "You paid"
 
@@ -9406,13 +9406,13 @@ msgstr "Your reminders"
 #: src/screens/Analytics/components/Charts.tsx:250
 #: src/screens/Analytics/components/Charts.tsx:263
 #: src/screens/Analytics/components/Charts.tsx:327
-#: src/screens/Analytics/index.tsx:145
-#: src/screens/Analytics/index.tsx:260
+#: src/screens/Analytics/index.tsx:141
+#: src/screens/Analytics/index.tsx:254
 msgid "Your share"
 msgstr "Your share"
 
 #. placeholder {0}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:223
+#: src/screens/Analytics/index.tsx:217
 msgid "Your share <0>{0}</0>"
 msgstr "Your share <0>{0}</0>"
 
@@ -9448,7 +9448,7 @@ msgstr "Your share of expenses"
 msgid "Your spending"
 msgstr "Your spending"
 
-#: src/screens/Analytics/index.tsx:116
+#: src/screens/Analytics/index.tsx:112
 msgid "Your spending shows up here – by month, category, person and group – once you add an expense."
 msgstr "Your spending shows up here – by month, category, person and group – once you add an expense."
 

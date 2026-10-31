@@ -44,8 +44,8 @@ export function Overview({
   title,
   onCurrencyPress,
   captions = {},
-  testID = 'analytics-overview',
-  titleTestID = 'analytics-overview-title',
+  testID = 'overview',
+  titleTestID = 'overview-title',
 }: {
   totals: CurrencyTotal[]
   locale: string

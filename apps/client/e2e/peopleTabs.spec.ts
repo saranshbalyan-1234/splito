@@ -37,7 +37,8 @@ test('the app opens on People: / is the start tab, there is no Home anywhere, th
   await expect(page).toHaveURL(/\/people$/)
   await page.goto('/?overview=groups')
   await expect(page).toHaveURL(/\/analytics\?overview=groups$/)
-  await expect(page.getByTestId('screen-analytics').getByTestId('analytics-overview')).toBeVisible()
+  await expect(page.getByTestId('screen-analytics').getByTestId('analytics-currency')).toBeVisible()
+  await expect(page.getByTestId('screen-analytics').getByTestId('overview')).toHaveCount(0)
   // The logo goes to the start tab.
   await page.setViewportSize(DESKTOP)
   await page.getByTestId('tab-activity').click()

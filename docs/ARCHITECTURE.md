@@ -1890,6 +1890,10 @@ Splito lessons (add newest last, dated, with PR):
   The Overview now follows the page's own scope; on People it follows the list's Include groups switch, so a list and
   its summary never differ. The shared card grid moved to `components/overview/` (People, Groups, Analytics and
   Profile use it); choosing balance rows is selection, the sums stay in the domain (`personSummary`, `groupTotals`).
+- 2026-10-31, owner 221: **a page whose filters drive it must not carry a figure they cannot move.** "Balances right
+  now" ignored Analytics' period and currency, so the page answered two different questions at once; it left Analytics
+  (People and Groups carry it). `overviewLayout.spec` checks Analytics has no Overview and that the People and Groups
+  Overviews add up per currency (all = groups + non-group).
 
 ## 24. Checklists
 
@@ -2216,8 +2220,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **There is no Home tab; the Overview is the top of Analytics** [Built, F-271; web checked in e2e at 390 and 1440, native not run on a simulator] (owner 198, replaces the Home tab of 153 below):
   the tabs are **People, Groups, Analytics, Activity** (owner 220: Settings is not a tab or a nav item any more, it is
   part of Profile, opened from the header avatar; Ask Splito is not a tab or a nav item, owner 200). The
-  Overview (per-currency balance cards, owners 113/114/120/161) is the first section of Analytics, People and Groups
-  (owner 219, § 26.12), labelled as balances right now; Recent transactions is Activity (Type = Expenses and Payments), and recently active people and groups
+  Overview (per-currency balance cards, owners 113/114/120/161) is the first section of People and Groups (owners 219,
+  221, § 26.12), labelled as balances right now; Recent transactions is Activity (Type = Expenses and Payments), and recently active people and groups
   are People and Groups sorted by Last active (owner 199). The app opens on **People** (the start tab; Settings >
   Navigation can change it); `/` opens the start tab; the old `/?overview=` address redirects to
   `/analytics?overview=`; a saved tab list or start tab naming `home` is migrated (dropped, start tab People). The
@@ -2742,8 +2746,8 @@ pages". § 17 holds the engineering rules that meet these budgets.
 group there"; "add overview in both friends and groups, with search and filters as well, search icon only,
 expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Group`, `components/ListToolsHeader.tsx`.
 
-- **An Overview tops People, Groups and Analytics, each counting what its page is about, with no scope control of
-  its own** (owner 219, replaces owner 176's All / Groups / Direct chips and 198's Analytics-only Overview). The same
+- **An Overview tops People and Groups, each counting what its page is about, with no scope control of its own**
+  (owners 219, 221; replaces owner 176's All / Groups / Direct chips and 198's Analytics Overview). The same
   card grid and counts line everywhere (`components/overview/Overview.tsx`), "Balances right now", ignoring any period
   or currency filter, currencies never summed:
   - **People:** my balances with friends, counted exactly as the Friends list counts them: Include groups on (the
@@ -2755,10 +2759,9 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     filters show; deleted ones do not. Counts "N groups · M settled" (settled = everyone square); a card's caption "N
     groups". A card opens Analytics in that currency scoped to groups. Above the requests and the list
     (`GroupsOverview`).
-  - **Analytics:** follows the page's one scope chip in the filter row (Everything, Non-group only, chosen groups); no
-    chips of its own, so nothing on the page asks the same question twice. A card narrows Analytics to its currency.
-    An old `?overview=groups|direct|all` link still lands on the same balances, read as Analytics' scope
-    (`overviewScopeParam`); the `home.overviewScope` preference stays in the registry, unused.
+  - **Not on Analytics** (owner 221): everything on Analytics follows its filters (§ 26.16), and balances right now
+    cannot follow a period, so they live only here. An old `/?overview=groups|direct|all` link lands on Analytics with
+    the matching scope (`overviewScopeParam`); the `home.overviewScope` preference stays in the registry, unused.
   Hidden while the page has nothing to count (no friends, no groups). *Why:* "On the analytics tab, all group and direct
   filter is at top already, it shows up again in filter"; "overview section to be on people and groups as well, think
   about it properly".
@@ -3244,9 +3247,11 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 ### 26.16 Analytics
 
-- **The Overview opens Analytics** [Built, F-271] (owners 198, 219): the per-currency balance cards are its first
-  section, above the filter row, and show balances right now under the page's one scope (not its period or currency;
-  no All / Groups / Direct chips of their own, § 26.12); a card narrows the rest of Analytics to that currency.
+- **Everything on Analytics follows its filters** (owner 221, replaces 198/219's balances Overview at its top): the
+  period, currency and scope chips drive every figure on the page (the summary, every chart and table, the list and
+  the export); nothing there ignores them. Balances right now, which cannot follow a period, are on People and Groups
+  (§ 26.12); Analytics' "Balance over time" shows the balance up to the end of the chosen period. *Why:* "Make sure
+  analytics everything changes according to filters it should not have something which is not affected by these".
 - **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
@@ -3841,6 +3846,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 218 | "Ask splito icon only on Home Screen" | The Search & Ask (sparkles) header button shows only on the start tab (the screen the app opens on, People by default, following Settings > Navigation "Open on"); no other tab or page draws it; Cmd/Ctrl+K and "/" still work everywhere on web | § 26.3, § 26.4, § 26.19 | Search & Ask in every top-level header (73, 74) |
 | 219 | "On the analytics tab, all group and direct filter is at top already, it shows up again in filter"; "overview section to be on people and groups as well, think about it properly" | Analytics' Overview loses its All / Groups / Direct chips and follows the filter row's one scope; People gets an Overview of balances with friends that follows its Include groups filter; Groups gets an Overview of my balances in groups (inactive and hidden counted); cards open Analytics in that currency and scope | § 26.3, § 26.12, § 26.16 | Overview only on Analytics with its own scope chips (176, 198) |
 | 220 | "Remove settings from navigation and merge with profile"; "Fanout max" | Settings leaves the bottom bar and the sidebar; Profile (the avatar, `/profile`) holds the person then every Settings row, Log out last; `/settings` opens Profile, sections keep their addresses with Back to Profile; a saved bar loses `settings`; builders fan out as wide as the independent work allows | § 26.3, § 26.4, § 26.7, § 26.15 | Settings as its own tab and nav item, Profile without Settings (203, 206, 217's locked Settings) |
+| 221 | "Make sure analytics everything changes according to filters it should not have something which is not affected by these" | Every figure on Analytics follows its period, currency and scope; the balances-right-now Overview leaves Analytics (it stays on People and Groups); old `?overview=` links map to Analytics' scope | § 26.12, § 26.16 | Analytics Overview of balances right now that ignored period and currency (198, 219) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

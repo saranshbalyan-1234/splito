@@ -31,7 +31,6 @@ import {
   ExpenseRowPlaceholder,
 } from '#/screens/Analytics/components/ExpenseRow'
 import {FilterBar} from '#/screens/Analytics/components/FilterBar'
-import {OverviewSection} from '#/screens/Analytics/components/OverviewSection'
 import {
   Summary,
   SummaryPlaceholder,
@@ -91,8 +90,6 @@ export function AnalyticsScreen() {
         when={!!report}
         fallback={
         <>
-        {/* Balances right now do not wait for the report (owner 198): they read their own data. */}
-        <OverviewSection />
         <Shimmer testID="analytics-loading">
           <SummaryPlaceholder />
           <ChartsPlaceholder />
@@ -103,12 +100,11 @@ export function AnalyticsScreen() {
         </>
         }>
         {() => !report ? null : !report.hasExpenses ? (
-        /* No expenses yet, but payments can still leave balances: the Overview shows above the empty state. */
+        /* No expenses yet: the empty state (balances right now live on People and Groups, owner 221). */
         <List
           data={NO_ROWS}
           keyExtractor={(e: ListedExpense) => e.id}
           renderItem={() => null}
-          ListHeaderComponent={<OverviewSection />}
           ListFooterComponent={
             <EmptyState
               testID="analytics-empty"
@@ -154,8 +150,6 @@ export function AnalyticsScreen() {
             )}
             ListHeaderComponent={
               <>
-                {/* Balances right now come first (owner 198), above the filter row they ignore. */}
-                <OverviewSection />
                 <FilterBar
                   report={report}
                   isTable={isTable}
