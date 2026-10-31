@@ -1131,6 +1131,16 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
 - **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
   10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
   three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+- **A tab switch reads no data and draws only the bar and the navigator; what is left is the browser's and
+  react-navigation's.** Counted 2026-10-31 (Chromium, 390 px, touch, large demo, load under 2): 0 IndexedDB
+  transactions per switch between visited tabs (90 during load); renders: the bar and the navigator shell only.
+  At CPU x1 a switch shows its screen in 31-52 ms (first visits 27-56 ms, Activity's once 142 ms) and lights the tab
+  in 11-24 ms; at x4 first visits take 63-217 ms. `propagateParentContextChanges` walks the kept screens on each
+  switch; one cause was react-navigation's web `SceneView` handing a new `headerBack` object to `HeaderBackContext`
+  on every focus change (patched, `patches/@react-navigation__native-stack@7.21.0.patch`, test
+  `navigation/nativeStackPatch.test.ts`), but most of the walk is the navigation state context itself (182 -> 162 ms
+  over 6 switches at x6). So a delay felt on iPhone Safari that Chromium does not show is to be measured in WebKit
+  (the iOS simulator's Safari) before anything more is changed on this path.
 - **A kept tab's size is paid on every switch to it, so a tab draws only what is on screen.** Showing a parked tab
   again re-lays out and restyles its whole tree: Analytics drew all 200 report rows the data layer read (about 4,700
   layout objects), so a switch to it cost 540-930 ms at CPU x6 (one 187 ms layout of 5,878 objects, 428 ms of style).
