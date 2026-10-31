@@ -4,6 +4,7 @@ import {useOpenLink} from '#/data/useOpenLink'
 import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
+import {plural} from '@lingui/core/macro'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {isSettledBalance} from '@splito/domain'
@@ -94,7 +95,7 @@ export function FriendsAndInvitesScreen() {
   for (const link of active) items.push({type: 'link', key: link.id, link})
   if (active.length === 0) items.push({type: 'note', key: 'no-links', text: l`No active invite links. Make one to add friends without typing their number.`})
   else if (inactive.length > 0)
-    items.push({type: 'note', key: 'inactive', text: l`${inactive.length} expired, used or revoked links aren’t shown.`})
+    items.push({type: 'note', key: 'inactive', text: plural(inactive.length, {one: '# expired, used or revoked link isn’t shown.', other: '# expired, used or revoked links aren’t shown.'})})
   items.push({type: 'header', key: 'h-defaults', title: l`Defaults for new links and requests`})
   items.push({type: 'defaults', key: 'defaults'})
 

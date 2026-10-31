@@ -4,7 +4,7 @@ import {useLingui} from '@lingui/react/macro'
 import {Clock} from 'lucide-react-native'
 
 import {deletedAge} from '#/lib/deletedAge'
-import {useTimeZone} from '#/locale/useDates'
+import {useFormatDateTime, useTimeZone} from '#/locale/useDates'
 import {useTickEveryMinute} from '#/state/shell'
 import {atoms as a, useTheme} from '#/alf'
 import {createIcon} from '#/components/icons/lucide'
@@ -35,13 +35,10 @@ export function DeletedMeta({
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const tz = useTimeZone()
+  const formatDateTime = useFormatDateTime()
   const now = useTickEveryMinute()
   const age = deletedAge(at, now)
-  const exact = i18n.date(new Date(at), {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: tz,
-  })
+  const exact = formatDateTime(at)
   const label =
     age.unit === 'now'
       ? l`Deleted just now`

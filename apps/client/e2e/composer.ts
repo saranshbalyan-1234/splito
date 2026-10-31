@@ -28,3 +28,26 @@ export async function pickPeople(page: Page, names: string[]) {
   await page.getByTestId('people-dialog').getByTestId('sheet-close').click()
   await expect(page.getByTestId('people-dialog')).toHaveCount(0)
 }
+
+/** Opens the "More options" part of the composer (how to split, cash rounding, notes) when it is closed. */
+export async function openMoreOptions(page: Page) {
+  if ((await page.getByTestId('expense-more-options').count()) === 0)
+    await page.getByTestId('expense-more').click()
+  await expect(page.getByTestId('expense-more-options')).toBeVisible()
+}
+
+/** Picks how the expense is split (the chips live under "More options"). */
+export async function chooseSplitMode(
+  page: Page,
+  mode: 'equal' | 'exact' | 'percent' | 'shares' | 'adjusted' | 'items',
+) {
+  await openMoreOptions(page)
+  await page.getByTestId(`split-mode-${mode}`).click()
+}
+
+/** Opens the itemize bill's "Tax, tip and discounts" row when it is closed. */
+export async function openCharges(page: Page) {
+  if ((await page.getByTestId('item-charges').count()) === 0)
+    await page.getByTestId('item-charges-row').click()
+  await expect(page.getByTestId('item-charges')).toBeVisible()
+}

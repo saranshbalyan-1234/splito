@@ -7,7 +7,6 @@ import {
   type FeedbackInput,
   FEEDBACK_MAIL_MESSAGE_MAX,
   feedbackMailto,
-  isValidEmail,
   loadFeedback,
   saveFeedback,
   sortFeedback,
@@ -125,12 +124,6 @@ test('email draft carries the message and app info, notes the attachment, never 
   expect(body).not.toContain('base64')
   // mailto wants %20, not +, for spaces.
   expect(url).not.toContain('+')
-})
-
-test('isValidEmail', () => {
-  expect(isValidEmail('a@b.co')).toBe(true)
-  expect(isValidEmail('a@b')).toBe(false)
-  expect(isValidEmail('a b@c.com')).toBe(false)
 })
 
 test('a very long message is shortened in the email draft only', async () => {

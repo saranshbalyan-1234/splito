@@ -15,7 +15,6 @@ import {FileExport_Stroke2_Corner0_Rounded as ExportIcon} from '#/components/ico
 import {PeopleGroup_Stroke2_Corner0_Rounded as FriendsIcon} from '#/components/icons/Invite'
 import * as Layout from '#/components/Layout'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
-import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {TabScreen} from '#/components/TabScreen'
 import {useTabLabels} from '#/components/settings/NavigationEditor'
 import {SETTINGS_SECTIONS, type SettingsSectionId, useSectionInfo} from '#/components/settings/sections'
@@ -54,7 +53,7 @@ export function SettingsScreen() {
             <Trans>Settings</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <SearchAskButton edge />
+        <Layout.Header.Slot />
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>

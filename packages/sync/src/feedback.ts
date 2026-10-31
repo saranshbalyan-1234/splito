@@ -1,4 +1,4 @@
-import {DomainError} from '@splito/domain'
+import {DomainError, isContactEmail} from '@splito/domain'
 
 import {requireLive, write} from './mutations'
 import {type Store} from './store'
@@ -57,13 +57,6 @@ export interface Feedback {
 
 export type FeedbackInput = Pick<Feedback, 'type' | 'message' | 'attachment' | 'appInfo' | 'replyEmail'>
 
-// ponytail: shape check only (x@y.tld); the mail server is the real validator.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-
-export function isValidEmail(v: string): boolean {
-  return EMAIL_RE.test(v)
-}
-
 function cleanAppInfo(info: FeedbackAppInfo | null): FeedbackAppInfo | null {
   if (!info) return null
   return Object.fromEntries(APP_INFO_KEYS.map(k => [k, String(info[k] ?? '').slice(0, 200)])) as unknown as FeedbackAppInfo
@@ -76,7 +69,7 @@ export async function saveFeedback(store: Store, ctx: MutationCtx, input: Feedba
   if (message.length < FEEDBACK_MIN_LENGTH) throw new DomainError('FEEDBACK_TOO_SHORT')
   if (message.length > FEEDBACK_MAX_LENGTH) throw new DomainError('FEEDBACK_TOO_LONG')
   const replyEmail = input.replyEmail?.trim() || null
-  if (replyEmail && !isValidEmail(replyEmail)) throw new DomainError('INVALID_EMAIL')
+  if (replyEmail && !isContactEmail(replyEmail)) throw new DomainError('INVALID_EMAIL')
   const data: Feedback = {
     type: input.type,
     message,

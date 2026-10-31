@@ -1,7 +1,7 @@
 import {type LocalDate} from '@splito/domain'
 import {type ActivityEvent, type ActivityTypeId} from '@splito/sync'
 
-import {daysBetween, todayIn} from '#/locale/dates'
+import {dayOfInstant} from '#/locale/dayLabel'
 import {type IllustrationName} from '#/motion/illustrations'
 
 /**
@@ -85,16 +85,6 @@ export function writeOffParties(
   if (actor === w.from) return {kind: 'pair', other: w.to}
   if (actor === w.to) return {kind: 'pair', other: w.from}
   return {kind: 'third'}
-}
-
-/** The calendar day `at` falls on in `tz` (the Timezone preference, not the device's). */
-export function dayOf(at: number, tz: string): LocalDate {
-  return todayIn(tz, new Date(at))
-}
-
-/** Calendar days from `day` to `today` (0 = today). */
-export function daysAgo(day: LocalDate, today: LocalDate) {
-  return daysBetween(day, today)
 }
 
 export type FeedRow =
@@ -257,7 +247,7 @@ export function buildRows(
       hiddenCount++
       continue
     }
-    const eventDay = dayOf(event.at, tz)
+    const eventDay = dayOfInstant(event.at, tz)
     if (eventDay !== day) {
       day = eventDay
       rows.push({type: 'section', key: `day-${day}`, day})

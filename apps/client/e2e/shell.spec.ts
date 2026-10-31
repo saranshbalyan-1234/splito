@@ -21,12 +21,12 @@ const RIGHT_COLUMN = 320
 const TABS = ['people', 'groups', 'analytics', 'activity', 'settings']
 /* Top-level pages and their one header action, at the far right. */
 const TOP_LEVEL: [string, string, string][] = [
-  // People adds Invite people (invite links live only in its sheet, 26.18 decision 77); Settings, a tab (owner 206), has Search & Ask only.
+  // People adds Invite people (invite links live only in its sheet, 26.18 decision 77). Settings has no header action:
+  // Search & Ask is on the start tab only (owner 218).
   ['/people', 'screen-people', 'people-add-friend'],
   ['/groups', 'screen-groups', 'groups-new'],
   ['/analytics', 'screen-analytics', 'analytics-export'],
   ['/activity', 'screen-activity', 'activity-mark-all-read'],
-  ['/settings', 'screen-settings', 'header-search-ask'],
 ]
 
 async function open(page: Page, path: string, screen: string) {
@@ -628,6 +628,17 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     expect(box.y + box.height).toBeLessThan(bar.y)
   })
 
+  test('owner 222: the bar keeps a little air under its labels', async ({page}) => {
+    await page.setViewportSize(PHONE)
+    await openDemo(page)
+    const nav = page.getByRole('navigation')
+    const pad = await nav.evaluate(el => parseFloat(getComputedStyle(el).paddingBottom))
+    expect(pad).toBeGreaterThanOrEqual(8)
+    const bar = (await nav.boundingBox())!
+    const label = (await nav.getByTestId('tab-people').getByText('People').boundingBox())!
+    expect(bar.y + bar.height - (label.y + label.height)).toBeGreaterThanOrEqual(14)
+  })
+
   test('the FAB is on every top-level page (Analytics too), empty People included (F-275)', async ({
     page,
   }) => {
@@ -795,4 +806,30 @@ test('Activity is a bell that turns solid when selected, so the selected tab sho
   await expect(page.getByTestId('screen-activity')).toBeVisible()
   // Selected: the bell is filled in the text colour.
   await expect.poll(fill).not.toBe('none')
+})
+
+test('Search & Ask sits only on the start tab, and follows it when the start tab changes (owner 218)', async ({page}) => {
+  await page.setViewportSize(DESKTOP)
+  await open(page, '/people', 'screen-people')
+  await expect(on(page, 'screen-people', 'header-search-ask')).toBeVisible()
+  for (const [path, screen] of [
+    ['/groups', 'screen-groups'],
+    ['/analytics', 'screen-analytics'],
+    ['/activity', 'screen-activity'],
+    ['/settings', 'screen-settings'],
+  ] as const) {
+    await open(page, path, screen)
+    await expect(on(page, screen, 'header-search-ask')).toHaveCount(0)
+  }
+  // Cmd/Ctrl+K still opens the drawer from any page.
+  await page.keyboard.press('Control+k')
+  await expect(page.getByTestId('search-ask')).toBeVisible()
+  await page.keyboard.press('Escape')
+  // Open on Groups: the button moves there.
+  await page.waitForFunction(() => 'splito' in window)
+  await page.evaluate(() => (window as any).splito.setPref('startTab', 'groups'))
+  await open(page, '/groups', 'screen-groups')
+  await expect(on(page, 'screen-groups', 'header-search-ask')).toBeVisible()
+  await open(page, '/people', 'screen-people')
+  await expect(on(page, 'screen-people', 'header-search-ask')).toHaveCount(0)
 })

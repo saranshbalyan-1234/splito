@@ -96,7 +96,9 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
     analytics.push(await openTab(page, 'tab-analytics', 'analytics-expenses-title'))
   }
   // Search: one keystroke-sized change to the first page of results, for narrow and broad queries (the Search & Ask drawer).
-  await page.getByTestId('header-search-ask').last().click()
+  // Search & Ask is on the start tab (People) only (owner 218).
+  await page.getByTestId('tab-people').click()
+  await page.getByTestId('screen-people').getByTestId('header-search-ask').click()
   await expect(page.getByTestId('search-input')).toBeVisible()
   const searches: Record<string, number> = {}
   const searchTotals: Record<string, number> = {}
@@ -250,7 +252,9 @@ async function askCase(page: Page) {
   await page.getByTestId('ask-input').pressSequentially(sentence, {delay: 0})
   const typedInChat = await page.getByTestId('ask-input').inputValue()
   await page.keyboard.press('Escape')
-  await page.getByTestId('header-search-ask').last().click()
+  // Search & Ask is on the start tab (People) only (owner 218).
+  await page.getByTestId('tab-people').click()
+  await page.getByTestId('screen-people').getByTestId('header-search-ask').click()
   await page.getByTestId('search-input').pressSequentially(sentence, {delay: 0})
   const typedInSearch = await page.getByTestId('search-input').inputValue()
   await page.keyboard.press('Escape')

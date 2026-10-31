@@ -49,10 +49,9 @@ async function seed(page: Page) {
 
 test('People hides friends settled up by default; Show settled brings them back and survives a reload', async ({page}) => {
   await seed(page)
-  // The counts line of the Overview (top of Analytics) keeps saying how many are settled, so nothing looks lost.
-  await page.goto('/analytics')
-  await expect(page.getByTestId('analytics-overview-counts')).toContainText(/settled/)
+  // The counts line of People's Overview keeps saying how many are settled, so nothing looks lost (owner 219).
   await page.goto('/people')
+  await expect(page.getByTestId('screen-people').getByTestId('people-overview-counts')).toContainText(/settled/)
   const home = page.getByTestId('screen-people')
   await expect(home.getByTestId('person-Open Olive')).toBeVisible()
   // A friend with no records yet is new, not settled: never hidden.

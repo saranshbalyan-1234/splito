@@ -395,6 +395,8 @@ export type FormEvaluation = {
   remaining?: Remaining
   /** Items mode: items + tax + tip + service - discount. */
   itemsTotal?: bigint
+  /** Items mode with no total typed: `total` is the items' own sum (F-275), not something the person wrote. */
+  isTotalFromItems?: boolean
   /** Items mode: each charge in money, percentages already applied. */
   adjustments?: Record<AdjustmentKind, bigint>
   /** Items mode: each priced, assigned item split by its portions, by item key then person. */
@@ -422,8 +424,42 @@ const codeOf = (e: unknown) =>
  * Turns the form into a domain draft. All money maths goes through
  * `@splito/domain` (evaluateAmount, sums, computeShares, validateExpense).
  * `mark` is the number locale's decimal mark (`decimalMark`).
+ *
+ * An itemised bill with no total typed takes the items' own sum as its total
+ * (F-275): the first pass reads the items without a total, the second runs
+ * with the domain's `itemsTotal` written as the amount, so the readout, the
+ * payers and the split all see an ordinary total and the sum is never made
+ * by the client.
  */
 export function evaluateForm(
+  f: ExpenseForm,
+  tz: string,
+  mark: '.' | ',' = '.',
+  options: {shorthand?: boolean} = {},
+): FormEvaluation {
+  const typed = evaluateTyped(f, tz, mark, options)
+  if (
+    f.mode !== 'items' ||
+    f.amount.trim() ||
+    typed.itemsTotal === undefined ||
+    typed.itemsTotal <= ZERO
+  )
+    return typed
+  const derived = evaluateTyped(
+    {
+      ...f,
+      amount: amountInputText(typed.itemsTotal, f.currency, mark),
+      amountReading: 'decimal',
+    },
+    tz,
+    mark,
+    options,
+  )
+  derived.isTotalFromItems = true
+  return derived
+}
+
+function evaluateTyped(
   f: ExpenseForm,
   tz: string,
   mark: '.' | ',' = '.',
