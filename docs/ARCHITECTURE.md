@@ -665,9 +665,13 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   place, `a` amount per currency, `m` month, `c` category, `b` / `h` who paid / who is on a record, `G` its group (`-`:
   none), `d` `<date>:<createdAt>` (the list order), `s` `deleted`, `n` a comment's words on the record it hangs on;
   expenses, payments and write-offs carry them, comments contribute `n` only. Each token is a set of record ids from
-  key ranges and the sets are intersected. A narrow answer (at most 500 records) is then read by id and ordered,
-  totalled and status-checked from its rows; a broad one is ordered from the `d` keys and totalled from the `a` keys;
-  only the rows shown are read (30 by id per page, payments and expenses paged apart). No in-memory ledger mirror.
+  key ranges and the sets are intersected. Each token is probed first within a budget of 500 keys: the narrow ones'
+  intersection (at most 500 records) is read by id, the broad tokens are checked on those rows in hand, and order,
+  count and totals come from the rows. When every token is broad, each section's first page comes from a newest-first
+  walk of its store (`byDate`, at most 1,000 rows, given up early when matches are too rare) with every token checked
+  on the row in hand (`eachTerm`, the same terms the keys hold), and the count, the totals (ordered from the `d` keys,
+  totalled from the `a` keys) and later pages come after it (`whenCounted`, F-266); only the rows shown are read (30
+  per page, payments and expenses paged apart). No in-memory ledger mirror.
   Person and group names resolve at query time (to their live ids, then to their records by `h` / `G`; my own name
   never expands, every record is mine), so a rename rewrites no terms. What `search_terms` holds is versioned in
   `meta.searchIndex` (`SEARCH_INDEX_VERSION`, 3); `store.prepareSearch()` runs at idle after the store opens (and the
@@ -1164,13 +1168,13 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   balance status (settled, owed, owe, inactive, hidden) on a narrow answer is checked on the rows instead of listing
   every record in it. Rules: a new searchable field is a term kind, a facet is a key range, a screen never checks rows
   one by one to answer "how many" or "how much" over a broad set, and the cost of a query is bounded by its answer or,
-  for a broad answer, by its keys. Checked by `searchOracle.test.ts` (random changes on both engines; the keys equal
+  for a broad answer, by its keys (its first page by at most 1,000 walked rows, next rule). Checked by `searchOracle.test.ts` (random changes on both engines; the keys equal
   the rows' terms, every query equals a row-by-row reference, narrow and broad both exercised). Measure it as the
-  drawer waits for it (`openSearch`: people, groups, counts, totals and the first pages), not as the whole ledger
-  read out.
+  drawer waits for it (`openSearch` to the first pages, then `whenCounted` to the counts and totals), not as the whole
+  ledger read out.
 - **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
   10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
-  three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+  three at load under 10), to the first pages and again from there to the counts and totals. Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
 - **A tab switch reads no data and draws only the bar and the navigator; what is left is the browser's and
   react-navigation's.** Counted 2026-10-31 (Chromium, 390 px, touch, large demo, load under 2): 0 IndexedDB
   transactions per switch between visited tabs (90 during load); renders: the bar and the navigator shell only.
@@ -1198,14 +1202,27 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   Accept button re-drew as each Activity row scrolled into view (three worklet hooks and a motion subscription per
   row, decoration owner 213 rules out); the drawn check is for a confirmed result (Save), and a tab pops only when it
   becomes active, not when it is left.
-- **Narrow first: a broad token is checked on the rows of a narrow answer, never turned into its full id set.**
-  Text and plain numbers are read with a cap (SMALL, 500); one that names more is tested on the rows the narrow
-  tokens found, from `termRows` plus the few people, groups and categories its word names (`capped`, `tester` in
-  `search.ts`). Measured in Chromium at 10,000 expenses, load under 2: "Bulk expense 9993" first page 350 -> 102 ms
-  (`main`: 63 ms). A query whose every token is broad ("> 90" 279 ms, "Bulk Friend 4" 709 ms; `main` 58 / 73 ms first
-  page, 1.0 / 1.3 s totals) still builds full sets: its first page must come from a newest-first walk with in-memory
-  checks and its count and totals after it (follow-up, F-266). Search speed is judged in the browser
-  (`perf/schema-v2.spec.ts`); bun's IndexedDB numbers are `fake-indexeddb`'s.
+- **Narrow first, and a query with nothing narrow gets its first page from a walk, its count and totals after.**
+  Every token is probed within a budget of 500 keys (each read capped to what is left, one read at a time, so a broad
+  token costs its budget, never its set). The narrow ones' intersection is read by id and the broad tokens are checked
+  on those rows in hand; when every token is broad, each section's first page comes from a newest-first walk of its
+  store (`byDate`, chunks of 60 doubling to 480, at most 1,000 rows) checking every token on the row in hand, and only
+  then, after the page is painted, the full key sets give the count, the totals and the later pages (`whenCounted`). A
+  row check is the keys' own answer: `eachTerm` hands the walk the same terms `termRows` stores, and every token kind
+  has a row test (`testOf`) beside its key read (`resolve`). Three rules came from measuring it: (1) a row costs 15-25
+  keys (SQLite page read plus terms, bun), so the walk gives up after 180 rows when its matches would not fill a page
+  within the bound (rows of one day come in id order and bunch the matches, so never sooner), and a section whose
+  store fits in the bound is walked to its end and answered exactly; (2) a day is certain only once every row of it
+  is read, so the walk stops at a date boundary (119 records a day in the bulk ledger: 180 rows for "> 90"); (3) the
+  count's reads hold the main thread, so the drawer starts them a frame after the first page (`useSearch`): started at
+  once, "> 90" drew its first page in 505 ms instead of 142 ms. Counted in bun on the bulk ledger (10,000 expenses,
+  60 friends): to the first page "> 90" 30,004 keys + 30 rows -> 505 keys + 180 rows, "Bulk Friend 4" 69,345 keys +
+  245 rows -> 1,985 keys + 635 rows, "bulk" 49,812 keys -> 645 keys + 324 rows; "Bulk expense 9993" (narrow) 651
+  keys + 74 rows both. Chromium, 10,000 expenses, median of five, two rounds each at load 27-37 (indicative only):
+  first page "> 90" 1,256 / 1,005 -> 282 / 141 ms, "Bulk Friend 4" 2,751 / 2,084 -> 338 / 289 ms, "Bulk expense
+  9993" 178 / 176 -> 123 / 90 ms; the totals arrive later than before ("> 90" 1,256 / 1,005 -> 1,754 / 823 ms, "Bulk
+  Friend 4" 3,036 / 2,174 -> 3,748 / 2,580 ms) because they now follow the walk and a frame. Search speed is judged in
+  the browser (`perf/schema-v2.spec.ts`); bun's IndexedDB numbers are `fake-indexeddb`'s.
 - **Derived data that may be rebuilt is rebuilt at idle, in chunks, and a failure is forgotten.** The search index
   rebuild first ran inside the first search (during the first keystrokes) as one transaction, and a rejected rebuild
   was kept as a rejected promise, so search spun forever. Start such work at idle after open, run it in chunks of a
@@ -1881,6 +1898,21 @@ Splito lessons (add newest last, dated, with PR):
   outline (Lucide `activity` is one open line) cannot show a selected tab; pick a glyph with an area to fill (the bell),
   and `shell.spec` checks the selected bar icon is filled. The pulse redraw went with it, so the `tick` variant and
   `playKey` left `AnimatedIcon`; `react-native-drawer-layout` left the dependencies.
+- 2026-10-31, F-266 (search, broad first page): **a query with nothing narrow paid for its whole answer before its
+  first row.** "> 90" and "Bulk Friend 4" built every token's full id set (30,004 and 69,345 keys at 10,000 expenses),
+  then read every `d`, `a` and `s` key, all before the first page. Now each token is probed within 500 keys and, with
+  nothing narrow, the first page comes from a newest-first walk of the rows with every token checked in hand; the
+  count and totals follow (`SearchSession.whenCounted`, the drawer shows "30+" until then). What it took: (1) a check
+  on a row must give the keys' answer, so the walk reads a record's terms from `eachTerm`, the function `termRows`
+  stores, and every token kind has a row test beside its key read; the oracle compares first pages, then counts and
+  totals, then every row, with the default walk and with one too short to finish (so the walk, a walk read to its end
+  and a walk given up on are all exercised); (2) a walk that finds little is pure loss (a row costs 15-25 keys), so it
+  gives up when its rate cannot fill a page within 1,000 rows, but not before 180 rows, because the first version gave
+  up after 60 rows on "Bulk Friend 4": the rows of a day come in id order, which put no match in the first 60; and when
+  the expenses' walk gives up the payments are not walked (the whole answer gives both); (3) the count's key reads
+  started right after the first page held its paint ("> 90" 505 ms), so the drawer starts them a frame later (142 ms).
+  The totals now arrive later than before (they follow the walk); measured at load 27-37, so indicative. A narrow
+  query's path and cost are unchanged ("Bulk expense 9993": 651 keys + 74 rows before and after).
 
 ## 24. Checklists
 
@@ -3420,12 +3452,15 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   *Reads/writes:* reads term ranges (`store.terms`), `getMany` for a narrow answer (at most 500 records) and for the
   30 rows of a page, the people / groups / balances projections for the statuses, `listOpenDisputes` for *disputed*;
   `store.prepareSearch()` once per open at idle; writes up to 12 term rows per expense, payment or write-off, none
-  for a comment beyond its words. *Cost:* a narrow query touches its tokens' keys plus its rows; a broad one (over 500
-  records) also the `d` and `a` ranges (about 1 us a key); a stale index is rebuilt once, at idle, in 500-row chunks.
+  for a comment beyond its words. *Cost:* a narrow query touches its tokens' keys (each probe at most 500) plus its
+  rows; a broad one's first page costs at most 500 keys per token plus at most 1,000 walked rows per section, and its
+  count and totals (after the first page is painted) its full key sets and the `d` and `a` ranges (about 1 us a key);
+  a stale index is rebuilt once, at idle, in 500-row chunks.
   *Telemetry:* none added (a failed index build is a `StoreProvider.prepareSearch` error log). *Checks:*
   `search.test.ts` (parser, per-field, paging, speed on both engines at 10,000, IndexedDB rebuild), `searchFields.test.ts`
   (every field on SQLite and IndexedDB, contacts, weekStart, localised categories, >30 payments, mixed-version writer,
-  failed rebuild), `searchOracle.test.ts` (property test on both engines), `searchQuery.test.ts` (table of 107
+  failed rebuild), `searchOracle.test.ts` (property test on both engines: first pages on open, then counts and totals,
+  then every row, with the walk, a walk read to its end and a walk given up on), `searchQuery.test.ts` (table of 107
   queries), `searchMatch.test.ts`, `e2e/search.spec.ts` at 390 and 1440; web verified, native not run.
 - **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
   shows exactly what data is sent; nothing is sent for on-device answers.

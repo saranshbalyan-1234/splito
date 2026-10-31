@@ -144,9 +144,10 @@ function SearchPanel({
   const rows = results
     ? searchRows(
         results,
-        {count: results.summary.count, isPartial: false},
+        /* A broad query's counts come after its first page (F-266): "30+" until then, where more may follow. */
+        {count: results.summary.count, isPartial: !results.isCounted && results.hasMore},
         query.trim() || undefined,
-        results.paymentCount,
+        {count: results.paymentCount, isPartial: !results.isCounted && results.hasMorePayments},
       )
     : []
   const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header' && r.type !== 'more')

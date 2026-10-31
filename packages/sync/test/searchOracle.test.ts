@@ -8,7 +8,7 @@ import {parseAmount, periodRange} from '@splito/domain'
 import {type Comment} from '../src/comments'
 import {openIdbStore} from '../src/idbStore'
 import {type Expense, type Group, isGroupInactive, type Person, type Repayment} from '../src/mutations'
-import {type SearchOptions, searchStore} from '../src/search'
+import {openSearch, SEARCH_PAGE, type SearchOptions, searchStore} from '../src/search'
 import {dateTerm, recordPeople, type RecordType, termKey, termRows, wordsOf} from '../src/searchTerms'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
@@ -23,7 +23,9 @@ import {entity, expense, put, resetClock} from './searchFixture'
  * creation times), then applies random edits, deletes, restores, renames, comment edits and deletes. Then (1) the stored
  * `search_terms` must equal the union of `termRows` over every entity, and (2) every kind of query (words, people,
  * groups, comments, amounts, dates, payers, currencies, types, statuses and hidden, narrow and broad) must give the
- * expenses, payments and totals that a row-by-row reference gives, in the same order.
+ * expenses, payments and totals that a row-by-row reference gives, in the same order: the first pages as `openSearch`
+ * returns (for a query whose every token is broad, from the newest-first walk), then the counts and totals once
+ * counted, then every row. Each query runs with the default walk and with a walk too short to finish (its fallback).
  */
 const today = '2026-10-26'
 const categories = [
@@ -237,6 +239,18 @@ async function reference(store: Store, opts: SearchOptions) {
     ['payments', r => r.type === 'repayment'],
     ['write-off sam', r => r.type === 'writeoff' && has(r, 'sam')],
     ['paid by riya march over 300', r => (r.type === 'expense' ? Object.entries((r.data as Expense).payers).some(([k, v]) => k === 'riya' && v !== 0n) : (r.data as Repayment).from === 'riya') && month(r) === '03' && amount(r) > typed(r, 300)],
+    /* Every token broad: the first page comes from the newest-first walk, the rest and the totals from the keys (F-266). */
+    ['d > 500', r => has(r, 'd') && amount(r) > typed(r, 500)],
+    ['> 100 settled', r => amount(r) > typed(r, 100) && status(r, 'settled')],
+    ['with riya > 300', r => peopleOn(r).includes('riya') && amount(r) > typed(r, 300)],
+    ['march or june > 200', r => (['03', '06'].includes(month(r)) || has(r, 'march') || has(r, 'june')) && amount(r) > typed(r, 200)],
+    ['in goa > 100', r => (wordsOfRow(r).some(w => w.startsWith('goa')) || r.data.groupId === 'goa') && amount(r) > typed(r, 100)],
+    ['2026', r => r.data.date.startsWith('2026') || has(r, '2026') || amount(r) === typed(r, 2026)],
+    ['today or yesterday', r => r.data.date === today || r.data.date === '2026-10-25' || has(r, 'today') || has(r, 'yesterday')],
+    ['comments', r => commentWords.has(r.id)],
+    ['owe EUR', r => status(r, 'owe') && r.data.currency === 'EUR'],
+    ['write-off 2026', r => r.type === 'writeoff' && (r.data.date.startsWith('2026') || has(r, '2026') || amount(r) === typed(r, 2026))],
+    ['dinner > 100 with sam', r => has(r, 'dinner') && amount(r) > typed(r, 100) && peopleOn(r).includes('sam')],
   ]
   const newestFirst = (rows: Rec[]) => rows.map(r => ({r, key: `${dateTerm(r.data.date, r.createdAt)}\u0000${r.id}`})).sort((a, b) => (a.key < b.key ? 1 : -1)).map(x => x.r.id)
   return cases.map(([q, keep]) => {
@@ -264,20 +278,44 @@ describe.each(ENGINES)('the keys give the answer the rows give, after random cha
     // (1) The stored terms are exactly what the entities say.
     const want = (await allEntities(store)).flatMap(termRows).map(r => JSON.stringify(termKey(r)))
     expect(await storedTerms(store)).toEqual([...new Set(want)].sort())
-    // (2) Every query answers as the rows do.
-    const opts: SearchOptions = {today, categories, me: 'me', hiddenGroups: ['lis'], hiddenItems, weekStart: 0}
-    let isNarrowSeen = false
-    let isBroadSeen = false
+    // (2) Every query answers as the rows do: the first pages on open, then the counts and totals, then every row.
+    // A walk of at most 100 rows cannot read a section to its end, so the broad first pages also take the whole answer's path.
+    const base: SearchOptions = {today, categories, me: 'me', hiddenGroups: ['lis'], hiddenItems, weekStart: 0}
+    const seen = {narrow: false, broad: false, walked: false, walkedAll: false, fellBack: false}
     const empty: string[] = []
-    for (const {q, expenses, payments, totals} of await reference(store, opts)) {
-      if (expenses.length + payments.length === 0) empty.push(q)
-      const got = await searchStore(store, q, opts)
-      expect({q, expenses: got.expenses.map(e => e.id), payments: got.payments.map(p => p.id), totals: got.totals}).toEqual({q, expenses, payments, totals})
-      isNarrowSeen ||= expenses.length + payments.length > 0 && expenses.length + payments.length <= 500
-      isBroadSeen ||= expenses.length + payments.length > 500
+    for (const opts of [base, {...base, walkRows: 100}]) {
+      for (const {q, expenses, payments, totals} of await reference(store, base)) {
+        if (expenses.length + payments.length === 0) empty.push(q)
+        const reads = {walk: 0}
+        const watched = new Proxy(store, {
+          get(t, key) {
+            const v = Reflect.get(t, key) as unknown
+            if (key === 'page')
+              return (type: string, query: {index?: string}) => {
+                if (query.index === 'byDate') reads.walk++
+                return t.page(type as 'expense', query)
+              }
+            return typeof v === 'function' ? (v as (...a: unknown[]) => unknown).bind(t) : v
+          },
+        })
+        const session = await openSearch(watched, q, opts)
+        const isWalked = reads.walk > 0
+        const isCounted = session.isCounted()
+        expect({q, expenses: session.found().map(e => e.id), payments: session.foundPayments().map(p => p.id)}).toEqual({q, expenses: expenses.slice(0, SEARCH_PAGE), payments: payments.slice(0, SEARCH_PAGE)})
+        await session.whenCounted()
+        expect({q, count: session.summary.count, payments: session.paymentCount, totals: session.summary.totals}).toEqual({q, count: expenses.length, payments: payments.length, totals})
+        const got = await searchStore(store, q, opts)
+        expect({q, expenses: got.expenses.map(e => e.id), payments: got.payments.map(p => p.id), totals: got.totals}).toEqual({q, expenses, payments, totals})
+        seen.narrow ||= expenses.length + payments.length > 0 && expenses.length + payments.length <= 500
+        seen.broad ||= expenses.length + payments.length > 500
+        // The walk gave the first pages and the counts came after them; or it read everything; or it gave up and the whole answer did.
+        seen.walked ||= isWalked && !isCounted
+        seen.walkedAll ||= isWalked && isCounted && !opts.walkRows
+        seen.fellBack ||= isWalked && isCounted && !!opts.walkRows && expenses.length > 0
+      }
     }
-    // Both ways of answering were exercised, and the queries find something (an empty answer proves little).
-    expect([isNarrowSeen, isBroadSeen]).toEqual([true, true])
+    // Every way of answering was exercised, and the queries find something (an empty answer proves little).
+    expect(seen).toEqual({narrow: true, broad: true, walked: true, walkedAll: true, fellBack: true})
     expect(empty).toEqual([])
     await store.close()
   }, 120_000)
