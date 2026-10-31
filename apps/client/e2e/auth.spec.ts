@@ -96,17 +96,16 @@ test.describe('the launch screen', () => {
 })
 
 test.describe('the Continue screen', () => {
-  test('Apple and Google first by platform, each saying it arrives with sync; no fake success', async ({page}) => {
+  test('Google and Apple are not buttons that do nothing: one small line says they come with sync (F-275)', async ({page}) => {
     await page.setViewportSize(PHONE)
     await toContinue(page)
-    const google = (await page.getByTestId('continue-google').boundingBox())!
-    const apple = (await page.getByTestId('continue-apple').boundingBox())!
-    // Web: Google first (Apple first on iOS only).
-    expect(google.y).toBeLessThan(apple.y)
-    await page.getByTestId('continue-google').click()
-    await expect(page.getByTestId('auth-social-not-live')).toContainText('arrives with sync')
-    await page.getByTestId('continue-apple').click()
-    await expect(page.getByTestId('continue-form')).toBeVisible()
+    await expect(page.getByTestId('continue-google')).toHaveCount(0)
+    await expect(page.getByTestId('continue-apple')).toHaveCount(0)
+    await expect(page.getByTestId('auth-social-coming')).toHaveText('Google and Apple sign-in come with sync.')
+    // The email or phone field and Continue are the first things on the screen.
+    const field = (await page.getByTestId('continue-input').boundingBox())!
+    const note = (await page.getByTestId('auth-social-coming').boundingBox())!
+    expect(field.y).toBeLessThan(note.y)
     await expect(page.getByTestId('screen-people')).toHaveCount(0)
     expect(await databases(page)).toEqual([])
   })
@@ -257,6 +256,8 @@ test.describe('a new account', () => {
     // Profile shows the new account (owner 216: it is not a Settings row).
     await page.goto('/profile')
     await expect(page.getByTestId('profile-email')).toContainText(NEW.email)
+    // The name typed during sign-up is the account's and "me" person's name, not "Add your name" (F-275).
+    await expect(page.getByTestId('profileHeaderDisplayName')).toHaveText(NEW.name)
   })
 
   test('starting with a phone asks for the email next; the account can then sign in with either', async ({page}) => {

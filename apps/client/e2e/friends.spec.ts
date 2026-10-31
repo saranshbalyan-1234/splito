@@ -209,17 +209,36 @@ test('not on Splito: Send invite makes a personal one-use link and lists them un
   await expect(row).toContainText('invited new.person@example.com to Splito')
 })
 
-test('offline (no directory): we’ll check when online, the request queues, Add anyway stays', async ({page}) => {
+test('no directory (no backend yet): name first and required, email or number optional, and the friend is usable at once (F-275)', async ({page}) => {
   await page.setViewportSize(DESKTOP)
   await page.goto('/friends/new')
-  await page.getByTestId('add-friend-contact').fill('someone@example.com')
-  await expect(page.getByTestId('add-friend-status-unavailable')).toContainText('We’ll check when you’re online')
-  await expect(page.getByTestId('add-friend-add-anyway')).toBeVisible()
-  await page.getByTestId('sheet-save').click()
-  await expect(page.getByText('Saved. We’ll check and send it when you’re online.')).toBeVisible()
-  const row = await openInvitesSent(page, 'someone@example.com')
-  await expect(row.getByTestId('invite-sent-resend')).toBeVisible()
-  // Invite links fail closed without the server: no made-up link.
+  await expect(page.getByTestId('screen-add-friend')).toBeVisible()
+  // Name comes first and has focus; no request flow, no "check", no invite-link row that cannot work.
+  const name = (await page.getByTestId('add-friend-name').boundingBox())!
+  const contact = (await page.getByTestId('add-friend-contact').boundingBox())!
+  expect(name.y).toBeLessThan(contact.y)
+  await expect(page.getByTestId('add-friend-name')).toBeFocused()
+  await expect(page.getByText('They get a request to accept')).toHaveCount(0)
+  await expect(page.getByTestId('add-friend-invite-link')).toHaveCount(0)
+  const save = page.getByTestId('sheet-save')
+  await expect(save).toHaveText('Add friend')
+  await expect(save).toBeDisabled()
+  // A contact alone is not enough; a bad one keeps Save off even with a name.
+  await page.getByTestId('add-friend-contact').fill('kabir@example.com')
+  await expect(save).toBeDisabled()
+  await page.getByTestId('add-friend-name').fill('kabir rao')
+  await expect(save).toBeEnabled()
+  await page.getByTestId('add-friend-contact').fill('kabir@')
+  await expect(save).toBeDisabled()
+  await page.getByTestId('add-friend-contact').fill('kabir@example.com')
+  await expect(page.getByTestId('add-friend-status-checking')).toHaveCount(0)
+  await save.click()
+  await expect(page.getByTestId('person-name')).toHaveText('Kabir Rao')
+  // Usable at once in an expense: ticked and enabled, never "Waiting to accept".
+  const dialog = await pickerOptions(page)
+  await expect(dialog.getByRole('checkbox', {name: 'Kabir Rao'})).toBeEnabled()
+  await expect(dialog.getByTestId('pending-kabir@example.com')).toHaveCount(0)
+  // Invite links still fail closed without the server: no made-up link.
   await page.goto('/invites/new')
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
   await expect(page.getByText('Invite links work once sync arrives')).toBeVisible()

@@ -15,11 +15,11 @@ import {Text} from '#/components/Typography'
 import {ContactField} from './ContactField'
 import {FormActions} from './FormActions'
 import {useAuthErrorText} from './messages'
-import {SocialButtons} from './SocialButtons'
+import {SocialComing} from './SocialComing'
 
 /**
- * The one Continue screen (owners 140, 141; Bluesky's splash look and `LoginForm` layout): Apple, Google, then
- * "Email or phone" and Continue. Continue asks the auth client whether the account exists; the next step follows
+ * The one Continue screen (owners 140, 141; Bluesky's splash look and `LoginForm` layout): "Email or phone" and
+ * Continue, then one muted line that Google and Apple come with sync (F-275). Continue asks the auth client whether the account exists; the next step follows
  * from the answer. There is no Create account anywhere. Dev and e2e builds add a labelled "Continue with a dev
  * account" below.
  */
@@ -71,8 +71,6 @@ export function ContinueForm({
         </Text>
       </View>
 
-      <SocialButtons />
-
       <ContactField
         testID="continue-input"
         value={value}
@@ -89,6 +87,7 @@ export function ContinueForm({
         </View>
       )}
       <FormActions testID="continue" isBusy={isBusy} onNext={submit} />
+      <SocialComing />
 
       {process.env.EXPO_PUBLIC_ENV === 'preview' && (
         <View testID="preview-note" role="note">
