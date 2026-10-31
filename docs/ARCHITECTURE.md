@@ -195,7 +195,7 @@ The shell is Bluesky's, per § 26.3-26.9 and § 26.17 (drawer from the top-left 
 Activity as a destination, LeftNav, right column, FAB, sheets, animated tab switches). [Built] in `view/shell/`,
 `components/Layout/`, `navigation/Navigation.tsx`.
 
-- **One `navigationItems` array feeds the bottom bar, the web sidebar and the drawer**, and a test pins § 26.3's
+- **One `navigationItems` array feeds the bottom bar and the web sidebar** (there is no side drawer, owner 217), and a test pins § 26.3's
   order. Nav items never hide or reorder while data loads; only badges (Activity unread) appear
   once data is there. [Planned] (A-027)
 - **Every Back control calls `goBack(navigation, fallbackRoute)`**, so a page opened from a deep link or a
@@ -1865,6 +1865,22 @@ Splito lessons (add newest last, dated, with PR):
   and every bottom-bar, sidebar and drawer icon fell back to the accent colour. The pop now sits alone on the
   wrapper and the whole style goes to the glyph; `shell.spec` checks the bar's icons are drawn in the label's text
   colour.
+- 2026-10-31, owner 216 (iPhone Safari): **a left-edge swipe belongs to the browser.** The phone-web drawer opened on a
+  touch that started within 24 px of the left edge and moved right, which is exactly iOS Safari's Back swipe (and it
+  ran on pushed pages too), so a Back swipe also opened the drawer over the page it went back to. No app gesture starts
+  at the screen's left edge; the drawer opens only by its address. Also: React Navigation's web scroll restoration
+  scrolled only in the frame after focus, so the page Back returned to was painted once at the old page's offset and
+  then jumped; it now scrolls at once as well (`scrollWeb.spec` "Back ... from the first frame"). And a filled icon made
+  by filling every shape of a Lucide outline can lose its drawing (People became a plain square): filled glyphs cut
+  their detail out with a mask (`createFilledIcon`), and `shell.spec` checks the selected People icon has its holes.
+  Real Safari's swipe was not driven here (no WebKit in this container); Chromium's `history.back()` stands in for it.
+- 2026-10-31, owner 217: **removing a navigation surface means finding what only it reached.** With the drawer gone the
+  phone bar became the only navigation, and Settings > Navigation still let Settings be switched off, which would have
+  left a phone with no way back to Settings: the editor now locks Settings with the start tab, and reading a saved bar
+  adds Settings when it is missing (an empty bar still reads as the default). Also: an icon whose filled form equals its
+  outline (Lucide `activity` is one open line) cannot show a selected tab; pick a glyph with an area to fill (the bell),
+  and `shell.spec` checks the selected bar icon is filled. The pulse redraw went with it, so the `tick` variant and
+  `playKey` left `AnimatedIcon`; `react-native-drawer-layout` left the dependencies.
 
 ## 24. Checklists
 
@@ -2234,15 +2250,14 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   right column when wide, § 26.17). *Why:* "on web it should occupy complete screen", "the navigation should
   be like Bluesky", "for web, keep my left sidebar and main content".
 - **Destinations:** the home destination is labelled **"Home"** (house icon; it holds the Overview and the short
-  recent lists). Phone bottom bar by default = Home, People, Groups, Analytics, Activity, plus the FAB (§ 26.6). **Search and AI are not pages:** both live in the Search & Ask drawer opened from the header icon (below). *Why:* "that search to be available globally on home section instead of a separate page" (replaces "Search as the second tab"). **The desktop/rail
-  sidebar and the phone drawer show the same list, in the same order, with the same icons and labels:** Home,
-  People, Groups, Analytics, Ask Splito, Activity, Settings, then the same footer links (Feedback · Help · Privacy ·
-  About). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header
-  (§ 26.7) and Sign in / Log out. One `navigationItems` array and one `NavFooterLinks` component feed all of
-  them (§ 3). Profile is never a nav item (the avatar opens it). *Why:* "mobile sidebar and desktop seems to be
-  different, make them same". *Why:* "make notification
-  as activity and move to bottom". *Where:* `view/shell/bottom-bar/`, `view/shell/desktop/LeftNav.tsx`,
-  `navigation/Drawer.tsx`.
+  recent lists). Phone bottom bar by default = Home, People, Groups, Analytics, Activity, plus the FAB (§ 26.6). **Search and AI are not pages:** both live in the Search & Ask drawer opened from the header icon (below). *Why:* "that search to be available globally on home section instead of a separate page" (replaces "Search as the second tab"). **One navigation per
+  width, never two** (owner 217, replaces the phone drawer of 23/62): a phone has only the bottom bar, rail and desktop
+  only the sidebar; there is no side drawer anywhere. The bar and the sidebar show the same items with the same icons
+  and labels (People, Groups, Analytics, Activity, Settings); the sidebar adds the logo, the "Add expense" pill and the
+  footer links (Feedback · Help · Privacy · About), which a phone reaches in Settings > Support. One `navigationItems`
+  array and one `NavFooterLinks` component feed them (§ 3). Profile is never a nav item (the avatar opens it). *Why:*
+  "Remove the sidebar in mobile completely, either sidebar or bottom navigation"; earlier "make notification as
+  activity and move to bottom". *Where:* `view/shell/bottom-bar/`, `view/shell/desktop/LeftNav.tsx`.
 - **Search & Ask: one drawer for search and AI.** An AI icon (Lucide `Sparkles`, the widely recognised AI
   mark; not a magnifier, not `Zap`, which reads as "fast") sits in the header of every top-level page
   (Home, People, Groups, Analytics, Activity), to the LEFT of that page's action (on Home, its only action, at the far right), on every
@@ -2263,12 +2278,13 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Settings > Navigation lets the user choose the phone bottom bar from every sidebar item.** All items of the
   shared list (People, Groups, Analytics, Activity, Settings; owners 198, 200) are offered, each with a toggle
   and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar, with **any number of
-  tabs** (from one item up to every item; the start tab cannot be turned off). Tabs share the bar width equally; with
-  more than 5 the labels hide and icons stay at Bluesky size with their badges. Items not in the bar stay in the
-  drawer. Default bar: People, Groups, Analytics, Activity, Settings (owner 206). **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
+  tabs** (the start tab and Settings cannot be turned off: a phone has no other navigation, owner 217, so the bar
+  always reaches Settings and a saved bar without it gets it back on read). Tabs share the bar width equally; with
+  more than 5 the labels hide and icons stay at Bluesky size with their badges. An item that is off is not on a phone
+  (its page still opens from links). Default bar: People, Groups, Analytics, Activity, Settings (owner 206). **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
   screens): the sidebar and rail list all items (People, Groups, Analytics, Activity, Settings),
   in the order chosen in Settings > Navigation, with no "More" item; the on/off choice shapes only the phone bottom
-  bar (off items stay in the phone drawer).
+  bar.
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
 - **Every place has a URL, so a copied link lands on the same screen** (owner 100; F-241, built; Expensify's model, where every side panel and modal is a route). Every page, every in-page tab (Group
@@ -2431,10 +2447,14 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
 - **Nav items:** Bluesky `NavItem` exactly (24 px icon, `text_xl`, active = bold + filled icon,
   `rounded_full` hover background, Bluesky badge/dot): the shared list of § 26.3. The
   sliding active indicator (§ 26.9) sits beside the active item.
-- **Navigation icons are drawn in the text colour, never the accent** (owner 215): the bottom bar, the sidebar and
-  the drawer draw every tab icon in the theme's text colour (white in Dim and Black, near-black in light), active and
+- **Navigation icons are drawn in the text colour, never the accent** (owner 215): the bottom bar and the sidebar
+  draw every tab icon in the theme's text colour (white in Dim and Black, near-black in light), active and
   inactive alike; the selected tab is shown by its filled glyph and bold label, as in Bluesky. The accent colours
   buttons, links and the FAB, not the nav. *Why:* "make the navigation selector white again like it was previously".
+- **A filled tab glyph keeps its drawing** (owner 216): a selected icon is a solid shape with its inner detail cut out
+  (`createFilledIcon`, a mask), never Lucide's outline with every shape filled in, which can merge into a blob. People is
+  a solid card with the head and shoulders cut out (filling the outline drew a plain square that read as a calendar).
+  *Why:* "People tab when selected is not correct".
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
 - **Compact, no space it does not need** (owner 188): the sidebar is as wide as its content needs (icon,
@@ -2462,31 +2482,26 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   friend; wide screens, which have no FAB, keep the body's "Add expense". *Why:* "use the same flow of that FAB icon".
 - *Where:* `components/AddExpenseFAB.tsx`, `view/com/util/fab/`.
 
-### 26.7 Drawer (side drawer)
+### 26.7 No side drawer; the avatar's sync dot
 
-- **Bluesky's `Drawer.tsx`, copied:** slides in from the LEFT with Bluesky's animation, layout, spacing, rows,
-  header block and footer; closes on scrim tap and swipe (native, Gesture Handler); focus trap and Escape on
-  web. testID `drawer`. *Why:* "it should open the drawer like Bluesky where all menu appears like the
-  hamburger".
-- **Opened by** a swipe from the left edge on phones (native and phone web); the header avatar opens Profile
-  instead (owner 201, § 26.4). Everything the drawer offers is also reachable without it (tabs, Settings from
-  Profile's Back, Feedback, Help, Privacy and About in Settings > Support, owner 204).
-- **Contents, the same as the desktop sidebar (§ 26.3):** a profile header (avatar with the sync-status dot,
-  the person's real name; tapping it opens Profile; no "Me" label and no "Saved on this device" text); the
-  shared nav items (§ 26.3); the shared footer links Feedback ·
-  Help · Privacy · About (no Log out, owner 202). No separate Profile item and no theme toggle
-  (Appearance lives in Settings). *Why:* "remove me from drawer profile"; "removed the other saved on device and
-  me"; "make them same".
-- **Sync-status dot on the user's avatar** (drawer header and the header avatar at every width): **green** =
-  signed in, online, everything synced; **yellow** = syncing or waiting to sync (changes in the outbox, or
-  offline with unsynced changes); **red** = on this device only (no account yet, nothing backed up). Bluesky
-  presence-dot geometry (bottom-right, ring in the background colour). Never colour alone (§ F-1801): the avatar's
-  accessibility label says the state ("Synced" / "Syncing" / "On this device only"), and a long-press or hover
-  shows it as a tooltip; tapping the dot area in the drawer opens Settings > Account/Sync. It replaces every
-  other "Saved on this device" text in the shell. Until the backend exists the honest state is red. *Why:* "add
-  green icon for online, add a yellow icon for syncing, add a red icon for on device only ... add this icon on
-  player avatar on sidebar drawer".
-- *Where:* `navigation/Drawer.tsx`, `state/shell/drawer-open.tsx`.
+- **There is no side drawer, on any platform or width** (owner 217, replaces Bluesky's drawer of owners 23, 60, 62,
+  201 and 216's address-only drawer): a phone navigates with the bottom bar alone, rail and desktop with the sidebar
+  alone (§ 26.3). Nothing opens a drawer; an old `?drawer=menu` address opens its page without one. What the drawer
+  held lives elsewhere: the tabs in the bar, Profile on the header avatar (owners 201, 206), Feedback, Help, Privacy and
+  About in Settings > Support (owner 204), and Settings is always in the bar (§ 26.3). *Why:* "Remove the sidebar in
+  mobile completely, either sidebar or bottom navigation"; earlier "Sidebar opens up when swiping" (owner 216).
+- **The browser's Back gesture is the browser's** (owner 216): the app puts no gesture at the left edge of a phone
+  screen, and the page Back returns to is drawn at its own saved scroll from the first frame
+  (`useWebScrollRestoration` scrolls at once on focus, then again a frame later for a re-mounted screen), so Safari's
+  swipe lands on its snapshot without a jump. *Why:* "Swipe doesn't look good to go to last screen".
+- **Sync-status dot on the user's avatar** (the header avatar at every width): **green** = signed in, online,
+  everything synced; **yellow** = syncing or waiting to sync (changes in the outbox, or offline with unsynced
+  changes); **red** = on this device only (no account yet, nothing backed up). Bluesky presence-dot geometry
+  (bottom-right, ring in the background colour). Never colour alone (§ F-1801): the avatar's accessibility label says
+  the state ("Synced" / "Syncing" / "On this device only"), and a long-press or hover shows it as a tooltip. It
+  replaces every other "Saved on this device" text in the shell. Until the backend exists the honest state is red.
+  *Why:* "add green icon for online, add a yellow icon for syncing, add a red icon for on device only".
+- *Where:* `view/shell/index(.web).tsx` (no drawer layout), `components/HeaderAvatar.tsx`, `components/SyncStatusDot.tsx`.
 
 ### 26.8 Sheets, popups and prompts
 
@@ -2658,8 +2673,8 @@ pages". § 17 holds the engineering rules that meet these budgets.
 - **Animated icons and Expensify-style animation wherever it helps** (owner 96, narrowed by 213; F-1713, built in
   part). Icons animate on meaning, never as decoration, and every one is the single `AnimatedIcon` primitive
   (`components/anim/AnimatedIcon.tsx`, Lucide geometry only, animated SVG paths and Reanimated on the UI thread, no
-  per-icon Lottie): tab, drawer and sidebar icons morph to their filled state on select (`MorphIcon`), the Activity
-  pulse redraws when the unread count goes up, the check draws on Accept and on the Save, Record payment and Call it even buttons (no full-sheet success screen, F-275; the sheet closes with one toast), the
+  per-icon Lottie): tab and sidebar icons morph to their filled state on select (`MorphIcon`; the Activity bell's
+  unread badge springs in on its own, the pulse redraw went with the pulse icon, owner 217), the check draws on Accept and on the Save, Record payment and Call it even buttons (no full-sheet success screen, F-275; the sheet closes with one toast), the
   trash lid lifts while a Delete button is hovered, pressed or focused, the sync dot breathes while syncing and
   rests otherwise, chevrons turn on expand. Two items of the original list are **not built** because motion there
   would not explain a change (owner 213): Search & Ask sparkles twinkling on open (the drawer opening shows it) and
@@ -2923,8 +2938,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 *Why:* "make notification as activity and move to bottom". *Where:* `screens/Activity.tsx`,
 `components/activity/`.
 
-- **Activity is a navigation destination, not a header bell** (§ 26.3): Lucide `Activity` (pulse) icon,
-  Bluesky's unread badge on the nav item (bottom bar, sidebar), counting unread items from others. testIDs
+- **Activity is a navigation destination, not a header bell** (§ 26.3): Lucide `Bell` icon (owner 217, replaces the
+  `Activity` pulse, a single line that looked the same selected or not), solid when selected, as Bluesky's
+  notifications tab; Bluesky's unread badge on the nav item (bottom bar, sidebar), counting unread items from others. testIDs
   `tab-activity`, `screen-activity`.
 - **Header:** avatar (Back on a pushed copy, § 26.3) | "Activity" | Search & Ask | Filters | "Mark all read".
 - **Body keeps Bluesky's notification list:** day section headers (Today / Yesterday / weekday / date), read/unread
@@ -3073,8 +3089,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 - **Not in this task:** setup after sign-in (F-211) and the guided tour (F-253); Google and Apple (buttons only, a
   tap says "arrives with sync"); the real HTTP client (F-2101/F-2102).
 
-- **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
-  Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
+- **Settings has no Profile or account row** (owner 216, replaces "Settings starts with an Account section"): Profile is
+  reached only from the header avatar (owners 201, 206); the Settings list starts with Friends and invites, then the
+  preference sections, Support and Your data. *Why:* "Remove profile from settings".
 - **The review site is a "preview" build** (assistant's ruling 2026-10-30, after the F-250 review; the owner
   reviews the front end on https://splito-web.onrender.com before any backend, owners 164/165): Render builds with
   `EXPO_PUBLIC_ENV=preview`, which allows the labelled dev account ("Preview build: local dev account, data stays in
@@ -3115,11 +3132,11 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 - **Log out is not in the drawer footer or the Settings list** (owner 202; it is on Profile only).
 - **Auth state comes from one `useSession()`** (Bluesky pattern, `src/state/session`), signed out until the
   backend lands.
-- **Feedback** ("add one feedback section as well"). Placement copied from Bluesky: a "Feedback" item in the
-  drawer (Bluesky `Drawer.tsx` onPressFeedback), **"Support" in Settings is one row that opens its
+- **Feedback** ("add one feedback section as well"). Placement copied from Bluesky: the sidebar footer's
+  "Feedback" link (wide screens; a phone has no drawer, owner 217), **"Support" in Settings is one row that opens its
   own page** (owner 204, `/settings/support`, Back -> Settings) holding every help item: Send feedback, Your
   feedback, Help, Privacy, About (and the app version); the Settings list itself shows only the "Support" row,
-  and the sidebar/drawer footer links still go straight to each page. *Why:* "make support a section, which opens
+  and the sidebar footer links still go straight to each page. *Why:* "make support a section, which opens
   up all these menus". **The data items work the same way under the name "Your data"** (owner 205, assistant's
   name: plain, says whose and what): one "Your data" row in Settings opens `/settings/data` (Back -> Settings)
   with Export, Import (restore a backup), Move this device's older data (while an old database exists) and Reset
@@ -3799,6 +3816,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 213 | "make sure to use proper skeletons, proper animations, proper icons, proper empty screen and proper cta"; "loading wheverever required"; "guided tour for required part only"; "dont overdo anything" | Skeletons where content loads, small loaders only for non-content waits, motion only where it explains, consistent Lucide icons, an empty state with art + one sentence + one CTA on every list, one primary CTA per screen; guided tour only for the essentials; nothing decorative | § 26.1, F-253 | - |
 | 214 | "for some reason, by desktop full width sidebar looks really bad"; "Feedback · Help · Privacy · About moves to bottom" | The sidebar footer links are pinned to the bottom again; items and Add expense stay a block at the top; width stays 216 px | § 26.5 | Footer links directly under Add expense (188) |
 | 215 | "Tab ui issue"; "make the navigation selector white again like it was previously" | Bottom bar, sidebar and drawer icons in the text colour (white in dark), active shown by the filled glyph and bold label; never the accent | § 26.5 | Accent-coloured icons (a regression of the c-anim review fix) |
+| 216 | "People tab when selected is not correct"; "Sidebar opens up when swiping"; "Remove profile from settings"; "Swipe doesn't look good to go to last screen" (iPhone screenshots, 2026-10-31) | Selected People glyph is a solid card with the person cut out; no swipe opens the drawer (address only); no Profile row in Settings; Back (Safari's swipe) shows the page at its saved scroll from the first frame, no app gesture at the left edge | § 26.5, § 26.7, § 26.15 | Filled outline (a plain square); edge swipe opened the drawer (201); Settings Account row with Profile |
+| 217 | "Also we need to choose a diff icon for activity, it doesn't make any diff if it's selected or not"; "Remove the sidebar in mobile completely, either sidebar or bottom navigation" | Activity is a Lucide Bell, solid when selected; no side drawer anywhere (phone: bottom bar only; wide: sidebar only); Settings and the start tab cannot leave the bar; old `?drawer=menu` opens the page alone | § 26.3, § 26.7, § 26.14 | Activity pulse icon (unchanged when selected); phone drawer opened by its address (216) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

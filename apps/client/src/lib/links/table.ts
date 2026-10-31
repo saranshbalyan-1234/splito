@@ -2,7 +2,7 @@ import {ROUTE_PATHS, type RouteName} from '#/routes'
 
 /**
  * Everything that has a URL besides the pages of `ROUTE_PATHS` (ARCHITECTURE 26.3, F-241): in-page tabs, sheets
- * and the pickers inside them, and the global drawers. One table, read by the resolver, the sheet hooks and the
+ * and the pickers inside them, and the global sheets. One table, read by the resolver, the sheet hooks and the
  * tests; a source scan in `table.test.ts` fails when a `useDialogControl({url})` names something missing here.
  */
 
@@ -74,11 +74,14 @@ export const SETTINGS_SECTION_SHEETS: Record<string, readonly string[]> = {
 }
 
 /** Sheets that open over whatever page is showing: they belong to the shell, not a page. */
-export const GLOBAL_SHEETS = ['search', 'drawer', 'feedback', 'install'] as const
+export const GLOBAL_SHEETS = ['search', 'feedback', 'install'] as const
 export type GlobalSheet = (typeof GLOBAL_SHEETS)[number]
 
-/** The global sheets that print as a query on the page they cover (`?drawer=menu`); Search prints as `/search`. */
-export const QUERY_SHEETS = {drawer: 'menu', feedback: 'new', install: 'help'} as const satisfies Partial<Record<GlobalSheet, string>>
+/**
+ * The global sheets that print as a query on the page they cover (`?feedback=new`); Search prints as `/search`. There is
+ * no side drawer (owner 217), so an old `?drawer=menu` is an unknown key and the page opens without it.
+ */
+export const QUERY_SHEETS = {feedback: 'new', install: 'help'} as const satisfies Partial<Record<GlobalSheet, string>>
 
 
 /** The names in a page pattern: `/people/:personId` -> ['personId']. */

@@ -1,11 +1,10 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDrawer} from './nav'
 
 /*
  * F-271 owners 201-206 (ARCHITECTURE 26.3, 26.4, 26.7, 26.15): the avatar opens Profile at every width and Back
  * returns where you were; Settings is a tab; Log out is the last row of Profile; Support and Your data are one row
- * each in Settings and open their own pages; the phone drawer opens by a swipe from the left edge.
+ * each in Settings and open their own pages; a phone has no side drawer (owner 217).
  */
 
 const VIEWPORTS = [
@@ -53,8 +52,8 @@ for (const [label, viewport] of VIEWPORTS) {
       await expect(page).toHaveURL(/\/settings$/)
       await expect(page.getByTestId('tab-settings')).toHaveAttribute('aria-current', 'page')
       await expect(page.getByTestId('screen-settings').getByTestId('header-avatar')).toBeVisible()
-      // No Log out, Support items or Data items in the list itself (owners 202, 204, 205).
-      for (const id of ['settings-log-out', 'settings-send-feedback', 'settings-help', 'settings-about', 'settings-export', 'settings-import', 'settings-reset-all'])
+      // No Profile row (owner 216: the avatar opens it), no Log out, Support items or Data items (owners 202, 204, 205).
+      for (const id of ['settings-profile', 'settings-log-out', 'settings-send-feedback', 'settings-help', 'settings-about', 'settings-export', 'settings-import', 'settings-reset-all'])
         await expect(page.getByTestId(id)).toHaveCount(0)
       await expect(page.getByTestId('settings-support')).toBeVisible()
       await expect(page.getByTestId('settings-data')).toBeVisible()
@@ -140,10 +139,10 @@ for (const [label, viewport] of VIEWPORTS) {
   })
 }
 
-test.describe('phone 390: the drawer opens by a swipe from the left edge (owner 201)', () => {
+test.describe('phone 390: there is no side drawer, the bottom bar is the navigation (owner 217)', () => {
   test.use({viewport: {width: 390, height: 844}})
 
-  test('an edge swipe opens it; a swipe from the middle or a mostly vertical one does not', async ({page}) => {
+  test('no swipe (Safari\'s Back from the edge, the middle, vertical) and no old ?drawer=menu address opens one', async ({page}) => {
     await page.goto('/activity')
     await expect(page.getByTestId('screen-activity')).toBeVisible()
     const swipe = (from: {x: number; y: number}, to: {x: number; y: number}) =>
@@ -160,15 +159,17 @@ test.describe('phone 390: the drawer opens by a swipe from the left edge (owner 
         },
         [from, to],
       )
+    await swipe({x: 4, y: 400}, {x: 120, y: 404})
     await swipe({x: 200, y: 400}, {x: 320, y: 402})
     await swipe({x: 4, y: 300}, {x: 30, y: 700})
     await page.waitForTimeout(300)
     await expect(page.getByTestId('drawer')).toHaveCount(0)
-    await openDrawer(page)
-    await expect(page.getByTestId('drawer-groups')).toBeVisible()
-    await expect(page).toHaveURL(/drawer=menu/)
-    await page.keyboard.press('Escape')
+    // An old link to the drawer opens its page alone.
+    await page.goto('/groups?drawer=menu')
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await page.waitForTimeout(300)
     await expect(page.getByTestId('drawer')).toHaveCount(0)
+    await expect(page.getByRole('navigation').getByTestId('tab-settings')).toBeVisible()
   })
 
   test('the avatar no longer opens the drawer', async ({page}) => {

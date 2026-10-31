@@ -21,8 +21,7 @@ const used = new Set(all.flatMap(f => [...f.text.matchAll(/useDialogControl\(\{[
 test('every sheet a host binds to a URL is in the table, and every table entry has a host', () => {
   const listed = new Set<string>([...GLOBAL_SHEETS, ...Object.values(SHEETS).flat()])
   for (const url of used) expect([url, listed.has(url)]).toEqual([url, true])
-  /* The side drawer is the shell's own state (`state/shell/drawer-open.tsx`), not a Dialog. */
-  for (const url of listed) expect([url, used.has(url) || url === 'drawer']).toEqual([url, true])
+  for (const url of listed) expect([url, used.has(url)]).toEqual([url, true])
 })
 
 /*

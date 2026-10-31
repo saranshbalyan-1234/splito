@@ -76,7 +76,7 @@ export function resolveLink(input: string): Resolved {
   const oldQ = old.indexOf('?')
   const segs = (oldQ === -1 ? old : old.slice(0, oldQ)).split('/').filter(Boolean)
   const query = cleanQuery([search, oldQ === -1 ? '' : old.slice(oldQ + 1)].filter(Boolean).join('&'))
-  /* The bare address is the start tab (owner 198), with a global sheet if the query names one (`/?drawer=menu`). */
+  /* The bare address is the start tab (owner 198), with a global sheet if the query names one (`/?feedback=new`). */
   if (segs.length === 0) return finish(startPage(), {}, [], query)
 
   for (let i = segs.length; i >= 0; i--) {
@@ -120,7 +120,7 @@ function finish(name: PageName, params: Record<string, string>, chain: string[],
   let sheets = chain
   if (sheets.length > 0 && !isPageSheet(name, sheets, params)) return {isKnown: false, target: home()}
   if (name === 'Group' && queryTab === 'rules' && sheets.length === 0) sheets = ['rules']
-  /* `?drawer=menu` opens the side drawer over the page, unless a sheet is already named. */
+  /* `?feedback=new` opens Send feedback over the page, unless a sheet is already named. */
   for (const [id, value] of Object.entries(QUERY_SHEETS)) {
     if (pageQuery[id] === value && sheets.length === 0) sheets = [id]
     delete pageQuery[id]

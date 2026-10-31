@@ -2,7 +2,6 @@ import {expect, type Page, test} from '@playwright/test'
 
 import {DEMO_LARGE_PREFIX, generateLargeDemo, localToday} from '@splito/sync/demoLarge'
 
-import {openDrawer} from './nav'
 import {openDemo as enterDemo} from './openDemo'
 
 /* Changes by other people in the demo history, from the same deterministic plan the app seeded. */
@@ -315,87 +314,15 @@ test.describe('header rule set', () => {
   })
 })
 
-test.describe('drawer: Bluesky drawer, opened by a swipe from the left edge (owner 201)', () => {
-  test('slides in from the left with the account card, the rows and the footer', async ({
-    page,
-  }) => {
-    await page.setViewportSize(PHONE)
-    await openDemo(page)
-    await openDrawer(page)
-    const drawer = page.getByTestId('drawer')
-    await expect(drawer).toBeVisible()
-    await expect.poll(async () => (await drawer.boundingBox())!.x).toBe(0)
-    // Real name only: no "Me", no "Saved on this device" (26.7).
-    await expect(page.getByTestId('drawer-profile')).not.toContainText(
-      'Saved on this device',
-    )
-    await expect(page.getByTestId('drawer-profile')).not.toHaveText('Me')
-    const rows = await drawer
-      .locator('[data-testid^="drawer-"]')
-      .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-    expect(rows).toEqual([
-      'drawer-profile',
-      // The default bar's items first, then the rest (26.3); no Home, no Ask Splito, no Log out (owners 198, 200, 202).
-      'drawer-people',
-      'drawer-groups',
-      'drawer-analytics',
-      'drawer-activity',
-      'drawer-settings',
-    ])
-    // The footer links are the sidebar's component (26.3).
-    await expect(drawer.getByTestId('nav-footer-links')).toContainText(
-      'Feedback ∙ Help ∙ Privacy ∙ About',
-    )
-    // Escape closes it (focus is trapped inside while it's open).
-    await page.keyboard.press('Escape')
-    await expect(drawer).toHaveCount(0)
-  })
-
-  test('the sync dot is red (on this device only) on the header avatar and the drawer avatar, and says so in words', async ({
-    page,
-  }) => {
-    await page.setViewportSize(PHONE)
-    // The real data (demo mode has its own "Demo" dot, see demo-mode.spec).
-    await page.goto('/')
-    const avatar = on(page, 'screen-people', 'header-avatar')
-    await expect(avatar.getByTestId('sync-dot-local')).toBeVisible()
-    // Never colour alone: the label carries the state, and web shows a tooltip.
-    await expect(avatar).toHaveAttribute('aria-label', /On this device only/)
-    await expect(avatar.getByTestId('sync-dot')).toHaveAttribute(
-      'title',
-      'On this device only',
-    )
-    await openDrawer(page)
-    const drawer = page.getByTestId('drawer')
-    await expect(drawer.getByTestId('sync-dot-local')).toBeVisible()
-    // Tapping the dot opens Settings.
-    await drawer.getByTestId('sync-dot').click()
-    await expect(page.getByTestId('screen-settings')).toBeVisible()
-    await expect(drawer).toHaveCount(0)
-  })
-
-  test('the scrim closes it; rows navigate and close it', async ({page}) => {
-    await page.setViewportSize(PHONE)
-    await open(page, '/', 'screen-people')
-    await openDrawer(page)
-    await page.mouse.click(PHONE.width - 10, PHONE.height / 2)
-    await expect(page.getByTestId('drawer')).toHaveCount(0)
-
-    for (const [row, screen, url] of [
-      ['drawer-groups', 'screen-groups', /\/groups$/],
-      ['drawer-profile', 'screen-profile', /\/profile$/],
-      ['drawer-settings', 'screen-settings', /\/settings$/],
-      ['drawer-activity', 'screen-activity', /\/activity$/],
-      ['nav-footer-about', 'screen-settings-section', /\/settings\/about$/],
-    ] as const) {
-      await open(page, '/analytics', 'screen-analytics')
-      await openDrawer(page)
-      await page.getByTestId(row).click()
-      await expect(page).toHaveURL(url)
-      await expect(page.getByTestId(screen)).toBeVisible()
-      await expect(page.getByTestId('drawer')).toHaveCount(0)
-    }
-  })
+test('the sync dot is red (on this device only) on the header avatar, and says so in words', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  // The real data (demo mode has its own "Demo" dot, see demo-mode.spec).
+  await page.goto('/')
+  const avatar = on(page, 'screen-people', 'header-avatar')
+  await expect(avatar.getByTestId('sync-dot-local')).toBeVisible()
+  // Never colour alone: the label carries the state, and web shows a tooltip.
+  await expect(avatar).toHaveAttribute('aria-label', /On this device only/)
+  await expect(avatar.getByTestId('sync-dot')).toHaveAttribute('title', 'On this device only')
 })
 
 test.describe("activity: a tab with Bluesky's unread badge", () => {
@@ -796,10 +723,10 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
     .getByRole('navigation')
     .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
     .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  expect(order).toEqual(['tab-people', 'tab-groups'])
-  // Hiding tabs never strands anything: the drawer still reaches every page.
-  await openDrawer(page)
-  await page.getByTestId('drawer-analytics').click()
+  // Settings always stays in the bar: a phone has no drawer, so it is the only way there (owner 217).
+  expect(order).toEqual(['tab-people', 'tab-groups', 'tab-settings'])
+  // A hidden tab's page still opens by its address.
+  await page.goto('/analytics')
   await expect(page.getByTestId('screen-analytics')).toBeVisible()
 
   // The sidebar lists every item (owner 155, no More): what is on in the chosen order, then the rest.
@@ -809,7 +736,8 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
       .getByRole('navigation')
       .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  await expect.poll(sidebar).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-settings'])
+  // Settings joined the bar on read (owner 217), so it is among the items that are on.
+  await expect.poll(sidebar).toEqual(['tab-people', 'tab-groups', 'tab-settings', 'tab-analytics', 'tab-activity'])
   await page.getByTestId('tab-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 })
@@ -831,7 +759,8 @@ test('bottom-bar icons are drawn in the text colour, never the accent (owner 215
     const nav = document.querySelector('[role="navigation"]')!
     const label = [...nav.querySelectorAll('[aria-current="page"] [data-testid="tab-label"]')][0] as HTMLElement
     const icons = [...nav.querySelectorAll('[data-testid^="tab-"] svg')].map(svg => {
-      const painted = svg.querySelector('path, circle, rect') ?? svg
+      // The first shape outside a mask: a filled glyph's cut-outs live in its mask (owner 216).
+      const painted = [...svg.querySelectorAll('path, circle, rect')].find(el => !el.closest('mask, defs')) ?? svg
       const style = getComputedStyle(painted)
       return style.fill !== 'none' && style.fill !== 'rgba(0, 0, 0, 0)' ? style.fill : style.stroke
     })
@@ -839,4 +768,31 @@ test('bottom-bar icons are drawn in the text colour, never the accent (owner 215
   })
   expect(colours.icons.length).toBeGreaterThan(3)
   for (const c of colours.icons) expect(c).toBe(colours.text)
+})
+
+test('the selected People icon is a solid card with the person cut out, not a plain square (owner 216)', async ({page}) => {
+  await page.setViewportSize({width: 390, height: 844})
+  await page.goto('/people')
+  await expect(page.getByTestId('screen-people').first()).toBeVisible()
+  const icon = await page.evaluate(() => {
+    const svg = document.querySelector('[role="navigation"] [aria-current="page"] svg')!
+    const holes = [...svg.querySelectorAll('mask circle, mask path')]
+    return {masked: !!svg.querySelector('g[mask]'), holes: holes.length}
+  })
+  // The head and the shoulders are holes in the card, so the person shows through in the background colour.
+  expect(icon).toEqual({masked: true, holes: 2})
+})
+
+test('Activity is a bell that turns solid when selected, so the selected tab shows (owner 217)', async ({page}) => {
+  await page.setViewportSize({width: 390, height: 844})
+  await page.goto('/people')
+  await expect(page.getByTestId('screen-people').first()).toBeVisible()
+  const fill = () =>
+    page.getByRole('navigation').getByTestId('tab-activity').locator('svg path').first().evaluate(el => getComputedStyle(el).fill)
+  // Unselected: an outline (nothing filled).
+  expect(await fill()).toBe('none')
+  await page.getByRole('navigation').getByTestId('tab-activity').click()
+  await expect(page.getByTestId('screen-activity')).toBeVisible()
+  // Selected: the bell is filled in the text colour.
+  await expect.poll(fill).not.toBe('none')
 })

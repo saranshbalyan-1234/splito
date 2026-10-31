@@ -1,6 +1,5 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDrawer} from './nav'
 import {openDemo} from './openDemo'
 
 /*
@@ -180,7 +179,7 @@ test('the chat and the draft survive closing, and Clear chat empties it', async 
 
 test('Ask Splito is not a nav item anywhere; the header icon, Cmd/Ctrl+K and the /search address reach it (owner 200)', async ({page}) => {
   await home(page)
-  // Not on the sidebar, nor in Settings > Navigation, nor in the phone drawer.
+  // Not on the sidebar, nor in Settings > Navigation, nor in the phone bar (there is no drawer, owner 217).
   await expect(page.getByTestId('tab-ask')).toHaveCount(0)
   await page.goto('/settings/navigation')
   await expect(page.getByTestId('tabs-toggle-ask')).toHaveCount(0)
@@ -188,10 +187,6 @@ test('Ask Splito is not a nav item anywhere; the header icon, Cmd/Ctrl+K and the
   await page.goto('/people')
   await expect(page.getByTestId('screen-people')).toBeVisible()
   await expect(page.getByTestId('tab-ask')).toHaveCount(0)
-  await page.waitForTimeout(500)
-  await openDrawer(page)
-  await expect(page.getByTestId('drawer-ask')).toHaveCount(0)
-  await page.keyboard.press('Escape')
   // The header icon opens the drawer on search; its Ask row (or a question and Enter) opens the chat.
   await page.getByTestId('screen-people').getByTestId('header-search-ask').click()
   await expect(page.getByTestId('search-input')).toBeVisible()
@@ -225,10 +220,11 @@ test('the five-tab bar fits a phone: every tab is on screen, equal in width, wit
   // Icons keep their size however many tabs there are.
   const icon = await page.getByTestId('tab-groups').locator('svg').first().boundingBox()
   await page.goto('/settings/navigation')
-  await page.getByTestId('tabs-toggle-settings').click()
-  await expect(page.getByTestId('tab-settings')).toHaveCount(0)
+  // Settings cannot leave the bar (owner 217); Analytics can.
+  await page.getByTestId('tabs-toggle-analytics').click()
+  await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
   await page.goto('/people')
-  await expect(page.getByTestId('tab-settings')).toHaveCount(0)
+  await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
   const four = await page.getByTestId('tab-groups').locator('svg').first().boundingBox()
   expect(Math.round(icon!.width)).toBe(Math.round(four!.width))
 })

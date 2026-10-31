@@ -4,7 +4,7 @@ import {SETTINGS_SECTION_SHEETS, SHEETS} from '#/lib/links/table'
 import {openDemo} from './openDemo'
 
 /*
- * F-241 / F-254: every page, tab, sheet, picker and drawer has a URL. Each sample opens cold (the address pasted
+ * F-241 / F-254: every page, tab, sheet, picker and global sheet has a URL. Each sample opens cold (the address pasted
  * into a fresh load) and warm (a link opened inside the running app, as a push tap or a shared link would), at a
  * phone and a desktop width; then Back and close are checked. Demo data only: nothing is handed to a real app
  * (owner 118) and no URL performs an action. The data is the real (e2e) database, seeded through the app's own
@@ -79,16 +79,6 @@ const SAMPLES: Sample[] = [
     },
     parent: ({group}) => `/groups/${group}/members`,
     close: sheetClose,
-  },
-  {
-    name: 'the side drawer',
-    path: () => '/groups?drawer=menu',
-    isOpen: async page => {
-      await expect(page.getByTestId('screen-groups')).toBeVisible()
-      await expect(page.getByTestId('drawer')).toBeVisible()
-    },
-    parent: () => '/groups',
-    close: async page => await page.keyboard.press('Escape'),
   },
   {
     name: 'Search & Ask in Ask mode with its question',

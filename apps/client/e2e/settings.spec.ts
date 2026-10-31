@@ -1,6 +1,5 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDrawer} from './nav'
 
 const LAPTOP = {width: 1280, height: 800}
 const PHONE = {width: 390, height: 844}
@@ -75,7 +74,7 @@ test('an accent is only previewed until Apply, then tints the app and survives a
   await expect.poll(() => background(page, 'sidebar-add')).toBe(BLUESKY_BLUE)
 })
 
-test('hiding Groups removes it from the phone bar only; the drawer and the sidebar keep it (owner 155)', async ({
+test('hiding Groups removes it from the phone bar only; the sidebar keeps it; Settings cannot be hidden (owners 155, 217)', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
@@ -88,11 +87,12 @@ test('hiding Groups removes it from the phone bar only; the drawer and the sideb
   await open(page, '/', 'screen-people')
   await expect(page.getByTestId('tab-people')).toBeVisible()
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
-  // The avatar's drawer still lists every item and reaches Settings.
-  await openDrawer(page)
-  await expect(page.getByTestId('drawer-groups')).toBeVisible()
-  await page.getByTestId('drawer-settings').click()
+  // A phone has no drawer (owner 217): the bar is its only navigation, so Settings always stays in it.
+  await expect(page.getByTestId('drawer')).toHaveCount(0)
+  await page.getByTestId('tab-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
+  await open(page, '/settings/navigation', 'screen-settings-section')
+  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute('aria-disabled', 'true')
 
   // Wide screens always list every item: Groups is still on the sidebar, after the items that are on.
   await page.setViewportSize(LAPTOP)
@@ -149,7 +149,7 @@ for (const width of [1440, 860]) {
   })
 }
 
-test('Settings is on the phone bar by default (owner 206); it can go off and Reset brings it back, with arrows to reorder', async ({
+test('Settings is on the phone bar and cannot go off (owners 206, 217); Reset brings back what went off, with arrows to reorder', async ({
   page,
 }) => {
   await page.setViewportSize(LAPTOP)
@@ -170,7 +170,8 @@ test('Settings is on the phone bar by default (owner 206); it can go off and Res
     .toBe(true)
   await expect(page.getByTestId('tabs-up-analytics')).toBeDisabled()
 
-  await page.getByTestId('tabs-toggle-settings').click()
+  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute('aria-disabled', 'true')
+  await page.getByTestId('tabs-toggle-activity').click()
   await page.setViewportSize(PHONE)
   // The bar re-renders for the phone width after the resize: poll, a read right after it can still see the old bar.
   await expect
@@ -180,39 +181,36 @@ test('Settings is on the phone bar by default (owner 206); it can go off and Res
         .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid'))),
     )
-    .toEqual(['tab-analytics', 'tab-people', 'tab-groups', 'tab-activity'])
+    .toEqual(['tab-analytics', 'tab-people', 'tab-groups', 'tab-settings'])
 
   await page.setViewportSize(LAPTOP)
   await page.getByTestId('reset-tabs').click()
-  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByTestId('tabs-toggle-activity')).toHaveAttribute('aria-checked', 'true')
   await expect
     .poll(async () => (await top('groups')) < (await top('analytics')))
     .toBe(true)
 })
 
-test('the bar takes any number of tabs, down to the start tab alone, and the start tab cannot be hidden', async ({
+test('the bar takes any number of tabs, down to the start tab and Settings, which cannot be hidden (owner 217)', async ({
   page,
 }) => {
   await open(page, '/settings/navigation', 'screen-settings-section')
-  for (const tab of ['groups', 'analytics', 'activity', 'settings']) {
+  for (const tab of ['groups', 'analytics', 'activity']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute(
       'aria-checked',
       'false',
     )
   }
-  // Nothing is locked but the start tab (People), even with People alone left.
-  await expect(page.getByTestId('tabs-toggle-people')).toHaveAttribute(
-    'aria-disabled',
-    'true',
-  )
+  // Nothing is locked but the start tab (People) and Settings (a phone's only way there, owner 217).
+  for (const tab of ['people', 'settings'])
+    await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute('aria-disabled', 'true')
   await expect(page.getByTestId('tabs-toggle-activity')).not.toHaveAttribute(
     'aria-disabled',
     'true',
   )
   // The note about sharing the bar only comes above five tabs; every item is five.
-  // (Settings first: a bar of exactly People, Groups, Analytics, Activity reads as the pre-owner-206 default and gains Settings.)
-  for (const tab of ['settings', 'groups', 'analytics', 'activity']) {
+  for (const tab of ['groups', 'analytics', 'activity']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute('aria-checked', 'true')
   }

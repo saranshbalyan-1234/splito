@@ -1,9 +1,8 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDrawer} from './nav'
 import {openDemo} from './openDemo'
 
-/* F-226: Send feedback, Your feedback, the drawer item and the Settings Support section. */
+/* F-226: Send feedback, Your feedback and the Settings Support section (no side drawer, owner 217). */
 
 const PHONE = {width: 390, height: 844}
 const DESKTOP = {width: 1440, height: 900}
@@ -36,14 +35,12 @@ test('Settings has one Support row; its page lists Send feedback, Your feedback,
   await expect(page.getByTestId('feedback-empty')).toBeVisible()
 })
 
-test('the drawer footer opens the Send feedback sheet as a bottom drawer on phones', async ({
+test('Settings > Support opens the Send feedback sheet as a bottom drawer on phones', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
-  await openDemo(page, '/people')
-  await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-  await openDrawer(page)
-  await page.getByTestId('nav-footer-feedback').click()
+  await openDemo(page, '/settings/support')
+  await page.getByTestId('settings-send-feedback').click()
   const sheet = page.getByTestId('feedback-sheet')
   await expect(sheet).toBeVisible()
   /* The sheet rises from the bottom edge; wait for it to come to rest. */

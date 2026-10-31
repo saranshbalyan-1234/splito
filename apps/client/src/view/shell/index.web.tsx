@@ -1,222 +1,30 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/index.web.tsx
-import {useEffect, useLayoutEffect, useRef, useState} from 'react'
-import {StyleSheet, TouchableWithoutFeedback, View} from 'react-native'
-import {useLingui} from '@lingui/react/macro'
-import * as DismissableLayer from '@radix-ui/react-dismissable-layer'
-import {useFocusGuards} from '@radix-ui/react-focus-guards'
-import * as FocusScope from '@radix-ui/react-focus-scope'
-import {RemoveScrollBar} from 'react-remove-scroll-bar'
+import {View} from 'react-native'
 
-import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
 import {SearchAskProvider} from '#/features/searchAsk/SearchAskProvider'
-import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
-import {DrawerContent} from '#/navigation/Drawer'
 import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {FlatNavigator, RoutesContainer} from '#/navigation/Navigation'
-import {atoms as a, flatten, select, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {DemoBusy} from '#/components/DemoBusy'
 import {Outlet as PortalOutlet} from '#/components/Portal'
-import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 
-/* As upstream: the drawer is the navigator's layout, so it can read the navigation state. */
-function drawerLayout({children}: {children: React.ReactNode}) {
-  return (
-    /* Inside the navigator, so a search result can navigate; one drawer for every page. */
-    <SearchAskProvider>
-      <DrawerLayout>{children}</DrawerLayout>
-    </SearchAskProvider>
-  )
+/* The navigator's layout, so it can read the navigation state: a search result can navigate. */
+function searchLayout({children}: {children: React.ReactNode}) {
+  return <SearchAskProvider>{children}</SearchAskProvider>
 }
 
 /*
- * Bluesky's web shell also mounts the composer, global dialogs (sign-in,
- * report, muted words ...), age-assurance and account status screens.
- * Splito has none of those, so the navigator, the drawer and the portal
- * outlet remain.
+ * Bluesky's web shell also mounts its phone drawer, the composer, global dialogs (sign-in, report, muted words ...),
+ * age-assurance and account status screens. Splito has no side drawer (owner 217: a phone has the bottom bar, wider
+ * screens the sidebar) and none of the others, so the navigator and the portal outlet remain.
  */
 function ShellInner() {
   return (
     <FeedbackProvider>
-      <FlatNavigator layout={drawerLayout} />
+      <FlatNavigator layout={searchLayout} />
       <PortalOutlet />
       <DemoBusy />
     </FeedbackProvider>
-  )
-}
-
-/** A touch must start this close to the left edge to open the drawer (owner 201). */
-const EDGE_PX = 24
-/** ... and travel this far sideways, mostly sideways, to count as a swipe rather than a scroll. */
-const SWIPE_PX = 48
-
-/**
- * Phone web has no hamburger and no swipe of its own (Bluesky's web shell has none), so a touch that starts at the
- * left edge and moves right opens the drawer. Document-level and passive: nothing covers the page, vertical scrolling
- * and sideways chip rows are untouched (a swipe must start within `EDGE_PX` and be at least twice as wide as tall).
- */
-function useEdgeSwipe(isOn: boolean, onSwipe: () => void) {
-  const latest = useRef(onSwipe)
-  latest.current = onSwipe
-  useEffect(() => {
-    if (!isOn) return
-    let start: {x: number; y: number} | null = null
-    const down = (e: TouchEvent) => {
-      const t = e.touches[0]
-      start = e.touches.length === 1 && t && t.clientX <= EDGE_PX ? {x: t.clientX, y: t.clientY} : null
-    }
-    const move = (e: TouchEvent) => {
-      const t = e.touches[0]
-      if (!start || !t) return
-      const dx = t.clientX - start.x
-      const dy = Math.abs(t.clientY - start.y)
-      if (dx >= SWIPE_PX && dx >= dy * 2) {
-        start = null
-        latest.current()
-      } else if (dy > dx + SWIPE_PX) start = null
-    }
-    const end = () => (start = null)
-    document.addEventListener('touchstart', down, {passive: true})
-    document.addEventListener('touchmove', move, {passive: true})
-    document.addEventListener('touchend', end, {passive: true})
-    document.addEventListener('touchcancel', end, {passive: true})
-    return () => {
-      document.removeEventListener('touchstart', down)
-      document.removeEventListener('touchmove', move)
-      document.removeEventListener('touchend', end)
-      document.removeEventListener('touchcancel', end)
-    }
-  }, [isOn])
-}
-
-/*
- * Bluesky only shows this drawer below the tablet breakpoint, where its
- * hamburger lives. Splito opens it by a swipe from the left edge on phones (owner 201); the avatar opens
- * Profile. Focus is trapped in the
- * panel and Escape closes it, as in Splito's web dialogs.
- */
-function DrawerLayout({children}: {children: React.ReactNode}) {
-  const t = useTheme()
-  const {t: l} = useLingui()
-  const isDrawerOpen = useIsDrawerOpen()
-  const setDrawerOpen = useSetDrawerOpen()
-  const shouldReduceMotion = useShouldReduceMotion()
-  const showDrawer = isDrawerOpen
-  const {gtMobile} = useBreakpoints()
-  useEdgeSwipe(!gtMobile && !isDrawerOpen, () => setDrawerOpen(true))
-  const [showDrawerDelayedExit, setShowDrawerDelayedExit] = useState(showDrawer)
-
-  useLayoutEffect(() => {
-    if (showDrawer !== showDrawerDelayedExit) {
-      if (showDrawer) {
-        setShowDrawerDelayedExit(true)
-      } else {
-        const timeout = setTimeout(
-          () => {
-            setShowDrawerDelayedExit(false)
-          },
-          shouldReduceMotion ? 0 : 160,
-        )
-        return () => clearTimeout(timeout)
-      }
-    }
-  }, [showDrawer, showDrawerDelayedExit, shouldReduceMotion])
-
-  return (
-    <>
-      {children}
-      {showDrawerDelayedExit && (
-        <>
-          <RemoveScrollBar />
-          <TouchableWithoutFeedback
-            onPress={ev => {
-              // Only close if press happens outside of the drawer
-              if (ev.target === ev.currentTarget) {
-                setDrawerOpen(false)
-              }
-            }}
-            accessibilityLabel={l`Close drawer menu`}
-            accessibilityHint="">
-            <View
-              testID="drawer-scrim"
-              style={[
-                styles.drawerMask,
-                {
-                  backgroundColor: showDrawer
-                    ? select(t.name, {
-                        light: 'rgba(0, 57, 117, 0.1)',
-                        dark: 'rgba(1, 82, 168, 0.1)',
-                        dim: 'rgba(10, 13, 16, 0.8)',
-                      })
-                    : 'transparent',
-                },
-                a.transition_color,
-              ]}>
-              <DrawerPanel
-                isOpen={showDrawer}
-                shouldAnimate={!shouldReduceMotion}
-                onDismiss={() => setDrawerOpen(false)}
-              />
-            </View>
-          </TouchableWithoutFeedback>
-        </>
-      )}
-    </>
-  )
-}
-
-function DrawerPanel({
-  isOpen,
-  shouldAnimate,
-  onDismiss,
-}: {
-  isOpen: boolean
-  shouldAnimate: boolean
-  onDismiss: () => void
-}) {
-  const {t: l} = useLingui()
-  useFocusGuards()
-  /*
-   * The slide decides when the menu mounts (owner 168): the panel and its scrim move first, the items follow
-   * `animationend`. A timer opens it anyway; without animation it is open as drawn.
-   */
-  const [opened, setOpened] = useState(!shouldAnimate)
-  const panel = useRef<React.ComponentRef<typeof View>>(null)
-  useEffect(() => {
-    if (!shouldAnimate || !isOpen) return
-    const node = panel.current as unknown as HTMLElement | null
-    const done = () => setOpened(true)
-    // The panel's own slide, not an animation that bubbles up from something inside it.
-    const onEnd = (e: Event) => e.target === node && done()
-    node?.addEventListener('animationend', onEnd)
-    const id = setTimeout(done, OPENED_FALLBACK_MS)
-    return () => {
-      node?.removeEventListener('animationend', onEnd)
-      clearTimeout(id)
-    }
-  }, [shouldAnimate, isOpen])
-  return (
-    <FocusScope.FocusScope loop asChild trapped={isOpen}>
-      <View
-        ref={panel}
-        role="dialog"
-        aria-modal={true}
-        aria-label={l`Menu`}
-        // Radix's Slot spreads the style, so it must be one object.
-        style={flatten([
-          styles.drawerContainer,
-          shouldAnimate && (isOpen ? a.slide_in_left : a.slide_out_left),
-        ])}>
-        <DismissableLayer.DismissableLayer
-          onEscapeKeyDown={onDismiss}
-          onPointerDownOutside={ev => ev.preventDefault()}
-          onFocusOutside={ev => ev.preventDefault()}
-          style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-          <OpenedContext.Provider value={opened}>
-            <DrawerContent />
-          </OpenedContext.Provider>
-        </DismissableLayer.DismissableLayer>
-      </View>
-    </FocusScope.FocusScope>
   )
 }
 
@@ -230,24 +38,3 @@ export function Shell() {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  drawerMask: {
-    ...a.fixed,
-    // Above the sticky headers (z 10), which Bluesky's mobile drawer never meets.
-    zIndex: 50,
-    width: '100%',
-    height: '100%',
-    top: 0,
-    left: 0,
-  },
-  drawerContainer: {
-    display: 'flex',
-    ...a.fixed,
-    top: 0,
-    left: 0,
-    height: '100%',
-    width: 330,
-    maxWidth: '80%',
-  },
-})

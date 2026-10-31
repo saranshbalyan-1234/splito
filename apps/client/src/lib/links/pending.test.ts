@@ -59,10 +59,10 @@ describe('owner', () => {
     expect(peek(null, ['record-payment'], 1)).toBeUndefined()
   })
 
-  test('a shell sheet (the drawer, Search) goes to a dialog with no page, not to a page\'s', () => {
-    queue(target('/?drawer=menu'), 0)
-    expect(peek(null, ['drawer'], 1)).toEqual({})
-    expect(peek(person, ['drawer'], 1)).toBeUndefined()
+  test('a shell sheet (Search, Send feedback) goes to a dialog with no page, not to a page\'s', () => {
+    queue(target('/?feedback=new'), 0)
+    expect(peek(person, ['feedback'], 1)).toBeUndefined()
+    expect(peek(null, ['feedback'], 1)).toEqual({})
     queue(target('/search?q=dinner&mode=ask'), 0)
     expect(peek(null, ['search'], 1)).toEqual({q: 'dinner', mode: 'ask'})
   })

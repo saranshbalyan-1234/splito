@@ -5,10 +5,9 @@ import {type Group, isGroupInactive} from '@splito/sync'
 import {useEntities} from '#/data/hooks'
 
 import {navigationRef} from '#/navigation/ref'
-import {useSetDrawerOpen} from '#/state/shell/drawer-open'
 
 const STEP_MS = 8000
-/* Module scope: the drawer remounts this component, which must not restart the tour. */
+/* Module scope: a remount must not restart the tour. */
 let tourStep = 0
 let tourTimer: ReturnType<typeof setInterval> | undefined
 
@@ -18,10 +17,6 @@ let tourTimer: ReturnType<typeof setInterval> | undefined
  * headless simulators). Renders nothing.
  */
 export function DevTour() {
-  const setDrawerOpen = useSetDrawerOpen()
-  /* Read through a ref: the setter's identity changes with drawer state, which must not restart the tour. */
-  const setDrawerOpenRef = useRef(setDrawerOpen)
-  setDrawerOpenRef.current = setDrawerOpen
   /* The busiest active group, read when its step runs (demo data seeds after mount). */
   const groupIdRef = useRef<string>(undefined)
   groupIdRef.current = useEntities<Group>('group')?.find(g => !isGroupInactive(g.data))?.id
@@ -31,8 +26,6 @@ export function DevTour() {
       (navigationRef.navigate as (n: string, p?: object) => void)(name, params)
     const steps = [
       go('Tabs', {screen: startPage()}),
-      () => setDrawerOpenRef.current(true),
-      () => setDrawerOpenRef.current(false),
       go('Tabs', {screen: 'Groups'}),
       () => {
         if (groupIdRef.current) go('Group', {groupId: groupIdRef.current, tab: 'balances'})()

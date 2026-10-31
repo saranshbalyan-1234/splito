@@ -37,7 +37,6 @@ Reuse search: inside Splito first (`createIcon`, `useCommonSVGProps`, `useShould
 | Piece | Where | Animation and source pattern |
 |---|---|---|
 | fill morph | `MorphIcon` in `components/anim/AnimatedIcon.tsx`; used by `TabGlyph`, `navigation/Drawer.tsx`, `view/shell/desktop/LeftNav.tsx` | Outline and filled glyphs cross-fade with a small pop on select (Bluesky's tab icon swap, on the UI thread, no remount). |
-| tick | `ActivityTick_*` (`icons/Activity.tsx`), fed the unread badge by the three nav surfaces | Stroke redraws (dash offset, as Bluesky's `AnimatedCheck`) each time the unread count goes up. |
 | draw | `CheckDrawn_*` (`icons/Check.tsx`): Accept in `RequestsSection` and `ActivityItem`, the sheet Save button (`components/FormSheet/shared.tsx`) | Check draws on mount and when the Button is pressed. The Save, Record payment and Call it even buttons draw it too (`FormSheet` footer `isSaved`), then the sheet closes with one toast; `SuccessCheck` and Bluesky's `AnimatedCheck` are no longer used by any sheet (kept for the F-1713 "All settled" moment). |
 | lid | `TrashLid_*` (`icons/Trash.tsx`): Delete buttons (feedback, payment, group, Ask clear chat) | Lid swings open and lifts while the enclosing Button is hovered, pressed or focused. |
 | pulse | `SyncStatusDot` | Dot breathes (opacity and scale) while syncing; rests on any other state, blur, or reduced motion. |

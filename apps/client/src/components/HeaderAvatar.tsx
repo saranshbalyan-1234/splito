@@ -20,8 +20,8 @@ const HITSLOP = {top: 30, bottom: 10, left: 30, right: 30}
 
 /**
  * The account avatar in Bluesky's hamburger spot, at the left of every
- * top-level header (owner directive). At every width it opens Profile (owners 201, 206); the phone drawer opens
- * by a swipe from the left edge.
+ * top-level header (owner directive). At every width it opens Profile (owners 201, 206); there is no side drawer
+ * (owner 217).
  */
 export function HeaderAvatar() {
   /* A main screen opened from a link is a pushed page: Back in this spot (owner 179, § 26.3). */

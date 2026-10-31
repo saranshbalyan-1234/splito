@@ -5,8 +5,7 @@ import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {bottomBarItems} from '#/lib/routes/navigationItems'
-import {useMe, usePref} from '#/data/hooks'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {usePref} from '#/data/hooks'
 import {InstallAppItem} from '#/screens/Settings/components/InstallAppItem'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
@@ -21,7 +20,6 @@ import {TabScreen} from '#/components/TabScreen'
 import {useTabLabels} from '#/components/settings/NavigationEditor'
 import {SETTINGS_SECTIONS, type SettingsSectionId, useSectionInfo} from '#/components/settings/sections'
 import {Text} from '#/components/Typography'
-import {useSession} from '#/state/session'
 
 /*
  * Dev and e2e builds only (ARCHITECTURE 26.1): the demo rows and the data
@@ -38,15 +36,13 @@ const DemoModeRows: ReturnType<typeof lazy> | null = lazy(() =>
 /**
  * Settings, a tab of its own (owner 206): Bluesky's Settings list, one row per preferences-registry group, then one
  * "Support" row and one "Your data" row (owners 204, 205) that open their own pages. Account rows (switch account,
- * privacy) arrive with sign-in; Log out is on Profile (owner 202).
+ * privacy) arrive with sign-in; Profile and its Log out are reached from the header avatar only (owners 202, 216).
  */
 export function SettingsScreen() {
   const {t: l} = useLingui()
   const t = useTheme()
   const sections = useSectionInfo()
   const summary = useSectionSummary()
-  const me = useMe()
-  const {currentAccount} = useSession()
 
   return (
     <TabScreen testID="screen-settings">
@@ -62,34 +58,7 @@ export function SettingsScreen() {
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
-          {/* Account first, as Bluesky's settings open with the account (owner rule). */}
-          <SectionTitle>
-            <Trans>Account</Trans>
-          </SectionTitle>
-          <SettingsList.LinkItem
-            testID="settings-profile"
-            to="/profile"
-            label={l`Profile`}
-            contentContainerStyle={[a.py_md]}>
-            <UserAvatar size={44} name={me?.data.name} type="user" />
-            <View style={[a.flex_1, a.gap_2xs]}>
-              <Text
-                emoji
-                numberOfLines={1}
-                style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
-                {me?.data.name ?? ''}
-              </Text>
-              <Text
-                numberOfLines={1}
-                style={[
-                  a.text_sm,
-                  a.leading_snug,
-                  t.atoms.text_contrast_medium,
-                ]}>
-                {currentAccount?.email ?? currentAccount?.phone ?? l`Your profile`} · <Trans>saved on this device</Trans>
-              </Text>
-            </View>
-          </SettingsList.LinkItem>
+          {/* Profile is its own page, opened from the avatar, never a Settings row (owners 206, 216). */}
           <SettingsList.LinkItem
             testID="settings-friends"
             to="/settings/friends"
