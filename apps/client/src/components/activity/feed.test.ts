@@ -6,8 +6,6 @@ import {
   ACTIVITY_TYPE_ART,
   activityEmptyArt,
   buildRows,
-  dayOf,
-  daysAgo,
   EMPTY_FEED_STATE,
   type FeedFilter,
   ALL_ACTIVITY,
@@ -116,14 +114,6 @@ test('a group scope keeps that group\'s changes, a comment going by its expense'
   expect(rows.flatMap(r => (r.type === 'event' ? [r.event.id] : []))).toEqual(['e1', 'c1'])
 })
 
-test('daysAgo counts calendar days, not 24-hour periods', () => {
-  expect(daysAgo('2026-10-26', '2026-10-26')).toBe(0)
-  expect(daysAgo('2026-10-25', '2026-10-26')).toBe(1)
-  expect(daysAgo('2026-10-19', '2026-10-26')).toBe(7)
-  // Across the end of a month.
-  expect(daysAgo('2026-09-30', '2026-10-26')).toBe(26)
-})
-
 /* F-115 m23: days follow the Timezone preference, not the device's. */
 test('events are grouped by the day they fall on in the chosen timezone', () => {
   // 20:00Z on the 25th is 01:30 on the 26th in Kolkata but still the 25th in London.
@@ -132,7 +122,6 @@ test('events are grouped by the day they fall on in the chosen timezone', () => 
   const la = buildRows(events, EMPTY_FEED_STATE, 'me', ALL_ACTIVITY, 'America/Los_Angeles')
   expect(ist.rows[0]).toMatchObject({type: 'section', day: '2026-10-26'})
   expect(la.rows[0]).toMatchObject({type: 'section', day: '2026-10-25'})
-  expect(dayOf(at(25, 20), 'Asia/Kolkata')).toBe('2026-10-26')
 })
 
 /* F-113 m5: a write-off row is told from who recorded it. */

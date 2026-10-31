@@ -1755,6 +1755,20 @@ Splito lessons (add newest last, dated, with PR):
   (specs with their own viewport sizes; clipboard use outside `lib/sharing.ts`); the remaining duplicates the review
   listed (time-of-day formatting in four files, `dayOf` / `daysAgo` in `activity/feed.ts`, dead `CATEGORY_ICONS`, two
   filter-sheet switches) are cleanup round 2 (BACKLOG F-274).
+- 2026-10-31, F-274 cleanup round 2 (c-r2): **a clean-up brief that lists files not to touch leaves duplicates behind, so
+  record them where the next slice finds them.** (1) Time of day: `useFormatTime()` and a new `useFormatDateTime()`
+  (`locale/useDates.ts`) serve Comments, the Expense history line, Activity's timestamp and its tooltip, and DeletedMeta;
+  the architecture rule `timeFormatOutsideLocale` counts a hand-written `timeStyle:` / `hour:` / `toLocaleTimeString` outside
+  `locale/` and baselines only the device-zone reminders, the import date and the Ask chat (P1-e). A reminder fires on the
+  device clock, so it is deliberately not in the Timezone preference. (2) `activity/feed.ts` lost its own `dayOf` / `daysAgo`
+  (`dayOfInstant` / `dayBucket` in `locale/dayLabel.ts` are the one rule; `daysAgo(...) === 0` is `dayBucket(...) === 'today'`).
+  (3) `clipboardOutsideSharing` fails `expo-clipboard` or `navigator.clipboard` outside `lib/sharing.ts` (CommentRow's Copy
+  link was the last). (4) `IncludeGroupsToggle` is the one "Include groups" row (a `Toggle.SwitchRow`); People's
+  `FriendsFilterDialog` still holds its own copy (screens/People was another builder's). (5) One email check: the sync
+  feedback regex and the unused domain `isEmail` went; `isContactEmail` is the only one. (6) A `plural` macro from
+  `@lingui/core/macro` produces the same message id as `<Plural>`, so moving a hand-written "N links" note onto it kept its
+  Hindi. Not obvious: builders that share one scratchpad directory overwrite each other's scripts of the same name
+  (`edit1.py`); give a scratch script a prefix that is yours.
 - 2026-10-31, merge of c-anim (F-1713, F-260, part of F-275), from its Opus review: **a success state wins over a busy
   state in the button's render order, and a spec asserts the success UI itself.** The save button rendered
   `isSaving ? Loader : isSaved ? Check : text`, and the composer, Record payment and Call it even keep `isSaving` set

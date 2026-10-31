@@ -736,7 +736,7 @@ Every new expense shows Paid by and starts with me as the payer, from every entr
 
 Audit the whole codebase for code that does the same job twice and merge each set into one shared piece.
 
-- **Effort** M-L · **Impact** 8 · **Backend** no · **Status** in progress (audit running; consolidation after the current builders merge), Wave C · **Deps** -
+- **Effort** M-L · **Impact** 8 · **Backend** no · **Status** in progress: audit done; cleanup rounds 1 and 2 built (round 2 2026-10-31: time of day, day helpers, clipboard, Include groups row, email check; leftovers listed in `docs/reuse/consolidation.md` Status), phases 1-4 still to do, Wave C · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. A ranked audit (files, what is duplicated, the shared piece, risk, effort) in `docs/reuse/consolidation.md`.
