@@ -1,10 +1,8 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openAddExpense} from './composer'
+import {composeButton, openAddExpense, pickPeople} from './composer'
 import {openDemo} from './openDemo'
-
-const DESKTOP = {width: 1440, height: 900}
-const PHONE = {width: 390, height: 844}
+import {DESKTOP, PHONE} from './viewports'
 
 /** The owner's bill: The Supper Factory, 02/06/2007. Food 1,611.00 in 8 lines, alcohol 400.00 in 2. */
 const FOOD = [
@@ -43,10 +41,7 @@ async function addCharge(
 async function enterBill(page: Page) {
   await page.getByTestId('expense-title').fill('The Supper Factory')
   await page.getByTestId('amount-input').fill('2522')
-  await page.getByTestId('expense-people').click()
-  await page.getByTestId('person-option-Riya Sharma').click()
-  await page.getByTestId('people-dialog').getByTestId('sheet-close').click()
-  await expect(page.getByTestId('people-dialog')).toHaveCount(0)
+  await pickPeople(page, ['Riya Sharma'])
   await page.getByTestId('split-mode-items').click()
   let n = 0
   for (const [name, amount] of [...FOOD, ...ALCOHOL]) {
@@ -110,7 +105,7 @@ for (const [label, size] of [
 
     // Riya had only food: no part of the alcohol VAT.
     await page.getByTestId('sheet-save').click()
-    await expect(page.getByTestId('expense-saved')).toBeVisible()
+    await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
     await page.getByRole('button', {name: 'View expense'}).click()
     await expect(page.getByTestId('screen-expense')).toBeVisible()
 
@@ -146,12 +141,9 @@ test('presets in one tap; save a merchant setup and get it back as a dashed sugg
   await page.getByTestId('charge-save-setup').click()
   await page.getByTestId('amount-input').fill('1155')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('expense-saved')).toBeVisible()
+  await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
   // The same merchant on a new bill: the setup is offered, not forced.
-  await openDemo(page, '/people')
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-  await page.getByTestId('sidebar-add').click()
-  await expect(page.getByTestId('screen-add-expense')).toBeVisible()
+  await openAddExpense(page, DESKTOP)
   await page.getByTestId('expense-title').fill('toit  brewpub')
   await page.getByTestId('split-mode-items').click()
   await expect(page.getByTestId('charges-suggestion')).toContainText('Service charge 10%')
@@ -186,7 +178,7 @@ test('Settings: tax classes can be added, renamed, hidden and used', async ({pag
   // The picker offers the new class and not the hidden one.
   await page.goto('/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-  await page.getByTestId('sidebar-add').click()
+  await composeButton(page).click()
   await page.getByTestId('split-mode-items').click()
   await page.getByTestId('item-add').click()
   await page.getByTestId('charge-preset-custom').click()
@@ -215,10 +207,7 @@ async function unnamedItemsBill(page: Page) {
   await openAddExpense(page, DESKTOP)
   await page.getByTestId('expense-title').fill('Mixed bill')
   await page.getByTestId('amount-input').fill('1041')
-  await page.getByTestId('expense-people').click()
-  await page.getByTestId('person-option-Riya Sharma').click()
-  await page.getByTestId('people-dialog').getByTestId('sheet-close').click()
-  await expect(page.getByTestId('people-dialog')).toHaveCount(0)
+  await pickPeople(page, ['Riya Sharma'])
   await page.getByTestId('split-mode-items').click()
   for (const [n, amount] of [['0', '600'], ['1', '400']] as const) {
     await page.getByTestId('item-add').click()
@@ -243,7 +232,7 @@ test('a round-off is shared by everyone by share (F-251: no setting), and an unn
   await unnamedItemsBill(page)
   await expect(page.getByTestId('bill-line-round-off')).toContainText('₹1.00')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('expense-saved')).toBeVisible()
+  await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
   await page.getByRole('button', {name: 'View expense'}).click()
   const detail = page.getByTestId('expense-items')
   await expect(detail.getByTestId('expense-charge-0')).toContainText('on Item 2')

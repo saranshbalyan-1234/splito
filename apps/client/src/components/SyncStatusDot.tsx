@@ -1,9 +1,14 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/util/UserAvatar.tsx (the alert badge pinned bottom-right on an avatar)
-import {useEffect, useRef} from 'react'
+import {useContext, useEffect, useRef} from 'react'
 import {Pressable, View} from 'react-native'
+import {NavigationContext} from '@react-navigation/native'
 import Animated, {
+  cancelAnimation,
+  Easing,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated'
 import {msg} from '@lingui/core/macro'
@@ -68,8 +73,42 @@ export function SyncStatusDot({
     scale.set(0.6)
     scale.set(withTiming(1, {duration: 220}))
   }, [state, reduceMotion, scale])
+  /* While syncing the dot breathes on the UI thread; it rests as soon as the state changes, the screen is covered or motion is reduced. */
+  const pulse = useSharedValue(0)
+  const navigation = useContext(NavigationContext)
+  useEffect(() => {
+    if (reduceMotion || state !== 'syncing') {
+      cancelAnimation(pulse)
+      pulse.set(0)
+      return
+    }
+    const start = () =>
+      pulse.set(
+        withRepeat(
+          withSequence(
+            withTiming(1, {duration: 700, easing: Easing.inOut(Easing.ease)}),
+            withTiming(0, {duration: 700, easing: Easing.inOut(Easing.ease)}),
+          ),
+          -1,
+        ),
+      )
+    const rest = () => {
+      cancelAnimation(pulse)
+      pulse.set(withTiming(0, {duration: 150}))
+    }
+    start()
+    const offs = navigation
+      ? [navigation.addListener('blur', rest), navigation.addListener('focus', start)]
+      : []
+    return () => {
+      offs.forEach(off => off())
+      cancelAnimation(pulse)
+      pulse.set(0)
+    }
+  }, [state, reduceMotion, navigation, pulse])
   const animated = useAnimatedStyle(() => ({
-    transform: [{scale: scale.get()}],
+    opacity: 1 - 0.45 * pulse.get(),
+    transform: [{scale: scale.get() * (1 + 0.18 * pulse.get())}],
   }))
 
   /* react-native-web drops `title`, so the hover tooltip is set on the element. */

@@ -25,7 +25,7 @@ async function splitWith(page: Page, names: string[]) {
 /** Saves, waits for the success check, and opens the new expense from the toast. Returns its id. */
 async function saveAndView(page: Page) {
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('expense-saved')).toBeVisible()
+  await expect(page.getByText(/Expense added|Changes saved/)).toBeVisible()
   await page.getByRole('button', {name: 'View expense'}).click()
   await expect(page.getByTestId('screen-expense')).toBeVisible()
   return new URL(page.url()).pathname.split('/').pop()!
@@ -269,7 +269,7 @@ test('phones: the FAB opens Add expense as a sheet from the bottom edge; the cro
 }) => {
   await page.setViewportSize(PHONE)
   await openDemo(page)
-  await expect(page.getByTestId('screen-home')).toBeVisible()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await page.getByTestId('fab-add').click()
   const composer = page.getByTestId('screen-add-expense')
   await expect(composer).toBeVisible()

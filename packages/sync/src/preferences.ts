@@ -31,13 +31,16 @@ export interface PrefDef<T> {
  * The tab destinations (routes of their own). Activity was briefly a header
  * bell; lists stored before then still name 'activity' and read back unchanged.
  */
-export type TabId = 'home' | 'people' | 'groups' | 'analytics' | 'activity'
+export type TabId = 'people' | 'groups' | 'analytics' | 'activity' | 'settings'
 /**
  * Every item of the shared sidebar / drawer list (ARCHITECTURE 26.3), in its
- * order. The phone bottom bar shows 2 to 5 of them, Home first; 'ask' opens
- * the Search & Ask drawer and 'settings' the Settings page.
+ * order; the phone bottom bar shows any number of them. There is no Home (owner 198), Ask Splito is
+ * not an item (owner 200) and Settings is a tab (owner 206).
  */
-export type NavItemId = TabId | 'ask' | 'settings'
+export type NavItemId = TabId
+/** How People and Groups order their rows (owner 199): the newest change, by name, the biggest balance, the newest record. */
+export type ListSort = 'lastActive' | 'name' | 'amount' | 'newest'
+export const LIST_SORTS: readonly ListSort[] = ['lastActive', 'name', 'amount', 'newest']
 /** How each itemised-bill charge is typed: money, or a percentage of the items. */
 export type AdjustmentModes = Record<'tax' | 'tip' | 'service' | 'discount', 'amount' | 'percent'>
 /**
@@ -66,14 +69,18 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
-const TAB_IDS: TabId[] = ['home', 'people', 'groups', 'analytics', 'activity']
-/** The shared list's order: Home, People, Groups, Analytics, Ask Splito, Activity, Settings. */
-export const NAV_ITEM_IDS: readonly NavItemId[] = ['home', 'people', 'groups', 'analytics', 'ask', 'activity', 'settings']
+/** The shared list's order: People, Groups, Analytics, Activity, Settings. */
+export const NAV_ITEM_IDS: readonly NavItemId[] = ['people', 'groups', 'analytics', 'activity', 'settings']
+/** The tabs that hold the user's data: what the app can open on (Settings cannot be the start tab). */
+/** The tabs the app can open on (owner 198: no Home). */
+export const START_TAB_IDS = ['people', 'groups', 'analytics', 'activity'] as const satisfies readonly TabId[]
+/** The default bar before owners 198 and 206 (it had Home and no Settings): a saved list that is exactly this was never customised, so it reads as the new default. */
+const OLD_DEFAULT_BAR = 'home,people,groups,analytics,activity'
 /** What Activity can be filtered by (owner 173): "transactions" in an address is `expenses` and `payments` together. */
 export const ACTIVITY_TYPE_IDS = ['expenses', 'payments', 'comments', 'groups', 'friends', 'reminders', 'disputes'] as const
 export type ActivityTypeId = (typeof ACTIVITY_TYPE_IDS)[number]
 
-/** The bottom bar holds any number of tabs, from Home alone to every item (decision 84). */
+/** The bottom bar holds any number of tabs, from one item to every item (decision 84). */
 export const MIN_TABS = 1
 export const MAX_TABS = NAV_ITEM_IDS.length
 const HEX = /^#[0-9a-f]{6}$/i
@@ -144,23 +151,22 @@ export const PREFS = {
   haptics: def('haptics', 'appearance', 'device', 'Haptics', true, isBool),
   /** The Send feedback sheet's "Include app info" switch remembers the last choice (spec default: on). */
   'feedback.includeAppInfo': def('feedback.includeAppInfo', 'app', 'device', 'Include app info with feedback', true, isBool),
-  /* The phone bottom bar: any number of items of the shared nav list, Home first and always on (26.3, decision 84). */
+  /* The phone bottom bar: any number of items of the shared nav list (26.3, decision 84). A saved list naming the old 'home' or 'ask' reads without them (`readRaw`). */
   tabs: def<NavItemId[]>(
     'tabs',
     'navigation',
     'account',
     'Bottom bar',
-    [...TAB_IDS],
+    [...NAV_ITEM_IDS],
     (v): v is NavItemId[] =>
       Array.isArray(v) &&
       v.length >= MIN_TABS &&
       v.length <= MAX_TABS &&
-      v[0] === 'home' &&
       new Set(v).size === v.length &&
       v.every(t => NAV_ITEM_IDS.includes(t)),
   ),
-  /** The tab the app opens on. Stored as `homeTab` until F-256, when 'people' meant Home: that old row is read once (`readRaw`). */
-  startTab: def<TabId>('startTab', 'navigation', 'account', 'Open on', 'home', oneOf(...TAB_IDS)),
+  /** The tab the app opens on (owner 198: People). Stored as `homeTab` until F-256: that old row is read once (`readRaw`); a saved 'home' reads as People. */
+  startTab: def<TabId>('startTab', 'navigation', 'account', 'Open on', 'people', oneOf<TabId>(...START_TAB_IDS)),
   defaultCurrency: def('defaultCurrency', 'defaults', 'account', 'Default currency', 'INR', (v): v is string => typeof v === 'string' && v in CURRENCIES),
   itemizeAdjustmentModes: def<AdjustmentModes>(
     'itemizeAdjustmentModes',
@@ -181,6 +187,12 @@ export const PREFS = {
   analyticsView: def('analyticsView', 'defaults', 'device', 'Analytics view', 'charts', oneOf('charts', 'table')),
   /** F-1901: the one-time "install Splito" hint on the web has been shown; set by the app, no Settings row. */
   'pwa.installHintDismissed': def('pwa.installHintDismissed', 'app', 'device', 'Install hint shown', false, isBool),
+  /**
+   * The guided tour after the first sign-in (F-253, owner 142) has been shown or skipped; set by the tour, replayed from
+   * Settings > Support > Help "Take the tour", no Settings row of its own. (The intro slides before sign-in keep theirs in
+   * device storage, because the database is closed while signed out.)
+   */
+  'onboarding.tourSeen': def('onboarding.tourSeen', 'app', 'account', 'Guided tour seen', false, isBool),
   /** The last scope chosen on Analytics' scope chip; set there, not in Settings. */
   analyticsScope: def<AnalyticsScope>('analyticsScope', 'defaults', 'device', 'Analytics scope', 'everything', isAnalyticsScope),
   categories: def<Category[]>(
@@ -209,7 +221,8 @@ export const PREFS = {
   dateFormat: def('dateFormat', 'regional', 'account', 'Date format', 'auto', oneOf('auto', 'dmy', 'mdy', 'ymd')),
   numberLocale: def('numberLocale', 'regional', 'account', 'Number format', 'auto', oneOf('auto', 'en-IN', 'en-US', 'de-DE', 'fr-FR')),
   /** F-1816: Bluesky's language dropdown on the web splash, sign-up and the desktop right column. */
-  peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),
+  /** People's order (owner 199, its own Sort button). A saved 'recent' reads as 'lastActive' (`readRaw`). */
+  peopleSort: def<ListSort>('peopleSort', 'lists', 'account', 'Sort people by', 'lastActive', oneOf(...LIST_SORTS)),
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
   /** Groups I have hidden from my own lists (decision 89); set from a group's menu, personal to my account, no Settings row. */
   'groups.hidden': def<string[]>('groups.hidden', 'lists', 'account', 'Hidden groups', [], (v): v is string[] => Array.isArray(v) && v.length <= 1000 && v.every(isString) && new Set(v).size === v.length),
@@ -230,8 +243,8 @@ export const PREFS = {
   /** Home's Overview scope (26.12, owner 176): every balance, only the groups' parts, or only the direct ones. Also `/?overview=`. */
   'home.overviewScope': def<'all' | 'groups' | 'direct'>('home.overviewScope', 'lists', 'account', 'Overview scope', 'all', oneOf('all', 'groups', 'direct')),
   'people.showSettled': def('people.showSettled', 'lists', 'account', 'Show settled friends', false, isBool),
-  /** The Groups filter's sort, saved on Apply so it survives a reload (owner 128, decision 90). */
-  'groups.sort': def('groups.sort', 'lists', 'account', 'Sort groups by', 'recent', oneOf('recent', 'name', 'amount')),
+  /** Groups' order (owner 199). Stored as `groups.sort` (with 'recent') until F-272: that old row is read once (`readRaw`). */
+  groupsSort: def<ListSort>('groupsSort', 'lists', 'account', 'Sort groups by', 'lastActive', oneOf(...LIST_SORTS)),
   'groups.showSettled': def('groups.showSettled', 'lists', 'account', 'Show settled groups', false, isBool),
   /** Activity's tab, All / Me / Others (owner 92, decision 90); saved on a tap, an address that names a tab wins. */
   'activity.tab': def('activity.tab', 'lists', 'account', 'Activity tab', 'all', oneOf('all', 'me', 'others')),
@@ -253,7 +266,6 @@ export const PREFS = {
   'invites.defaultMaxUses.friend': def<InviteMaxUses>('invites.defaultMaxUses.friend', 'invites', 'account', 'Friend invite link uses', 1, oneOf(...MAX_USES)),
   'invites.defaultMaxUses.group': def<InviteMaxUses>('invites.defaultMaxUses.group', 'invites', 'account', 'Group invite link uses', 25, oneOf(...MAX_USES)),
   /** Groups: new invite links make each join wait for an admin (26.18, default off). */
-  'invites.approveJoins': def('invites.approveJoins', 'invites', 'account', 'Approve each group join', false, isBool),
   'invites.defaultExpiry': def<InviteExpiry>('invites.defaultExpiry', 'invites', 'account', 'Invite links expire after', '7d', oneOf('24h', '7d', '30d', 'never')),
 } as const
 
@@ -262,10 +274,8 @@ export type PrefValue<K extends PrefKey> = (typeof PREFS)[K] extends PrefDef<inf
 
 type PrefRow = Pick<Entity<{value: unknown}>, 'id' | 'deleted' | 'data'>
 
-/** A stored `tabs` list from before F-256 (decision 153): it has no 'home'; its 'people' was Home. */
-function isLegacyTabs(v: unknown): boolean {
-  return Array.isArray(v) && !v.includes('home')
-}
+/** A saved sort from before F-272 called the newest change 'recent'. */
+const sortOf = (v: unknown) => (v === 'recent' ? 'lastActive' : v)
 
 function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefValue<K> {
   const def = PREFS[key] as PrefDef<PrefValue<K>>
@@ -274,23 +284,28 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
   if (key === 'tabs' && Array.isArray(value)) {
     // Orders saved while Profile was a tab predate the Analytics tab, so it joins them.
     const isPreAnalytics = value.includes('profile')
-    // Profile left the tabs for the header avatar; the rest keep their order.
-    const kept = (value as string[]).filter((t): t is NavItemId => (NAV_ITEM_IDS as readonly string[]).includes(t))
-    value = kept
-    if (isPreAnalytics && !kept.includes('analytics')) value = [...kept, 'analytics']
-    if (isLegacyTabs(value)) {
-      // Before F-256 the id 'people' was Home and there was no People tab: Home keeps its place, first, and People joins right after it.
-      value = ['home', 'people', ...(value as NavItemId[]).filter(t => t !== 'people')]
-    } else {
-      // Home is fixed (26.3): orders saved before then keep their tabs, with Home first.
-      value = ['home', ...(value as NavItemId[]).filter(t => t !== 'home')]
+    const isOldDefault = value.join() === OLD_DEFAULT_BAR
+    // Profile, Home (owner 198) and Ask Splito (owner 200) are not items now: a saved list loses them and keeps the order of the rest.
+    const saved = value as string[]
+    const kept = saved.filter((t): t is NavItemId => (NAV_ITEM_IDS as readonly string[]).includes(t))
+    // Home was always in the bar: a bar that held it (and more) keeps what it guaranteed, People (the start tab) where Home stood and Settings (owner 206, reachable from no other row on phones).
+    if (saved.includes('home') && kept.length > 0) {
+      const isItem = (t: string) => (NAV_ITEM_IDS as readonly string[]).includes(t)
+      if (!kept.includes('people')) kept.splice(saved.slice(0, saved.indexOf('home')).filter(isItem).length, 0, 'people')
+      if (!kept.includes('settings')) kept.push('settings')
     }
+    value = isPreAnalytics && !kept.includes('analytics') ? [...kept, 'analytics'] : kept
+    // The default bar lost Home and gained Settings (owners 198, 206): a saved bar that is exactly the old default never was customised, so it becomes the new one; any other choice keeps its tabs.
+    if (isOldDefault) value = [...NAV_ITEM_IDS]
   }
-  // The "Open on" tab was the `homeTab` key before F-256, and its 'people' meant Home: read that old row once when there is no new one.
+  // The "Open on" tab was the `homeTab` key before F-256: read that old row once when there is no new one. A saved 'home' fails validation and reads as People.
   if (key === 'startTab' && value === undefined) {
     const old = rows.find(p => p.id === 'homeTab' && !p.deleted)?.data.value
-    if (typeof old === 'string') value = old === 'people' ? 'home' : old
+    if (typeof old === 'string') value = old
   }
+  if (key === 'peopleSort') value = sortOf(value)
+  // Groups' order was `groups.sort` inside the Filters sheet before F-272: read that old row once when there is no new one.
+  if (key === 'groupsSort') value = sortOf(value ?? rows.find(p => p.id === 'groups.sort' && !p.deleted)?.data.value)
   // The "New expenses" switch folded into "Payments" (owner 131): an old stored off on either reads as off.
   if (key === 'notify.payment' && value !== false && rows.some(p => p.id === 'notify.expense' && !p.deleted && p.data.value === false)) value = false
   // The account-wide unit saved before units were per currency (F-112) belongs to the default currency, where it was meant.
@@ -309,7 +324,9 @@ export function prefFrom<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K
   const value = readRaw(rows, key)
   if (key === 'startTab') {
     const tabs = readRaw(rows, 'tabs')
-    return (tabs.includes(value as TabId) ? value : 'home') as PrefValue<K>
+    // A start tab the bar does not hold falls back to the first one it does, so the app never opens on an unlit tab.
+    const fallback = tabs.find(t => (START_TAB_IDS as readonly string[]).includes(t)) ?? PREFS.startTab.default
+    return (tabs.includes(value as TabId) ? value : fallback) as PrefValue<K>
   }
   return value
 }
@@ -326,6 +343,15 @@ async function putPref(tx: Tx, ctx: MutationCtx, key: PrefKey, value: unknown, d
   if (def.scope === 'account') await enqueuePref(tx, ctx, key, prev?.version ?? 0, deleted, value)
   // The folded-in "New expenses" row would keep reading as off after Payments is changed here: this write is the latest word,
   // and its tombstone is queued too, so another device pulling the old row cannot win by its newer updatedAt.
+  // A key read through an older one (Groups' sort was `groups.sort`, the start tab `homeTab`): this write is the latest word, so the old row goes (Reset included).
+  const older = ({groupsSort: 'groups.sort', startTab: 'homeTab'} as Partial<Record<PrefKey, string>>)[key]
+  if (older) {
+    const old = await tx.get('preference', older)
+    if (old && !old.deleted) {
+      await tx.put({...old, version: old.version + 1, deleted: true, updatedAt: ctx.now()})
+      await enqueuePref(tx, ctx, older, old.version, true, null)
+    }
+  }
   if (key === 'notify.payment') {
     const old = await tx.get('preference', 'notify.expense')
     if (old && !old.deleted) {

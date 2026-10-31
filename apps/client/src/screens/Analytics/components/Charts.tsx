@@ -3,7 +3,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, sumMinor, ZERO} from '@splito/domain'
 
 import {useMe} from '#/data/hooks'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
 import {Button, ButtonText} from '#/components/Button'
@@ -293,10 +293,12 @@ export function Charts({
                 ...p,
                 /* My own name, not "You", so my avatar matches everywhere else. */
                 leading: (
-                  <UserAvatar
+                  <PersonLink
+                    id={p.key}
+                    name={p.label}
+                    avatarName={p.key === me?.id ? me.data.name : undefined}
+                    show="avatar"
                     size={24}
-                    name={p.key === me?.id ? me.data.name : p.label}
-                    type="user"
                   />
                 ),
               }))}

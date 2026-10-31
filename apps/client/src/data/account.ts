@@ -81,7 +81,7 @@ async function finishLogOut(accountId: string, closed: Promise<void>) {
     // The account's own keys are gone and the session ends; the device's language and theme stay.
     sessionApi.signOut()
     keepDeviceChoices(choices)
-    // Web: the address belonged to this account's session; the next sign-in starts at Home.
+    // Web: the address belonged to this account's session; the next sign-in starts at the start tab.
     if (typeof window !== 'undefined') window.history?.replaceState(window.history.state, '', '/')
   } catch (e) {
     logger.error(e, {where: 'logOut'})

@@ -12,13 +12,14 @@ import {
   needsDivider,
 } from '#/lib/ask/history'
 import {device} from '#/storage'
+import {EmptyState} from '#/view/com/util/EmptyState'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import {ArrowLeft_Stroke2_Corner0_Rounded as ArrowLeftIcon} from '#/components/icons/Arrow'
 import {Sparkles_Stroke2_Corner0_Rounded as SparklesIcon} from '#/components/icons/Sparkles'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
-import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
+import {TrashLid_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Prompt from '#/components/Prompt'
 import {AskComposer} from '#/components/SearchAsk/AskComposer'
 import {QuestionChip} from '#/components/SearchAsk/AskCards'
@@ -209,7 +210,7 @@ export function AskChat({
         data={items}
         keyExtractor={(item: Item) => item.key}
         renderItem={({item}: {item: Item}) => {
-          if (item.type === 'empty') return <EmptyState chips={chips} onAsk={send} />
+          if (item.type === 'empty') return <AskEmpty chips={chips} onAsk={send} />
           if (item.type === 'divider') return <DateDivider at={item.at} />
           return (
             <MessageItem
@@ -255,27 +256,21 @@ export function AskChat({
   )
 }
 
-function EmptyState({chips, onAsk}: {chips: string[]; onAsk: (q: string) => void}) {
-  const t = useTheme()
+/** Ask with nothing yet: the shared empty state with the Ask art and the suggested questions under it. */
+function AskEmpty({chips, onAsk}: {chips: string[]; onAsk: (q: string) => void}) {
+  const {t: l} = useLingui()
   return (
-    <View testID="ask-empty" style={[a.align_center, a.gap_lg, a.px_xl, a.pt_4xl, a.pb_lg]}>
-      <View style={[a.rounded_full, a.align_center, a.justify_center, {width: 64, height: 64, backgroundColor: t.palette.primary_100}]}>
-        <SparklesIcon size="xl" fill={t.palette.primary_600} />
-      </View>
-      <View style={[a.gap_xs, a.align_center]}>
-        <Text style={[a.text_xl, a.font_bold, a.text_center]}>
-          <Trans>Ask about your money</Trans>
-        </Text>
-        <Text style={[a.text_md, a.leading_snug, a.text_center, t.atoms.text_contrast_medium]}>
-          <Trans>Balances, who owes whom, and where the money went. Answered on this device, nothing is sent anywhere.</Trans>
-        </Text>
-      </View>
+    <EmptyState
+      testID="ask-empty"
+      illustration="empty-ask"
+      title={l`Ask about your money`}
+      message={l`Balances, who owes whom, and where the money went. Answered on this device, nothing is sent anywhere.`}>
       <View style={[a.flex_row, a.flex_wrap, a.justify_center, a.gap_sm]}>
         {chips.map(c => (
           <QuestionChip key={c} testID="ask-chip" text={c} onPress={() => onAsk(c)} />
         ))}
       </View>
-    </View>
+    </EmptyState>
   )
 }
 

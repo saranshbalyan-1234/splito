@@ -144,7 +144,7 @@ test('M5: an empty new expense still takes the group home currency, until one is
   await page.getByTestId('group-option-Lisbon').click()
   await expect(page.getByTestId('amount-currency')).toContainText('EUR')
   await page.getByTestId('amount-currency').click()
-  await page.getByTestId('currency-USD').click()
+  await page.getByTestId('currency-dialog-USD').click()
   await expect(page.getByTestId('amount-currency')).toContainText('USD')
   await page.getByTestId('expense-group').click()
   await page.getByTestId('group-option-Goa trip').click()
@@ -166,13 +166,13 @@ test('M8: Record payment on a settled friend offers every currency, starting on 
   await expect(page.getByTestId('payment-sentence')).toBeVisible()
   await expect(page.getByTestId('record-payment-sheet')).toContainText('EUR')
   await page.getByTestId('payment-other-currency').click()
-  await page.getByTestId('currency-JPY').click()
+  await page.getByTestId('currency-dialog-JPY').click()
   // The picker closes back into the payment sheet before the amount is typed.
   await expect(page.getByTestId('currency-dialog')).toHaveCount(0)
   await expect(page.getByTestId('record-payment-sheet')).toContainText('JPY')
   await page.getByTestId('payment-amount').fill('500')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
   await expect(page.getByTestId('person-total-JPY')).toHaveText('¥500')
 })
 
@@ -180,7 +180,7 @@ test('M12, m2: Recently active groups shows a chip per open currency, with exact
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  /* Home shows the groups in its body and no right column (owner 153); the right column is on Groups. */
+  /* The right column (>= 1300 px) lists the recently active groups; it is on every page (owner 198). */
   await openDemo(page, '/groups')
   await expect(page.getByTestId('screen-groups')).toBeVisible()
   const recent = page
@@ -196,19 +196,18 @@ test('M12, m2: Recently active groups shows a chip per open currency, with exact
   expect(label).toMatch(/you owe (US)?\$/)
 })
 
-test('m21: an Overview currency card opens Analytics in that currency, every time', async ({
+test('m21: an Overview currency card (top of Analytics) opens the rest of Analytics in that currency, every time', async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openDemo(page)
+  await openDemo(page, '/analytics')
   await expect(page.getByTestId('summary-EUR')).toBeVisible()
   await page.getByTestId('summary-EUR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
-  // Pick another currency there, go home and tap the same card again: it must seed again.
+  // Pick another currency in the filter row, then tap the same card again: it must seed again.
   await page.getByTestId('analytics-currency').click()
   await page.getByTestId('analytics-currency-INR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('INR')
-  await page.getByTestId('tab-home').click()
   await page.getByTestId('summary-EUR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
 })

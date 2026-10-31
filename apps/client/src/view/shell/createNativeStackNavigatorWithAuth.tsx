@@ -1,4 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/createNativeStackNavigatorWithAuth.tsx
+import {startPage} from '#/lib/routes/startTab'
 import {useCallback, useEffect, useRef} from 'react'
 import {View} from 'react-native'
 // Based on @react-navigation/native-stack/src/navigators/createNativeStackNavigator.ts
@@ -35,7 +36,7 @@ import {DesktopLeftNav, useLeftNavWidth} from './desktop/LeftNav'
 import {DesktopRightNav, useRightNavWidthFor} from './desktop/RightNav'
 import {parkTabs, type RouteLike, shallowEqual} from '#/navigation/parkTabs'
 
-// On web, only this many screens (beyond Home + focused) stay mounted.
+// On web, only this many screens (beyond the start tab + focused) stay mounted.
 // Older screens are unmounted to prevent memory growth during long sessions.
 const WEB_MAX_CACHED_SCREENS = 5
 
@@ -114,10 +115,7 @@ function NativeStackNavigator({
   const activeRoute = state.routes[state.index]
   const {isMobile} = useWebMediaQueries()
   const leftNavWidth = useLeftNavWidth()
-  /* A `Sheet` marker is open over the page named in its params; that page decides the column. */
-  const focusedPage =
-    activeRoute.name === 'Sheet' ? String((activeRoute.params as {page?: string} | undefined)?.page ?? '') : activeRoute.name
-  const rightNavWidth = useRightNavWidthFor(focusedPage)
+  const rightNavWidth = useRightNavWidthFor()
   const {footerHeight} = useShellLayout()
   useEffect(() => {
     // The bottom bar reports its height; nothing replaces it on wider windows.
@@ -125,7 +123,7 @@ function NativeStackNavigator({
   }, [isMobile, footerHeight])
   // Splito has no sign-in, sign-up queue or onboarding gate (Bluesky's auth branches are removed).
   // On web, limit how many screens stay mounted to prevent memory growth.
-  // Home is pinned once visited, the focused screen is always mounted, and the
+  // The start tab is pinned once visited, the focused screen is always mounted, and the
   // most recently visited screens are kept up to WEB_MAX_CACHED_SCREENS.
   // Evicted screens render a lightweight placeholder — the route stays in
   // state so browser back/forward still works; the component just re-mounts.
@@ -150,11 +148,11 @@ function NativeStackNavigator({
     const routeKeySet = new Set(state.routes.map(r => r.key))
     lruKeysRef.current = lruKeysRef.current.filter(k => routeKeySet.has(k))
 
-    // Build mount set: Home (pinned) + focused + N most recent
+    // Build mount set: the start tab (pinned) + focused + N most recent
     mountSet.add(focusedKey)
-    /* Pinned once visited. A deep link to another page puts Home under it in the state, but it is never drawn: its three lists would otherwise render hidden beside the page that was opened (and duplicate its rows). */
-    const homeKey = state.routes.find(r => r.name === 'Home')?.key
-    if (homeKey && lruKeysRef.current.includes(homeKey)) mountSet.add(homeKey)
+    /* Pinned once visited. A deep link to another page puts the start tab under it in the state, but it is never drawn: its lists would otherwise render hidden beside the page that was opened (and duplicate its rows). */
+    const startKey = state.routes.find(r => r.name === startPage())?.key
+    if (startKey && lruKeysRef.current.includes(startKey)) mountSet.add(startKey)
     /* A sheet's page stays mounted under its `Sheet` marker (F-241), also on a cold start where it was never focused. */
     state.routes.forEach((route, i) => {
       if (route.name !== 'Sheet') return

@@ -1,4 +1,3 @@
-import {Database} from 'bun:sqlite'
 import {beforeAll, describe, expect, test} from 'bun:test'
 import {
   ACTIVITY_TYPE_IDS,
@@ -15,6 +14,8 @@ import {
   type Expense,
   type FriendRequest,
   type Group,
+  type GroupRequest,
+  joinPolicyOf,
   type InviteLink,
   inviteLinkState,
   type NetBalance,
@@ -30,6 +31,7 @@ import {
   type StoreDump,
   type WriteOff,
 } from '@splito/sync'
+import {bunExecutor} from '@splito/sync/testing'
 
 import {activityTypeOf} from '#/components/activity/feed'
 import {DEMO_ME, seedDemo} from '#/data/demoSeed'
@@ -57,6 +59,7 @@ type Demo = {
   repayments: Entity<Repayment>[]
   writeOffs: Entity<WriteOff>[]
   requests: Entity<FriendRequest>[]
+  groupRequests: Entity<GroupRequest>[]
   links: Entity<InviteLink>[]
   feedback: Entity[]
   /** Every group, deleted ones too (`groups` holds only the live ones). */
@@ -148,8 +151,20 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   ['a friend invite link with no limits', d => d.links.some(l => l.data.kind === 'friend' && l.data.maxUses === null && l.data.expiresAt === null)],
   ['a group invite link, active', d => linkStates(d, 'group').has('active')],
   ['a group invite link with a use limit', d => d.links.some(l => l.data.kind === 'group' && l.data.maxUses !== null)],
-  // ponytail: a "join request" is a use of a group link that needs approval; there is no pending-approval record until the server exists (F-2105).
-  ['a group join request (someone opened a link that needs my approval)', d => d.links.some(l => l.data.kind === 'group' && l.data.approveJoins && !l.data.revoked && l.data.uses > 0)],
+  // Who can join a group and consent to be added (F-269, owner 196)
+  ['a group that anyone with the link can join', d => d.groups.some(g => joinPolicyOf(g.data) === 'link' && d.links.some(l => l.data.groupId === g.id && !l.data.revoked && !l.data.approveJoins))],
+  ['a group where I approve each join (the default), with its link', d => d.groups.some(g => joinPolicyOf(g.data) === 'approve' && d.links.some(l => l.data.groupId === g.id && !l.data.revoked && l.data.approveJoins))],
+  ['an invite-only group (no working link)', d => d.groups.some(g => g.data.joinPolicy === 'invite' && !d.links.some(l => l.data.groupId === g.id && !l.data.revoked))],
+  ['a group join request waiting for my approval (someone opened the link)', d => d.groupRequests.some(r => r.data.kind === 'join' && r.data.direction === 'incoming' && requestState(r.data, d.now) === 'pending')],
+  ['a join request I approved (they are now a member)', d => d.groupRequests.some(r => r.data.kind === 'join' && r.data.status === 'accepted' && r.data.personId && d.groups.some(g => g.id === r.data.groupId && g.data.members.some(m => m.personId === r.data.personId)))],
+  ['a group request waiting for me ("X added you to G")', d => d.groupRequests.some(r => r.data.kind === 'invite' && r.data.direction === 'incoming' && requestState(r.data, d.now) === 'pending')],
+  ['a group request I declined', d => d.groupRequests.some(r => r.data.kind === 'invite' && r.data.direction === 'incoming' && r.data.status === 'declined')],
+  ['an invited member waiting on a group (shown "Invited", not a member)', d => d.groupRequests.some(r => r.data.kind === 'invite' && r.data.direction === 'outgoing' && requestState(r.data, d.now) === 'pending' && d.groups.some(g => g.id === r.data.groupId && !g.data.members.some(m => m.personId === r.data.personId)))],
+  ['my own join request waiting for an admin', d => d.groupRequests.some(r => r.data.kind === 'join' && r.data.direction === 'outgoing' && requestState(r.data, d.now) === 'pending')],
+  ['a group request in Activity: added you', d => d.activity.some(e => e.kind === 'groupRequest.invited')],
+  ['a group request in Activity: join requested', d => d.activity.some(e => e.kind === 'groupRequest.joinRequested')],
+  ['a group request in Activity: sent', d => d.activity.some(e => e.kind === 'groupRequest.sent')],
+  ['a group request in Activity: accepted (joined)', d => d.activity.some(e => e.kind === 'groupRequest.accepted')],
   ['a friend request in Activity: received', d => d.activity.some(e => e.kind === 'friendRequest.received')],
   ['a friend request in Activity: sent', d => d.activity.some(e => e.kind === 'friendRequest.sent')],
   ['a friend request in Activity: accepted (Joined)', d => d.activity.some(e => e.kind === 'friendRequest.accepted')],
@@ -202,15 +217,15 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   // Feedback
   ['feedback saved on this device', d => d.feedback.some(f => !f.deleted)],
   ['feedback with a reply address', d => d.feedback.some(f => !f.deleted && (f.data as {replyEmail: string | null}).replyEmail)],
-  // Home (F-256, F-1415): the short lists need records of mine, spread over several friends and groups
-  ['Home recent transactions: five or more live expenses and payments I am on', d => d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).length + d.repayments.filter(r => !r.deleted && (r.data.from === DEMO_ME || r.data.to === DEMO_ME)).length >= 5],
-  ['Home recently active people: five or more friends who share a live expense with me', d => new Set(d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).flatMap(e => [...Object.keys(e.data.payers), ...Object.keys(e.data.shares)]).filter(id => id !== DEMO_ME)).size >= 5],
-  ['Home recently active groups: five or more live groups with a live expense I am in', d => d.groups.filter(g => d.live.some(e => e.data.groupId === g.id && (DEMO_ME in e.data.payers || DEMO_ME in e.data.shares))).length >= 5],
-  ['Home Overview scope: direct balances and group balances, each in two or more currencies', d => {
+  // Activity, People, Groups and the Analytics Overview (owner 198: Home is gone): the lists need records of mine, spread over several friends and groups
+  ['Activity Expenses and Payments (and the right column): five or more live expenses and payments I am on', d => d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).length + d.repayments.filter(r => !r.deleted && (r.data.from === DEMO_ME || r.data.to === DEMO_ME)).length >= 5],
+  ['People sorted by Last active: five or more friends who share a live expense with me', d => new Set(d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).flatMap(e => [...Object.keys(e.data.payers), ...Object.keys(e.data.shares)]).filter(id => id !== DEMO_ME)).size >= 5],
+  ['Groups sorted by Last active: five or more live groups with a live expense I am in', d => d.groups.filter(g => d.live.some(e => e.data.groupId === g.id && (DEMO_ME in e.data.payers || DEMO_ME in e.data.shares))).length >= 5],
+  ['Analytics Overview scope: direct balances and group balances, each in two or more currencies', d => {
     const open = (inGroup: boolean) => new Set(d.balances.filter(b => b.amount !== 0n && (b.groupId !== null) === inGroup && !d.people.find(p => p.id === b.personId)?.data.isMe).map(b => b.currency))
     return open(false).size >= 2 && open(true).size >= 2 && [...open(true)].filter(c => open(false).has(c)).length >= 2
   }],
-  ['Home Requests: a request waiting for me and an invite waiting for an answer, together', d => d.requests.some(r => r.data.direction === 'incoming' && requestState(r.data, d.now) === 'pending') && d.requests.some(r => r.data.direction === 'outgoing' && requestState(r.data, d.now) === 'pending')],
+  ['People Requests: a request waiting for me and an invite waiting for an answer, together', d => d.requests.some(r => r.data.direction === 'incoming' && requestState(r.data, d.now) === 'pending') && d.requests.some(r => r.data.direction === 'outgoing' && requestState(r.data, d.now) === 'pending')],
   // Activity
   ['changes made by other people (unread in Activity)', d => d.dump.history.some(h => h.actor !== DEMO_ME && h.entityType === 'expense')],
   ['my own changes in Activity', d => d.dump.history.some(h => h.actor === DEMO_ME)],
@@ -250,6 +265,7 @@ async function readDemo(now: number): Promise<Demo> {
     repayments: of<Repayment>('repayment'),
     writeOffs: of<WriteOff>('writeoff'),
     requests: of<FriendRequest>('friendRequest'),
+    groupRequests: of<GroupRequest>('groupRequest'),
     links: of<InviteLink>('inviteLink'),
     feedback: of('feedback'),
     activity: activityFromHistory(dump.history),
@@ -261,24 +277,7 @@ const T0 = Date.now()
 let clock = T0
 
 beforeAll(async () => {
-  const db = new Database(':memory:')
-  store = await openSqlStore({
-    exec: async sql => void db.run(sql),
-    run: async (sql, params) => void db.query(sql).run(...(params as never[])),
-    all: async (sql, params) => db.query(sql).all(...(params as never[])) as never,
-    withTransaction: async fn => {
-      db.run('BEGIN IMMEDIATE')
-      try {
-        const r = await fn()
-        db.run('COMMIT')
-        return r
-      } catch (e) {
-        db.run('ROLLBACK')
-        throw e
-      }
-    },
-    close: async () => db.close(),
-  })
+  store = await openSqlStore(bunExecutor(':memory:'))
   const ctx = ctxAt(() => clock)
   await ensureMe(store, ctx, 'Me')
   await seedDemo(store, ctx)

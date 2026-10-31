@@ -1,4 +1,5 @@
 import {redirectOldPath, ROUTE_PATHS, router, type RouteName} from '#/routes'
+import {startPage} from '#/lib/routes/startTab'
 import {LINK_SCHEME, TIER_HOSTS} from './hosts'
 import {
   ENTITY_QUERY_KEYS,
@@ -10,7 +11,6 @@ import {
   pathParamNames,
   QUERY_KEYS,
   QUERY_SHEETS,
-  SETTINGS_SHEET_SEGMENTS,
   type PageName,
 } from './table'
 
@@ -32,7 +32,8 @@ export type LinkTarget = {
 
 export type Resolved = {isKnown: boolean; target: LinkTarget}
 
-const HOME: LinkTarget = {name: 'Home', params: {}, sheets: [], query: {}}
+/** Where a link that names nothing goes: the start tab (owner 198: there is no Home page). */
+const home = (): LinkTarget => ({name: startPage(), params: {}, sheets: [], query: {}})
 
 const SAFE_VALUE = /^[A-Za-z0-9_.,:~ -]{1,64}$/
 /** Free text a link may carry: a search question, an expense title. Control characters never. */
@@ -64,10 +65,10 @@ function cleanQuery(search: string): Record<string, string> {
   return out
 }
 
-/** Resolves a link to its screen. Anything unknown, malformed or from another host opens Home. */
+/** Resolves a link to its screen. Anything unknown, malformed or from another host opens the start tab. */
 export function resolveLink(input: string): Resolved {
   const pathAndQuery = toPathAndQuery(input)
-  if (pathAndQuery === null) return {isKnown: false, target: HOME}
+  if (pathAndQuery === null) return {isKnown: false, target: home()}
   const qIndex = pathAndQuery.indexOf('?')
   const pathname = qIndex === -1 ? pathAndQuery : pathAndQuery.slice(0, qIndex)
   const search = qIndex === -1 ? '' : pathAndQuery.slice(qIndex + 1)
@@ -75,6 +76,8 @@ export function resolveLink(input: string): Resolved {
   const oldQ = old.indexOf('?')
   const segs = (oldQ === -1 ? old : old.slice(0, oldQ)).split('/').filter(Boolean)
   const query = cleanQuery([search, oldQ === -1 ? '' : old.slice(oldQ + 1)].filter(Boolean).join('&'))
+  /* The bare address is the start tab (owner 198), with a global sheet if the query names one (`/?drawer=menu`). */
+  if (segs.length === 0) return finish(startPage(), {}, [], query)
 
   for (let i = segs.length; i >= 0; i--) {
     const [matched, pathParams] = router.matchPath(`/${segs.slice(0, i).join('/')}`)
@@ -82,21 +85,17 @@ export function resolveLink(input: string): Resolved {
     const name = matched as RouteName
     let rest = segs.slice(i)
 
-    /* `/settings/export` reads as a section called "export"; it is Settings' own sheet. */
-    if (name === 'SettingsSection' && (SETTINGS_SHEET_SEGMENTS as readonly string[]).includes(pathParams.section!)) {
-      return finish('Settings', {}, [pathParams.section!, ...rest], query)
-    }
     /* `/groups/filters` reads as a group called "filters"; no id is, so it is the Groups list's own sheet. */
     if (name === 'Group' && pathParams.groupId === 'filters') return finish('Groups', {}, ['filters', ...rest], query)
     /* `/people/filters` likewise is the People list's own sheet. */
     if (name === 'Person' && pathParams.personId === 'filters') return finish('People', {}, ['filters', ...rest], query)
-    if (Object.entries(pathParams).some(([k, v]) => !isValidPathParam(k, v))) return {isKnown: false, target: HOME}
+    if (Object.entries(pathParams).some(([k, v]) => !isValidPathParam(k, v))) return {isKnown: false, target: home()}
     if (name === 'Search') {
       if (rest.length > 0) continue
       const {q, mode} = query
       return {
         isKnown: true,
-        target: {name: 'Home', params: {}, sheets: ['search'], query: {...(q ? {q} : {}), ...(mode === 'ask' ? {mode} : {})}},
+        target: {name: startPage(), params: {}, sheets: ['search'], query: {...(q ? {q} : {}), ...(mode === 'ask' ? {mode} : {})}},
       }
     }
     const params: Record<string, string> = {...pathParams}
@@ -107,7 +106,7 @@ export function resolveLink(input: string): Resolved {
     }
     return finish(name as PageName, params, rest, query)
   }
-  return {isKnown: false, target: HOME}
+  return {isKnown: false, target: home()}
 }
 
 /** Splits the query into the page's, the sheet's and a global sheet's, then checks the sheet chain is one the table lists. */
@@ -119,7 +118,7 @@ function finish(name: PageName, params: Record<string, string>, chain: string[],
   delete pageQuery.tab
   if (queryTab && !params.tab && tabs?.includes(queryTab)) params.tab = queryTab
   let sheets = chain
-  if (sheets.length > 0 && !isPageSheet(name, sheets, params)) return {isKnown: false, target: HOME}
+  if (sheets.length > 0 && !isPageSheet(name, sheets, params)) return {isKnown: false, target: home()}
   if (name === 'Group' && queryTab === 'rules' && sheets.length === 0) sheets = ['rules']
   /* `?drawer=menu` opens the side drawer over the page, unless a sheet is already named. */
   for (const [id, value] of Object.entries(QUERY_SHEETS)) {

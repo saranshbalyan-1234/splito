@@ -10,10 +10,12 @@ import Animated, {
   ZoomOut,
 } from 'react-native-reanimated'
 import {useLingui} from '@lingui/react/macro'
+import {type ListSort} from '@splito/sync'
 
 import {HITSLOP_10} from '#/lib/constants'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
+import {ListSortMenu} from '#/components/ListSortMenu'
 import {SearchInput} from '#/components/forms/SearchInput'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
@@ -29,8 +31,8 @@ const EASE = Easing.out(Easing.cubic)
  * right (owner: "search icon only, expands once I click"). The search icon
  * grows into Bluesky's `SearchInput` across the row (width and opacity on
  * the UI thread; instant under reduced motion), focused, with a cross that
- * clears and collapses it. The filter button stays beside the field, so
- * search and filters combine, and a "2 of 6" line answers each query. The
+ * clears and collapses it. The filter button and the Sort button (owner 199) stay beside the field, so
+ * search, filters and order combine, and a "2 of 6" line answers each query. The
  * filter button carries a dot while filters differ from the defaults.
  */
 export function ListToolsHeader({
@@ -43,6 +45,7 @@ export function ListToolsHeader({
   searchLabel,
   activeFilterCount,
   onFiltersPress,
+  sort,
   action,
   endAction,
 }: {
@@ -61,9 +64,11 @@ export function ListToolsHeader({
   searchLabel?: string
   activeFilterCount: number
   onFiltersPress: () => void
+  /** The Sort button beside Filters (owner 199): the current order and what a pick does. */
+  sort?: {value: ListSort; onChange: (sort: ListSort) => void}
   /** A small link beside the title (Home's friends: "Manage"). */
   action?: React.ReactNode
-  /** A third icon button after Filters (the Friends list's "Manage friends and invites" gear, owner 177). */
+  /** An icon button after Sort (the Friends list's "Manage friends and invites" gear, owner 177). */
   endAction?: React.ReactNode
 }) {
   const t = useTheme()
@@ -71,6 +76,8 @@ export function ListToolsHeader({
   const shouldReduceMotion = useShouldReduceMotion()
   const [isSearching, setIsSearching] = useState(!!query)
   const [rowWidth, setRowWidth] = useState(0)
+  /* The icon buttons after the search field: Filters, Sort and the end action. */
+  const trailing = (sort ? ICON + GAP : 0) + (endAction ? ICON + GAP : 0)
   const progress = useSharedValue(isSearching ? 1 : 0)
   const input = useRef<React.ComponentRef<typeof TextInput>>(null)
 
@@ -96,7 +103,7 @@ export function ListToolsHeader({
   return (
     <View
       /* A hidden tab measures 0: keep the last real width (owner 166). */
-      onLayout={e => e.nativeEvent.layout.width > 0 && setRowWidth(e.nativeEvent.layout.width - 32 - ICON - GAP - (endAction ? ICON + GAP : 0))}
+      onLayout={e => e.nativeEvent.layout.width > 0 && setRowWidth(e.nativeEvent.layout.width - 32 - ICON - GAP - trailing)}
       style={[a.px_lg, a.pt_md, a.pb_sm, a.justify_center, {minHeight: 60}]}>
       <View style={[a.flex_row, a.align_center, {gap: GAP}]}>
         <Animated.View
@@ -176,6 +183,7 @@ export function ListToolsHeader({
             />
           )}
         </Button>
+        {sort && <ListSortMenu value={sort.value} onChange={sort.onChange} />}
         {endAction}
       </View>
       {isSearching && (
@@ -184,7 +192,7 @@ export function ListToolsHeader({
           style={[
             a.absolute,
             a.justify_center,
-            {right: 16 + ICON + GAP + (endAction ? ICON + GAP : 0), top: 8, height: 44},
+            {right: 16 + ICON + GAP + trailing, top: 8, height: 44},
             fieldStyle,
           ]}>
           <SearchInput

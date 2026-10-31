@@ -6,6 +6,7 @@ import {useLingui} from '@lingui/react/macro'
 import {type RowSync} from '@splito/sync'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {type Props as SVGIconProps} from '#/components/icons/common'
@@ -23,12 +24,15 @@ const TIP_MS = 1500
  */
 export function RequestRow({
   testID,
+  personId,
   name,
   detail,
   sync,
   children,
 }: {
   testID: string
+  /** Who the row is about, when they are a person on this device: the avatar and name then open them (owner 178). */
+  personId?: string | null
   name: string
   detail: React.ReactNode
   /** The record's own sync state: unsynced draws the text lighter, a refusal says Needs attention (decision 111). */
@@ -44,19 +48,23 @@ export function RequestRow({
       {...listAnimations}
       testID={testID}
       style={[a.flex_row, a.align_center, a.gap_md, a.px_lg, a.py_sm, tone.fade]}>
-      <UserAvatar size={40} name={name} type="user" />
+      {personId ? <PersonLink id={personId} name={name} show="avatar" size={40} /> : <UserAvatar size={40} name={name} type="user" />}
       <SyncToneContext.Provider value={tone.isUnsynced}>
       <View
         style={[a.flex_1, a.gap_2xs, {minWidth: 0}]}
         accessible={tone.isUnsynced ? true : undefined}
         accessibilityLabel={tone.isUnsynced ? l`${name}, not synced yet` : undefined}>
         <View style={[a.flex_row, a.align_center, a.gap_sm]}>
-          <Text
-            emoji
-            numberOfLines={1}
-            style={[a.flex_shrink, a.text_md, a.font_semi_bold, {minWidth: 0}]}>
-            {name}
-          </Text>
+          {personId ? (
+            <PersonLink id={personId} name={name} show="name" style={a.flex_shrink} />
+          ) : (
+            <Text
+              emoji
+              numberOfLines={1}
+              style={[a.flex_shrink, a.text_md, a.font_semi_bold, {minWidth: 0}]}>
+              {name}
+            </Text>
+          )}
           <NeedsAttention status={sync?.syncStatus} testID={`${testID}-sync`} />
         </View>
         <Text

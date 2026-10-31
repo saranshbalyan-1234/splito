@@ -16,7 +16,7 @@ import {
   Envelope_Stroke2_Corner0_Rounded as MailIcon,
   Message_Stroke2_Corner0_Rounded as MessageIcon,
 } from '#/components/icons/Invite'
-import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
+import {TrashLid_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -45,7 +45,7 @@ export function FeedbackList() {
     return (
       <EmptyState
         testID="feedback-empty"
-        illustration="empty-activity"
+        illustration="empty-feedback"
         title={l`No feedback yet`}
         message={l`Tell us what to fix or build next. What you send is kept here, with where it is.`}
         button={{

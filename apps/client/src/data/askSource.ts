@@ -1,5 +1,5 @@
 import {type CurrencyCode, type DateRange, NO_RULES} from '@splito/domain'
-import {type Group, openSearch, type Store, summarizeSearch} from '@splito/sync'
+import {type Group, openSearch, type Store} from '@splito/sync'
 
 import {type AskSource, type FoundExpense} from '#/lib/ask/source'
 import {boundsQuery, cellsQuery, overviewQuery} from '#/data/analyticsQueries'
@@ -43,7 +43,7 @@ export function storeAskSource(
       const found = session.found()
       const isDone = session.isDone()
       const rows: FoundExpense[] = found.map(e => ({id: e.id, title: e.data.title, date: e.data.date, currency: e.data.currency, total: e.data.total, groupId: e.data.groupId}))
-      return {found: rows, isDone, totals: isDone ? summarizeSearch(found).totals : {}}
+      return {found: rows, isDone, totals: session.summary.totals}
     },
   }
 }

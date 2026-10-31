@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Profile/Header/EditProfileDialog.tsx (dirty close: preventDismiss, onBackgroundPress, "Discard changes?" prompt)
-import {createContext, useContext, useState} from 'react'
+import {createContext, useContext, useEffect, useState} from 'react'
 import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -15,6 +15,7 @@ import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import {useDeferredReady} from '#/lib/hooks/useAfterTransition'
+import {CheckDrawn_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Loader} from '#/components/Loader'
 import * as Prompt from '#/components/Prompt'
@@ -257,6 +258,12 @@ export type FooterProps = {
   saveLabel: string
   canSave?: boolean
   isSaving?: boolean
+  /**
+   * The save went through: the button shows a drawn check (instead of a full-sheet success screen, F-275) for the
+   * moment before the caller closes the sheet. `savedTestID` names the button then, for specs that wait on it.
+   */
+  isSaved?: boolean
+  savedTestID?: string
   /** The secondary button's words (default "Cancel"). */
   cancelLabel?: string
   /** Default: the sheet's close request (asks first if anything changed). */
@@ -303,11 +310,17 @@ function Actions({
   cancelLabel,
   canSave = true,
   isSaving = false,
+  isSaved = false,
+  savedTestID,
 }: FooterProps) {
   const {t: l} = useLingui()
-  const {requestClose} = useFormSheet()
+  const {requestClose, setIsDirty} = useFormSheet()
   const isSheet = useIsSheet()
   const size = isSheet ? 'large' : 'small'
+  // Saved: nothing is at stake any more, so a drag or Cancel in the moment before the sheet closes never asks "Discard changes?".
+  useEffect(() => {
+    if (isSaved) setIsDirty(false)
+  }, [isSaved, setIsDirty])
   return (
     <View
       style={[a.flex_row, a.align_center, a.gap_sm, !isSheet && a.justify_end]}>
@@ -316,6 +329,7 @@ function Actions({
         label={cancelLabel ?? l`Cancel`}
         color="secondary"
         size={size}
+        disabled={isSaved}
         style={[isSheet && a.flex_1]}
         onPress={onCancel ?? requestClose}>
         <ButtonText maxFontSizeMultiplier={2} numberOfLines={1}>
@@ -323,14 +337,17 @@ function Actions({
         </ButtonText>
       </Button>
       <Button
-        testID="sheet-save"
+        testID={isSaved ? (savedTestID ?? 'sheet-save') : 'sheet-save'}
         label={saveLabel}
         color="primary"
         size={size}
-        disabled={!canSave || isSaving}
+        disabled={(!canSave && !isSaved) || isSaving}
         style={[isSheet && a.flex_1]}
-        onPress={onSave}>
-        {isSaving ? (
+        onPress={isSaved ? () => {} : onSave}>
+        {/* Saved wins over saving: the callers keep isSaving set until the sheet closes (F-275 review). */}
+        {isSaved ? (
+          <ButtonIcon icon={CheckIcon} />
+        ) : isSaving ? (
           <Loader size="sm" />
         ) : (
           <ButtonText maxFontSizeMultiplier={2} numberOfLines={1}>{saveLabel}</ButtonText>

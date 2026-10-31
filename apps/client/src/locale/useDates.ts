@@ -2,20 +2,21 @@ import {useSyncExternalStore} from 'react'
 import {AppState} from 'react-native'
 import {addDays, type LocalDate} from '@splito/domain'
 import {useLingui} from '@lingui/react/macro'
-import {getLocales} from 'expo-localization'
 
 import {
   formatDay,
   resolveTimeZone,
   todayIn,
 } from '#/locale/dates'
+import {dayBucket, dayOfInstant} from '#/locale/dayLabel'
 import {usePref} from '#/data/hooks'
+import {deviceLocale} from '#/locale/numberLocale'
 
 /** The locale dates are written in: Hindi uses hi-IN, English follows the device. */
 export function useDateLocale(): string {
   const [language = 'en'] = usePref('language')
   if (language === 'hi') return 'hi-IN'
-  const tag = getLocales()[0]?.languageTag
+  const tag = deviceLocale()?.languageTag
   return tag?.startsWith('en') ? tag : 'en'
 }
 
@@ -86,4 +87,42 @@ export function useFormatDay() {
     }
     return formatDay(date, format, locale, intl)
   }
+}
+
+/**
+ * The one day label (F-274 finding 6): Today, Yesterday, a weekday within the week, otherwise the date in
+ * the Date format preference ("Mon, 5 Oct", the year when it is not this one). Takes a calendar day, or an
+ * instant, which is first put on its day in the Timezone preference. Activity's day headers, the
+ * Comments divider and every relative date go through it, so they always agree.
+ */
+export function useDayLabel() {
+  const {i18n} = useLingui()
+  const timeZone = useTimeZone()
+  const today = useToday()
+  const formatDay = useFormatDay()
+  return (when: LocalDate | number): string => {
+    const day = typeof when === 'number' ? dayOfInstant(when, timeZone) : when
+    const bucket = dayBucket(day, today)
+    if (bucket === 'weekday')
+      return i18n.date(new Date(`${day}T00:00:00Z`), {
+        weekday: 'long',
+        timeZone: 'UTC',
+      })
+    return formatDay(day, {
+      relative: true,
+      intl: {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: day.slice(0, 4) === today.slice(0, 4) ? undefined : 'numeric',
+      },
+    })
+  }
+}
+
+/** The time of day of an instant in the Timezone preference ("4:15 PM"): one format for every line that shows one. */
+export function useFormatTime() {
+  const {i18n} = useLingui()
+  const timeZone = useTimeZone()
+  return (at: number | Date) => i18n.date(at, {timeStyle: 'short', timeZone})
 }

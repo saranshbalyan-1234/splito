@@ -9,6 +9,7 @@ import {StorageNotice} from '#/components/StorageNotice'
 import * as Toast from '#/components/Toast'
 import {perfMark} from '#/lib/perfMark'
 import {resetToRoot} from '#/navigation/ref'
+import {accountName} from '#/state/session'
 import {DemoContext, type DemoModeValue, setDemoProgress} from '#/state/demo'
 import {useDialogStateControlContext} from '#/state/dialogs'
 import {flush, logger, setDiagnosticsEnabled, setTelemetryIdentity} from '#/logger'
@@ -96,6 +97,13 @@ type Live = DataContext & {demo: boolean; unwire: () => void}
  * the old one in the one context value and the old connection is closed. The
  * tree never remounts (§ 3 "Root contexts stay still").
  */
+/** Runs `fn` when the app is idle (at most 2 s later), or soon where there is no idle callback. */
+function whenIdle(fn: () => unknown) {
+  const idle = (globalThis as {requestIdleCallback?: (cb: () => void, opts: {timeout: number}) => void}).requestIdleCallback
+  if (idle) idle(() => void fn(), {timeout: 2000})
+  else setTimeout(() => void fn(), 500)
+}
+
 export function StoreProvider({accountId, children, fallback = null}: {accountId: string; children: React.ReactNode; fallback?: React.ReactNode}) {
   const [value, setValue] = useState<DataContext | null>(null)
   const [demo, setDemoFlag] = useState(false)
@@ -141,6 +149,13 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
       perfMark('splito:store-adopt')
       if (prev) dropOpenUi()
       setValue({store: next.store, ctx: next.ctx})
+      // The search index is checked (and rebuilt in chunks when stale) at idle after the store opens, never during the first keystrokes.
+      whenIdle(() =>
+        next.store.prepareSearch().catch(e => {
+          // A store closed under it (a switch) is not a failure; the search box says so and retries if it ever is one.
+          if (live.current?.store === next.store) logger.error(e, {where: 'StoreProvider.prepareSearch'})
+        }),
+      )
       setDemoFlag(next.demo)
       setHasDirectory(next.demo && !!next.directory)
       setNotice(current => (current === 'blocked' ? null : current))
@@ -160,7 +175,7 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
     const ctx = getMutationCtx(accountId)
     const store = await openStore(notices.current, accountStoreName(accountId))
     try {
-      if (ensure) await ensureMe(store, ctx, 'Me')
+      if (ensure) await ensureMe(store, ctx, accountName(accountId))
     } catch (e) {
       void store.close()
       throw e
@@ -193,7 +208,7 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
         void adopt({...resumed, demo: true})
         closingPrev.current.add(new Promise<void>(resolve => setTimeout(() => void real.store.close().then(resolve, resolve), 300)))
       } else {
-        await ensureMe(real.store, real.ctx, 'Me')
+        await ensureMe(real.store, real.ctx, accountName(accountId))
         // Only ever on the real store, before anything can switch away from (and close) it: erase the rows older builds left in it, once.
         // The old ?demo rows only ever existed in dev and e2e builds; production skips the cleanup and its chunk.
         if ((__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e') && !demoOn) await (await loadDemo()).purgeLegacy(real.store)
@@ -242,7 +257,7 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
     })
   }, [])
 
-  /** The progress of a seeding reaches the blocking dialog (and the caller's own callback, if any). */
+  /** The progress of a seeding reaches the progress pill (and the caller's own callback, if any); while it runs the app stays usable on the store it is on. */
   const withProgress = useCallback(<T,>(onProgress: ((done: number) => void) | undefined, run: (report: (done: number) => void) => Promise<T>) => {
     setDemoProgress(0)
     return run(done => {
@@ -253,36 +268,37 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
 
   const setDemo = useCallback(
     (on: boolean, onProgress?: (done: number) => void) =>
-      serial(() =>
-        withProgress(onProgress, async report => {
-          await booted.current
-          const cur = live.current
-          if (!cur || cur.demo === on) return
-          const m = await loadDemo()
-          if (on) {
-            // Seeded and ready before anything changes; the real database learns of the mode last, so a failure leaves it untouched.
-            const opened = await m.openDemo(accountId, cur.ctx, notices.current, report)
-            try {
-              await m.writeDemoMode(cur.store, cur.ctx, true)
-            } catch (e) {
-              await opened.store.close()
-              throw e
-            }
-            void adopt({...opened, demo: true})
-          } else {
-            const real = await openReal()
-            try {
-              await m.writeDemoMode(real.store, real.ctx, false)
-            } catch (e) {
-              await real.store.close()
-              throw e
-            }
-            // Back on the real data first; then the demo database and everything it kept are erased (owner 136).
-            await adopt({...real, demo: false})
-            await m.eraseDemo(accountId)
+      serial(async () => {
+        // Turning on starts at 0 %: the progress pill, not the cover, shows from the first frame (the seeding is the long part).
+        setDemoProgress(on ? 0 : null)
+        await booted.current
+        const cur = live.current
+        if (!cur || cur.demo === on) return setDemoProgress(null)
+        const m = await loadDemo()
+        if (on) {
+          // Seeded and ready before anything changes; the real database learns of the mode last, so a failure leaves it untouched.
+          // The app stays usable on the real store meanwhile; only the swap itself covers it.
+          const opened = await withProgress(onProgress, report => m.openDemo(accountId, cur.ctx, notices.current, report))
+          try {
+            await m.writeDemoMode(cur.store, cur.ctx, true)
+          } catch (e) {
+            await opened.store.close()
+            throw e
           }
-        }),
-      ),
+          void adopt({...opened, demo: true})
+        } else {
+          const real = await openReal()
+          try {
+            await m.writeDemoMode(real.store, real.ctx, false)
+          } catch (e) {
+            await real.store.close()
+            throw e
+          }
+          // Back on the real data first; then the demo database and everything it kept are erased (owner 136).
+          await adopt({...real, demo: false})
+          await m.eraseDemo(accountId)
+        }
+      }),
     [accountId, adopt, openReal, serial, withProgress],
   )
 

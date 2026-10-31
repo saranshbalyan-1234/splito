@@ -1,5 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
+import {setStartTab} from '#/lib/routes/startTab'
 import {ROUTE_PATHS, type RouteName} from '#/routes'
 import {TIER_HOSTS} from './hosts'
 import {buildPath, type LinkTarget, resolveLink, touchesRealData} from './resolve'
@@ -22,8 +23,8 @@ describe('route table: every route parses from https, splito:// and a bare path 
       const results = forms(path).map(resolveLink)
       for (const r of results) expect(r).toEqual(results[0]!)
       expect(results[0]!.isKnown).toBe(true)
-      /* Search is not a page: the old route opens the Search & Ask sheet over Home. */
-      expect(results[0]!.target.name).toBe(name === 'Search' ? 'Home' : name)
+      /* Search is not a page: the old route opens the Search & Ask sheet over the start tab. */
+      expect(results[0]!.target.name).toBe(name === 'Search' ? 'People' : name)
     })
   }
 })
@@ -69,9 +70,9 @@ describe('every tab, sheet and picker', () => {
     const drawer = resolveLink('/groups?drawer=menu')
     expect(drawer.target).toMatchObject({name: 'Groups', sheets: ['drawer']})
     expect(buildPath(drawer.target)).toBe('/groups?drawer=menu')
-    expect(resolveLink('/?drawer=menu').target).toMatchObject({name: 'Home', sheets: ['drawer']})
+    expect(resolveLink('/?drawer=menu').target).toMatchObject({name: 'People', sheets: ['drawer']})
     const search = resolveLink('splito://search?q=dinner%20out&mode=ask')
-    expect(search.target).toMatchObject({name: 'Home', sheets: ['search'], query: {q: 'dinner out', mode: 'ask'}})
+    expect(search.target).toMatchObject({name: 'People', sheets: ['search'], query: {q: 'dinner out', mode: 'ask'}})
     expect(buildPath(search.target)).toBe('/search?mode=ask&q=dinner+out')
     expect(resolveLink('/feedback').isKnown).toBe(false)
     expect(resolveLink('/settings/regional?feedback=new').target.sheets).toEqual(['feedback'])
@@ -95,8 +96,8 @@ describe('list state', () => {
   })
 })
 
-describe('unknown and unsafe links open Home', () => {
-  const home: LinkTarget = {name: 'Home', params: {}, sheets: [], query: {}}
+describe('unknown and unsafe links open the start tab', () => {
+  const home: LinkTarget = {name: 'People', params: {}, sheets: [], query: {}}
   for (const bad of [
     '/no/such/page',
     `/groups/${ID}/settle/extra`,
@@ -126,7 +127,10 @@ describe('unknown and unsafe links open Home', () => {
   })
   test('old paths redirect', () => {
     expect(resolveLink('/notifications').target.name).toBe('Activity')
-    expect(resolveLink('/settings/recently-deleted').target).toMatchObject({name: 'Settings', params: {note: 'deleted-stay'}})
+    expect(resolveLink('/settings/recently-deleted').target).toMatchObject({name: 'SettingsSection', params: {section: 'data', note: 'deleted-stay'}})
+    /* Export and Import moved under Your data (owner 205). */
+    expect(resolveLink('/settings/export').target).toMatchObject({name: 'SettingsSection', params: {section: 'data'}, sheets: ['export']})
+    expect(resolveLink('/settings/import').target).toMatchObject({name: 'SettingsSection', params: {section: 'data'}, sheets: ['import']})
   })
 })
 
@@ -158,11 +162,18 @@ test('/people is the People tab (F-256) with its list state; person pages are /p
   expect(resolveLink('/people/filters').target).toMatchObject({name: 'People', sheets: ['filters']})
 })
 
-test('Home is "/" and takes only its Overview scope; the old Home list state and /filters now belong to People (F-256)', () => {
-  expect(resolveLink('/').target).toEqual({name: 'Home', params: {}, sheets: [], query: {}})
-  expect(resolveLink('/?overview=groups').target).toEqual({name: 'Home', params: {overview: 'groups'}, sheets: [], query: {}})
+test('there is no Home (owner 198): "/" is the start tab, the old /?overview= is Analytics, the old list state and /filters belong to People', () => {
+  expect(resolveLink('/')).toEqual({isKnown: true, target: {name: 'People', params: {}, sheets: [], query: {}}})
+  expect(resolveLink('/?overview=groups').target).toEqual({name: 'Analytics', params: {overview: 'groups'}, sheets: [], query: {}})
+  expect(resolveLink('/?overview=direct&currency=EUR').target).toEqual({name: 'Analytics', params: {overview: 'direct', currency: 'EUR'}, sheets: [], query: {}})
+  expect(buildPath(resolveLink('/?overview=groups').target)).toBe('/analytics?overview=groups')
   // Only the key is checked here; the page ignores a value it does not know.
-  expect(resolveLink('/?junk=1').target).toEqual({name: 'Home', params: {}, sheets: [], query: {}})
+  expect(resolveLink('/?junk=1').target).toEqual({name: 'People', params: {}, sheets: [], query: {}})
+  // The start tab is whatever the person chose.
+  setStartTab('activity')
+  expect(resolveLink('/').target).toMatchObject({name: 'Activity'})
+  expect(resolveLink('/no/such/page').target).toMatchObject({name: 'Activity'})
+  setStartTab('people')
   expect(resolveLink('/?sort=name&show=owesYou').target).toEqual({name: 'People', params: {sort: 'name', show: 'owesYou'}, sheets: [], query: {}})
   expect(resolveLink('/?groups=0&settled=1').target).toMatchObject({name: 'People', params: {groups: '0', settled: '1'}})
   expect(resolveLink('/filters').target).toMatchObject({name: 'People', sheets: ['filters']})
@@ -179,9 +190,9 @@ describe('Activity (F-1213, F-259): tab, types and one group in the address', ()
   })
 
   test('?type=, ?group= and ?from= (the tab a pushed copy opened from) survive; a bad group id and unknown keys are dropped', () => {
-    const r = resolveLink(`/activity/all?type=transactions&group=${ID}&from=home&x=1`)
-    expect(r.target.params).toEqual({tab: 'all', type: 'transactions', group: ID, from: 'home'})
-    expect(buildPath(r.target)).toBe(`/activity/all?from=home&group=${ID}&type=transactions`)
+    const r = resolveLink(`/activity/all?type=transactions&group=${ID}&from=people&x=1`)
+    expect(r.target.params).toEqual({tab: 'all', type: 'transactions', group: ID, from: 'people'})
+    expect(buildPath(r.target)).toBe(`/activity/all?from=people&group=${ID}&type=transactions`)
     expect(resolveLink('/activity?group=nope').target.params).toEqual({})
   })
 
@@ -203,4 +214,17 @@ test('every "See all" is Activity on All: transactions, disputed, requests, scop
   expect(activityPath({personId: ID})).toBe(`/activity?tab=all&person=${ID}`)
   expect(resolveLink(activityPath({personId: ID, types: ['comments']})).target.params).toEqual({tab: 'all', type: 'comments', person: ID})
   expect(resolveLink('/activity?person=nope').target.params).toEqual({})
+})
+
+test('Support and Your data are Settings section pages; Export and Import are sheets of Your data (owners 204, 205)', () => {
+  expect(resolveLink('/settings/support').target).toEqual({name: 'SettingsSection', params: {section: 'support'}, sheets: [], query: {}})
+  expect(resolveLink('/settings/data').target).toEqual({name: 'SettingsSection', params: {section: 'data'}, sheets: [], query: {}})
+  expect(resolveLink('/settings/data/export/period').target).toMatchObject({name: 'SettingsSection', params: {section: 'data'}, sheets: ['export', 'period']})
+  // A sheet belongs to the page that hosts it: Export is not a sheet of Appearance or of the Settings tab.
+  expect(resolveLink('/settings/appearance/export').isKnown).toBe(false)
+  expect(resolveLink('/settings/export/period').target).toMatchObject({sheets: ['export', 'period']})
+})
+
+test('Profile is its own page at /profile, not a Settings page (owner 206)', () => {
+  expect(resolveLink('/profile').target).toEqual({name: 'Profile', params: {}, sheets: [], query: {}})
 })

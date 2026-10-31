@@ -3,7 +3,7 @@ import {allocate, expenseDebts, groupNet, type LedgerRecord, pairwiseBalances, p
 
 import {type Dispute} from '../src/disputes'
 import {type Expense, type Repayment} from '../src/mutations'
-import {termKey, termRows} from '../src/searchTerms'
+import {TERM_KINDS, termKey, termRows} from '../src/searchTerms'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from '../src/selectors'
 import {type Store} from '../src/store'
 import {type Entity} from '../src/types'
@@ -155,7 +155,7 @@ export async function storedAggregates(s: Store) {
 /** Every stored search term, as keys. */
 export async function storedTerms(s: Store) {
   const out: string[] = []
-  for (const kind of ['w', 'p', 'g', 'a', 'm', 'c'] as const) for (const t of await s.terms({kind})) out.push(JSON.stringify([t.kind, t.term, t.entityType, t.entityId]))
+  for (const kind of TERM_KINDS) for (const t of await s.terms({kind})) out.push(JSON.stringify([t.kind, t.term, t.entityType, t.entityId]))
   return out.sort()
 }
 
@@ -187,6 +187,13 @@ export async function expectedActivity(s: Store) {
       bump(h.entityType, h.data as Record<string, unknown>, h.at)
       bump(h.entityType, rows[i - 1]?.data as Record<string, unknown> | undefined, h.at)
     })
+  }
+  // A comment (or its edit or delete) makes the record it is about active at its last change (owner 199).
+  const records = new Map(entities.filter(e => MONEY.includes(e.type)).map(e => [`${e.type}:${e.id}`, e]))
+  for (const c of entities.filter(e => e.type === 'comment')) {
+    const d = c.data as {targetType?: string; targetId?: string}
+    const target = records.get(`${d.targetType}:${d.targetId}`)
+    if (target) bump(target.type, target.data as Record<string, unknown>, c.updatedAt)
   }
   const groups = new Map(entities.filter(e => e.type === 'group').map(g => [g.id, Math.max(g.updatedAt, groupAt.get(g.id) ?? 0)]))
   const people = new Map(entities.filter(e => e.type === 'person' && (personAt.get(e.id) ?? 0) > 0).map(p => [p.id, personAt.get(p.id)!]))

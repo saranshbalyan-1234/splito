@@ -23,6 +23,7 @@ import {LinkHost} from '#/features/links/LinkHost'
 import {PwaHost} from '#/features/pwa/PwaHost'
 import {DisputeHost} from '#/features/disputes/DisputeHost'
 import {RemindHost} from '#/features/remind/RemindHost'
+import {TourHost} from '#/features/tour/TourHost'
 import {ToastOutlet} from '#/components/Toast'
 import {StoreProvider} from '#/data/StoreProvider'
 import {LoggedOutApp, LoggedOutShell} from '#/screens/LoggedOut'
@@ -71,6 +72,8 @@ function SignedInApp({accountId}: {accountId: string}) {
         <BottomSheetOutlet />
       </BottomSheetProvider>
       <Shell />
+      {/* After the Shell, whose portal outlet it draws into; before the toasts, which stay on top. */}
+      <TourHost />
       <ToastOutlet />
     </StoreProvider>
   )

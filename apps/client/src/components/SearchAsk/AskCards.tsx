@@ -3,7 +3,7 @@ import {plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, ZERO} from '@splito/domain'
 
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useTheme} from '#/alf'
 import {Button} from '#/components/Button'
 import {BarChart} from '#/components/charts/BarChart'
@@ -114,7 +114,7 @@ export function PeopleRanking({
           key: r.id,
           value: r.amount,
           label: r.name,
-          leading: <UserAvatar size={24} name={r.name} type="user" />,
+          leading: <PersonLink id={r.id} name={r.name} show="avatar" size={24} />,
         }))}
       />
     </Card>
@@ -127,7 +127,7 @@ export function PlanRows({
   locale,
   testID,
 }: {
-  rows: Array<{key: string; from: string; to: string; fromAvatar?: string; toAvatar?: string; currency: string; amount: bigint}>
+  rows: Array<{key: string; fromId: string; toId: string; from: string; to: string; fromAvatar?: string; toAvatar?: string; currency: string; amount: bigint}>
   locale: string
   testID: string
 }) {
@@ -136,15 +136,9 @@ export function PlanRows({
     <View testID={testID} style={[a.gap_sm]}>
       {rows.map(r => (
         <View key={r.key} style={[a.flex_row, a.align_center, a.gap_sm]}>
-          <UserAvatar size={28} name={r.fromAvatar ?? r.from} type="user" />
-          <Text numberOfLines={1} style={[a.flex_shrink, a.text_sm, a.font_semi_bold]}>
-            {r.from}
-          </Text>
+          <PersonLink id={r.fromId} name={r.from} avatarName={r.fromAvatar} size={28} style={a.flex_shrink} textStyle={a.text_sm} />
           <ArrowRightIcon size="sm" style={t.atoms.text_contrast_medium} />
-          <UserAvatar size={28} name={r.toAvatar ?? r.to} type="user" />
-          <Text numberOfLines={1} style={[a.flex_1, a.text_sm, a.font_semi_bold]}>
-            {r.to}
-          </Text>
+          <PersonLink id={r.toId} name={r.to} avatarName={r.toAvatar} size={28} style={a.flex_1} textStyle={a.text_sm} />
           <Text style={[a.text_sm, a.font_bold, tabular]}>{formatAmount(r.amount, r.currency, locale)}</Text>
         </View>
       ))}

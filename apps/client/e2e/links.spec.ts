@@ -2,16 +2,16 @@ import {expect, test} from '@playwright/test'
 
 /* A-014 / F-108: a link the app does not know opens People, never a blank page. */
 
-test('an unknown path opens People and the address bar says /', async ({page}) => {
+test('an unknown path opens People and the address bar says /people', async ({page}) => {
   await page.goto('/no/such/page')
-  await expect(page.getByTestId('screen-home')).toBeVisible()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page).toHaveURL(/\/people$/)
 })
 
 test('an unknown nested path under a real section opens People too', async ({page}) => {
   await page.goto('/groups/abc/settle/extra')
-  await expect(page.getByTestId('screen-home')).toBeVisible()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page).toHaveURL(/\/people$/)
 })
 
 test('a known path still opens its screen', async ({page}) => {

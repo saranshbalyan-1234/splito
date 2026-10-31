@@ -3,6 +3,9 @@ import {join} from 'node:path'
 
 import {expect, type Page, test} from '@playwright/test'
 
+import {type SplitoDevTools} from '../src/data/devTools'
+import {DESKTOP, PHONE} from './viewports'
+
 /*
  * A known ledger, seeded through the real mutations (window.splito, E2E
  * builds only), with the clock fixed at 2026-10-26 12:00 in Kolkata. Every
@@ -53,14 +56,7 @@ async function seed(page: Page, rows: Row[], now = NOW, groups: string[] = []) {
   await page.waitForFunction(() => 'splito' in window)
   await page.evaluate(
     async ({rows, groups}) => {
-      type Splito = {
-        me: string
-        createPerson(name: string): Promise<string>
-        createGroup(input: unknown): Promise<string>
-        createExpense(draft: unknown): Promise<string>
-        deleteExpense(id: string): Promise<void>
-      }
-      const s = (window as unknown as {splito: Splito}).splito
+      const s = (window as unknown as {splito: SplitoDevTools}).splito
       const ids = {
         me: s.me,
         riya: await s.createPerson('Riya Sharma'),
@@ -187,7 +183,7 @@ async function expectTotals(
 test.use({
   timezoneId: 'Asia/Kolkata',
   locale: LOCALE,
-  viewport: {width: 1440, height: 900},
+  viewport: DESKTOP,
 })
 
 test('this year: totals, every chart label, the list and the CSV agree', async ({
@@ -529,7 +525,7 @@ test('scope: more than 8 groups get a search field', async ({page}) => {
 })
 
 test.describe('phone', () => {
-  test.use({viewport: {width: 390, height: 844}})
+  test.use({viewport: PHONE})
   test('scope: the sheet is a bottom drawer with a handle, Cancel and Apply filling the width', async ({
     page,
   }) => {

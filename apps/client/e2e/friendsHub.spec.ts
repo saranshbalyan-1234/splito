@@ -24,7 +24,7 @@ async function owes(page: Page, name: string) {
   }, name)
 }
 
-test('Settings has a Friends and invites page; Home links to it and the sections show', async ({page}) => {
+test('Settings has a Friends and invites page; People links to it and the sections show', async ({page}) => {
   await openDemo(page, '/people')
   await page.getByTestId('people-manage-friends').click()
   await expect(page).toHaveURL(/\/settings\/friends$/)
@@ -87,7 +87,7 @@ test('removing a settled friend keeps history, hides them from lists and pickers
   await expect(page.getByText('Neel Joshi removed')).toBeVisible()
   await expect(row).toHaveCount(0)
   await expect(page.getByTestId('hub-removed-Neel Joshi')).toBeVisible()
-  // Gone from Home's list (settled friends are hidden by default, so show them: the removal is what hides him).
+  // Gone from People's list (settled friends are hidden by default, so show them: the removal is what hides him).
   // Settled groups and friends are hidden by default (F-1413); this spec reads them, so show them.
   await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('people.showSettled', true))
   await page.goto('/people')
@@ -113,7 +113,7 @@ test('above ten friends the Friends section gets a search', async ({page}) => {
   await expect(page.getByTestId('hub-friend-Friend 08')).toHaveCount(0)
 })
 
-test('a removed friend who gets a balance through a group stays on Home, marked Removed, with that balance', async ({page}) => {
+test('a removed friend who gets a balance through a group stays on People, marked Removed, with that balance', async ({page}) => {
   await ready(page)
   const ids = await page.evaluate(async () => {
     const s = (window as unknown as {splito: Splito & {createGroup(i: unknown): Promise<string>}}).splito

@@ -15,8 +15,8 @@ import {Text} from '#/components/Typography'
 import * as FormSheet from '#/components/FormSheet'
 
 /**
- * Rename a friend and set the UPI ID used for pay links. For my own person
- * (Profile's Edit profile) it edits only my name.
+ * Rename a friend and set the UPI ID used for pay links. For my own person (Profile's Edit profile and Payment
+ * details) the UPI ID is how friends pay me.
  */
 export function EditFriendDialog({
   control,
@@ -105,45 +105,49 @@ function Form({person}: {person: Entity<Person>}) {
             </Text>
           ) : null}
         </View>
-        {!isMe && (
-          <View>
-            <TextField.LabelText>
+        <View>
+          <TextField.LabelText>
+            {isMe ? (
+              <Trans>Your UPI ID (optional)</Trans>
+            ) : (
               <Trans>UPI ID (optional)</Trans>
-            </TextField.LabelText>
-            <TextField.Root isInvalid={error === 'upi'}>
-              <Dialog.Input
-                testID="friend-upi"
-                label={l`UPI ID`}
-                value={upiId}
-                onChangeText={v => {
-                  setUpiId(v)
-                  setError(null)
-                }}
-                placeholder="name@bank"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-              />
-            </TextField.Root>
-            <Text
-              style={[
-                a.pt_sm,
-                a.text_sm,
-                a.leading_snug,
-                error === 'upi'
-                  ? {color: t.palette.negative_500}
-                  : t.atoms.text_contrast_medium,
-              ]}>
-              {error === 'upi' ? (
-                <Trans>Enter a UPI ID like name@bank.</Trans>
-              ) : (
-                <Trans>
-                  Used to open your UPI app when you pay them in rupees.
-                </Trans>
-              )}
-            </Text>
-          </View>
-        )}
+            )}
+          </TextField.LabelText>
+          <TextField.Root isInvalid={error === 'upi'}>
+            <Dialog.Input
+              testID="friend-upi"
+              label={l`UPI ID`}
+              value={upiId}
+              onChangeText={v => {
+                setUpiId(v)
+                setError(null)
+              }}
+              placeholder="name@bank"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+            />
+          </TextField.Root>
+          <Text
+            style={[
+              a.pt_sm,
+              a.text_sm,
+              a.leading_snug,
+              error === 'upi'
+                ? {color: t.palette.negative_500}
+                : t.atoms.text_contrast_medium,
+            ]}>
+            {error === 'upi' ? (
+              <Trans>Enter a UPI ID like name@bank.</Trans>
+            ) : isMe ? (
+              <Trans>Friends use this to pay you in rupees.</Trans>
+            ) : (
+              <Trans>
+                Used to open your UPI app when you pay them in rupees.
+              </Trans>
+            )}
+          </Text>
+        </View>
       </View>
     </FormSheet.Inner>
   )

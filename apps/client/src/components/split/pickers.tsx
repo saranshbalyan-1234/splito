@@ -1,15 +1,13 @@
-import {useState} from 'react'
 import {View} from 'react-native'
-import {Trans, useLingui} from '@lingui/react/macro'
-import {CURRENCIES, type CurrencyInfo} from '@splito/domain'
+import {useLingui} from '@lingui/react/macro'
 import {type Category, type Entity, type Group, isGroupInactive} from '@splito/sync'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
-import {SearchInput} from '#/components/forms/SearchInput'
 import * as Toggle from '#/components/forms/Toggle'
 import {Text} from '#/components/Typography'
 import {CategoryTile} from './shared'
@@ -24,105 +22,6 @@ function rowStyle(t: ReturnType<typeof useTheme>, isLast: boolean) {
     a.py_md,
     a.gap_md,
   ]
-}
-
-/* ---------- Currency ---------- */
-
-const ALL_CURRENCIES = Object.values(CURRENCIES)
-
-export function CurrencyDialog({
-  control,
-  value,
-  onSelect,
-}: {
-  control: Dialog.DialogControlProps
-  value: string
-  onSelect: (code: string) => void
-}) {
-  return (
-    <FormSheet.Outer control={control} testID="currency-dialog" fullHeight>
-      <CurrencyInner value={value} onSelect={onSelect} />
-    </FormSheet.Outer>
-  )
-}
-
-function CurrencyInner({
-  value,
-  onSelect,
-}: {
-  value: string
-  onSelect: (code: string) => void
-}) {
-  const t = useTheme()
-  const {t: l} = useLingui()
-  const control = Dialog.useDialogContext()
-  const [query, setQuery] = useState('')
-  const q = query.trim().toLowerCase()
-  const matches = (c: CurrencyInfo) =>
-    !q || c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)
-  const list = [
-    CURRENCIES[value],
-    ...ALL_CURRENCIES.filter(c => c.code !== value),
-  ].filter((c): c is CurrencyInfo => !!c && matches(c))
-
-  return (
-    <FormSheet.Inner deferBody title={l`Currency`}>
-      <SearchInput
-        testID="currency-search"
-        value={query}
-        onChangeText={setQuery}
-        onClearText={() => setQuery('')}
-        label={l`Search currencies`}
-        placeholder={l`Search currencies`}
-      />
-      <Toggle.Group
-        type="radio"
-        label={l`Currency`}
-        values={[value]}
-        onChange={([code]) => code && control.close(() => onSelect(code))}
-        style={[a.pt_sm]}>
-        {list.map((c, i) => (
-          <Toggle.Item
-            key={c.code}
-            name={c.code}
-            label={`${c.code} ${c.name}`}
-            testID={`currency-${c.code}`}
-            style={rowStyle(t, i === list.length - 1)}>
-            <View
-              style={[
-                a.align_center,
-                a.justify_center,
-                a.rounded_full,
-                t.atoms.bg_contrast_50,
-                {width: 36, height: 36},
-              ]}>
-              <Text style={[a.text_sm, a.font_semi_bold]} numberOfLines={1}>
-                {c.symbol}
-              </Text>
-            </View>
-            <View style={[a.flex_1]}>
-              <Text style={[a.text_md, a.font_semi_bold]}>{c.code}</Text>
-              <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-                {c.name}
-              </Text>
-            </View>
-            <Toggle.Radio />
-          </Toggle.Item>
-        ))}
-        {list.length === 0 && (
-          <Text
-            style={[
-              a.text_md,
-              a.py_xl,
-              a.text_center,
-              t.atoms.text_contrast_medium,
-            ]}>
-            <Trans>No currency matches “{query}”</Trans>
-          </Text>
-        )}
-      </Toggle.Group>
-    </FormSheet.Inner>
-  )
 }
 
 /* ---------- Category ---------- */
@@ -253,13 +152,15 @@ function GroupInner({
   const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
   /* Inactive groups take no new expenses and hidden ones are out of my lists (decision 89). */
+  const memberText = (n: number) => (n === 1 ? l`1 member` : l`${n} members`)
   const live = groups.filter(g => !isGroupInactive(g.data) && !hidden.has(g.id))
   const rows = [
-    {id: NO_GROUP, name: l`No group`, detail: l`Just between you and friends`},
+    {id: NO_GROUP, kind: null, name: l`No group`, detail: l`Just between you and friends`},
     ...live.map(g => ({
       id: g.id,
+      kind: g.data.kind,
       name: g.data.name,
-      detail: `${g.data.currency} · ${l`${g.data.members.filter(m => m.leftAt === null).length} members`}`,
+      detail: `${g.data.currency} · ${memberText(g.data.members.filter(m => m.leftAt === null).length)}`,
     })),
   ]
 
@@ -280,11 +181,11 @@ function GroupInner({
             label={g.name}
             testID={`group-option-${g.name}`}
             style={rowStyle(t, i === rows.length - 1)}>
-            <UserAvatar
-              size={36}
-              name={g.id === NO_GROUP ? '–' : g.name}
-              type="list"
-            />
+            {g.kind ? (
+              <GroupAvatar size={36} kind={g.kind} name={g.name} />
+            ) : (
+              <UserAvatar size={36} name="–" type="list" />
+            )}
             <View style={[a.flex_1]}>
               <Text style={[a.text_md, a.font_semi_bold]} numberOfLines={1}>
                 {g.name}

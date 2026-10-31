@@ -1,21 +1,15 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDemo} from './openDemo'
+import {activityKinds, activityRows, activityScreen} from './activity'
+import {openDemo, setPref} from './openDemo'
+import {SIZES} from './viewports'
 
 /*
  * F-268 (owners 192-195): every disputed amount, transactions heading or count, and request or invite link opens Activity
  * as a pushed copy (Back) on All with the matching Type filter, scoped to the group or friend it sits in. Demo data.
  */
-const SIZES = [
-  ['390', {width: 390, height: 844}],
-  ['1440', {width: 1440, height: 900}],
-] as const
-
 type Hooks = {splito: {me: string; list(type: string): Promise<Array<{id: string; deleted: boolean; data: Record<string, any>}>>}}
 
-const screen = (page: Page) => page.getByTestId('screen-activity').last()
-const rows = (page: Page) => screen(page).locator('[data-testid^="activity-"][data-testid*="."]')
-const kinds = async (page: Page) => [...new Set((await rows(page).evaluateAll(els => els.map(e => e.getAttribute('data-testid')!))).map(id => id.replace(/^activity-/, '').split('.')[0]!))].sort()
 const decoded = (page: Page) => decodeURIComponent(page.url())
 
 /** Open disputes and holds in the demo set, with the record each is about: which groups and friends carry a disputed amount. */
@@ -49,11 +43,11 @@ async function firstWith(page: Page, paths: string[], selector: string) {
 async function expectActivityCopy(page: Page, opts: {url: RegExp; types: string[]; families: string[]; chip?: 'activity-group-chip' | 'activity-person-chip'}) {
   await expect(page).toHaveURL(/\/activity\/all/)
   expect(decoded(page)).toMatch(opts.url)
-  await expect(screen(page).getByTestId('header-back')).toBeVisible()
-  if (opts.chip) await expect(screen(page).getByTestId(opts.chip)).toBeVisible()
-  await expect(rows(page).first()).toBeVisible({timeout: 30_000})
-  for (const k of await kinds(page)) expect(opts.families, `a ${k} row`).toContain(k)
-  await screen(page).getByTestId('activity-filters').click()
+  await expect(activityScreen(page).getByTestId('header-back')).toBeVisible()
+  if (opts.chip) await expect(activityScreen(page).getByTestId(opts.chip)).toBeVisible()
+  await expect(activityRows(page).first()).toBeVisible({timeout: 30_000})
+  for (const k of await activityKinds(page)) expect(opts.families, `a ${k} row`).toContain(k)
+  await activityScreen(page).getByTestId('activity-filters').click()
   const sheet = page.getByTestId('activity-filters-sheet')
   await expect(sheet).toBeVisible()
   const all = ['expenses', 'payments', 'comments', 'groups', 'friends', 'reminders', 'disputes']
@@ -74,7 +68,7 @@ for (const [name, viewport] of SIZES) {
     test('disputed: a Person page, a Group page and Settle open Activity on All with Expenses, Payments and Disputes; Back returns', async ({page}) => {
       // A saved Others tab must not narrow the pushed copy.
       await openDemo(page, '/')
-      await page.evaluate(async () => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('activity.tab', 'others'))
+      await setPref(page, 'activity.tab', 'others')
       const {groups, people} = await disputedScopes(page)
       expect(groups.length + people.length).toBeGreaterThan(0)
 
@@ -86,8 +80,8 @@ for (const [name, viewport] of SIZES) {
       expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44)
       await link.click()
       await expectActivityCopy(page, {url: new RegExp(`type=expenses,payments,disputes.*person=${personId}|person=${personId}.*type=expenses,payments,disputes`), types: ['expenses', 'payments', 'disputes'], families: DISPUTED, chip: 'activity-person-chip'})
-      await expect(screen(page).getByTestId('activity-tabs').getByRole('tab').nth(0)).toHaveAttribute('aria-selected', 'true')
-      await screen(page).getByTestId('header-back').click()
+      await expect(activityScreen(page).getByTestId('activity-tabs').getByRole('tab').nth(0)).toHaveAttribute('aria-selected', 'true')
+      await activityScreen(page).getByTestId('header-back').click()
       await expect(page).toHaveURL(new RegExp(`/people/${personId}`))
 
       // Person's friend Settle up / Call it even notice.
@@ -95,7 +89,7 @@ for (const [name, viewport] of SIZES) {
       if (await notice.isVisible().catch(() => false)) {
         await notice.click()
         await expectActivityCopy(page, {url: /type=expenses,payments,disputes/, types: ['expenses', 'payments', 'disputes'], families: DISPUTED, chip: 'activity-person-chip'})
-        await screen(page).getByTestId('header-back').click()
+        await activityScreen(page).getByTestId('header-back').click()
       }
 
       // Group page: group balances "of which disputed", scoped to the group.
@@ -104,27 +98,27 @@ for (const [name, viewport] of SIZES) {
       const groupLink = page.getByTestId('screen-group').last().locator('[data-testid^="group-disputed-link-"], [data-testid^="group-balances-disputed-link-"]').first()
       await groupLink.click()
       await expectActivityCopy(page, {url: new RegExp(`type=expenses,payments,disputes.*group=${groupId}|group=${groupId}.*type=expenses,payments,disputes`), types: ['expenses', 'payments', 'disputes'], families: DISPUTED, chip: 'activity-group-chip'})
-      await screen(page).getByTestId('header-back').click()
+      await activityScreen(page).getByTestId('header-back').click()
       await expect(page).toHaveURL(new RegExp(`/groups/${groupId}`))
 
       // Settle: "₹X disputed, not in this plan".
       const settlePath = await firstWith(page, groups.map(id => `/groups/${id}/settle`), '[data-testid="settle-disputed-link"]')
       await page.getByTestId('settle-disputed-link').click()
       await expectActivityCopy(page, {url: new RegExp(`type=expenses,payments,disputes.*group=${settlePath.split('/')[2]}|group=${settlePath.split('/')[2]}.*type=expenses,payments,disputes`), types: ['expenses', 'payments', 'disputes'], families: DISPUTED, chip: 'activity-group-chip'})
-      await screen(page).getByTestId('header-back').click()
+      await activityScreen(page).getByTestId('header-back').click()
       await expect(page).toHaveURL(new RegExp(settlePath))
     })
 
     test('transactions: the right column, a Group heading and a Person heading open Activity on Expenses and Payments, scoped', async ({page}) => {
       await openDemo(page, '/')
-      await page.evaluate(async () => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('activity.tab', 'me'))
+      await setPref(page, 'activity.tab', 'me')
       /* The right column's heading and See all (>= 1300 px only; Home's own go with the Home tab, F-271). */
       if (viewport.width >= 1300) {
         for (const id of ['sidebar-transactions-title', 'sidebar-transactions-all']) {
           await page.goto('/people')
           await page.getByTestId(id).click()
           await expectActivityCopy(page, {url: /type=transactions/, types: ['expenses', 'payments'], families: TRANSACTIONS})
-          await screen(page).getByTestId('header-back').click()
+          await activityScreen(page).getByTestId('header-back').click()
         }
       }
 
@@ -132,28 +126,28 @@ for (const [name, viewport] of SIZES) {
       await page.goto(`/groups/${groups[0]}`)
       await page.getByTestId('group-expenses-title-link').click()
       await expectActivityCopy(page, {url: new RegExp(`type=transactions.*group=${groups[0]}|group=${groups[0]}.*type=transactions`), types: ['expenses', 'payments'], families: TRANSACTIONS, chip: 'activity-group-chip'})
-      await screen(page).getByTestId('header-back').click()
+      await activityScreen(page).getByTestId('header-back').click()
 
       await page.goto(`/people/${people[0]}`)
       await page.getByTestId('person-history-title-link').click()
       await expectActivityCopy(page, {url: new RegExp(`type=transactions.*person=${people[0]}|person=${people[0]}.*type=transactions`), types: ['expenses', 'payments'], families: TRANSACTIONS, chip: 'activity-person-chip'})
       // Only their events: clearing the chip lists more.
-      const before = await rows(page).count()
-      await screen(page).getByTestId('activity-person-chip').click()
-      await expect.poll(() => rows(page).count()).toBeGreaterThan(before)
+      const before = await activityRows(page).count()
+      await activityScreen(page).getByTestId('activity-person-chip').click()
+      await expect.poll(() => activityRows(page).count()).toBeGreaterThan(before)
       expect(decoded(page)).not.toContain('person=')
     })
 
     test('requests and invites: People links to Activity on Friends and invites; Accept and Cancel work in place', async ({page}) => {
       await openDemo(page, '/people')
       await page.getByTestId('screen-people').getByTestId('people-requests-title-link').click()
-      await expectActivityCopy(page, {url: /type=friends/, types: ['friends'], families: ['friendRequest', 'person']})
-      const kabir = () => screen(page).getByTestId('activity-friendRequest.sent').filter({hasText: 'Kabir'})
+      await expectActivityCopy(page, {url: /type=friends/, types: ['friends'], families: ['friendRequest', 'groupRequest', 'person']})
+      const kabir = () => activityScreen(page).getByTestId('activity-friendRequest.sent').filter({hasText: 'Kabir'})
       await expect(kabir().getByTestId('invite-sent-resend')).toBeVisible()
       await kabir().getByTestId('invite-sent-cancel').click()
       await expect(kabir().getByTestId('invite-sent-cancel')).toHaveCount(0)
 
-      const ishaan = () => screen(page).getByTestId('activity-friendRequest.received').filter({hasText: 'Ishaan Verma'})
+      const ishaan = () => activityScreen(page).getByTestId('activity-friendRequest.received').filter({hasText: 'Ishaan Verma'})
       await ishaan().getByTestId('activity-request-accept').click()
       await expect(ishaan().getByTestId('activity-request-accept')).toHaveCount(0)
       await page.goto('/people')

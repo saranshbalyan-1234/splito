@@ -91,11 +91,10 @@ function rowAnimates(page: Page, testID: string) {
   )
 }
 
-test('empty Home, People, Groups and Activity show their animated illustration', async ({
+test('empty People, Groups and Activity show their animated illustration', async ({
   page,
 }) => {
   for (const [path, id] of [
-    ['/', 'home-empty'],
     ['/people', 'people-empty'],
     ['/groups', 'groups-empty'],
     ['/activity', 'activity-empty'],
@@ -136,7 +135,7 @@ test('the Animations preference freezes illustrations without a reload', async (
 test('a balance total counts to its new value and lands exactly on it', async ({
   page,
 }) => {
-  await ready(page, '/', 'summary-INR-net', true)
+  await ready(page, '/analytics', 'summary-INR-net', true)
   const before = await page.getByTestId('summary-INR-net').innerText()
   const seen = await addExpenseAndWatchTotal(page)
   const after = await page.getByTestId('summary-INR-net').innerText()
@@ -152,7 +151,7 @@ test('a balance total counts to its new value and lands exactly on it', async ({
 })
 
 test('with Animations off a total changes in one step', async ({page}) => {
-  await ready(page, '/', 'summary-INR-net', true)
+  await ready(page, '/analytics', 'summary-INR-net', true)
   await setMotion(page, 'off')
   const seen = await addExpenseAndWatchTotal(page)
   expect(seen).toHaveLength(1)
@@ -194,7 +193,7 @@ test('skeletons show while the local store loads', async ({page}) => {
     }).observe(document, {subtree: true, childList: true})
   })
   for (const [path, screen] of [
-    ['/', 'summary-INR'],
+    ['/analytics', 'summary-INR'],
     ['/people', 'person-Arjun Mehta'],
     ['/groups', 'group-Goa trip'],
     ['/activity', 'screen-activity'],
@@ -208,8 +207,8 @@ test('skeletons show while the local store loads', async ({page}) => {
   )
   expect(seen.sort()).toEqual([
     'activity-loading',
+    'analytics-loading',
     'groups-loading',
-    'home-loading',
     'people-loading',
     'profile-loading',
   ])
@@ -243,4 +242,65 @@ test.describe('touch screens', () => {
     await page.mouse.up()
     await expect.poll(scale).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/)
   })
+})
+
+/*
+ * Row exits (owner 189, ARCHITECTURE 17.1): Reanimated's web exit clones every row that unmounts. A row a filter takes
+ * off a list that stays animates out; the rows of a page that is left do not (`useScreenExitScope`). And no animated row
+ * measures itself while it mounts or updates (the patched `saveSnapshot`, patches/react-native-reanimated): 60 rows
+ * forced 60 layouts on every open and every keystroke; the exit reads the box itself, so its clone keeps the row's size.
+ * Each half fails when its workaround stops applying.
+ */
+test('opening a page measures none of its rows, leaving it fades none out, and a filtered-out row fades out', async ({page}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as {__dummies: number; __rects: number; __short: number}
+    w.__dummies = 0
+    w.__rects = 0
+    w.__short = 0
+    new MutationObserver(list => {
+      for (const m of list)
+        for (const n of m.addedNodes) {
+          if (!(n as unknown as {isDummy?: boolean}).isDummy) continue
+          w.__dummies++
+          /* The clone is sized from the box read when the exit starts: a row is at least a 44 px target; a box read after the children had left was 0 px. */
+          if (parseFloat((n as HTMLElement).style.height) < 40) w.__short++
+        }
+    }).observe(document, {childList: true, subtree: true})
+    const rect = Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = function () {
+      /* Only reads made from a class component's mount or update (Reanimated's AnimatedComponent is the one that did); onLayout reads vary with timing. */
+      if (/componentDid(Mount|Update)/.test(new Error().stack ?? '')) w.__rects++
+      return rect.call(this)
+    }
+  })
+  await ready(page, '/groups', 'group-Goa trip', true)
+  const read = () =>
+    page.evaluate(() => {
+      const w = window as unknown as {__dummies: number; __rects: number}
+      return {__dummies: w.__dummies, __rects: w.__rects}
+    })
+  const groups = page.getByTestId('screen-groups')
+
+  // Opening a pushed page with its rows measures no row; leaving it clones none.
+  const start = await read()
+  await groups.getByTestId('group-Goa trip').click()
+  await expect(page.getByTestId('screen-group')).toBeVisible()
+  await page.waitForTimeout(1000)
+  const atOpen = await read()
+  console.log(`group page open: ${atOpen.__rects - start.__rects} box reads from a mount or update`)
+  expect(atOpen.__rects - start.__rects, 'box reads from rows mounting (unpatched Reanimated: one per row)').toBe(0)
+  await page.getByTestId('header-back').last().click()
+  await expect(page.getByTestId('screen-group')).toHaveCount(0)
+  await page.waitForTimeout(500)
+  expect((await read()).__dummies - atOpen.__dummies).toBe(0)
+
+  // A search that leaves one group: the others fade out on the page that stays, measuring nothing as they mount.
+  await groups.getByTestId('list-search').click()
+  const before = await read()
+  await groups.getByTestId('list-search-input').fill('Goa trip')
+  await expect(groups.getByTestId('list-search-count')).toHaveText(/^1 of/)
+  await page.waitForTimeout(500)
+  const after = await read()
+  expect(after.__dummies - before.__dummies).toBeGreaterThan(0)
+  expect(await page.evaluate(() => (window as unknown as {__short: number}).__short), 'exit clones smaller than their row').toBe(0)
 })

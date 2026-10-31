@@ -109,7 +109,7 @@ for (const {name, width, height} of [
       await expect(row).toContainText('Deleted')
       await expect(row.getByText('Rishikesh', {exact: true})).toHaveCSS('text-decoration-line', STRUCK)
       await expect(page.getByTestId(`group-${group}-deleted`)).toContainText(DELETED)
-      // Never counted: the row shows no balance from it (the Overview is on Home only).
+      // Never counted: the row shows no balance from it (the Overview is the top of Analytics only).
       await expect(row.getByTestId('group-balance-INR')).toHaveCount(0)
 
       await row.click()
@@ -314,7 +314,7 @@ for (const {name, width, height} of [
       await page.goto('/search?q=camp')
       await expect(page.getByTestId(`search-deleted-${camp}`)).toContainText('Deleted')
       await page.goto('/settings/recently-deleted')
-      await expect(page).toHaveURL(/\/settings(\?|$)/)
+      await expect(page).toHaveURL(/\/settings\/data(\?|$)/)
       await expect(page.getByTestId('settings-deleted-note')).toContainText('Deleted items now stay in their lists')
       await expect(page.getByTestId('settings-recently-deleted')).toHaveCount(0)
     })

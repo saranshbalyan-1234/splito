@@ -9,23 +9,23 @@ type Splito = {
 }
 
 const SCREEN: Record<string, string> = {
-  home: 'screen-home',
   people: 'screen-people',
   groups: 'screen-groups',
   analytics: 'screen-analytics',
   activity: 'screen-activity',
+  settings: 'screen-settings',
 }
 const GAP = 50
-/* From Home; the last tap repeats a tab tapped two taps (~100 ms) earlier, which a per-link debounce swallows. */
+/* From People (the start tab); the last tap repeats a tab tapped two taps (~100 ms) earlier, which a per-link debounce swallows. */
 const SIX = ['groups', 'analytics', 'activity', 'groups', 'analytics', 'groups']
 const TEN = [
-  'activity', 'groups', 'home', 'analytics', 'people',
-  'activity', 'home', 'groups', 'analytics', 'people',
+  'activity', 'groups', 'settings', 'analytics', 'people',
+  'activity', 'settings', 'groups', 'analytics', 'people',
 ]
 
 async function ready(page: Page) {
   await page.goto('/')
-  await expect(page.getByTestId('screen-home')).toBeVisible()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await page.waitForFunction(() => 'splito' in window)
 }
 
@@ -61,7 +61,7 @@ async function expectLanded(page: Page, last: string) {
   for (const other of Object.keys(SCREEN).filter(k => k !== last)) {
     await expect(page.getByTestId(`tab-${other}`)).not.toHaveAttribute('aria-current', 'page')
   }
-  await expect(page).toHaveURL(last === 'home' ? /\/$/ : new RegExp(`/${last}$`))
+  await expect(page).toHaveURL(new RegExp(`/${last}$`))
 }
 
 for (const motion of ['full', 'reduced'] as const) {
@@ -88,7 +88,7 @@ for (const motion of ['full', 'reduced'] as const) {
           }
           requestAnimationFrame(frame)
         })
-        await tapAll(page, ['groups', 'analytics', 'activity', 'home', 'people', 'groups'], true, 120)
+        await tapAll(page, ['groups', 'analytics', 'activity', 'settings', 'people', 'groups'], true, 120)
         await expectLanded(page, 'groups')
         expect(await page.evaluate(() => (window as unknown as {__widest: number}).__widest)).toBeLessThanOrEqual(390)
       })
@@ -174,8 +174,8 @@ for (const motion of ['full', 'reduced'] as const) {
 }
 
 /*
- * Owner 150/166, found on a real iPhone: Analytics -> Home took 600 ms (5.9 s at 6x CPU) because popping a tab
- * unmounted it and every row ran its exit animation; Home answered only after that. A tab you left stays mounted.
+ * Owner 150/166, found on a real iPhone: Analytics -> People took 600 ms (5.9 s at 6x CPU) because popping a tab
+ * unmounted it and every row ran its exit animation; People answered only after that. A tab you left stays mounted.
  */
 test.describe('phone: tabs stay mounted and answer in the first frame', () => {
   test.use({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true})
@@ -187,27 +187,27 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
 
   test('a visited tab is not unmounted or rebuilt when you come back to it', async ({page}) => {
     await openDemo(page)
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
     await tap(page, 'analytics')
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
     await page.evaluate(() => document.querySelector('[data-testid="screen-analytics"]')!.setAttribute('data-mark', 'kept'))
-    await tap(page, 'home')
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
     await tap(page, 'analytics')
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
     await expect(page.getByTestId('screen-analytics')).toHaveAttribute('data-mark', 'kept')
-    // Browser Back still walks the history (Analytics -> Home), and forward comes back to the same tab.
+    // Browser Back still walks the history (Analytics -> People), and forward comes back to the same tab.
     await page.goBack()
-    await expect(page.getByTestId('screen-home')).toBeVisible()
-    await expect(page.getByTestId('tab-home')).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
     await page.goForward()
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
     await expect(page.getByTestId('tab-analytics')).toHaveAttribute('aria-current', 'page')
   })
 
   for (const rate of [1, 6]) {
-    test(`Home switch shows its shell in the first frame (CPU x${rate})`, async ({page}) => {
-      // Open on Groups, so Home is cold: its first visit shows the header and the bar's highlight at once, the rows may follow.
+    test(`People switch shows its shell in the first frame (CPU x${rate})`, async ({page}) => {
+      // Open on Groups, so People is cold: its first visit shows the header and the bar's highlight at once, the rows may follow.
       await openDemo(page, '/groups')
       await expect(page.getByTestId('screen-groups')).toBeVisible()
       await tap(page, 'analytics')
@@ -223,23 +223,23 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
         const frame = () => {
           w.__frames.push({
             t: performance.now(),
-            screen: shown('screen-home'),
-            header: [...document.querySelectorAll('[data-testid="screen-home"] [data-testid="header-avatar"]')].some(e => e.getClientRects().length > 0),
-            selected: document.querySelector('[data-testid="tab-home"]')?.getAttribute('aria-current') === 'page',
+            screen: shown('screen-people'),
+            header: [...document.querySelectorAll('[data-testid="screen-people"] [data-testid="header-avatar"]')].some(e => e.getClientRects().length > 0),
+            selected: document.querySelector('[data-testid="tab-people"]')?.getAttribute('aria-current') === 'page',
           })
           requestAnimationFrame(frame)
         }
         requestAnimationFrame(frame)
       })
-      await tap(page, 'home')
-      await expect(page.getByTestId('screen-home')).toBeVisible()
+      await tap(page, 'people')
+      await expect(page.getByTestId('screen-people')).toBeVisible()
       await page.waitForTimeout(400)
       const {frames, t0} = await page.evaluate(() => {
         const w = window as unknown as {__frames: Array<{t: number; screen: boolean; header: boolean; selected: boolean}>; __t0: number}
         return {frames: w.__frames, t0: w.__t0}
       })
       const first = frames.find(f => f.t >= t0 && f.screen)
-      expect(first, 'a frame with Home visible').toBeTruthy()
+      expect(first, 'a frame with People visible').toBeTruthy()
       // The tab's highlight, the screen and its header arrive in the same frame, never the screen before the rest.
       expect(first).toMatchObject({selected: true, header: true})
       // Never later than the budget (generous: the suite runs several workers on one machine).
@@ -249,18 +249,18 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
 
   test('a parked tab the LRU had evicted comes back with its content (never a stand-in)', async ({page}) => {
     await openDemo(page)
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
     for (const t of ['groups', 'analytics', 'activity']) {
       await tap(page, t)
       await expect(page.getByTestId(`screen-${t}`)).toBeVisible()
     }
     // Four pushed pages (four different routes) on top: the stack keeps only the most recent screens mounted, Groups falls out.
-    for (const url of ['/settings', '/profile', '/settings/friends', '/settings/appearance']) {
+    for (const url of ['/profile', '/settings/friends', '/settings/appearance', '/settings/data']) {
       await page.evaluate(u => (window as unknown as {__splitoTest: {openLink(u: string): void}}).__splitoTest.openLink(u), url)
       await expect(page).toHaveURL(new RegExp(`${url}$`))
     }
-    await tap(page, 'home')
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
     await tap(page, 'groups')
     await expect(page.getByTestId('screen-groups')).toBeVisible()
     await expect(page.getByTestId('screen-groups').getByTestId('list-filters')).toBeVisible()
@@ -270,15 +270,15 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
 
   test('browser Back and Forward bring a tab back as it was, not rebuilt', async ({page}) => {
     await openDemo(page)
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
     await tap(page, 'groups')
     await expect(page.getByTestId('screen-groups')).toBeVisible()
     await page.evaluate(() => document.querySelector('[data-testid="screen-groups"]')!.setAttribute('data-mark', 'kept'))
     await tap(page, 'analytics')
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
-    await tap(page, 'home')
-    await expect(page.getByTestId('screen-home')).toBeVisible()
-    // Going Home popped two history entries, so Forward walks back through Groups and Analytics (a history reset).
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    // Going back to People popped two history entries, so Forward walks back through Groups and Analytics (a history reset).
     await page.goForward()
     await expect(page.getByTestId('screen-groups')).toBeVisible()
     await expect(page.getByTestId('screen-groups')).toHaveAttribute('data-mark', 'kept')
@@ -288,13 +288,13 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
     await expect(page.getByTestId('screen-groups')).toBeVisible()
     await expect(page.getByTestId('screen-groups')).toHaveAttribute('data-mark', 'kept')
     await page.goBack()
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
   })
 
   /* A press-in acts at once; the activations that are not a press-in must still work (keyboard, screen reader, modified click). */
   test('the keyboard, a screen reader click and a cancelled press still switch tabs; a modified click stays in place', async ({page}) => {
     await openDemo(page)
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
 
     // Keyboard: Enter on a focused tab link.
     await page.getByTestId('tab-groups').focus()
@@ -316,20 +316,20 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
     await expect(page.getByTestId('tab-activity')).toHaveAttribute('aria-current', 'page')
     await cdp.send('Input.dispatchTouchEvent', {type: 'touchCancel', touchPoints: []})
     await expect(page.getByTestId('screen-activity')).toBeVisible()
-    await tap(page, 'home')
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
     await page.waitForTimeout(1200)
     await page.getByTestId('tab-activity').evaluate(el => (el as HTMLElement).click())
     await expect(page.getByTestId('screen-activity')).toBeVisible()
 
     // Ctrl-click asks for a new tab: this page stays where it is.
-    await tap(page, 'home')
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
     const popup = page.context().waitForEvent('page', {timeout: 3000}).catch(() => null)
     await page.getByTestId('tab-groups').click({modifiers: ['Control']})
     ;(await popup)?.close()
     await page.waitForTimeout(300)
-    await expect(page.getByTestId('screen-home')).toBeVisible()
-    await expect(page.getByTestId('tab-home')).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
   })
 })

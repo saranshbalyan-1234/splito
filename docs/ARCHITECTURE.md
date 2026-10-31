@@ -95,8 +95,8 @@ Rules:
   A-002. [Planned]
 - **Money rules live only in `packages/domain`.** Screens and components never add, subtract, compare-to-sum
   or allocate money, and never sum unlike currencies. Reason: one place to test exactness. [Partial] Today
-  money arithmetic also lives in `components/split/form.ts`, `components/people/ledger.ts`,
-  `components/groups/net.ts` and `screens/People/sort.ts`; A-001 freezes it and A-004 moves it.
+  money arithmetic also lives in `components/split/form.ts`, `components/people/ledger.ts`
+  and `screens/People/sort.ts`; A-001 freezes it and A-004 moves it.
 - **`packages/domain` is imported, never ported**, by the client and (M2) the API. If a rule must exist twice
   (say a SQL aggregate of balances on the server), a parity test runs both on the same fixtures and the
   constants live in one module.
@@ -130,6 +130,8 @@ Rules:
   | Dialog, sheet, form sheet | `#/components/Dialog` + `#/components/FormSheet` |
   | Confirm / discard | `#/components/Prompt` |
   | Menu, overflow | `#/components/Menu` |
+  | A row's "more actions" menu | `#/components/RowMenu` (`RowMenu`, `useRowMenuTrigger`): right-click, Menu key / Shift+F10, long-press (native and phone-width web); the "..." button on every width or wide only |
+  | Category name, tile | `useCategoryLookup` / `useCategory` (translated, gone id = Other) and `CategoryTile`, all in `#/components/split/shared` |
   | Toast, undo | `#/components/Toast` |
   | Long list | `#/view/com/util/List` |
   | In-page tabs | Bluesky Pager + `TabBar` (§ 26.9) [Partial: `components/TabBar.tsx`, no Pager yet] |
@@ -358,16 +360,20 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 - **Honesty:** "Synced" appears only in the sync-status component's messages. FX-, OCR- and AI-derived
   values carry "Estimated rate" / "From receipt" until confirmed; converted totals carry "≈" and "rate from
   DATE"; a receipt field that was not read stays empty. A bun test scans the source catalog (A-013).
-- **Every empty state looks the same and is animated with art about that screen** (owners 146, 172): one
+- **Every empty state looks the same and is animated with art about that screen** (owners 146, 172, 213): one
   `EmptyState` layout on every screen and state (first-use empty, search with no match, filters with no match,
   all settled, no history, no balances, nothing to settle, no feedback, no invite links, not found, Ask with nothing
-  yet): the same structure (animated illustration, one short message, at most one small secondary button), the same
-  illustration size, motion and top spacing; never a bare icon or text only. Each illustration is original and
-  about its own screen (people, groups, activity, analytics, search, settled, history, balances, settle up,
-  feedback, invites, not found), light and dark variants, played once and resting (§ 17), static under reduced
-  motion. A test fails on any `EmptyState` without an illustration. *Why:* "make the home empty screen animation
-  like other screens"; "why there is no animation here"; "empty screen animations should be there always, and
-  related to those screens only, and design/structure should be same".
+  yet): the same structure (animated illustration, one short message, **one** clear call to action that is the next
+  useful step, plus at most one lesser secondary button), the same illustration size (168 phone, 200 wider) and top
+  spacing; never a bare icon or text only, never a dead end. The `illustration` prop is required by the type.
+  Each illustration is original and about its own screen (19 pieces: people, groups, activity, analytics, search,
+  filter, settled, history, expenses, balances, settle, feedback, invites, not-found, ask, disputes, payments,
+  comments, reminders; an Activity empty state picks the one for its type or filter), light and dark variants, all
+  240 x 240, **played once to a resting frame and held** (§ 17), the same frame under reduced motion, lazy: the
+  JSON and `lottie-web` are dynamic imports. A test fails on any `EmptyState` without an illustration
+  (`architecture/emptyStateArt.test.ts`). *Why:* "make the home empty screen animation like other screens"; "why
+  there is no animation here"; "empty screen animations should be there always, and related to those screens
+  only, and design/structure should be same"; "proper empty screen and proper cta".
 - **Every list has a type filter where items have types; Activity filters by type** (owner 173; F-259, built for Activity, Home's "See all" follows with Home):
   Activity's Filters offer the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes)
   besides All / Me / Others (owner 92), remembered (decision 90) and in the URL (`/activity?type=transactions`).
@@ -601,7 +607,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 
 - **One store / table per entity type** (IndexedDB object stores and SQLite tables share names and columns):
   `people`, `groups`, `group_members`, `expenses`, `expense_parties`, `repayments`, `writeoffs`, `comments`,
-  `friend_requests`, `invite_links`, `feedback`, `preferences`, `reminders`, `disputes`, plus infrastructure `history`, `outbox`,
+  `friend_requests`, `group_requests`, `invite_links`, `feedback`, `preferences`, `reminders`, `disputes`, plus infrastructure `history`, `outbox`,
   `meta`. A new entity type gets its own store and a migration; nothing is "clubbed" into a shared store.
 - **Every row** carries `id` (UUID), `version`, `createdAt` / `updatedAt` (UTC ms), `deleted` (+ `deletedAt`,
   `purgedAt`), and for money rows `currency` + amounts as bigint minor units encoded with the codec (§ 9.3);
@@ -634,7 +640,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   `byUpdatedAt`, `byArchived`; group_members `byPerson`; expenses `byGroupDate` `[groupId, date]`, `byDate`,
   `byUpdatedAt`, `byDeleted`; expense_parties `byPersonDate` `[personId, date]`, `byGroupPerson`; repayments and
   writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; disputes `byTarget` `[targetType, targetId]`, `byTargetStatus` `[targetType, targetId, status]` (a record's open ones: the badge, the one-open-per-person rule, the projection) and `byStatus` (every open one: the Disputed filter); friend_requests
-  `byStatus`; history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
+  `byStatus`; group_requests `byStatus` and `byGroup` `[groupId, status]` (a group's pending join requests and invited people); history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
 - **Materialised balance projection** `balances` (`[personId, groupId|'', currency]` -> net minor units),
   maintained in the SAME transaction as every money write (expense, repayment, write-off, delete, restore) by
   the sync mutations, so Home, People, Groups and the right column read balances in O(rows shown) instead of
@@ -653,14 +659,25 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   Analytics reads the selected period by `byDate` / `byGroupDate` range and reads history-long charts from an
   `aggregates` projection (`[currency, month, groupId|'', categoryId, personId|'', kind]` -> sum and count in minor units; `personId` '' is the whole record, a person id is that person's share, `kind` separates expenses from transfers), kept in
   the same transaction as `balances` and covered by `rebuildProjections()` and the property test. Search reads
-  a `search_terms` store (normalised prefix tokens of description, notes, merchant, person and group names,
-  plus an amount key per currency -> entity id), also maintained in the mutation transaction, and loads only
-  the matching rows, paged: the first page renders within the § 26.10 budget whatever the match count, and
-  per-currency totals of a broad match fill in after it. No in-memory ledger mirror. Person and group names
-  resolve at query time, so a rename rewrites no terms.
+  a `search_terms` store, also maintained in the mutation transaction, and resolves a whole query from its keys
+  (F-246). Kinds: `w` words of a record's title / note, notes and items, `p` words of a person's name, `k` words of a
+  person's contact and UPI id (they list the person, never the person's records), `g` words of a group's name and trip
+  place, `a` amount per currency, `m` month, `c` category, `b` / `h` who paid / who is on a record, `G` its group (`-`:
+  none), `d` `<date>:<createdAt>` (the list order), `s` `deleted`, `n` a comment's words on the record it hangs on;
+  expenses, payments and write-offs carry them, comments contribute `n` only. Each token is a set of record ids from
+  key ranges and the sets are intersected. A narrow answer (at most 500 records) is then read by id and ordered,
+  totalled and status-checked from its rows; a broad one is ordered from the `d` keys and totalled from the `a` keys;
+  only the rows shown are read (30 by id per page, payments and expenses paged apart). No in-memory ledger mirror.
+  Person and group names resolve at query time (to their live ids, then to their records by `h` / `G`; my own name
+  never expands, every record is mine), so a rename rewrites no terms. What `search_terms` holds is versioned in
+  `meta.searchIndex` (`SEARCH_INDEX_VERSION`, 3); `store.prepareSearch()` runs at idle after the store opens (and the
+  first term read waits for it): it rebuilds the terms from the rows when the version is older or the `d` key count
+  differs from the record count (a tab of an older build, a rollback), in chunks of 500 rows, one transaction each
+  with a yield between; a failure is forgotten so the next read retries, and the search box shows "Try again" (derived
+  data only, no schema version spent).
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
-  run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty); v1 -> v2 copies rows from `entities` into the per-type stores, builds
+  run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty; v6: the `group_requests` store, v5 -> v6 adds it empty, and a group's `joinPolicy` lives in its data, absent reads as 'approve'); v1 -> v2 copies rows from `entities` into the per-type stores, builds
   `group_members`, `expense_parties` and `balances`, then drops `entities`. Each migration has a test that
   loads a v1 fixture (incl. the large demo set) and checks every row and balance survives exactly.
 - **The Store interface stays the boundary** (§ 1): screens and hooks never touch IndexedDB/SQLite directly;
@@ -861,7 +878,8 @@ call it; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab 
   script); AASA and assetlinks list only app paths (join, group, person), excluding auth callbacks and
   downloads; the web deploy keeps dot-paths.
 - **Share:** one share helper takes the entity id plus the screen's summary; screens never call Share APIs
-  directly; capability fallback per § 2.
+  directly; capability fallback per § 2. [Built] `lib/sharing.ts` is it: `copyText(text, {toast})`, `shareText`, `shareUrl`
+  (the Remind sheet, the invite field and comment rows all call these; no other file touches the clipboard).
 - **Secrets are scrubbed:** invite tokens and join codes are removed from URLs, breadcrumbs and nav spans in
   `#/logger`, with a bun test.
 
@@ -1057,6 +1075,59 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **An animated row measures nothing while it mounts or updates; its exit reads the box when it starts.** Reanimated
+  4.7.1 on web called `saveSnapshot` (`getBoundingClientRect` plus every ancestor's `scrollTop`) in `componentDidMount`
+  and `componentDidUpdate` of every component with an `exiting` prop, so each list row forced a style and layout pass
+  as it mounted and on every re-render (c-perf counted 191 forced reads opening Friends and invites, one per row per
+  keystroke in a list search). `patches/react-native-reanimated@4.7.1.patch` drops both calls and reads the box at the
+  top of `handleExitingAnimation`, while the element still holds its children: c-perf's first cut leaned on
+  `getSnapshotForElement`'s fallback, which runs after the children have moved into the clone, so the clone was sized
+  from an emptied element. `e2e/animations.spec.ts` fails if opening a page measures its rows again, if a leaving page
+  clones a row, if a filtered-out row stops fading out, or if an exit clone is smaller than its row.
+- **Nothing that leaves runs its rows' exit animations on web: pages, sheets, popups and composers.** Reanimated's
+  `LayoutAnimationConfig skipExiting` is a no-op on web (`JSReanimated.setShouldAnimateExitingForTag`), so the lists'
+  wrappers never stopped it there. The exit scope (`useScreenExitScope`, `motion/listAnimations.tsx`) is taken in `Layout.Screen` and
+  `OpenedProvider` and makes the shared exit config read "reduce motion" once its scope unmounts (a parent's
+  layout-effect cleanup runs before its children's `componentWillUnmount`); a row a filter or delete takes off a list
+  that stays still fades out. Rows read `exiting` through `useListAnimations()` / `AnimatedListRow`, inside the scope.
+  It is a hook plus a bare context provider, not a wrapper component: c-perf's `<ScreenExitScope>` re-rendered with
+  every screen render (the renders gate counted 6 to 11 more updates per phase). Measured 2026-10-31 (Chromium, 390 px,
+  touch, large demo, median of three, load under 4.5): popping Person cloned 60 rows (124 ms at 1x, 1,046 ms at 6x),
+  Group 20 and Friends and invites 106 (264 ms at 1x, 2,077 ms at 6x); now none, and those Backs take 40, 37 and 38 ms
+  at 1x, 279, 171 and 209 ms at 6x.
+- **A row reads nothing per row that is the same for every row.** The device locale (`deviceLocale()`, not
+  expo-localization's `getLocales()`, which builds `Intl` objects per call on web), breakpoints (one shared
+  `matchMedia` list per width, not `react-responsive`'s per-call query and listener) and a friend's balance summary
+  (`usePersonSummary`, one `personSummary` per balance snapshot, not one per row over every balance row) are read once
+  and shared. A shared answer is kept by its listener and read as a plain value in render: the first port read
+  `MediaQueryList.matches` in `useSyncExternalStore`'s snapshot, which the browser may answer by bringing style up to
+  date in the middle of a render (an Analytics revisit at x6 read 439-484 ms against a base of 356-488; with the cached
+  answer 421-444, inside the base's range).
+- **Long writes run behind progress, never a cover, and a write batch writes each rewritten row once.** The demo seed's
+  main thread is mostly idle (IndexedDB works in another process); what blocked the app was the full-screen cover.
+  Seeding shows a pill and the app stays usable; only the store swap covers it, and only the cover may drop a dirty
+  sheet without asking (`useIsStoreCovered`). `txRows` holds the rows a batch rewrites (projection sums, people and
+  group activity times) and writes them once; every other store writes through at once so IndexedDB works while
+  JavaScript runs (holding every store made the seed slower).
+- **Measure Chrome with its accessibility tree off, and name the surface a probe waits for.** Playwright's CDP session
+  turns Chrome's accessibility on and every commit then rebuilds the tree (about a third of a tab revisit at 6x); the
+  sweep sends `Accessibility.disable` before each measured step, at every CPU rate. "A dialog is on screen" was true at
+  once for a picker over its sheet: the probe watches the topmost dialog and waits for one that was not there when it
+  armed.
+
+- **A gesture moves DOM nodes, not React state, never trusts a touchend to arrive, and costs nothing when idle.**
+  Phone-web pull to refresh (F-258) writes a transform and the spinner straight to the list's nodes; a pull renders
+  nothing, the header never moves (only the list's content is translated), and the transform is removed at rest so no
+  `position: fixed` child keeps a containing block. There is no wrapper element: `usePullToRefresh` hands the list a
+  ref and a memoised indicator, so a list that redraws does not redraw the pull (the first version wrapped the list
+  and added 14 updates per scroll round to the renders gate). The cancelling (non-passive) `touchmove` listener is on
+  only while the window is at the top (a passive scroll listener toggles it) and `overscroll-behavior-y: contain` is
+  set only for the touch that may pull. Every single-finger `touchstart` ends any gesture still on record, because a
+  touch whose element left the page before the finger lifted never delivers `touchend` to the window (a row deleted
+  under the finger, a menu that closed): one such touch had stopped pull to refresh everywhere until a reload. Measured
+  at 390 px in Chromium with real CDP touches: no long task over 50 ms; WebKit has no long task API, so the spec also
+  reports the worst frame gap.
+
 - **Specs and render baselines that depend on "now" run on a pinned clock (`e2e/pinClock.ts`), and the gate counts
   only what is deterministic.** The demo's change times and "recently active" are relative to now: homeTabs "Overview
   scope" passed on 30 Oct and failed from midnight (pinned to 28 or 29 Oct it fails the same way; pinned to noon on
@@ -1066,6 +1137,93 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   app never reaches Home), prints the first-visit round
   as `FIRSTVISIT` without gating it, and gates the second round, where every tab is mounted and parked
   (69 mounts + 468 updates in 4 of 4 runs). Median of three, taken on a quiet machine, as below.
+
+- **Every person target adds components to every row that draws one, so make each one the cheapest it can be.** `PersonLink`
+  (F-261) puts a `Link` and a `Pressable` behind each avatar and name: the renders gate's scroll phase (1,000 Activity
+  rows) mounts about 360 more of each (`Pressable` 2,218 -> about 2,950), the Ask phase 19. It subscribes to nothing (the
+  ids and names come down as props; "is this me" is one context read, `state/me.ts`, never a store hook), an avatar-only link
+  (about 95 % of them) holds no state and no hover handlers (only a link that shows the name tracks hover and focus for its
+  underline), it grows to a 44 px target with padding and an equal negative margin (no wrapper, no layout change), and it is
+  memoised. Where a whole row already opens the person (People rows, Members) the avatar and name use `isInsideLink` and mount
+  no extra `Link`. A row of bars nobody selects is a `View`, never a disabled `Pressable` (a disabled ancestor disables a link
+  inside it: the Ask ranking avatar was unclickable). Measured, Activity scroll of the large demo at 6x CPU, 60 wheel steps,
+  with and without the actor-avatar links: 53 and 54 long tasks over 50 ms (total 10.3 s and 9.3 s) against 42 and 46 (9.2 s and
+  10.5 s) without; largest 835 and 592 ms against 728 and 963 ms; machine load 37-57, so read it as "no clear difference in time,
+  a few more tasks", not as a budget pass. The same over-50 ms tasks occur with no links at all (row mounts dominate), so a
+  lighter non-Pressable anchor was not built; revisit it when the Activity row mount itself is cut. The new mounts are the
+  feature's cost, recorded once in the renders baseline; no wasted render was added.
+- **A query is answered from index keys, never by walking rows; and a narrow answer never reads the whole ledger's
+  keys either.** Search first ran broad queries (`> 1000`, a common prefix) by reading the ledger newest first in chunks
+  of 200 and checking every row (10,000 expenses: about 10 us per row of SQL, JSON decode and word checks, 0.1 s and
+  growing). Keys cost about 0.2-1 us a row, so each token became a set of ids from term ranges (`h` for who, `G` for a
+  group, `d` for the date order, `a` for amount ranges and totals) and the sets are intersected. But the first cut then
+  ordered and totalled every answer by reading all `d`, `a` and `s` keys, so one match still cost 21,201 keys at 10,000
+  expenses + 600 payments, a balance status 45,000 keys, and IndexedDB 50-130 ms of CPU per query (F-246 review I1).
+  Now: an answer of at most 500 records is read by id and ordered, totalled and status-checked from those rows (500
+  rows cost about what 3,500 keys do, whatever the ledger's size); only a broad answer reads the `d` and `a` ranges; a
+  balance status (settled, owed, owe, inactive, hidden) on a narrow answer is checked on the rows instead of listing
+  every record in it. Rules: a new searchable field is a term kind, a facet is a key range, a screen never checks rows
+  one by one to answer "how many" or "how much" over a broad set, and the cost of a query is bounded by its answer or,
+  for a broad answer, by its keys. Checked by `searchOracle.test.ts` (random changes on both engines; the keys equal
+  the rows' terms, every query equals a row-by-row reference, narrow and broad both exercised). Measure it as the
+  drawer waits for it (`openSearch`: people, groups, counts, totals and the first pages), not as the whole ledger
+  read out.
+- **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
+  10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
+  three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+- **A tab switch reads no data and draws only the bar and the navigator; what is left is the browser's and
+  react-navigation's.** Counted 2026-10-31 (Chromium, 390 px, touch, large demo, load under 2): 0 IndexedDB
+  transactions per switch between visited tabs (90 during load); renders: the bar and the navigator shell only.
+  At CPU x1 a switch shows its screen in 31-52 ms (first visits 27-56 ms, Activity's once 142 ms) and lights the tab
+  in 11-24 ms; at x4 first visits take 63-217 ms. `propagateParentContextChanges` walks the kept screens on each
+  switch; one cause was react-navigation's web `SceneView` handing a new `headerBack` object to `HeaderBackContext`
+  on every focus change (patched, `patches/@react-navigation__native-stack@7.21.0.patch`, test
+  `navigation/nativeStackPatch.test.ts`), but most of the walk is the navigation state context itself (182 -> 162 ms
+  over 6 switches at x6). So a delay felt on iPhone Safari that Chromium does not show is to be measured in WebKit
+  (the iOS simulator's Safari) before anything more is changed on this path.
+- **A kept tab's size is paid on every switch to it, so a tab draws only what is on screen.** Showing a parked tab
+  again re-lays out and restyles its whole tree: Analytics drew all 200 report rows the data layer read (about 4,700
+  layout objects), so a switch to it cost 540-930 ms at CPU x6 (one 187 ms layout of 5,878 objects, 428 ms of style).
+  Drawing a page at a time (`usePagedRows`, from c-perf) cut it to 209-466 ms (1,960 objects, longest task 727 -> 345
+  ms). Measured 2026-10-31 in Chromium at 390 px, touch, the large demo, rapid taps between visited tabs (scratch
+  spec, load under 4). The other tabs (600-1,250 objects) take 165-400 ms at x6: about 150 ms style, layout and paint,
+  65 ms the navigation commit in the bar's animation frame, 60-90 ms touch handling; React re-renders only the bar
+  and the navigator shell (the renders gate's "switching back" legs), but `propagateParentContextChanges` still walks
+  the shown and hidden screens' trees (about 30 ms at x6). Every tap landed on the last tab tapped.
+- **A cache read during render is re-synced in the effect when the cache filled between render and effect.** Two
+  empty states of the same art: the second rendered while the chunk loaded, the first's import filled the module cache
+  before the second's effect ran, and the second returned early, keeping the `undefined` it read and staying blank (the
+  React Compiler caches the read). The effect takes the cached value (`useIllustrationSource`).
+- **Draw and tick icons animate on the event they confirm, never on mount in list rows.** A drawn check on every
+  Accept button re-drew as each Activity row scrolled into view (three worklet hooks and a motion subscription per
+  row, decoration owner 213 rules out); the drawn check is for a confirmed result (Save), and a tab pops only when it
+  becomes active, not when it is left.
+- **Narrow first: a broad token is checked on the rows of a narrow answer, never turned into its full id set.**
+  Text and plain numbers are read with a cap (SMALL, 500); one that names more is tested on the rows the narrow
+  tokens found, from `termRows` plus the few people, groups and categories its word names (`capped`, `tester` in
+  `search.ts`). Measured in Chromium at 10,000 expenses, load under 2: "Bulk expense 9993" first page 350 -> 102 ms
+  (`main`: 63 ms). A query whose every token is broad ("> 90" 279 ms, "Bulk Friend 4" 709 ms; `main` 58 / 73 ms first
+  page, 1.0 / 1.3 s totals) still builds full sets: its first page must come from a newest-first walk with in-memory
+  checks and its count and totals after it (follow-up, F-266). Search speed is judged in the browser
+  (`perf/schema-v2.spec.ts`); bun's IndexedDB numbers are `fake-indexeddb`'s.
+- **Derived data that may be rebuilt is rebuilt at idle, in chunks, and a failure is forgotten.** The search index
+  rebuild first ran inside the first search (during the first keystrokes) as one transaction, and a rejected rebuild
+  was kept as a rejected promise, so search spun forever. Start such work at idle after open, run it in chunks of a
+  few hundred rows with a yield between (10,600 records on IndexedDB: the timer ran between chunks), drop the cached
+  promise on failure, and show an error state with Try again instead of a spinner.
+- **An animated icon swaps and pops; it never keeps two glyphs mounted.** Cross-fading an outline and a filled glyph doubled the
+  icons on every tab bar, sidebar and drawer (tab-round updates 468 -> 624, one new wasted-render report); one glyph in use plus a
+  180 ms scale-and-opacity pop on change gives 500, recorded in `e2e-renders/baseline.json` with its reasons in `docs/COMPLETION_MATRIX.md`.
+
+- **Load animation assets and their player on first use, and read a module-level cache through state.** The
+  start-up bundle held `lottie-web` (168 KB) and, through `require()` in a registry object, every animation JSON
+  (inline requires do not help when the registry object is built at import); each is now a dynamic `import()`
+  behind `useIllustrationSource`, so the web first-load JS fell from 7,305,880 B to 7,021,333 B (gzip 1,545,216 to
+  1,495,320 B) while 19 new pieces of art (with loading and success, about 415 KB raw in 53 lazy chunks) were added. Measure the entry
+  chunks of `expo export` (the `index`, `__common` and runtime scripts in `index.html`) before and after, never the
+  folder total. A hook that reads a module-level `Map` during render must also hold what it read in state: the
+  React Compiler caches a bare `loaded.get(key)` on `key` alone, so the art never appeared after its chunk
+  arrived.
 
 - **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
   Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
@@ -1100,8 +1258,6 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   incrementally, automatic searching is bounded (about 10 pages, then "Look further back").
 - **Membership checks use a Set.** `read.includes(id)` per event made Mark all read and every rebuild
   O(events x read); a persisted list of ids is read into a Set once.
-- **Search stays under 50 ms at 10,000 expenses** (`search.test.ts`); the slowest query was `> 1000` (amount
-  range), so amount scans need an index or a bound before the data grows.
 - **The renders baseline is a median, taken after the data has loaded.** Recording the highest of three noisy
   runs (tabs updates 1,916-3,440) let a doubling pass; the gate waits for an explicit "demo loaded" signal
   before a phase and records the median of three.
@@ -1152,6 +1308,12 @@ Rules:
   pinned); screenshots to a gitignored `apps/client/qa/<feature>/`. A stale selector is fixed in the spec,
   never by reverting UI. Release e2e runs on `expo export -p web` output.
 - **Every wait is bounded** (Playwright and bun): a timeout fails the test.
+- **e2e specs reuse the shared helpers (owner 210, F-274)**: `e2e/app.ts` `openApp` (load and wait for `window.splito`),
+  `e2e/viewports.ts` (`PHONE` 390, `DESKTOP` 1440, `LAPTOP`, `SIZES`; no spec defines its own), `e2e/seed.ts`
+  (`seedGroup`, `seedA04`, `BASE`), `e2e/activity.ts` (`activityScreen`, `activityRows`, `activityKinds`),
+  `e2e/composer.ts` (`composeButton`, `openAddExpense`, `pickPeople`), `e2e/openDemo.ts` (`openDemo`, `setPref`),
+  `e2e/pinClock.ts` (the one way to pin "now") and the `SplitoDevTools` type from `data/devTools.ts` instead of a
+  local `type Splito`. A client unit test that needs SQLite uses `bunExecutor` from `@splito/sync/testing`.
 - **Library workarounds and `patches/`** each have a test that fails when the workaround stops applying.
 - **Never commit tokens.** e2e uses seeded local-store fixtures; M2 signed-in QA reads a token from env or a
   gitignored file.
@@ -1427,6 +1589,24 @@ Splito lessons (add newest last, dated, with PR):
   meanwhile. Also: a main screen that is pushed from a link must be told apart from its tab by a param
   (`from=<tab>`, owner 184, in the address so a refresh keeps Back), not by stack depth (a deep link puts People
   under every page).
+- 2026-10-31, F-258 (c-refresh): **pull to refresh on phone web is a window gesture, and Bluesky has none.** Bluesky's
+  `List` takes `refreshing`/`onRefresh` for the native `RefreshControl` only; Splito supplies the refresh in the shared
+  layer (`useRefreshControl` for `List` and `Layout.Content`, `usePullToRefresh` + `pullController` on web), so a screen
+  passes nothing. Web: the window scrolls, so a touch that starts at `scrollY` 0 and moves down is the pull; only that
+  case calls `preventDefault` (iOS rubber band, Android Chrome's own refresh), and the list content, not the header, is
+  translated. Traps: (1) **a stranded gesture killed pull to refresh everywhere.** The controller kept one `gesture`
+  and ignored a new touch while it was set; a touchend that never reached the window (the touched element was removed
+  mid-touch) left it set for good. Every single-finger touchstart now ends the previous gesture first, and
+  `pullRefresh.spec` removes the touched element mid-pull and pulls again. (2) **Refresh does not re-run projections**
+  (owners 212/213): they already re-read on every commit, re-running them redrew every parked tab for nothing, and a
+  `run(MORE)` meant for the Activity pager misused its contract (`'unknown'` would restart the tracker); refresh is
+  `syncNow()` plus a 400 ms minimum spinner, skipped offline, and FX and sync are an honest TODO until F-2103. (3)
+  `lib/` may not import `data/` (the handler lives in `state/refresh`). (4) The Loader's `rotate-500ms` class was never
+  defined in `index.html`, so it never spun on web (now added, under `prefers-reduced-motion: no-preference`). (5) Metro
+  tries `.ts` before `.web.tsx`, so a native twin named `x.ts` silently shadows `x.web.tsx` on web: give both twins the
+  same extension. (6) Playwright WebKit has no `Touch`/`TouchEvent` constructor and no long task API: its run
+  dispatches touch-shaped events and reads the frame gap, and says so. Real iOS Safari rubber band and Android Chrome
+  were not driven by a person.
 
 ---
 
@@ -1439,6 +1619,20 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-30, F-1210 e2e: **never `goto` right after a click that writes.** The write is a transaction still in flight; the reload drops it and the next assertion fails (it looked like a missing feature). Wait for the sheet to close or the toast first. A search drawer input also needs `toBeEditable()` before `fill` under load.
 - 2026-10-30, F-1210 review: **a derived adjustment must stay between zero and the thing it adjusts.** The first "leave disputed out of the plan" subtracted the disputed part from every net, which flipped signs on a settled or part-repaid group and asked someone to pay twice for a disputed "payment not received". `withoutDisputed` now shrinks each net toward zero only and rebalances with `allocate`, with a property test (sums to zero, never flips, never grows). Likewise a stored pointer into a list (an item's position) must be the item's own id: reorders and edits moved the dispute onto the wrong item.
 - 2026-10-30, F-1210 review: **an "apply the suggestion" action must never change the shape of the record to fit it.** Converting an itemised or percent split to exact amounts to apply an amount fix lost the items. One tap applies a fix only when the split mode survives it (`fixApplies`); otherwise it is an edit by hand, and the panel says why.
+- 2026-10-31, F-1713 (c-anim): **an icon that animates a state change mounts only the glyph in use.** The first `MorphIcon`
+  kept the outline and the filled glyph both mounted and cross-faded their opacity: tab-round updates went from 468 to 624 (+33 %)
+  and a wasted `Rect` report appeared (the old Groups glyph re-rendering with equal props), against a budget of +10 %. Rendering one
+  glyph and popping it in on a change (scale and opacity on the UI thread, 180 ms) costs 500 updates, and the baseline records
+  that reviewed increase. Rule of thumb: any "morph" is a swap plus a pop, never two live copies.
+- 2026-10-31, F-260 / F-1713 (c-anim): **lazy art needs the player lazy too, and a compiled hook must not read a
+  module cache without state.** Moving the animation JSON behind `import()` was not enough on its own; `lottie-web`
+  was also in the entry (now dynamic) and together they took 285 KB (3.9 %) off the web first-load JS (7,305,880 to
+  7,021,333 B; gzip 1,545,216 to 1,495,320), with 19 new empty-state pieces added as lazy chunks (53 with loading, success and lottie-web: 415 KB). The first
+  version of `useIllustrationSource` drew nothing: the React Compiler memoised `loaded.get(key)` on `key`, so the
+  re-render after the fetch returned the old `undefined`; the hook now keeps `{key, json}` in state. Also: an empty
+  state plays once to a resting frame (`playSegments([0, staticFrame])`), so a looped file whose last frame equals
+  its first would end blank; every piece has an explicit resting frame, and reduced motion shows the same one.
+  Motion that does not explain a change was left out (owner 213): sparkles twinkle, plus-to-X without a menu.
 - 2026-10-31, fix/integration: **parked tabs make every unscoped locator ambiguous, and a gate must not count a race.**
   Four specs failed on the merged main with all tabs kept mounted: two asked for `request-Ishaan Verma` and
   `person-Bela Joshi` on the page when Home and People both list them (strict mode: scope to the screen you mean, here
@@ -1450,7 +1644,215 @@ Splito lessons (add newest last, dated, with PR):
   updates on the same build: the first visit of a tab lets background history loading and the Analytics report land
   inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
   frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
+- 2026-10-31, F-269 (group requests): **someone who has been asked is not a member.** A pending group request is its own
+  record (like a friend request), so no split, expense or picker can use the person by construction; the group page,
+  the Add members sheet and the expense picker draw them greyed as "Invited" from the request, never from `members`.
+  A group's join rule (`joinPolicy`, absent reads as 'approve') is the one source for its link: the link's
+  `approveJoins` is derived from it when the link is made or the rule changes, and 'invite' revokes the links; the old
+  `invites.approveJoins` preference is gone. A new store is a schema step on both engines (checklist above, v6), and
+  a request component that reads data lives in `screens/` (Activity gets its buttons through a render prop, as for
+  friend invites). New messages must be extracted, translated and compiled before an e2e build, or the app prints the
+  message ids (`+EvjqO`) and every text assertion fails.
+- 2026-10-31, F-269 review: **removing a preference leaves its rows on devices.** `invites.approveJoins` is gone from the
+  registry (a group's own rule replaced it), but old devices still hold its row: readers look up by registry key and
+  skip unknown ids (`resetAllPrefs` filters them, backup exports only account-scope keys it knows), and a test keeps it
+  so. A request that lapsed (30 days) must not block asking again: every "is there already one" check reads
+  `requestState`, never the stored `pending`. Getting into a group by a request or a link marks the written version
+  (`Group.viaRequest`), so Activity shows the request's row and not "created" or "edited".
 
+- 2026-10-31, F-253 (guided tour): four things a coach-mark feature needs. (1) **A host above the navigator cannot read
+  navigation state**, so the screen that matters (People) publishes what it holds to a module store while it is focused
+  (`usePublishPeopleState`), and the host reads that; no timer guesses at the route. (2) **Parked tabs keep their own copy of
+  a control** (each tab has a FAB), so a registry keyed by id holds all mounted copies and the tour measures them newest
+  first and takes the one that is showing (a hidden tab measures 0 x 0); a registry that keeps only the last one points at a
+  hidden FAB. (3) **Check the branch a worktree starts from**: the builder's worktree began at an
+  older main where Home was still the start tab, the tour never started (People was not showing) and every spec timed out;
+  merging the integration branch (no Home, app opens on People) fixed it, so no Home special case exists. (4) **E2E builds sign every spec in as a fresh account, which is exactly who the tour is for**, so an e2e build never starts it
+  by itself; a spec arms it with `window.__splitoTest = {tourAuto: true}` in an init script (hooks installed later spread the
+  object, so the flag survives). `expo export` can fail with a missing `react-native-worklets/.worklets/<id>.js`: create the
+  empty directory and rebuild with `-c`.
+
+- 2026-10-31, F-261 (c-personlink): **making every avatar a link is a mount cost, and nested links need care.** (1) The renders gate's
+  scroll phase counted about 360 more `PersonLink` / `Link` and about 730 more `Pressable` mounts (one per Activity row), so the
+  baseline was re-recorded on purpose (median of three; the machine was at load 30-80, not quiet; mount counts are not timing
+  dependent). (2) **A link nested in a row must still be an anchor**: a `div role=link` is never activated by Enter or Space in
+  react-native-web, so the first version (no `href` when nested) could not be opened from the keyboard; an anchor inside a
+  Pressable `div` is valid HTML. react-native-web also does not take Space for a role=link, so `PersonLink` adds one shared
+  `onKeyDown` that clicks on Space. (3) **A disabled `Pressable` disables everything inside it**: the Ask ranking rows were
+  disabled Pressables, so the avatar link in them was "not enabled"; a row nobody selects is a `View`. (4) Keyboard order: a nested
+  link is a tab stop between the row and its buttons (`activity.spec` "hide works from the keyboard" waits for the avatar first).
+  (5) Demo mode asks "Switch back to your data?" for a link naming an id the demo data lacks, so test "Not on this device yet"
+  outside demo. (6) `components/` may not import `data/`: a one-line `state/me.ts` hook gives them my id. (7) A baseline written by
+  a script must keep a phase's `"mounts": 0` (a pruned zero made the gate compare against NaN): only drop zero component counts.
+
+- 2026-10-31, merge of c-personlink, c-refresh, c-joins and c-search (cloud session, load under 2, 4 cores, Chromium):
+  **measure search in the browser, not only in bun.** (1) Before c-search, `main`'s `search.test` read 80-110 ms here
+  (rows walked one by one); with c-search SQLite reads 20-36 ms at 10,000 expenses, but the IndexedDB case reads
+  about 190 ms for every query because `fake-indexeddb` is a slow pure-JS engine, so that number says nothing about
+  a browser. (2) The real check is `perf/schema-v2.spec.ts` in the browser: at 10,000 expenses c-search drew the first
+  page in 259-709 ms against `main`'s 58-73 ms, while its totals arrived sooner (`main` 1.0-1.3 s): every token was
+  turned into its full set of ids before intersecting, so "bulk" (in every title) read 10,000 keys plus every record of
+  60 friends. Rule in 17.1 (narrow first). (3) **A type word inside a name is the name:** "friend", "group",
+  "payment" are type words, so "Bulk Friend 4" meant "bulk, only friends, amount 4" and could never list an
+  expense; the perf spec waited 60 s for one. When the query's words together start one person's or group's name,
+  its type words are read as plain words (`asNames`, tested in `search.test` "a type word inside a name"). (4)
+  Merging branches that each regenerated the Lingui catalogs is done by taking the union of both `.po` files (no
+  translation is lost), then `intl:extract --clean` and `intl:compile`; never "take one side" of a `.po`, which drops
+  the other side's Hindi strings; resolve the compiled `messages.ts` to either side first, or extract fails to parse it.
+- 2026-10-31, merge of c-joins: **a request's stored `status` is not its state.** Activity's invite rows carried Resend /
+  Cancel whenever `status === 'pending'`, so a 40-day-old invite (expired by `requestState`, gone from Invites sent) still
+  offered Resend there; group requests had the same check. `main` only passed `friends.spec` "the demo set carries the
+  invites flow" because that row was not reached. Every place that offers an answer to a friend or group request asks
+  `requestState(r, now) === 'pending'` (with `now` from `useTickEveryMinute`), and the check lives in the action
+  component (`OutgoingActions`, `GroupRequestActions`), so only rows with buttons follow the minute clock.
+- 2026-10-31, F-246 (c-search): **the "every query under 50 ms" test failed because broad queries read the ledger, not
+  because the amount scan was slow.** The amount range was already an index; the slow part was every broad query
+  (`f`, `> 1000`, `march`) walking `byDate` in chunks of 200 rows to check each one so the count and totals could
+  be shown (about 10 us a row, so 100 ms at 10,000 and more under load), and the old test read whole answers
+  through `searchStore`. The fix is structural: terms for every field (`b`, `h`, `G`, `d`, `s`, `n`), each token
+  resolved to a set of ids by key range, intersection, ordering and totals from the `d` and `a` keys, rows read only
+  for the page. Two things to remember: (1) reading 10,000 index rows costs 2-3 ms, reading 10,000 entity rows costs
+  70 ms, so put anything a count or a total needs into the keys; (2) a test that proves "the keys give the rows'
+  answer" (`searchOracle.test.ts`: 1,200 random expenses, 18 queries, order and totals compared with a row-by-row
+  reference) is what makes this safe, not the speed number. Also: the migration tests' `storedTerms` helper listed
+  the term kinds by hand, so a new kind failed dozens of migration tests until it read `TERM_KINDS`.
+
+- 2026-10-31, F-246 fix round (c-search, Opus): **"answered from the keys" was still a full-ledger read.** The first cut
+  intersected key sets well, then ordered every answer by reading all `d` keys and totalled it by reading all `a` and
+  `s` keys, and a balance status listed every record of every settled group plus every record outside groups: one
+  match cost 21,201 keys at 10,000 expenses + 600 payments, "owed" 44,916, and IndexedDB 50-130 ms of CPU per query
+  (load 45). Now an answer of at most 500 records is read by id and ordered, totalled and status-checked from its rows;
+  the rest is unchanged. Three more things to remember: (1) a word that finds a person must not expand to the person's
+  records when it is not a name: phone digits ("91", "98") and UPI words matched almost the whole ledger through the
+  `h` keys, and so did my own name; such words are their own term kind (`k`) that lists the person only; (2) a cached
+  promise of maintenance work must be dropped when it rejects, or one failure breaks the feature until reload; derived
+  data is rebuilt at idle, in chunks with yields, never inside the first keystroke; (3) a version marker cannot see a
+  writer of the same version that skipped rows (an older tab, a rollback): also compare a cheap count (`d` keys against
+  records). The oracle became a property test (random changes on both engines, the stored keys equal `termRows`, 30
+  queries equal a row-by-row reference, narrow and broad both exercised), which is what makes the two paths safe.
+
+- 2026-10-31, c-p0bf (consolidation P0-b, P0-f): **a row menu is one component, because the same gesture kept working on some rows only.** Four hand-built menus (Hide, Dispute, Activity, comments) differed on phone-width web: iOS Safari fires no `contextmenu` on a long-press, so a deleted history row and an Activity row had no way in there (`IS_NATIVE`-only `onLongPress`). `components/RowMenu.tsx` owns it (`useRowMenuTrigger`: long-press where there is no mouse, right-click, Menu key / Shift+F10; `RowMenu`: row + menu + the "..." button), and the architecture rule `rowMenuGesture` counts hand-built `onContextMenu`s (baselined: CommentRow until P1-d, two charge pickers). Test-method lesson: **Chromium's emulated touch (`Input.dispatchTouchEvent`) sends a click at the lift point, which lands on the menu's scrim and closes it about 0.3 s after release**; a real long-press does not, so `e2e/rowMenu.spec.ts` checks the menu while the finger is still down, and desktop WebKit cannot construct a `Touch` (it is sent plain touch objects). Reanimated's `useReducedMotion` is the OS setting read once at start, so a swipe or animation using it ignores the Animations preference: use `useShouldReduceMotion`. Category names translated only in Settings, so a Hindi user saw "Food" everywhere else: one `useCategoryLookup` now names them. Renders: the lookup hands back the same object for the same category, id and name (`nameCategory`), because a fresh `{...category}` per render re-rendered every memoised tile and composer button (type phase: `CategoryTile` 10x, `Pressable` +20, `Button` +10); the one recorded increase is `mount:CategoryTile` 2 to 5 in the launch phase of `e2e-renders/baseline.json`, the five Home rows whose `EntryIcon` now draws the shared tile (edited by hand for that one line, not re-recorded under load 60 to 150).
+- 2026-10-31, F-274 P0-a/d/g (c-p0adg): **three more copies became one.** (1) Avatars: `initials(name, mode)` and `nameHash` live in
+  `lib/avatarName.ts` (pure, so bun can test it; `UserAvatar` re-exports them) and the Create group preview draws the same
+  `GroupAvatar` tile the created group wears ("Goa" is "GO" in both). (2) Days: `useDayLabel()` / `useFormatTime()` in
+  `locale/useDates.ts` over the pure `locale/dayLabel.ts` (`dayOfInstant`, `dayBucket`) word every day header and divider
+  (Activity sections, the Comments `DateDivider` now in `components/`, dispute lines) in the Timezone and Date format
+  preferences; one `MonthCalendar` (`components/forms`) serves the date field and the custom range. A Date format
+  change now reaches the Comments divider and statements. (3) Sharing: see § 14. Rule: a helper that a bun test must
+  reach cannot sit in a file that imports `react-native` (bun cannot parse its Flow source); put the pure part in
+  its own file and re-export.
+
+- 2026-10-31, merge of F-274 cleanup round 1 (c-p0ijk, c-p0bf, c-p0eh, c-p0adg), from the combined Opus review: **a
+  clean textual merge is not a correct merge.** c-p0eh added `joinList(..., i18n.locale)` to `statementText.ts` while
+  c-p0adg narrowed the same hook to `const {t: l} = useLingui()`: git merged both without a conflict and the merged
+  file referenced an `i18n` that no longer existed. Typecheck and lint run on the merged tree before any e2e. Three
+  more: (1) deleting a file means sweeping every architecture baseline on the target branch, including rules other
+  branches added meanwhile (`FeedCard.tsx` was in the new `personAvatarOutsideLink` baseline, a STALE line fails the
+  gate); (2) Hermes has no `Intl.ListFormat`, `DisplayNames`, `RelativeTimeFormat` or `Segmenter`: they go only through
+  the guarded `locale/` helpers (`joinList`, `currencyName`), and an exported file never depends on runtime Intl
+  support (the statement's "Paid by" column is a plain join, so it reads the same on web and phones); (3) a "nothing
+  else does X" claim in this file needs a counter or a grep test: two such claims of the round were already false
+  (specs with their own viewport sizes; clipboard use outside `lib/sharing.ts`); the remaining duplicates the review
+  listed (time-of-day formatting in four files, `dayOf` / `daysAgo` in `activity/feed.ts`, dead `CATEGORY_ICONS`, two
+  filter-sheet switches) are cleanup round 2 (BACKLOG F-274).
+- 2026-10-31, merge of c-anim (F-1713, F-260, part of F-275), from its Opus review: **a success state wins over a busy
+  state in the button's render order, and a spec asserts the success UI itself.** The save button rendered
+  `isSaving ? Loader : isSaved ? Check : text`, and the composer, Record payment and Call it even keep `isSaving` set
+  until the sheet closes, so the drawn check never showed; the specs had moved to waiting for the toast, so nothing
+  caught it. The footer now draws Saved first, disables Cancel while saved and clears the sheet's dirty flag, so a drag
+  in the 300 ms before it closes never asks "Discard changes?". Also: (1) an audit finding cannot change an owner rule:
+  the branch swapped the Search & Ask Sparkles for a magnifier citing the UX audit, against decision 74; restored, and
+  the question goes to the owner; (2) an empty state keeps its one small secondary next step (owners 146, 213) even
+  beside the FAB, which stays the primary action: hiding it on phones (tried 2026-10-31) failed `emptyArt.spec`
+  and owner 213's "every list has an empty state with one clear call to action"; an inactive group or a deleted
+  friend gets none, since they take no new expenses; (3) the dead `SuccessCheck` went with the change that replaced it (section 1).
+- 2026-10-31, F-271/F-272 (c-nohome): **renders baseline re-recorded for the start tab; the median of three runs came out identical.**
+  Removing Home moved the launch end point to `splito:people-ready` (People, the start tab) and the tab round to People,
+  Groups, Analytics, Activity; the gate was recorded three times after the large demo had loaded and the median kept
+  (`RENDERS_BASELINE=write` x3, one worker, the machine at a load of 20 to 200 from other builders' runs, which only
+  slowed it): launch 3,403 + 302 (301 in one run), tabs 69 + 442, addExpense 498 + 179, type 0 + 793, closeAdd 76 + 193,
+  scroll 43,735 + 32,097, ask 1,018 + 943, 7 reports, and the parked-tab test shows no content render on a switch. The
+  Analytics Overview now sits in the Analytics list header (`OverviewSection`, a child that reads its own data), so a
+  balance change re-renders that section and not the report.
+- 2026-10-31, F-271: **"Home" as a fallback is one function, not a literal.** `startPage()` (`lib/routes/startTab.ts`) is the
+  start tab's route, set at launch from the device mirror and by `PrefsMirror`; Back's parents (`backFallback`), the
+  cold chain (`realParentsFor`, which lists the start tab once when it is the list itself), the resolver's bare `/` and
+  unknown links, the logo and sign-in return all read it. A `from=home` in an old address reads as the start tab. A
+  saved `tabs` list loses `home` and `ask` on read; only the exact old default bar (`home, people, groups, analytics,
+  activity`) becomes the new default (Settings added, owner 206), because treating "People, Groups, Analytics, Activity"
+  as the old default made Settings come back every time a user turned it off.
+- 2026-10-31, F-272: **"last active" needs comments too, and the projection is the only place that knows.** The people and
+  groups projections (`people.lastActivityAt`, `groups.activityAt`) were bumped by money records only, so a comment did
+  not move a friend or group up; `projectEntity` now bumps the groups and friends a commented record names, and
+  `rebuildActivity` takes the comments, so a rebuilt projection equals the incremental one
+  (`historyIntegrity.test`). Screens only read the maps (`useLastActivity`, `useGroupActivity`) and sort.
+- 2026-10-31, F-271: **moving a screen moves its architecture baselines.** `screens/Profile.tsx` became
+  `screens/Profile/index.tsx`, and Settings' raw store reads moved into `DataSettings.tsx`: the per-file counts in
+  `architecture/baseline.ts` and the `docs/reuse` row are keyed by path, so the move fails `rules.test` until both
+  follow. A testID that contains a money word (`profile-balance`) is read as arithmetic (`profile - balance`) by
+  `moneyArithmetic`; name it for the thing, not the money.
+- 2026-10-31, process: **a worktree's `node_modules` links point at whoever ran `pnpm install` last.** A fork that installed
+  in a scratch copy re-pointed `@splito/*` and `@bsky.app/bottom-sheet` at its copy; typecheck then failed everywhere. Run
+  `pnpm install --frozen-lockfile --offline` once in the worktree only, and never in a copy that shares it.
+- 2026-10-31, owner on iPhone Safari again ("tab taps within ms still take time"): **measure the case the owner
+  describes, between tabs already visited.** `perf/tapLatency.spec.ts` reloads before every tap, so it times first
+  visits only; a rapid round over visited tabs at CPU x6 showed taps are no longer lost (the last tap always wins) but
+  each switch takes 165-930 ms, and Analytics was the worst because it drew every report row. Rule in 17.1. Not yet
+  verified on a real iPhone: this container has no WebKit or simulator, so iPhone numbers still need the owner's
+  phone or Mac.
+- 2026-10-31, F-257 (tab slide): **an animation that shifts content right widens the page.** The first cut moved the
+  incoming screen 32 px right and `tabTaps.spec` "no tab widens the page" read 422 px on a 390 px phone (the fixed
+  bar slips below the fold, § 23 fix/tab-taps). The sliding screen clips sideways (`overflow-x: clip` on the screen
+  root only, never on `html` or `body`). Also: a `transform` on a screen's root would carry its `position: fixed` FAB
+  with it, so the slide moves the screen's children except `[data-fab]`.
+- 2026-10-31, merge of c-nohome: **a projection rule that grows must grow its test oracle in the same change.** F-272
+  made a comment (and its edit or delete) bump its record's group and friends for "Last active" (owner 199) in both the
+  incremental write and `rebuildActivity`, but `test/projectionCheck.ts` `expectedActivity` still counted money
+  records only, so the 10 large-demo migration tests failed on one group (`demo-large-g-b-paris`, a comment 4 minutes
+  after its expense) on the branch itself, and nobody saw it because the builder ran only its touched specs. The
+  oracle now counts comments the same way. Rule: `pnpm test` (all packages) runs before a branch is called done, not
+  only the specs a change touches.
+- 2026-10-31, c-nohome review: three rules from what the review found. (1) **A module-level "current value" needs a
+  writer on every path that changes it.** The start tab (`setStartTab`) was set at launch from the device mirror but not
+  when the preference changed or the tab list was migrated, so Back fallbacks named a stale tab; every path that changes the
+  source (launch, preference write, migration) calls the writer, and a test pins each. (2) **A migration that
+  drops a fixed item keeps what it guaranteed.** Removing Home from a saved tab list had also removed the one tab the app
+  could always open on and the place "Home" fallbacks pointed at; the migration now names the new guarantee (the start tab
+  is People, a saved bar keeps People and Settings) instead of only deleting. (3) **Moving a screen from the root stack
+  into the tabs breaks every plain `navigate(name)` on native** (React Navigation 7 does not navigate into a child
+  navigator; see the fix/ios-wB lesson): Settings became a tab and `navigate('Settings')`, `replace('Settings')`, the drawer's
+  sync dot, the dev tour and the Back fallbacks did nothing on native while web worked. In the same change as the move, grep
+  every `navigate(`, `replace(`, `popTo(` and `goBack` fallback for the route's name; tab names go through
+  `navigateArgs()` (`lib/routes/helpers.ts`), and `goBack(navigation, fallback, IS_WEB)` applies it to every fallback. A bun
+  test (`linkNavigation.test`, `goBack.test`) pins the native shape. Not checked on a simulator here.
+
+- 2026-10-31, F-266 (c-perf port): **the wip/c-perf fixes, reviewed before they landed, and what the review changed.**
+  (1) Reanimated 4.7.1's web `LayoutAnimationConfig skipExiting` does nothing (`JSReanimated.setShouldAnimateExitingForTag`
+  is a no-op), so the screens' `<LayoutAnimationConfig skipExiting>` never stopped a popped page's rows from cloning
+  themselves out: Person 60 clones, Group 20, Friends and invites 106 (a 2 s Back at x6). The exit scope fixes it on web.
+  (2) c-perf's Reanimated patch dropped the mount/update box reads and let the exit fall back to
+  `getSnapshotForElement`, but that fallback runs after `handleExitingAnimation` has moved the children into the clone:
+  every exit clone was 0 px tall. The patch now reads the box first; `e2e/animations.spec.ts` checks the clone height and
+  fails on c-perf's version (checked by editing the built bundle). A patch's test must fail on the version it replaces,
+  not only on upstream. (3) The test that counted every `getBoundingClientRect` read 10, 15 or 20 on the same build
+  (onLayout reads vary with timing); it now counts reads made from a class component's mount or update: 0 patched, 10
+  unpatched, every run. (4) A wrapper component around every screen adds a render per screen render (renders gate +6 to
+  +11 updates per phase): a scope that only provides a value is a hook plus a bare provider. (5) The demo pill made the
+  app usable during the seed, which also made `FormSheet.Screen`'s "busy means the store is going away, drop the sheet
+  without asking" wrong for the seeding part: only the swap cover (`useIsStoreCovered`) may drop a dirty sheet. (6) The
+  renders gate is red on this base before any change (806 Activity rows scrolled of 1,000; baseline older than the People
+  start tab): compare counts against a base run on the same machine, never against a stale baseline. (7) Chrome refuses
+  to start when `TMPDIR` is long (`Socket path too long`); give Metro its own cache with a short `TMPDIR` (`/tmp/<name>`),
+  which also avoids the shared Metro cache pointing at another worktree's `.worklets` files.
+- 2026-10-31, full e2e on the combined PR #1 (817 of 844 passed): **after sign-in the app landed on a pushed copy of
+  People "from" People** (`/people?from=people`, Back instead of the avatar). The bare `/` is rewritten to the start
+  tab before the app reads it (owner 198), so the signed-out app held `/people` as a link to resume, and opening it
+  pushed a tab copy over the same tab. Two rules: a link to the tab already showing opens that tab, never a pushed copy
+  of itself (`navigateToTarget`); a bare start-tab address is "open the app", never held for after sign-in
+  (`holdSignedOutLink`). Also: a change of the demo data (F-269 adds Sara, who joins Goa by an approved request) moves
+  every spec that counts friends, settled friends or members; the demo specs derive the count from the plan, so the
+  formula names each addition. Unavoidable reds here: 5 `rowMenu` webkit cases (no WebKit in the container) and 10
+  pull-to-refresh / touch-scroll cases (CDP `synthesizeScrollGesture` does not scroll this Chromium).
 
 ## 24. Checklists
 
@@ -1745,21 +2147,36 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     owner 100).
   - **Two different things** (owner 142): these swipeable **intro slides come BEFORE sign-in** (what Splito is,
     like many apps' first-open screens; "Get started" leads to the Continue screen, owner 140), and the **tour
-    comes AFTER the first sign-in and setup**: a guided walkthrough over the real app (F-253), a few coach marks
-    one at a time with Next / Skip: the FAB or "Add expense" ("Add your first expense"), a friend row ("Tap a
-    friend to see what you owe each other"), Groups "+", Settle up, the Search & Ask icon, and Activity; each
-    mark spotlights the real control and **blurs everything else** (owner 143: a blur plus slight dim over the rest of
-    the screen, the focused control sharp with a rounded cut-out and a short caption beside it; web `backdrop-filter`,
-    native `expo-blur`; reduced transparency falls back to a plain dim), works at every
-    width (sidebar items on desktop), shown once per account, replayable from Settings > Help "Take the tour".
-    After the tour, small first-use tips may still appear once per screen (`tips.enabled`, "Reset tips").
+    comes AFTER the first sign-in** [Built, F-253, web; native not run on a device]: a guided walkthrough over the real
+    app, **exactly three steps** (owner 213: only what a new user must know to start), one at a time with Next / Skip
+    (the last step's primary is Done): (1) **Add an expense**, on the FAB (phones) or the sidebar "Add expense" pill
+    (rail, desktop); (2) **See who owes whom**, on the first friend row of People; (3) **Settle up**, on that row's balance,
+    else on the Groups tab. With no friends yet there is no row, so step 2 stands on People's Add friend button with
+    empty-state wording ("Your friends will show up here, with what you owe each other."; step 1 falls back the same way
+    if its FAB or pill is ever missing, with "Add a friend here first ..."); a step
+    with nothing to point at is left out and "Step N of M" counts what is shown (`planTour`, `lib/tour/steps.ts`, pure and
+    tested). Each step spotlights the real control and **blurs everything else** (owner 143: a blur plus slight dim, the
+    control sharp inside a rounded cut-out, a caption card beside it: below, above or beside by the room there is); web
+    `backdrop-filter` masked by the same hole path the dim uses, native a plain dim (`expo-blur` is not a dependency),
+    reduced motion or reduced transparency a plain darker dim. The overlay blocks the app underneath, moves focus to the
+    caption, Escape is Skip, buttons are 44 px+, the card is at most 340 px and never wider than the screen less 16 px
+    gutters (320 px, Hindi). It runs **once per account**, right after sign-in when People is the page showing and loaded
+    (`onboarding.tourSeen`, an account preference in the `app` group with no Settings row of its own; Skip and Done both
+    set it), never in demo mode, never while a sheet is open (it waits), and replays from **Settings > Support
+    "Take the tour"** (hidden in demo mode; it takes the app to the plain People tab first). One `TourHost` is mounted
+    at the app root like `LogOutHost`: an account that has seen the tour pays one preference read at launch and renders
+    nothing; the overlay, its measuring and its timers exist only while a tour runs. Controls register themselves with
+    `useTourRef(id)` (`lib/tour/registry.ts`, a ref callback in a module store, no re-render): the FAB, the sidebar pill,
+    People's Add friend, the first row and its balance, and the Groups item of the bottom bar and the sidebar. E2E
+    builds never start it by themselves; a spec arms it with `window.__splitoTest = {tourAuto: true}` before the page
+    loads. First-use tips after the tour (`tips.enabled`) are not built (owner 213: nothing more than the essentials).
   - Screen readers hear "Step 2 of 5" and each title as a heading; tap targets 44 px; works at 320 px in Hindi.
   *Why:* "like what you get when you install one app and you get one overview, where you have to click next or
   skip which explains you what this app is and how to use".
 
 ### 26.3 Shell and navigation
 
-- **There is no Home tab; the Overview is the top of Analytics** (owner 198, replaces the Home tab of 153 below):
+- **There is no Home tab; the Overview is the top of Analytics** [Built, F-271; web checked in e2e at 390 and 1440, native not run on a simulator] (owner 198, replaces the Home tab of 153 below):
   the tabs are **People, Groups, Analytics, Activity, Settings** (owner 206 makes Settings a tab in the default
   bar; Ask Splito is not a tab or a nav item, owner 200). The
   Overview (per-currency balance cards with All / Groups / Direct, owners 113/114/120/161/176) is the first section of
@@ -1782,7 +2199,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
     rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
     here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
-  - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. The Groups tab glyph is Lucide `Group` now, since `Users` is People's.
+  - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. Tab glyphs (F-1713): People is Lucide `ContactRound`, Groups is `Users`.
   - **Requests and invites live on their own pages, never on Home** (owner 197): **People** shows friend requests
     (Accept / Decline) and friend invites sent (Resend / Cancel) at the top; **Groups** shows group requests to me
     (Join / Decline), join requests for groups I run (Approve / Decline) and group invites sent, at the top; a
@@ -1790,7 +2207,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     one-line row layout of § 26.18, at most 5 rows, then "See all" into Activity filtered to Friends and invites (and
     the group, owner 195), and hides when empty. *Why:* "all these invites should show on their respective page, not
     on home page, like group and people".
-  - **People** (`/people`, new tab, Lucide `Users`): friend requests and invites sent at the top (owner 197),
+  - **People** (`/people`, new tab, Lucide `ContactRound`): friend requests and invites sent at the top (owner 197),
     then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
     Friends header (search, Filters, gear; it opens Friends and invites; no "Manage" text button, owner 177); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
@@ -1884,6 +2301,13 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
   *Why:* "clicking on avatar or name anywhere on the website should open that friend's details"; repeated
   2026-10-31: "on click of others avatar, it should open up them as people" (own avatar opens Profile, owner 206).
+  [Built, F-261, web; native unverified: `components/PersonLink.tsx` (an anchor with an `href`: Enter, Space and Cmd-click work;
+  avatar-only links hold no state), `personPath` / `openPerson` in `lib/links/make.ts` for every push that names a person.
+  People rows, Members and requests reuse it (`isInsideLink` where the whole row already opens the person); the group header's
+  member stack is one control that opens Members, not a link per face; Settings > Friends rows have no "Open" button because the
+  avatar and name do that job (owner 213). The architecture rule `personAvatarOutsideLink` fails a new `<UserAvatar` outside it,
+  and its baseline lists only what is not a link to a person: own avatars, selection rows and dialogs, the member stack, an
+  invitee who is not a person yet.]
 - **Person names are capitalised word by word** (owner 181): every word of a person's full name starts with a
   capital letter ("saransh balyan" -> "Saransh Balyan"); the rest of each word stays as typed, so "McDonald" and
   "D'Souza" survive. Saved that way on every path (add friend, own profile name, contacts, invites, join, demo
@@ -2131,9 +2555,10 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   List's `RefreshControl` (Bluesky's `List` already supports it; iOS bounce, Android material spinner); phone web
   (iOS Safari, Android Chrome) gets the same gesture from a small shared pull handler on the window scroll that
   works with the safe-area patch (§ 23) and never fights browser overscroll (`overscroll-behavior-y: contain` on the
-  scroller while pulling). What it does: until sync exists it re-reads the local data (projections and the current
-  page) and ends in well under a second, honestly ("Saved on this device", no "Synced"); once the backend exists it
-  calls one `syncNow()` (drain, then pull, § 9.3); offline it ends at once with the status, never an error toast.
+  root while pulling). What it does (owners 212, 213): it calls one `syncNow()` (FX rates when online, drain, then
+  pull, § 9.3; a no-op until F-2103) and holds the spinner at least 400 ms so it never flashes. It does not re-run the
+  screen's queries: projections already re-read on every commit. Offline it ends at once, never an error toast, and
+  nothing reads "Synced" before an acknowledgement.
   Shell first (owner 152): the spinner appears in the same frame as the pull threshold; nothing else redraws unless
   data changed (owner 166). *Why:* "also add pull to refresh, header should stay while pulling down to refresh".
 - **Open first, render after, even the first time** (owner 168, sharpens 151/152): a tab switch, a drawer and a
@@ -2161,11 +2586,15 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   another, app-wide on native and per tab on web; `useNavigationDeduped().navigate` no longer dedupes, it is
   idempotent); e2e `tabTaps.spec.ts`.
 - **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch; reaffirmed by
-  owner 174 on 2026-10-30, "in tab switch, it should switch with sliding animation": F-257, next in Wave C, not built
-  yet; it must stay interruptible per owner 150 and must not redraw per owner 166): a
-  direction-aware horizontal slide (from the right when moving to a tab on the right, else from the left;
-  native ~220 ms via a bottom-tabs `sceneStyleInterpolator` + `transitionSpec`, web ~200 ms transform of the
-  content area). A small indicator under the active bottom-bar icon / beside the active sidebar item springs
+  owner 174 on 2026-10-30, "in tab switch, it should switch with sliding animation"; it must stay interruptible per
+  owner 150 and must not redraw per owner 166): a direction-aware horizontal slide (from the right when moving to a
+  tab on the right in the bar's own order, else from the left). [Built, F-257 slide part, 2026-10-31, web checked in
+  Chromium, native not yet run] Web: a bar tap notes the direction (`lib/routes/tabSlide.ts`) and the screen that
+  gains focus sets `data-tab-in` on its root; a CSS keyframe in `public/index.html` shifts the screen's content 32 px
+  with a fade in 200 ms on the compositor (no JS per frame, no React render; the fixed FAB is excluded, the screen
+  clips sideways so the page never widens), and a newer tap simply shows its screen with its own slide. Native: the
+  bottom tabs' `animation: 'shift'`. Reduced motion or motion off: instant (the bar notes no direction; CSS
+  `prefers-reduced-motion`; native `'none'`). Sidebar switches (rail and desktop) stay instant for now. A small indicator under the active bottom-bar icon / beside the active sidebar item springs
   to the new tab like the Activity underline; the tapped icon does a small spring scale pop while filled and
   stroke states cross-fade, with a Bluesky haptic tap; the unread badge springs in on count change; re-tap
   scrolls to top. No swipe between main tabs (it would fight the drawer edge-swipe and row swipe actions).
@@ -2210,13 +2639,16 @@ pages". § 17 holds the engineering rules that meet these budgets.
   feedback (`PressableScale`) on every tappable row, card and button; tab switches (§ 26.9); expanding search;
   filter dot; `AnimatedAmount` whenever a money total changes; skeleton shimmer while loading; success check +
   haptic on save and settle; drawer open/close with scrim.
-- **Animated icons and Expensify-style animation wherever it helps** (owner 96; F-1713, queued for Wave C).
-  Icons animate on meaning, not decoration: tab and nav icons morph to their filled state on select (Bluesky
-  tab icon pattern), Activity bell/pulse ticks when a new item lands, the check draws on Save/Settle/Accept, the
-  trash lid lifts on Delete, the sync dot pulses while syncing, the FAB plus rotates to an X when its menu
-  opens, Search & Ask sparkles twinkle on open, chevrons rotate on expand. Built as animated SVG paths with
-  Reanimated on the UI thread (react-native-svg animated props; no per-icon Lottie), from Lucide geometry
-  only. Expensify-style moments in addition to the page illustrations below: a success animation when a
+- **Animated icons and Expensify-style animation wherever it helps** (owner 96, narrowed by 213; F-1713, built in
+  part). Icons animate on meaning, never as decoration, and every one is the single `AnimatedIcon` primitive
+  (`components/anim/AnimatedIcon.tsx`, Lucide geometry only, animated SVG paths and Reanimated on the UI thread, no
+  per-icon Lottie): tab, drawer and sidebar icons morph to their filled state on select (`MorphIcon`), the Activity
+  pulse redraws when the unread count goes up, the check draws on Accept and on the Save, Record payment and Call it even buttons (no full-sheet success screen, F-275; the sheet closes with one toast), the
+  trash lid lifts while a Delete button is hovered, pressed or focused, the sync dot breathes while syncing and
+  rests otherwise, chevrons turn on expand. Two items of the original list are **not built** because motion there
+  would not explain a change (owner 213): Search & Ask sparkles twinkling on open (the drawer opening shows it) and
+  the FAB plus turning into an X (the FAB opens Add expense; no menu exists; add it with the first FAB menu).
+  Expensify-style moments in addition to the page illustrations below: a success animation when a
   balance reaches zero ("All settled"), a confetti-free celebratory Lottie on first expense and on settling a
   trip, animated empty states, and spring page/sheet transitions. Every animation honours reduced motion and
   the `motion` preference (static fallback), stays inside § 26.10 budgets (profiled), and never blocks input.
@@ -2272,11 +2704,12 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 - **The Overview has a scope** (owner 176): small chips "All" (default) / "Groups" / "Direct" (non-group
   expenses with friends) in its header beside "Analytics ›". It changes only the per-currency cards and their counts
   line, never the sections below; currencies are never summed. The choice is the preference `home.overviewScope`
-  (decision 90) and the address (`/?overview=groups|direct|all`; a param that is present wins, `all` is written when
-  a saved Groups/Direct would otherwise apply). "Analytics ›" and each card carry it as Analytics' scope
-  (`scope=` `0:all` for Groups, `1:` for Direct, `1:all` for All, written out so Analytics never keeps the scope it saved
-  last). It does not follow the friends list's Include groups filter, and it never changes Recently active people
-  or the other sections. `personSummary(rows, {includeGroups, scope})` in domain; `screens/Home/overviewScope.ts`.
+  (decision 90) and the address (`/analytics?overview=groups|direct|all`, the old `/?overview=` redirects there; a
+  param that is present wins, `all` is written when a saved Groups/Direct would otherwise apply). Each card carries it
+  as Analytics' scope (`scope=` `0:all` for Groups, `1:` for Direct, `1:all` for All, written out so Analytics never
+  keeps the scope it saved last) together with its currency; there is no "Analytics ›" link, since the cards are on
+  Analytics. It does not follow the friends list's Include groups filter or Analytics' own filters.
+  `personSummary(rows, {includeGroups, scope})` in domain; `screens/Analytics/overviewScope.ts`, `OverviewSection`.
 - **Overview cards: only the net is coloured and on the right** (owners 156-161; with F-256). Each currency
   card reads:
   - line 1: "You are owed" / "You owe" / "Settled" with the currency chip on the LEFT ... the NET on the RIGHT,
@@ -2343,7 +2776,7 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   (not the Overview on Home, which has its own scope, owner 176). Filters and search combine. Friends: "Include groups" (default from the
   `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
   Settled). Groups: type (Trip / Home / Couple / Other), status (Active / Inactive / All), show (Shown / Hidden /
-  All), currency, show (All / You are owed / You owe / Settled). **Sort is its own control** (owner 199): a Sort
+  All), currency, show (All / You are owed / You owe / Settled). **Sort is its own control** [Built, F-272] (owner 199): a Sort
   button beside Filters in the People and Groups list headers opens a menu (radio items): **Last active** (default:
   newest change first, any expense, payment, comment or edit involving them), Name, Amount (largest balance first),
   Newest (most recently added). The choice is remembered per list (`peopleSort`, `groupsSort`) and in the address
@@ -2758,7 +3191,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 ### 26.16 Analytics
 
-- **The Overview opens Analytics** (owner 198): the per-currency balance cards (All / Groups / Direct) are its first
+- **The Overview opens Analytics** [Built, F-271] (owner 198): the per-currency balance cards (All / Groups / Direct) are its first
   section, above the filter row, and show balances right now (not filtered by period or currency); a card opens the
   rest of Analytics in that currency.
 - **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and
@@ -2839,11 +3272,14 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   group, it lives only inside the group's "Add members / Invite people" sheet. No header overflow, menu or page
   shows invite links outside these flows (the Home "..." overflow and the Group overflow entries are removed;
   "Manage invite links" is reached from the invite-link sheet's "Manage links" button and from Settings).
-- **Every group says who can join, and adding someone asks them** (owner 196). New group, Edit group and the
-  group's "Add members / Invite people" sheet show one choice, "Who can join", with three options in plain words:
+- **Every group says who can join, and adding someone asks them** (owner 196). New group and Edit group
+  show one choice, "Who can join", with three options in plain words (radios; disabled for anyone but an admin); the
+  group's "Add members / Invite people" sheet shows only the current rule as one line ("Link, an admin approves each
+  join · Change"), and Change opens Edit group (owner 212: the options live in one place):
   - **Anyone with the link:** the group link and QR work, and whoever opens it joins at once.
-  - **Link, I approve each join** (the default): opening the link sends a join request; the group's admins see it
-    in Activity (Type = Friends and invites, owner 195) and Approve or Decline it in the row.
+  - **Link, I approve each join** (the default; everyone but an admin reads it as "Link, an admin approves each
+    join"): opening the link sends a join request; the group's admins see it in Activity (Type = Friends and invites,
+    owner 195) and Approve or Decline it in the row.
   - **Invite only:** no link exists (an existing link stops working); people join only when a member adds them.
   Adding someone to a group never puts them in without consent: adding a Splito friend whose account is linked
   (possible only once a directory or the backend can deliver the request) sends them a group request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as
@@ -2922,6 +3358,42 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   results stay grouped (People, Groups, Expenses...) with totals per currency and paged (§ 9.8 `search_terms`,
   extended with tokens for every field above). *Why:* "make sure the search works logically with most of the
   things like name, place, amount, category, type, group etc".
+  *How the query is read (assistant's ruling, F-246, replacing "words and simple amount filters"; fix round rulings
+  2026-10-31):* English and Hindi words for "over / under / between / around", "this / last week / month / year" (the
+  week starts on the `weekStart` preference), months and one day ("4 march", "march 4", "4 march 2026"; without a year,
+  the latest one not after today), today / yesterday, "paid by X / X ne", "with X / X ke saath", "in <place>",
+  statuses and types; amounts accept `1k`, `1.5 lakh`, `2 cr`, a currency sign or code, and `rs`, `Rs.`, `rupees`,
+  `रु` (all INR); joining words ("in", "on", "for", "spent", "at", "of", "the", "to", "from", "में", "पर", "लिए"...)
+  are dropped when they are not part of a facet and something else is left; `food or travel` (Hindi `या`) is OR
+  inside one facet, everything else AND (Hindi `और` is AND, as "and" is); a name that nobody has ("with friends") is
+  just words; a close spelling counts only for a person's name, keeps the first letter and is at most 20 letters; a
+  status or type word that finds nothing ("group dinner", "settled bill") is searched as text. A friend's contact
+  (email, phone, with or without the country code) or UPI id finds the friend, never their records; my own name finds
+  nothing (every record is mine). A category is found by its name in the person's language and by its stored name.
+  Status: *deleted* = tombstones (people and groups too), *disputed* = an open dispute or hold, *hidden* = the groups I
+  hid and the deleted items I hid, *inactive* = inactive groups; *settled / owed / owe* are a group's own nets (all
+  zero / I am owed / I owe), and for a record outside any group my direct balance with the others on it (a friend's
+  balance inside groups is not folded in). Results: People, Groups, Payments (payments and write-offs) and Expenses
+  (with count and per-currency totals), in that order, each paged with its own Show more, so loading more never moves a
+  section; a comment's text finds the expense, payment or write-off it is on; each row names the field that matched
+  (Notes, Item, Group, Place, Category, With, Paid by, Comment, Amount, Date, Currency, status) and marks the words; an
+  amount, date, currency or status match is the tag alone (the amount and date are already in the right column), and a
+  balance status says where it applies: "Settled in group", "Owed in group", "You owe in group" on a group's record,
+  "Settled", "Owed", "You owe" outside groups; the row's accessibility label names the matched fields and the comment;
+  each facet is a removable chip under the box. Types are expense, payment, write-off, comment, group and friend; not
+  searched: invites and friend requests (they are not ledger records and have their own list in People), so "invite"
+  is a plain word. If the search cannot be answered (its index cannot be built), the drawer says so with Try again,
+  never an endless spinner.
+  *Reads/writes:* reads term ranges (`store.terms`), `getMany` for a narrow answer (at most 500 records) and for the
+  30 rows of a page, the people / groups / balances projections for the statuses, `listOpenDisputes` for *disputed*;
+  `store.prepareSearch()` once per open at idle; writes up to 12 term rows per expense, payment or write-off, none
+  for a comment beyond its words. *Cost:* a narrow query touches its tokens' keys plus its rows; a broad one (over 500
+  records) also the `d` and `a` ranges (about 1 us a key); a stale index is rebuilt once, at idle, in 500-row chunks.
+  *Telemetry:* none added (a failed index build is a `StoreProvider.prepareSearch` error log). *Checks:*
+  `search.test.ts` (parser, per-field, paging, speed on both engines at 10,000, IndexedDB rebuild), `searchFields.test.ts`
+  (every field on SQLite and IndexedDB, contacts, weekStart, localised categories, >30 payments, mixed-version writer,
+  failed rebuild), `searchOracle.test.ts` (property test on both engines), `searchQuery.test.ts` (table of 107
+  queries), `searchMatch.test.ts`, `e2e/search.spec.ts` at 390 and 1440; web verified, native not run.
 - **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
   shows exactly what data is sent; nothing is sent for on-device answers.
 
@@ -3042,6 +3514,10 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   payment I am in), "Invites" and "Reminders I set". Like the others, Comments only notifies once sync exists
   (§ 0 rule 6), and the page says so. *Why:* "new expense and payment should be one, make it payment, add one
   more notification for comments".
+  *Assistant ruling, 2026-10-31 (not yet seen by the owner; after the c-nohome review):* until sync exists,
+  Settings > Notifications shows only "Reminders I set"; the Payments, Comments and Invites switches (and Privacy's
+  "find me by email / phone") are hidden (`NOT_BUILT` in `SettingsSection.tsx`), under owner 212 ("nothing shown that
+  they cannot act on") and § 0 rule 6. Their preferences stay in the registry and the rows come back with sync.
 
 - **Push notifications on every platform** (owner 137; F-2201, in the first backend batch right after sign-in
   and sync, F-2101..F-2103). Real push, not only local alerts: iOS (APNs) and Android (FCM) through

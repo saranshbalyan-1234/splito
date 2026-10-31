@@ -18,10 +18,10 @@ const summary = (
   ),
 })
 const rows: FriendRow[] = [
-  {id: 'a', name: 'Asha', summary: summary('a', {INR: 500n})},
-  {id: 'b', name: 'Bilal', summary: summary('b', {INR: -9000n})},
-  {id: 'c', name: 'Chen', summary: summary('c', {USD: 100n})},
-  {id: 'd', name: 'Dev'},
+  {id: 'a', name: 'Asha', summary: summary('a', {INR: 500n}), createdAt: 300},
+  {id: 'b', name: 'Bilal', summary: summary('b', {INR: -9000n}), createdAt: 100},
+  {id: 'c', name: 'Chen', summary: summary('c', {USD: 100n}), createdAt: 400},
+  {id: 'd', name: 'Dev', createdAt: 200},
 ]
 
 test('amount: biggest default-currency balance first, owed or owing; other currencies next', () =>
@@ -31,10 +31,10 @@ test('amount: biggest default-currency balance first, owed or owing; other curre
     ),
   ).toEqual(['b', 'a', 'c', 'd']))
 
-test('recent: latest change first, never-active last by name', () =>
+test('lastActive: latest change first, never-active last by name', () =>
   // The newest change per person comes from the store (`lastActivity`, epoch ms): d has the latest, a next, b older; c has none.
   expect(
-    sortFriends(rows, 'recent', {
+    sortFriends(rows, 'lastActive', {
       currency: 'INR',
       activity: new Map([
         ['d', 1_760_000_000_000],
@@ -43,6 +43,23 @@ test('recent: latest change first, never-active last by name', () =>
       ]),
     }).map(r => r.id),
   ).toEqual(['d', 'a', 'b', 'c']))
+
+test('lastActive: equal times sort by name', () =>
+  expect(
+    sortFriends([...rows].reverse(), 'lastActive', {
+      currency: 'INR',
+      activity: new Map([
+        ['b', 5],
+        ['a', 5],
+      ]),
+    }).map(r => r.id),
+  ).toEqual(['a', 'b', 'c', 'd']))
+
+test('newest: the friend added last first; equal times by name', () => {
+  const none = {currency: 'INR', activity: new Map<string, number>()}
+  expect(sortFriends(rows, 'newest', none).map(r => r.id)).toEqual(['c', 'a', 'd', 'b'])
+  expect(sortFriends([{id: 'z', name: 'Zed', createdAt: 100}, ...rows], 'newest', none).map(r => r.id)).toEqual(['c', 'a', 'd', 'b', 'z'])
+})
 
 test('name: alphabetical', () =>
   expect(

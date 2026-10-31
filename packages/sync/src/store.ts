@@ -220,6 +220,11 @@ export interface Store {
    * the projection, never the ledger.
    */
   aggregates(q?: {personId?: string; currency?: string}): Promise<SpendCell[]>
+  /**
+   * Checks the search index once (version and record count) and rebuilds it in chunks when stale. The app calls it
+   * at idle after opening; term reads wait for it. Rejects on failure, and the next call tries again.
+   */
+  prepareSearch(): Promise<void>
   /** `search_terms` of one kind in key order, optionally bounded on the term (inclusive). */
   terms(q: TermQuery): Promise<SearchTerm[]>
   /** How many `search_terms` rows a range holds (a count, not a read). */

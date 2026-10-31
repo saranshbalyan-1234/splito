@@ -28,11 +28,9 @@ const ROW_HEIGHT = 56
 export function useNavLabels(): Record<NavItemId, string> {
   const {_} = useLinguiCore()
   return {
-    home: _(NAV_LABELS.home),
     people: _(NAV_LABELS.people),
     groups: _(NAV_LABELS.groups),
     analytics: _(NAV_LABELS.analytics),
-    ask: _(NAV_LABELS.ask),
     activity: _(NAV_LABELS.activity),
     settings: _(NAV_LABELS.settings),
   }
@@ -60,26 +58,19 @@ function rowsFor(stored: readonly NavItemId[]): Row[] {
   ]
 }
 
-/* Home is fixed first (26.3): any order a drag makes keeps it there. */
-function homeFirst(rows: Row[]) {
-  return [
-    ...rows.filter(r => r.tab === 'home'),
-    ...rows.filter(r => r.tab !== 'home'),
-  ]
-}
-
 /**
  * Settings > Navigation (ARCHITECTURE 26.3, decision 70): every item of the
  * shared list can go in the bottom bar and the sidebar, each with a
  * switch and a drag handle (Bluesky's pinned-feeds list), or arrow buttons on
  * wide web and for screen readers. The bar takes any number of tabs, from
- * Home alone to every item (decision 84); Home stays on and first. Items that are off stay in the phone drawer; the sidebar and rail always list every item in this order (owner 155, no "More"). Reset (the section's) restores Home, People, Groups, Analytics,
- * Activity.
+ * one to every item (decision 84); the start tab stays on. Items that are off stay in the phone drawer; the sidebar and rail always list every item in this order (owner 155, no "More"). Reset (the section's) restores People, Groups, Analytics,
+ * Activity, Settings.
  */
 export function NavigationEditor() {
   const t = useTheme()
   const {t: l} = useLingui()
   const pref = usePrefControl('tabs')
+  const startTab = usePrefControl('startTab').value ?? 'people'
   const haptics = useHaptics()
   const {screenReaderEnabled} = useA11y()
   const {gtMobile} = useBreakpoints()
@@ -100,9 +91,8 @@ export function NavigationEditor() {
       : rowsFor(stored)
 
   const save = (next: Row[]) => {
-    const ordered = homeFirst(next)
-    setLocal({rows: ordered, over: storedKey})
-    void pref.set(ordered.filter(r => r.isVisible).map(r => r.tab))
+    setLocal({rows: next, over: storedKey})
+    void pref.set(next.filter(r => r.isVisible).map(r => r.tab))
   }
   const visibleCount = rows.filter(r => r.isVisible).length
   // Keyboard users on wide web and screen readers get arrows; touch drags.
@@ -121,7 +111,7 @@ export function NavigationEditor() {
       pref={pref}
       icon={TabsIcon}
       title={l`Items`}
-      description={l`On items make the phone bottom bar; the rest stay in the menu behind your avatar. The sidebar on wide screens always lists every item, in this order.`}>
+      description={l`On items make the phone bottom bar; the rest stay in the side menu (swipe in from the left edge). The sidebar on wide screens always lists every item, in this order.`}>
       <View
         style={[
           a.w_full,
@@ -137,23 +127,24 @@ export function NavigationEditor() {
           onReorder={next => save(next)}
           renderItem={(row, dragHandle) => {
             const index = rows.indexOf(row)
-            const isHome = row.tab === 'home'
+            /* The start tab stays on, so the bar always holds the place the app opens on. */
+            const isStart = row.tab === startTab
             return (
               <TabRow
                 row={row}
                 label={labels[row.tab]}
-                dragHandle={isHome ? <HandleSpacer /> : dragHandle}
+                dragHandle={dragHandle}
                 isLast={index === rows.length - 1}
-                isLocked={isHome}
+                isLocked={isStart}
                 onToggle={isVisible =>
                   save(
                     rows.map(r => (r.tab === row.tab ? {...r, isVisible} : r)),
                   )
                 }
                 arrows={
-                  showArrows && !isHome
+                  showArrows
                     ? {
-                        onUp: index > 1 ? () => move(index, -1) : undefined,
+                        onUp: index > 0 ? () => move(index, -1) : undefined,
                         onDown:
                           index < rows.length - 1
                             ? () => move(index, 1)
@@ -166,23 +157,16 @@ export function NavigationEditor() {
           }}
         />
       </View>
-      {(visibleCount === 1 || visibleCount > 5) && (
+      {visibleCount > 5 && (
         <Text
           testID="tabs-count-note"
           aria-live="polite"
           style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {visibleCount === 1
-            ? l`Only Home is on. The rest stay in the menu behind your avatar on phones.`
-            : l`${visibleCount} tabs share the phone bar equally.`}
+          {l`${visibleCount} tabs share the phone bar equally.`}
         </Text>
       )}
     </PrefSection>
   )
-}
-
-/* Home has no handle; the gap keeps its glyph in line with the rows below. */
-function HandleSpacer() {
-  return <View style={{width: 39}} />
 }
 
 function TabRow({
@@ -198,7 +182,7 @@ function TabRow({
   label: string
   dragHandle: React.ReactNode
   isLast: boolean
-  /** Home: its switch can't move. */
+  /** The start tab: its switch can't move. */
   isLocked: boolean
   onToggle: (isVisible: boolean) => void
   arrows?: {onUp?: () => void; onDown?: () => void}

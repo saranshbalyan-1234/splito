@@ -28,12 +28,23 @@
       @media (prefers-color-scheme: dark) { body { background: #151D28; } }
       /* Taps act at once: no double-tap-to-zoom wait, and a quick second tap on the bottom bar is never taken for a zoom (iOS Safari). Panning and pinch-zoom still work. */
       html { touch-action: manipulation; }
+      /* The main-tab slide (owner 174, src/lib/routes/tabSlide.ts): a short shift run by the compositor, the screen's content only (never its fixed FAB). */
+      @keyframes splito-tab-in-r { from { transform: translate3d(32px, 0, 0); opacity: 0.4; } to { transform: none; opacity: 1; } }
+      @keyframes splito-tab-in-l { from { transform: translate3d(-32px, 0, 0); opacity: 0.4; } to { transform: none; opacity: 1; } }
+      [data-screen][data-tab-in="r"] > :not([data-fab]) { animation: splito-tab-in-r 200ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+      [data-screen][data-tab-in="l"] > :not([data-fab]) { animation: splito-tab-in-l 200ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+      /* Content shifted right must not widen the page (the fixed bar would slip, tabTaps.spec): clip sideways on the screen only, never on html or body (that stops the window scrolling). */
+      [data-screen][data-tab-in] { overflow-x: clip; }
+      @media (prefers-reduced-motion: reduce) { [data-screen][data-tab-in] > * { animation: none; } }
       button, input, textarea { font: inherit; line-height: inherit; }
       /* As Bluesky's src/style.css: fields draw their own focus state. */
       textarea:focus, input:focus { outline: 0; }
       /* Date fields already show a calendar icon on the left; the browser's own picker button becomes the whole field (clear, and one click anywhere opens it). */
       input[type="date"] { position: relative; }
       input[type="date"]::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: auto; height: auto; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+      /* The Loader's turn, and the pull to refresh spinner's (Bluesky's bskyweb/templates/base.html .rotate-500ms). */
+      @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: no-preference) { .rotate-500ms { animation: rotate 500ms linear infinite; } }
       /* Keyframes for the ALF animation atoms (fade_in, zoom_fade_in, slide_in_left ...), as Bluesky's src/style.css. */
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }

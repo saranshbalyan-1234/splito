@@ -1,4 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Layout/Header/index.tsx
+import {startPage} from '#/lib/routes/startTab'
 import {createContext, useCallback, useContext} from 'react'
 import {type GestureResponderEvent, View} from 'react-native'
 import Animated from 'react-native-reanimated'
@@ -6,6 +7,7 @@ import {msg} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import {useNavigation} from '@react-navigation/native'
 
+import {IS_WEB} from '#/env'
 import {type NavigationProp} from '#/lib/routes/types'
 import {backFallback, goBack} from '#/navigation/goBack'
 import {useDemoMode} from '#/state/demo'
@@ -143,7 +145,7 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
       if (evt.defaultPrevented) return
       // Opened directly (deep link, refresh): Back goes to this page's parent.
       const state = navigation.getState()
-      goBack(navigation, backFallback(state?.routes[state.index] ?? {name: 'Home'}))
+      goBack(navigation, backFallback(state?.routes[state.index] ?? {name: startPage()}), IS_WEB)
     },
     [onPress, navigation],
   )
@@ -185,11 +187,14 @@ export function ActionButton({
   disabled = false,
   hint,
   children,
+  ref,
 }: {
   testID: string
   label: string
   icon: React.ComponentType<SVGIconProps>
   onPress: () => void
+  /** The button's node, for code that points at it (the guided tour). Absent: upstream behaviour. */
+  ref?: React.Ref<React.ComponentRef<typeof View>>
   edge?: boolean
   disabled?: boolean
   /** Read after the label, e.g. why the action is disabled. */
@@ -200,6 +205,7 @@ export function ActionButton({
   return (
     <Slot>
       <Button
+        ref={ref}
         testID={testID}
         label={label}
         size="small"

@@ -1,3 +1,4 @@
+import {startPage} from '#/lib/routes/startTab'
 import {isSignedIn} from '#/state/session'
 import {device} from '#/storage'
 import {publicPageFor} from './public'
@@ -16,14 +17,16 @@ export function holdLinkIntent(path: string) {
   device.set(['linkIntent'], path)
 }
 
-/** A link opened while signed out (the address the page loaded with, a cold-start or later URL): held when it names somewhere inside the app. Home and the intro itself are not "somewhere". */
+/** A link opened while signed out (the address the page loaded with, a cold-start or later URL): held when it names somewhere inside the app. The bare address and the intro itself are not "somewhere". */
 export function holdSignedOutLink(input: string) {
   /* The legal and help pages and a public invite page are shown as they are; there is nothing to resume. */
   if (publicPageFor(input)) return
   const {isKnown, target} = resolveLink(input)
   if (!isKnown || target.name === 'Welcome') return
   const path = buildPath(target)
-  if (path !== '/') holdLinkIntent(path)
+  // The bare address is rewritten to the start tab before the app reads it (owner 198): that is "open the app", nothing to resume.
+  const isBareStart = target.name === startPage() && Object.keys(target.params).length === 0 && target.sheets.length === 0
+  if (path !== '/' && !isBareStart) holdLinkIntent(path)
 }
 
 /** The held link, once: reading it clears it. */

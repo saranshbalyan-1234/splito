@@ -3,7 +3,7 @@ import {View} from 'react-native'
 import {useNavigation, useRoute} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
-import {goBack} from '#/navigation/goBack'
+import {backFallback, goBack} from '#/navigation/goBack'
 import {atoms as a, web, useBreakpoints, useTheme} from '#/alf'
 import {Portal} from '#/components/Portal'
 import {IS_WEB} from '#/env'
@@ -31,7 +31,7 @@ export function WelcomeScreen() {
           setPrevious(slide)
           navigation.setParams({step: String(next + 1)})
         }}
-        onDone={() => goBack(navigation, {name: 'Home'})}
+        onDone={() => goBack(navigation, backFallback({name: 'Welcome'}), IS_WEB)}
         isLanguageFromDevice={false}
       />
     </View>

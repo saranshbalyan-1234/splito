@@ -18,7 +18,7 @@ import {
   type Editing,
 } from '#/components/comments/CommentComposer'
 import {CommentRow} from '#/components/comments/CommentRow'
-import {DateDivider} from '#/components/comments/DateDivider'
+import {DateDivider} from '#/components/DateDivider'
 import {type CommentPerson} from '#/components/comments/mentions'
 import {
   mergeTimeline,

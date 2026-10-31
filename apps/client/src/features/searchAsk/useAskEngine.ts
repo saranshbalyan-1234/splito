@@ -4,6 +4,7 @@ import {DEFAULT_CATEGORIES, type Group, type Person} from '@splito/sync'
 import {storeAskSource} from '#/data/askSource'
 import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {answerIntent} from '#/lib/ask/answer'
+import {useCategoryName} from '#/components/settings/CategoryIcon'
 import {useNonReactiveCallback} from '#/lib/hooks/useNonReactiveCallback'
 import {parseQuestion} from '#/lib/ask/parse'
 import {type Answer, type Vocab} from '#/lib/ask/types'
@@ -21,6 +22,7 @@ export function useAskEngine() {
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const [categoryPref = DEFAULT_CATEGORIES] = usePref('categories')
+  const categoryName = useCategoryName()
   const [weekStart = 1] = usePref('weekStart')
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
   const today = useToday()
@@ -34,9 +36,10 @@ export function useAskEngine() {
   }
 
   const ask = useNonReactiveCallback(async (question: string): Promise<Answer> => {
-    const categories = categoryPref.map(c => ({id: c.id, name: c.name, color: c.color}))
+    /* Answers name categories in the UI language (a built-in one the person has not renamed); what they type to ask still matches the stored names (`vocab`). */
+    const categories = categoryPref.map(c => ({id: c.id, name: categoryName(c), color: c.color}))
     return answerIntent(parseQuestion(question, vocab), {
-      source: storeAskSource(store, me, {today, mark, categories}),
+      source: storeAskSource(store, me, {today, mark, categories: vocab.categories}),
       me,
       today,
       weekStart: weekStart as 0 | 1 | 6,

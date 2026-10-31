@@ -1,6 +1,7 @@
 import {expect, test} from '@playwright/test'
 
 import {openDemo} from './openDemo'
+import {DESKTOP, PHONE} from './viewports'
 
 /*
  * ARCHITECTURE 26.18: Activity's friend-request rows are the one-line
@@ -8,9 +9,8 @@ import {openDemo} from './openDemo'
  * icon + text from rail up), centred with the text, in place of the "..."
  * menu, whose items open on right-click (long-press on touch).
  */
-const DESKTOP = {width: 1440, height: 900}
 
-for (const viewport of [{width: 320, height: 800}, {width: 390, height: 844}, DESKTOP]) {
+for (const viewport of [{width: 320, height: 800}, PHONE, DESKTOP]) {
   test(`Activity request row is one line with Accept / Decline on the right at ${viewport.width}px`, async ({
     page,
   }) => {

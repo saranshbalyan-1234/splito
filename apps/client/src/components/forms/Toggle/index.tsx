@@ -606,3 +606,45 @@ export function RadioWithLabel({
 }
 
 export const Platform = IS_NATIVE ? Switch : Checkbox
+
+/**
+ * A labelled switch row (Splito): the label in semi-bold, an optional hint
+ * under it, the switch at the end. Every switch in a sheet or list filter.
+ */
+export function SwitchRow({
+  testID,
+  name,
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  testID?: string
+  name: string
+  label: string
+  hint?: string
+  value: boolean
+  onChange: (value: boolean) => void
+}) {
+  const t = useTheme()
+  return (
+    <Item
+      type="switch"
+      testID={testID}
+      name={name}
+      label={label}
+      value={value}
+      onChange={onChange}
+      style={[a.w_full]}>
+      <View style={[a.flex_1, a.gap_2xs, a.pr_md]}>
+        <LabelText style={[a.text_md, a.font_semi_bold]}>{label}</LabelText>
+        {hint ? (
+          <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+            {hint}
+          </Text>
+        ) : null}
+      </View>
+      <Switch />
+    </Item>
+  )
+}

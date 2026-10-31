@@ -71,6 +71,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | AI | Ask Splito: nav item, Sparkles Search & Ask button, Search row; DM-style chat; on-device answers (English and Hindi) with rich cards | F-2301 | done (web e2e; native pass pending) |
 | AI | Free-form answers via the backend model; AI opt-in and privacy | F-2302, F-2303 | todo (needs backend) |
 | Data | Free search across expenses | F-1401 | in progress (built and tested on feat/b-*, unmerged) |
+| Data | Search understands every field: title, notes, items, people (names, contacts, UPI), group and trip place, category, amounts and ranges (`1k`, lakh, between, around), dates and periods, currency, payer, status (settled, owed, disputed, deleted, hidden, inactive), types, comments, payments and write-offs; English and Hindi; removable facet chips; the matched field named on each result | F-246 | built on c-search, unmerged (2026-10-31, main merged). Answered from index keys, not rows (ARCHITECTURE 9.8, 17.1). Checks: sync `search.test.ts` + `searchFields.test.ts` (every field on SQLite and IndexedDB) + `searchOracle.test.ts` (keys equal the rows, order and totals, 1,200 random expenses) + `searchQuery.test.ts` (90-query table) + `searchMatch.test.ts`; `search.spec.ts` 13/13 at 390 and 1440 with `disputes.spec` Disputed filter and `tripLocation.spec` 4/4; lingui en + hi 1,959 messages 0 missing; lint, typecheck and `lessonsGate` green. NO USABLE SPEED RUN: the machine sat at load 70-90 all session. Unusable numbers (load 75-81, median of 3, `openSearch` = people, groups, payments, count, totals and first page): worst query 5,000 expenses 337 ms wall / 14.7 ms cpu, 10,000 expenses 517 ms wall / 41.8 ms cpu; before the change, whole answers at 5,000 cost 61-80 ms cpu per broad query at load 17-22. Renders gate: ask phase 1,020 mounts + 851 updates against baseline 1,018 + 944 (within); the scroll phase reports Activity components (`TimeElapsed`, `DeletedMeta`, `RequestAction`, `OutgoingRow`) above baseline at load 75, untouched by this change. Web verified, native not run |
 | Accessibility | Money direction never shown by colour alone | F-1801 | in progress (built and tested on feat/b-*, unmerged) |
 | Motion | Lottie illustrations, animated balances, success check, list animations | F-1704 | in progress (built on ui/brand, wiring) |
 | Expenses+ | Recurring expenses (rent, subscriptions) | F-306 | todo |
@@ -301,3 +302,91 @@ Checks, 2026-10-30, machine load under 6 for the perf runs (e2e at load 5-135 fr
 - Perf `schema-v2` (Home now shows recent transactions in its body): large demo set (1,590 expenses) Home cold open 27 ms (was 25),
   write + UI 16 ms; 10,000 expenses cold open 25 ms (24), write + UI 16-32 ms (16), Analytics 43 ms (44), search 20-25 ms; Ask open 35 ms, answer 30 ms.
 - Screenshots: apps/client/qa/home2/ (Home, People, Groups; light and Dim; 390 and 1440; demo on).
+
+### F-261 PersonLink (c-personlink, 2026-10-31)
+
+Renders gate re-recorded on purpose (median of three, machine at load 30-80, mount counts are not timing dependent): the scroll phase (1,000 Activity rows) mounts about 364 `PersonLink` and `Link`, and `Pressable` 2,218 to about 2,950 (one actor-avatar link per row); launch 10 and Ask 19 more `PersonLink`. No wasted-render report was added. People rows and Members pass `isInsideLink` and mount nothing extra.
+
+Activity scroll at 6x CPU (large demo, 60 wheel steps), long tasks over 50 ms, with / without the actor-avatar links: 54 and 53 against 46 and 42 (total 9.3 s and 10.3 s against 10.5 s and 9.2 s; largest 592 and 835 ms against 963 and 728 ms); machine load 37-57, two runs each. No clear difference in time; the same over-50 ms tasks occur without any links.
+## Animated icons and empty-state art (F-1713, F-260; owners 96, 172, 210, 213; branch c-anim, web, measured 2026-10-31)
+
+- Web first-load JS (`expo export -p web`, e2e build; the `index`, `__common` and runtime scripts): 7,305,880 B before, 7,021,333 B after
+  (-284,547 B, -3.9 %); gzip 1,545,216 B before, 1,495,320 B after. Lazy: 415 KB raw in 53 chunks (`lottie-web` 168 KB plus 52 animation files: 19 empty
+  states, the 5 intro slides, loading and success, light and dark).
+- Animations are UI-thread only (Reanimated shared values); each icon motion is 180-380 ms; the sync dot loops only while syncing and rests on blur or reduced motion.
+- Not profiled: the 1,000-row list scroll with animated icons visible (F-1713 acceptance 4). Native (iOS, Android) was not run for the art: the once-and-rest play on
+  `lottie-react-native` (`play(0, staticFrame)`) and the lid/tick motion are untested on a device.
+- Tests: `e2e/emptyArt.spec.ts` (every empty state at 390 and 1440 shows its own art and a button; reduced motion holds one frame, light and dark; one art plays once and rests),
+  `architecture/emptyStateArt.test.ts`, `activityEmptyArt` in `feed.test.ts`.
+- Renders gate (`e2e-renders/baseline.json`, re-recorded as the median of three runs, machine load about 75 so only counts are used): launch 2,090 -> 2,127 mounts, tabs 468 -> 500 updates
+  (mounts 69 -> 75), scroll 43,735 -> 43,740 mounts, ask 944 -> 957 updates, other phases unchanged. Reviewed causes: the new `MorphIcon` wrapper (7 icons mount, 8 update on the tab
+  round) and its `Animated.View` (+7 mounts, +8 updates), the Activity tick glyph (`AnimatedIcon`, `Layer`, `Nodes`, `AnimatedPath`: 3 mounts), and two `View`/`Circle` mounts
+  from the ContactRound and Users glyphs. No new wasted-render report. A first version that kept both the outline and filled glyph mounted cost 624 tab updates and one new
+  wasted `Rect` report, so only the glyph in use is mounted.
+
+## Guided tour after the first sign-in (F-253; web only, measured 2026-10-31, machine load 20 from other builders)
+
+| Check | Result |
+|---|---|
+| Lint, typecheck | green |
+| Client unit tests | new: `lib/tour/steps.test.ts` (6, which steps show for phone, desktop, settled friend, new account, nothing on screen), `lib/tour/layout.test.ts` (7, cut-out, card placement, 320 px width, hole path); architecture rules pass for the new files (the one red, `personAvatarOutsideLink` on `screens/Profile`, is on the integration branch before this change) |
+| Lingui | en 2041 / hi 2041, 0 missing (10 new strings, Hindi written for each) |
+| `e2e/tour.spec.ts` at 390 and 1440 | 12 tests: a new account is toured once (3 steps, Done ends it, no tour after a reload), Skip ends it, with a friend the steps sit on the FAB or pill / first row / balance, Escape skips and the dim blocks the control under it, Settings > Support "Take the tour" replays it on People, never in demo mode (no row either) |
+| Neighbouring specs (load 20, so timings are upper bounds) | `shell` "sidebar holds the mark, the nav, Add expense" and "the FAB is on every top-level page" pass (they cover the controls the tour registers). Not green here, and not from this change (the tour never runs unarmed): `shell` "detail pages" (the demo group has 6 members, the spec says 5, from the F-269 demo data), `shell` "badge counts unread" (Activity rows not found), `shell` "on desktop the header stays put", `sidebar` 1440 (demo switch over the 30 s test limit at load 20); not bisected against a build of the integration branch alone |
+| Cost | an account that has seen the tour: one `getPref` at launch, `TourHost` renders null; a tour that runs: one overlay in the portal, a measure per step (and one 350 ms settle look), no timers after it ends; no store subscription, no re-render of the controls it points at (ref callbacks register in a module map) |
+
+Not run: iOS and Android (the native dim has no blur because `expo-blur` is not a dependency; `measureInWindow` coordinates on Android edge-to-edge and the announcement on VoiceOver / TalkBack are unchecked), the renders gate (its Metro port 8191 is outside this builder's range).
+## F-266 perf sweep, c-perf port (owner 189; branch c-perf-port on `claude/repo-status-other-chat-xmr0l3` at 28f88d3, web, measured 2026-10-31)
+
+`perf/sweep.spec.ts` (from c-perf, on the current routes: no Home, Settings a tab, the avatar opens Profile, the drawer by
+its address, Support and Your data pages). Chromium (`channel: 'chrome'`), 390 x 844, touch, large demo, accessibility tree
+off, 4 laps per run (first lap = open, median of laps 2-4 = revisit), median of three runs per cell, base and after builds
+interleaved, 1-minute load 0.3-4.4 (x1) and 0.4-1.2 (x6). Cells: feedback / content / longest block, ms from `pointerdown`.
+Base = 28f88d3 (`e2e:build`), after = this branch. Run: `PERF_DIST=<dist> E2E_PORT=8262 SWEEP_DATA=demo SWEEP_CPU=6
+SWEEP_ONLY='^(tabs|Person|...)$' pnpm perf --project=sweep-chrome -g "demo data"`.
+
+| Interaction | x1 base | x1 after | x6 base | x6 after | Rows cloned on leave |
+|---|---|---|---|---|---|
+| Person: Back (revisit) | 124 / 124 / 95 | 40 / 40 / 0 | 1,046 / 1,046 / 792 | 279 / 279 / 145 | 60 -> 0 |
+| Group: Back (revisit) | 64 / 64 / 0 | 37 / 37 / 0 | 402 / 402 / 0 | 171 / 172 / 0 | 20 -> 0 |
+| Friends and invites: Back (revisit) | 264 / 264 / 235 | 38 / 38 / 0 | 2,077 / 2,077 / 0 | 209 / 209 / 135 | 106 -> 0 |
+| Friends and invites: open (revisit) | 220 / 220 / 181 | 148 / 148 / 123 | 1,486 / 1,486 / 0 | 1,097 / 1,097 / 0 | |
+| Add friend: close (revisit) | 50 | 51 | 294 | 301 | 2 -> 0 |
+| Person: open (revisit) | 48 / 112 / 0 | 40 / 116 / 0 | 304 / 875 / 188 | 260 / 784 / 202 | |
+| Group: open (revisit) | 55 / 113 / 0 | 33 / 73 / 0 | 266 / 617 / 205 | 252 / 618 / 175 | |
+| Add expense: open (revisit) | 59 / 485 / 0 | 54 / 484 / 0 | 364 / 953 / 167 | 306 / 881 / 145 | |
+| People filters sheet: open (revisit) | 70 / 70 / 0 | 69 / 69 / 0 | 498 / 498 / 239 | 453 / 453 / 254 | |
+| Search & Ask: open (revisit) | 72 / 72 / 0 | 72 / 72 / 0 | 524 / 526 / 240 | 399 / 399 / 181 | |
+| Profile: open (revisit) | 38 | 34 | 200 / 200 / 123 | 186 / 186 / 0 | |
+| Drawer: open (revisit) | 30 | 24 | 206 / 206 / 171 | 210 / 210 / 162 | |
+| Activity: fling scroll, worst frame (first / revisit) | 143 / 18 | 141 / 18 | 1,254 / 54 | 1,146 / 39 | |
+| People search, 16 keys, worst key-to-echo (revisit) | 75 | 75 | 1,152 | 1,139 | |
+| First load to the start tab's rows (revisit) | 190 / 375 | 171 / 345 | 1,138 / 3,472 | 1,135 / 3,501 | |
+
+Main tabs, revisit (tab highlight / content), x6: the sweep's tab round was taken again on the final code (cached breakpoint
+answers), 6 base and 3 after runs interleaved at load 0.7-1.5: Groups 259 / 287 -> 270 / 322, Analytics 403 / 452 -> 441 / 491,
+Activity 344 / 369 -> 360 / 396, Settings 239 / 262 -> 236 / 261, People 308 / 342 -> 314 / 340. Base Analytics ranged 356-488
+over its 6 runs; the after runs (421-444) sit inside that range, so no change is claimed either way. At x1 every tab is
+45-72 ms highlight and under 80 ms content on a revisit in both builds. The first build of this branch (breakpoints read
+`MediaQueryList.matches` in render) read Analytics 439-484: reading the answer from the listener instead is in 17.1.
+
+Demo mode on (seed a year, `demo-mode.spec` "under 10 s", alone): 9,058 ms base -> 8,029 ms after (median of three; held
+people and group activity writes), and the app stays usable behind the pill meanwhile. With two workers it read 13.4 s (the
+spec's 10 s bound is a timing test; run it alone).
+
+Still over budget at x6 (owner 189 sweep, not fixed here): every main-tab switch (236-441 ms highlight, budget 100), Friends
+and invites open (1.1 s, its 45-row list mounts in one task), Add expense body (881 ms), People search typing (1.1 s worst key,
+one long task per keystroke), Activity's first fling (1.1 s, the first page of rows mounting). At x1 the remaining misses are
+Friends and invites open (148 ms), the first Analytics visit (317 ms content) and the Add expense body (484 ms, under its
+500 ms moving-surface budget).
+
+Renders gate (`pnpm --filter @splito/client renders`, Metro dev, three runs each): identical counts on base and after,
+launch 3,632+308, tabs 75+474, addExpense 501+179, type 0+793, closeAdd 76+193, scroll 32,971+17,629, ask 1,095+824-851,
+7 wasted reports. A first version with a `<ScreenExitScope>` wrapper added 6-11 updates per phase (the wrapper re-rendered
+with every screen), so the scope is a hook plus a bare provider. The gate is red on base as well, for two reasons that
+predate this branch: the scroll phase stops at 806 Activity rows (the positive control wants 1,000) and `baseline.json` is
+from before People became the start tab (launch 3,632 against 2,110). Not re-recorded here (counts are unchanged by this
+branch); the counts above came from a local run with the scroll target lowered to 806.
+
+Not verified: WebKit (not installed in this container), iOS and Android (native paths unchanged: the Reanimated patch and
+the exit scope touch web code only; `LayoutAnimationConfig skipExiting` still does the native job).

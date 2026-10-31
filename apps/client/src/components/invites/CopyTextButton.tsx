@@ -2,9 +2,9 @@
 import {useEffect, useState} from 'react'
 import {type GestureResponderEvent, View} from 'react-native'
 import Animated, {FadeOutUp, ZoomIn} from 'react-native-reanimated'
-import * as Clipboard from 'expo-clipboard'
 import {Trans} from '@lingui/react/macro'
 
+import {copyText} from '#/lib/sharing'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, type ButtonProps} from '#/components/Button'
 import {SquareBehindSquare_Stroke2_Corner2_Rounded as CopyIcon} from '#/components/icons/Invite'
@@ -35,7 +35,7 @@ export function CopyTextButton({
   }, [hasBeenCopied, isReducedMotionEnabled])
 
   const onPress = (evt: GestureResponderEvent) => {
-    void Clipboard.setStringAsync(value)
+    void copyText(value, {toast: false})
     setHasBeenCopied(true)
     onPressProp?.(evt)
   }

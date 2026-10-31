@@ -22,6 +22,7 @@ import {useSelfReminders} from '#/data/remind'
 import {atoms as a, useTheme} from '#/alf'
 import {Admonition} from '#/components/Admonition'
 import {Button, ButtonText} from '#/components/Button'
+import {ChoiceChips} from '#/components/forms/ChoiceChips'
 import * as Dialog from '#/components/Dialog'
 import {DateField} from '#/components/forms/DateField'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
@@ -163,30 +164,18 @@ function Form({request}: {request: RemindMe}) {
           <Trans>A notification for you about {subject}. Nothing is sent to anyone.</Trans>
         </FormSheet.Description>
 
-        <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
-          {(
-            [
-              ['tomorrow', l`Tomorrow`],
-              ['in3days', l`In 3 days`],
-              ['nextWeek', l`Next Monday`],
-              ['nextMonth', l`Next month`],
-            ] as const
-          ).map(([id, label]) => {
-            const ms = picks.find(p => p.id === id)!.at
-            const isSelected = dateInput(ms) === date && timeInput(ms) === time
-            return (
-              <Button
-                key={id}
-                testID={`remind-pick-${id}`}
-                label={label}
-                size="small"
-                color={isSelected ? 'primary' : 'secondary'}
-                onPress={() => pick(ms)}>
-                <ButtonText>{label}</ButtonText>
-              </Button>
-            )
-          })}
-        </View>
+        <ChoiceChips
+          gap="sm"
+          label={l`Remind me`}
+          value={picks.find(p => dateInput(p.at) === date && timeInput(p.at) === time)?.id ?? null}
+          onChange={id => pick(picks.find(p => p.id === id)!.at)}
+          options={[
+            {value: 'tomorrow', label: l`Tomorrow`, testID: 'remind-pick-tomorrow'},
+            {value: 'in3days', label: l`In 3 days`, testID: 'remind-pick-in3days'},
+            {value: 'nextWeek', label: l`Next Monday`, testID: 'remind-pick-nextWeek'},
+            {value: 'nextMonth', label: l`Next month`, testID: 'remind-pick-nextMonth'},
+          ]}
+        />
 
         <View style={[a.flex_row, a.gap_md]}>
           <View style={[a.flex_1]}>

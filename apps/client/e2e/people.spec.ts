@@ -1,8 +1,12 @@
-import {expect, type Page, test} from '@playwright/test'
+import {expect, test} from '@playwright/test'
 import {balanceRows, balanceSides, personSummary} from '@splito/domain'
 import {DEMO_LARGE_PREFIX, generateLargeDemo, localToday, planLedger} from '@splito/sync/demoLarge'
 
-import {openDemo} from './openDemo'
+import {type SplitoDevTools} from '../src/data/devTools'
+import {openApp} from './app'
+import {openDemo, setPref} from './openDemo'
+import {seedA04} from './seed'
+import {LAPTOP, PHONE} from './viewports'
 
 /** A currency and direction nobody matches in the demo dataset (computed from its plan, so it follows the data). */
 function emptyFilter(): [currency: string, show: 'owesYou' | 'youOwe'] {
@@ -20,66 +24,11 @@ function emptyFilter(): [currency: string, show: 'owesYou' | 'youOwe'] {
   throw new Error('every currency has a friend in both directions: pick another filter')
 }
 
-/* Seeds through the app's own mutations (window.splito, dev/E2E builds only). Amounts are minor units. */
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createGroup(input: unknown): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-  setPref(key: string, value: unknown): Promise<void>
-}
-
-async function ready(page: Page) {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
-}
-
-/** A04: Kavya owes me 100 directly and 50 in a shared group. */
-async function seedA04(page: Page) {
-  return page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
-    const kavya = await s.createPerson('Kavya Rao')
-    const group = await s.createGroup({
-      name: 'Pune trip',
-      kind: 'trip',
-      currency: 'INR',
-      startDate: null,
-      endDate: null,
-      memberIds: [kavya],
-    })
-    const base = {
-      currency: 'INR',
-      tz: 'Asia/Kolkata',
-      category: 'food',
-      notes: '',
-    }
-    await s.createExpense({
-      ...base,
-      title: 'Concert',
-      groupId: null,
-      total: '20000',
-      payers: {[s.me]: '20000'},
-      split: {mode: 'equal', participants: [s.me, kavya]},
-      date: '2026-10-20',
-    })
-    await s.createExpense({
-      ...base,
-      title: 'Snacks',
-      groupId: group,
-      total: '10000',
-      payers: {[s.me]: '10000'},
-      split: {mode: 'equal', participants: [s.me, kavya]},
-      date: '2026-10-21',
-    })
-    return kavya
-  })
-}
-
 test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and history', async ({
   page,
 }) => {
-  await ready(page)
-  const kavya = await seedA04(page)
+  await openApp(page)
+  const {kavya} = await seedA04(page)
   await page.goto(`/people/${kavya}`)
 
   await expect(page.getByTestId('person-name')).toHaveText('Kavya Rao')
@@ -115,14 +64,9 @@ test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and his
 })
 
 test('the Include groups default comes from preferences', async ({page}) => {
-  await ready(page)
-  const kavya = await seedA04(page)
-  await page.evaluate(() =>
-    (window as unknown as {splito: Splito}).splito.setPref(
-      'includeGroupsDefault',
-      false,
-    ),
-  )
+  await openApp(page)
+  const {kavya} = await seedA04(page)
+  await setPref(page, 'includeGroupsDefault', false)
   await page.goto(`/people/${kavya}`)
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹100.00')
   await expect(
@@ -133,8 +77,8 @@ test('the Include groups default comes from preferences', async ({page}) => {
 test('recording a part payment moves the balance; deleting it is undoable', async ({
   page,
 }) => {
-  await ready(page)
-  const kavya = await seedA04(page)
+  await openApp(page)
+  const {kavya} = await seedA04(page)
   await page.goto(`/people/${kavya}`)
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')
 
@@ -146,7 +90,7 @@ test('recording a part payment moves the balance; deleting it is undoable', asyn
   await page.getByTestId('payment-amount').fill('40')
   await page.getByTestId('payment-note').fill('Cash')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹110.00')
 
   const row = page.getByRole('button', {name: 'Kavya Rao paid you'})
@@ -161,8 +105,8 @@ test('recording a part payment moves the balance; deleting it is undoable', asyn
 })
 
 test('swapping the direction records what I paid them', async ({page}) => {
-  await ready(page)
-  const kavya = await seedA04(page)
+  await openApp(page)
+  const {kavya} = await seedA04(page)
   await page.goto(`/people/${kavya}`)
   await page.getByTestId('person-record-payment').click()
   await page.getByTestId('payment-swap').click()
@@ -177,8 +121,8 @@ test('swapping the direction records what I paid them', async ({page}) => {
 test('paying the whole balance from a friend’s page settles the group part too, so nobody pays twice', async ({
   page,
 }) => {
-  await ready(page)
-  const kavya = await seedA04(page)
+  await openApp(page)
+  const {kavya} = await seedA04(page)
   await page.goto(`/people/${kavya}`)
   await page.getByTestId('person-record-payment').click()
   await expect(page.getByTestId('payment-amount')).toHaveValue('150.00')
@@ -186,12 +130,12 @@ test('paying the whole balance from a friend’s page settles the group part too
     'Counts towards: Direct ₹100.00 · Pune trip ₹50.00',
   )
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
   await expect(page.getByTestId('person-settled')).toBeVisible()
 
   // The group agrees: nothing left to settle there (a settled group is hidden by default, so show it).
   // Settled groups and friends are hidden by default (F-1413); this spec reads them, so show them.
-  await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('groups.showSettled', true))
+  await setPref(page, 'groups.showSettled', true)
   await page.goto('/groups')
   await page.getByTestId('screen-groups').getByText('Pune trip').click()
   await expect(page.getByTestId('group-settle')).toBeDisabled()
@@ -200,7 +144,7 @@ test('paying the whole balance from a friend’s page settles the group part too
 test('People: the Include groups filter changes the totals only on Apply', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   await seedA04(page)
   await page.goto('/people')
   const row = page.getByTestId('person-Kavya Rao')
@@ -268,12 +212,12 @@ test('People filters: one currency, which way, and the order drive the list and 
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
 })
 
-test('People sorts by the biggest balance, recent activity or name (preference)', async ({
+test('People sorts by last active (the default, owner 199), the biggest balance or name (preference)', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   await page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
+    const s = (window as unknown as {splito: SplitoDevTools}).splito
     const base = {
       currency: 'INR',
       tz: 'Asia/Kolkata',
@@ -309,22 +253,18 @@ test('People sorts by the biggest balance, recent activity or name (preference)'
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
   await page.goto('/people')
   await expect(page.getByTestId('person-Zoya Big')).toBeVisible()
-  expect(await order()).toEqual(['person-Zoya Big', 'person-Aarav Small'])
-  await page.evaluate(() =>
-    (window as unknown as {splito: Splito}).splito.setPref(
-      'peopleSort',
-      'recent',
-    ),
-  )
+  // Last active is the default (owner 199): Tea, the newest change, puts Aarav first.
   await expect.poll(order).toEqual(['person-Aarav Small', 'person-Zoya Big'])
+  await setPref(page, 'peopleSort', 'amount')
+  await expect.poll(order).toEqual(['person-Zoya Big', 'person-Aarav Small'])
 })
 
 test('UPI pay link shows only when I owe them rupees, and asks before recording', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const [owedINR, owedUSD] = await page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
+    const s = (window as unknown as {splito: SplitoDevTools}).splito
     const a = await s.createPerson('Meera Iyer')
     const b = await s.createPerson('Tom Hale')
     const base = {
@@ -393,7 +333,7 @@ test('UPI pay link shows only when I owe them rupees, and asks before recording'
 })
 
 test('add a friend, then land on their page', async ({page}) => {
-  await ready(page)
+  await openApp(page)
   await page.goto('/friends/new')
   // A sheet: the primary action at the bottom, off until there is a name. A name alone is a private friend (26.18).
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
@@ -407,15 +347,15 @@ test('add a friend, then land on their page', async ({page}) => {
 test('compose brings the friend: the sidebar pill on desktop, the FAB and the page’s own button on phones (owner 190)', async ({
   page,
 }) => {
-  await ready(page)
-  const kavya = await seedA04(page)
-  await page.setViewportSize({width: 1280, height: 800})
+  await openApp(page)
+  const {kavya} = await seedA04(page)
+  await page.setViewportSize(LAPTOP)
   await page.goto(`/people/${kavya}`)
   await expect(page.getByTestId('fab-add')).toHaveCount(0)
   await page.getByTestId('sidebar-add').click()
   await expect(page).toHaveURL(new RegExp(`/expense/new\\?personId=${kavya}`))
 
-  await page.setViewportSize({width: 390, height: 844})
+  await page.setViewportSize(PHONE)
   await page.goto(`/people/${kavya}`)
   await expect(page.getByTestId('screen-person')).toBeVisible()
   await expect(page.getByTestId('screen-person').getByTestId('fab-add')).toBeVisible()
@@ -427,7 +367,7 @@ test('compose brings the friend: the sidebar pill on desktop, the FAB and the pa
 })
 
 test('an unknown friend shows an honest not-found state', async ({page}) => {
-  await ready(page)
+  await openApp(page)
   await page.goto('/people/3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77')
   await expect(page.getByTestId('person-not-found')).toBeVisible()
 })

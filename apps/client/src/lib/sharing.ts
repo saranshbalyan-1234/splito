@@ -41,19 +41,41 @@ export async function shareSheet({text, url}: {text?: string; url?: string}): Pr
 }
 
 /**
- * Shares a link with a line of text: the native share sheet on iOS and
- * Android, the Web Share API where the browser has it, otherwise (most
- * desktop browsers) the link is copied and a toast says so (section 2:
- * a missing capability is a planned fallback).
+ * What happened to shared content: the system share sheet opened (`shared`), it was copied because this
+ * browser has no share sheet (`copied`), or the person closed the sheet without choosing an app
+ * (`cancelled`). None of them says the message was sent: Splito cannot see that.
  */
-export async function shareUrl(url: string, message?: string) {
-  if ((await shareSheet({url, text: message})) === 'unavailable') await copyText(url)
+export type ShareResult = 'shared' | 'copied' | 'cancelled'
+
+/**
+ * Copies text. The default confirms with a toast; pass `toast: false` where the caller shows its own
+ * confirmation (the invite field's floating "Copied!", the Remind sheet's closing toast).
+ */
+export async function copyText(text: string, {toast = true}: {toast?: boolean} = {}) {
+  await setStringAsync(text)
+  if (toast) Toast.show(t`Copied to clipboard`, {type: 'success'})
 }
 
-/** Copies text and confirms with a toast. */
-export async function copyText(text: string) {
-  await setStringAsync(text)
-  Toast.show(t`Copied to clipboard`, {type: 'success'})
+/**
+ * Shares text and/or a link: the native share sheet on iOS and Android, the Web Share API where the
+ * browser has it, otherwise (most desktop browsers) the content is copied (section 2: a missing
+ * capability is a planned fallback). `toast` confirms that fallback copy.
+ */
+async function share(content: {text?: string; url?: string}, toast: boolean): Promise<ShareResult> {
+  const result = await shareSheet(content)
+  if (result !== 'unavailable') return result
+  await copyText(content.url ?? content.text ?? '', {toast})
+  return 'copied'
+}
+
+/** Hands plain text to the share sheet, else the clipboard (silently: the caller words the outcome). */
+export function shareText(text: string): Promise<ShareResult> {
+  return share({text}, false)
+}
+
+/** Shares a link with a line of text; where there is no share sheet the link is copied and a toast says so. */
+export async function shareUrl(url: string, message?: string) {
+  await share({url, text: message}, true)
 }
 
 /** True where `sms:` links open a messages app (phones). */

@@ -1,7 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/JoinRequests.tsx (request rows: avatar, name, Accept / Reject buttons)
-import {memo, useRef} from 'react'
-import {View} from 'react-native'
-import {plural, t} from '@lingui/core/macro'
+import {memo} from 'react'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {
@@ -11,13 +9,13 @@ import {
   type Entity,
   type FriendRequest,
   requestName,
+  requestState,
   resendFriendRequest,
 } from '@splito/sync'
 
-import {seeRequestsPath} from '#/lib/links/make'
+import {openPerson} from '#/lib/links/make'
 import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
-import {logger} from '#/logger'
 import {directory} from '#/data/friends'
 import {useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
@@ -26,86 +24,31 @@ import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Ti
 import * as Toast from '#/components/Toast'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 import {RequestAction, RequestRow} from '#/components/people/RequestRow'
-import {SectionLink} from '#/components/SectionLink'
-import {SectionHeader} from './SectionHeader'
-
-const DAY = 86_400_000
-
-/** Rows the section shows at most (owner 153, 175); "See all" opens Friends and invites for the rest. */
-const MAX_ROWS = 5
+import {RequestsBlock} from '#/components/people/RequestsBlock'
+import {ago} from '#/components/people/ago'
+import {useRowAction} from '#/components/people/useRowAction'
 
 /**
- * On Home under the Overview and at the top of People (26.3, owners 153, 175): "Requests" waiting for your
- * answer (Accept / Decline), then "Invites sent" (Resend / Cancel), each row on one line as on Friends and invites
- * (F-621). At most 5 rows in all, requests first; more than that adds "See all" to Friends and invites. Hidden
- * when nothing is pending.
+ * At the top of People (26.3, owners 153, 175, 197): "Requests" waiting for your answer (Accept / Decline), then
+ * "Invites sent" (Resend / Cancel), each row on one line as on Friends and invites (F-621). The layout is the one
+ * Groups shares (`RequestsBlock`). Hidden when nothing is pending.
  */
 export function RequestsSection() {
   const {t: l} = useLingui()
   const {incoming, outgoing} = usePendingRequests()
-  if (incoming.length === 0 && outgoing.length === 0) return null
-  const shownIncoming = incoming.slice(0, MAX_ROWS)
-  const shownOutgoing = outgoing.slice(0, MAX_ROWS - shownIncoming.length)
-  const hasMore = shownIncoming.length + shownOutgoing.length < incoming.length + outgoing.length
-  const seeAll = (
-    <SectionLink testID="people-requests-all" href={seeRequestsPath()} label={l`See all requests and invites`}>
-      <Trans>See all</Trans>
-    </SectionLink>
-  )
   return (
-    <View testID="people-requests">
-      {shownIncoming.length > 0 ? (
-        <>
-          <SectionHeader
-            title={l`Requests`}
-            testID="people-requests-title"
-            href={seeRequestsPath()}
-            hrefLabel={l`See all requests and invites`}
-            count={incoming.length}
-            action={hasMore && shownOutgoing.length === 0 ? seeAll : undefined}
-          />
-          {shownIncoming.map(r => (
-            <IncomingRow key={r.id} request={r} />
-          ))}
-        </>
-      ) : null}
-      {shownOutgoing.length > 0 ? (
-        <>
-          <SectionHeader
-            title={l`Invites sent`}
-            testID="people-invites-title"
-            href={seeRequestsPath()}
-            hrefLabel={l`See all requests and invites`}
-            count={outgoing.length}
-            action={hasMore ? seeAll : undefined}
-          />
-          {shownOutgoing.map(r => (
-            <OutgoingRow key={r.id} request={r} />
-          ))}
-        </>
-      ) : null}
-    </View>
+    <RequestsBlock
+      testIDPrefix="people"
+      incomingTitle={l`Requests`}
+      outgoingTitle={l`Invites sent`}
+      incoming={incoming.map(r => (
+        <IncomingRow key={r.id} request={r} />
+      ))}
+      outgoing={outgoing.map(r => (
+        <OutgoingRow key={r.id} request={r} />
+      ))}
+    />
   )
-}
-
-/** One write at a time per row, from the first tap. */
-function useRowAction() {
-  const {t: l} = useLingui()
-  const haptics = useHaptics()
-  const busy = useRef(false)
-  return async (where: string, fn: () => Promise<void>) => {
-    if (busy.current) return
-    busy.current = true
-    try {
-      await fn()
-    } catch (e) {
-      haptics.error()
-      logger.error(e, {where})
-      Toast.show(l`That didn’t work. Please try again.`, {type: 'error'})
-    } finally {
-      busy.current = false
-    }
-  }
 }
 
 export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
@@ -121,6 +64,7 @@ export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
   return (
     <RequestRow
       testID={`request-${name}`}
+      personId={request.data.personId}
       name={name}
       sync={request}
       detail={
@@ -140,7 +84,7 @@ export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
             Toast.show(l`You and ${person.data.name} are friends now`, {
               type: 'success',
             })
-            navigation.navigate('Person', {personId: person.id})
+            openPerson(navigation, person.id, ctx.actor, 'navigate')
           })
         }
       />
@@ -178,6 +122,7 @@ export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
   return (
     <RequestRow
       testID={`invite-sent-${requestName(r)}`}
+      personId={r.personId}
       name={requestName(r)}
       sync={request}
       detail={detail}>
@@ -196,7 +141,10 @@ export const OutgoingActions = memo(function OutgoingActions({request}: {request
   const act = useRowAction()
   const r = request.data
   const name = requestName(r)
+  const now = useTickEveryMinute()
 
+  // An invite past its 30 days has lapsed: Activity keeps its row, without Resend / Cancel (Invites sent leaves it out).
+  if (requestState(r, now) !== 'pending') return null
   return (
     <>
       <RequestAction
@@ -238,11 +186,3 @@ export const OutgoingActions = memo(function OutgoingActions({request}: {request
     </>
   )
 })
-
-/** "today", "yesterday", "3 days ago": requests move in days. */
-function ago(ms: number) {
-  // Rounded: the minute tick lags the clock, so floor would read 2 days as "yesterday".
-  const days = Math.round(ms / DAY)
-  if (days <= 0) return t`today`
-  return plural(days, {one: 'yesterday', other: '# days ago'})
-}

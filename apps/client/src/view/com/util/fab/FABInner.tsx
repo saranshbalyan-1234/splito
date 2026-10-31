@@ -68,6 +68,9 @@ export function FABInner({testID, icon, onPress, style, ...props}: FABProps) {
 
   return (
     <Animated.View
+      // The tab slide moves a screen's content, never this fixed button (index.html).
+      // @ts-expect-error web only
+      dataSet={{fab: ''}}
       style={[
         styles.outer,
         size,

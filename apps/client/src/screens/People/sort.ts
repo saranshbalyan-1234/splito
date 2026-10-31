@@ -1,4 +1,4 @@
-import {type Entity, isRemovedFriend, type Person, type RowSyncStatus} from '@splito/sync'
+import {type Entity, isRemovedFriend, type ListSort, type Person, type RowSyncStatus} from '@splito/sync'
 import {
   balanceSides,
   isSettledBalance,
@@ -9,13 +9,13 @@ import {
 } from '@splito/domain'
 
 /** One friend on People: their balance with me, if any. */
-export type FriendRow = {id: string; name: string; summary?: PersonSummary; isRemoved?: boolean}
+export type FriendRow = {id: string; name: string; summary?: PersonSummary; isRemoved?: boolean; createdAt?: number}
 
-/** A friend as Home lists it: also a deleted one (struck, `deletedAt`) and whether I hid it. */
+/** A friend as People lists it: also a deleted one (struck, `deletedAt`) and whether I hid it. */
 export type ListedFriend = Omit<FriendRow, 'summary'> & {summary: PersonSummary | undefined; deletedAt?: number; isHidden?: boolean; syncStatus?: RowSyncStatus}
 
 /**
- * The friends Home lists: everyone but me and removed friends, plus a removed
+ * The friends People lists: everyone but me and removed friends, plus a removed
  * friend for as long as any currency is open between us (a group can still
  * give them a balance, and the totals above must match the rows below).
  */
@@ -33,6 +33,7 @@ export function listedFriends(
       {
         id: p.id,
         name: p.data.name,
+        createdAt: p.createdAt,
         summary,
         deletedAt: p.deleted ? p.updatedAt : undefined,
         isHidden: p.deleted && hiddenIds.has(p.id),
@@ -44,14 +45,15 @@ export function listedFriends(
 }
 
 /**
- * The `peopleSort` preference applied. `amount`: biggest balance in the
- * default currency first (balances in other currencies can't be ranked
- * against it, so those friends follow, open balances before settled ones).
- * `recent`: the friend with the newest change to a record they are on first (`people.lastActivityAt`). Ties, and `name`, go by name.
+ * The `peopleSort` preference applied (owner 199). `lastActive`: the friend with the newest change to a record they
+ * are on first (an expense, payment, comment or edit: the projection `people.lastActivityAt`, read by
+ * `useLastActivity`, never computed here); one with no record yet follows. `amount`: biggest balance in the default
+ * currency first (balances in other currencies can't be ranked against it, so those friends follow, open balances
+ * before settled ones). `newest`: the friend added last first. `name`: A to Z. Ties go by name.
  */
 export function sortFriends<T extends FriendRow>(
   rows: T[],
-  sort: 'amount' | 'name' | 'recent',
+  sort: ListSort,
   {currency, activity}: {currency: string; activity: Map<string, number>},
 ): T[] {
   const size = (row: FriendRow) =>
@@ -65,10 +67,14 @@ export function sortFriends<T extends FriendRow>(
       const dy = size(y)
       if (dx !== dy) return dx > dy ? -1 : 1
       if (isOpen(x) !== isOpen(y)) return isOpen(x) ? -1 : 1
-    } else if (sort === 'recent') {
+    } else if (sort === 'lastActive') {
       const ax = activity.get(x.id) ?? 0
       const ay = activity.get(y.id) ?? 0
       if (ax !== ay) return ax > ay ? -1 : 1
+    } else if (sort === 'newest') {
+      const cx = x.createdAt ?? 0
+      const cy = y.createdAt ?? 0
+      if (cx !== cy) return cx > cy ? -1 : 1
     }
     return byName(x, y)
   })

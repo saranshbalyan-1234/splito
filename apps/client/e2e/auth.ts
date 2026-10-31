@@ -64,15 +64,17 @@ export async function createAccount(page: Page, a: {email: string; phone: string
   await page.getByTestId('setNewPassword-next').click()
 }
 
-/** The app is up: Home, or the People tab when the address named it. */
-export const signedInShown = (page: Page) => expect(page.getByTestId('screen-home').or(page.getByTestId('screen-people'))).toBeVisible({timeout: 20_000})
+/** The app is up: the start tab, People, or the tab the address named. */
+export const signedInShown = (page: Page) =>
+  // A tab parked behind another keeps its screen mounted and hidden, so more than one can match: the visible one counts.
+  expect(page.getByTestId(/^screen-(people|groups|analytics|activity|settings)$/).locator('visible=true').first()).toBeVisible({timeout: 20_000})
 
 export const hooks = (page: Page) => page.evaluate(() => Object.keys((window as unknown as Hooks).__splitoTest ?? {}))
 
-/** Settings > Log out, confirmed: everything the account left on the device is erased, then the logged-out flow shows (owner 186). */
-export const logOutFromSettings = async (page: Page) => {
-  await page.goto('/settings')
-  await page.getByTestId('settings-log-out').click()
+/** Profile > Log out, confirmed: everything the account left on the device is erased, then the logged-out flow shows (owners 186, 202). */
+export const logOutFromProfile = async (page: Page) => {
+  await page.goto('/profile')
+  await page.getByTestId('profile-log-out').click()
   await page.getByTestId('logout-confirm').click()
   await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 30_000})
 }
