@@ -2218,9 +2218,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   check it; the wave assemble step re-seeds and re-screenshots. *Why:* "make sure to update the demo data again
   and again, with all the changes".
 - **Don't ask; decide.** The owner has delegated every open choice: make the call, record it (spec decision
-  table or here), deliver the final version, and do not interrupt with questions. *Why:* "don't ask me
-  anything, take your own decisions, give final version"; "do what you want to do, take own decisions, don't
-  disturb me".
+  table or here), deliver the final version, and do not interrupt with questions; reports state what was decided
+  instead of asking the owner to confirm product calls (owner 224). *Why:* "don't ask me anything, take your own
+  decisions, give final version"; "do what you want to do, take own decisions, don't disturb me"; "You take all
+  decisions, don't ask me".
 - **The local preview is always the newest build** (owner 122). http://localhost:8090 serves the newest
   integrated code: a watcher rebuilds it (e2e web build, demo mode available) within a few minutes of every
   commit to the integration branch or the main line, so the owner never looks at an old build; the reply that
@@ -3055,7 +3056,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   tie-break). Bun tests: conservation, 2-of-3 portions, tax pro-rata with weights.
 - **Tax, tip, service charge and discount sit behind one row, "Tax, tip and discounts"** (F-275, assistant's
   ruling 2026-10-31 that narrows owner 40's "it should be there" from always-open controls to one always-visible row;
-  to be confirmed by the owner): collapsed, the row shows a one-line summary when any is set ("Tax ₹30.00 · Discount
+  settled by the assistant under owner 224): collapsed, the row shows a one-line summary when any is set ("Tax ₹30.00 · Discount
   ₹150.00", or "3 charges" for a charge list); it opens by itself on a bill that already has some, and expanding it
   shows the presets, the charge list or the four plain rows. Each plain row has an amount / % toggle (segmented "INR | %"), remembered per kind in the
   `itemizeAdjustmentModes` preference (defaults: tax %, tip %, service %, discount amount). Percentages take up
@@ -4021,6 +4022,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 221 | "Make sure analytics everything changes according to filters it should not have something which is not affected by these" | Every figure on Analytics follows its period, currency and scope; the balances-right-now Overview leaves Analytics (it stays on People and Groups); old `?overview=` links map to Analytics' scope | § 26.12, § 26.16 | Analytics Overview of balances right now that ignored period and currency (198, 219) |
 | 222 | "Add a little padding from bottom on navigation bar" | Phone-web bottom bar pads its bottom by the home-indicator inset or at least 8 px; native unchanged | § 26.3 | No bottom padding on the phone-web bar |
 | 223 | Assistant rulings for F-275 (new-user audit, 2026-10-31; owners 212/213 apply) | Add friend with no directory makes a usable local friend (name first, contact optional); one "Report a problem" entry whose first choice is Dispute or Put on hold, "Raised by" only behind "Record this for someone else"; Google and Apple are one muted "come with sync" line, not buttons; the sign-up name is kept | § 26.15, § 26.18, § 26.20 | Request-to-accept sheet with no server to answer; separate Dispute and Put on hold entries with a Raised by picker; dead Google and Apple buttons (138) |
+| 224 | "You take all decisions, don't ask me" | Product calls are settled by the assistant and reported as decided (the Tax/tip/discount row, the statement CSV for the Analytics export and decision 223 stand) | § 26.1, § 26.13 | Reports that asked the owner to confirm product calls |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
