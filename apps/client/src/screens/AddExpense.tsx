@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react'
+import {startPage} from '#/lib/routes/startTab'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
 import {
@@ -43,7 +44,7 @@ export function AddExpenseScreen() {
 
   const close = () => {
     if (navigation.canGoBack()) navigation.goBack()
-    else navigation.navigate('Home')
+    else navigation.navigate(startPage() as never)
   }
 
   if (

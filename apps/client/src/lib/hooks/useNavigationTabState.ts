@@ -2,28 +2,29 @@
 import {useNavigationState} from '@react-navigation/native'
 
 import {getTabState, TabState} from '#/lib/routes/helpers'
+import {startPage} from '#/lib/routes/startTab'
 
 export function useNavigationTabState() {
   return useNavigationState(state => {
     const res = {
-      isAtHome: getTabState(state, 'Home') !== TabState.Outside,
       isAtPeople: getTabState(state, 'People') !== TabState.Outside,
       isAtGroups: getTabState(state, 'Groups') !== TabState.Outside,
       isAtAnalytics: getTabState(state, 'Analytics') !== TabState.Outside,
       isAtActivity: getTabState(state, 'Activity') !== TabState.Outside,
+      isAtSettings: getTabState(state, 'Settings') !== TabState.Outside,
     }
 
     if (
-      !res.isAtHome &&
       !res.isAtPeople &&
       !res.isAtGroups &&
       !res.isAtAnalytics &&
-      !res.isAtActivity
+      !res.isAtActivity &&
+      !res.isAtSettings
     ) {
       // HACK for some reason useNavigationState will give us pre-hydration results
-      //      and not update after, so we force isAtHome if all came back false
+      //      and not update after, so we force the start tab if all came back false
       //      -prf
-      res.isAtHome = true
+      res[`isAt${startPage()}`] = true
     }
     return res
   })

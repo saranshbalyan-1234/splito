@@ -1,0 +1,25 @@
+diff --git a/lib/module/views/NativeStackView.js b/lib/module/views/NativeStackView.js
+index 0fc081696ad11f82b1d94fa78de1d684ad5cd458..a0e7e777cf4af18b2785b5f7df41e712438a47a7 100644
+--- a/lib/module/views/NativeStackView.js
++++ b/lib/module/views/NativeStackView.js
+@@ -56,10 +56,16 @@ const SceneView = /*#__PURE__*/React.memo(function SceneView({
+     navigation,
+     render
+   } = descriptor;
+-  const headerBack = previousDescriptor ? {
+-    title: getHeaderTitle(previousDescriptor.options, previousDescriptor.route.name),
+-    href: buildHref(previousDescriptor.route.name, previousDescriptor.route.params)
+-  } : parentHeaderBack;
++  // Splito patch: the same object while its title and href hold. A new one on every render made the
++  // HeaderBackContext provider below change on each focus change, so React walked the whole screen tree
++  // (kept tabs: thousands of fibers) on every tab switch.
++  const backTitle = previousDescriptor ? getHeaderTitle(previousDescriptor.options, previousDescriptor.route.name) : undefined;
++  const backHref = previousDescriptor ? buildHref(previousDescriptor.route.name, previousDescriptor.route.params) : undefined;
++  const ownBack = React.useMemo(() => previousDescriptor ? {
++    title: backTitle,
++    href: backHref
++  } : undefined, [previousDescriptor != null, backTitle, backHref]);
++  const headerBack = previousDescriptor ? ownBack : parentHeaderBack;
+   const canGoBack = headerBack != null;
+   const {
+     header,

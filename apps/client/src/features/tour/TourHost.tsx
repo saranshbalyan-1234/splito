@@ -5,7 +5,6 @@ import {IS_E2E, IS_WEB} from '#/env'
 import {useNonReactiveCallback} from '#/lib/hooks/useNonReactiveCallback'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {endTourRequest, measureTargets, usePeopleState, useIsTourRequested} from '#/lib/tour/registry'
-import {openPeopleFromHome} from '#/lib/tour/replay'
 import {planTour, type TourStep} from '#/lib/tour/steps'
 import {useDemoMode} from '#/state/demo'
 import {useDialogStateContext} from '#/state/dialogs'
@@ -15,7 +14,6 @@ import {TourStepView} from './TourStepView'
 /** How long the friend row may take to mount after People has loaded before the account counts as having no friends. */
 const ROW_WAIT_MS = 800
 const POLL_MS = 120
-const OPEN_TRIES = 50
 /* While a sheet or prompt is open the tour only keeps an eye on it. */
 const BLOCKED_POLL_MS = 500
 
@@ -110,24 +108,6 @@ function TourRunner({onEnded: onEndedProp}: {onEnded: () => void}) {
       clearTimeout(timer)
     }
   }, [steps, isPeopleReady, people, dialogs, onEnded])
-
-  /* Due, but People is not showing: from Home (the start tab until F-271) go there, once the navigator is up. */
-  const isPeopleShowing = people !== null
-  useEffect(() => {
-    if (steps || isPeopleShowing) return
-    let cancelled = false
-    let timer: ReturnType<typeof setTimeout> | undefined
-    let tries = 0
-    const open = () => {
-      if (cancelled || openPeopleFromHome() || ++tries >= OPEN_TRIES) return
-      timer = setTimeout(open, POLL_MS)
-    }
-    open()
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [steps, isPeopleShowing])
 
   /* People stopped being the page showing (browser Back, a link): the tour is over. */
   useEffect(() => {

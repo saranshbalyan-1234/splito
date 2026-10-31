@@ -38,7 +38,7 @@ const skeletons = (page: Page) =>
   page.evaluate(() => (window as unknown as {__sk: {rowsSkeletonUnderRealHeader: number}}).__sk)
 
 test('opening a friend and a group with the data loaded shows no skeleton', async ({page}) => {
-  /* People is the first page here, so Home is never mounted behind it (its Recently active lists would repeat the rows). */
+  /* People is the first page here (the start tab). */
   await page.goto('/people')
   await expect(page.getByTestId('screen-people')).toBeVisible()
   await page.waitForFunction(() => 'splito' in window)
@@ -74,7 +74,7 @@ test('opening a friend and a group with the data loaded shows no skeleton', asyn
   expect((await skeletons(page)).rowsSkeletonUnderRealHeader).toBe(0)
 
   await page.goBack()
-  // Home and People both list friends and both stay mounted (owner 166): ask the People screen.
+  // Every visited tab stays mounted (owner 166): ask the People screen.
   await page.getByTestId('tab-people').click()
   const bela = page.getByTestId('screen-people').getByTestId('person-Bela Joshi')
   await expect(bela).toBeVisible()

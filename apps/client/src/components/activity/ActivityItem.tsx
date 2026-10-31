@@ -13,7 +13,7 @@ import {defineMessage} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
-import {type ActivityEvent, type Entity, type FriendRequest, requestName} from '@splito/sync'
+import {type ActivityEvent, type Entity, type FriendRequest, type GroupRequest, requestName} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {GestureActionView} from '#/lib/custom-animations/GestureActionView'
@@ -23,6 +23,7 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
 import {TimeElapsed} from '#/view/com/util/TimeElapsed'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {hexToRgb, rgbToHex} from '#/alf/util/colorGeneration'
 import {Button, ButtonIcon} from '#/components/Button'
@@ -32,6 +33,7 @@ import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Ti
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import * as Menu from '#/components/Menu'
+import {useRowMenuTrigger} from '#/components/RowMenu'
 import {RequestAction} from '#/components/people/RequestRow'
 import {SubtleHover} from '#/components/SubtleHover'
 import * as Toast from '#/components/Toast'
@@ -64,6 +66,8 @@ import {useTimeZone, useToday} from '#/locale/useDates'
 import {dayOf, daysAgo, writeOffParties} from './feed'
 import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {type ActivityActions, type RowAction} from './useActivityActions'
+import {openPerson} from '#/lib/links/make'
+import {avatarPersonId} from './avatarPerson'
 import {type ActivitySnapshot} from './useActivityFeed'
 
 /** The size of the row's avatar, for anything that stands in for it. */
@@ -138,6 +142,7 @@ export function ActivityItem({
   locale,
   actions,
   renderInviteActions,
+  renderGroupRequestActions,
   style,
 }: {
   event: ActivityEvent
@@ -148,12 +153,13 @@ export function ActivityItem({
   actions: ActivityActions
   /** Resend / Cancel for an invite still waiting (owner 195); the screen supplies the buttons Home's Invites sent uses. */
   renderInviteActions?: (request: Entity<FriendRequest>) => React.ReactNode
+  /** Join / Approve / Decline / Cancel for a group request still waiting (F-269); the screen supplies the Groups tab's buttons. */
+  renderGroupRequestActions?: (request: Entity<GroupRequest>) => React.ReactNode
   style?: StyleProp<ViewStyle>
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
-  const haptics = useHaptics()
   const {gtMobile} = useBreakpoints()
   const backgroundColor = useRowBackgroundColor(isRead)
   const rowPaddingTop = 12
@@ -167,7 +173,9 @@ export function ActivityItem({
           ? snapshot.people.get(event.entityId)
           : event.entityType === 'friendRequest'
             ? snapshot.requests.get(event.entityId)
-            : event.entityType === 'comment' || event.entityType === 'dispute'
+            : event.entityType === 'groupRequest'
+              ? snapshot.groupRequests.get(event.entityId)
+              : event.entityType === 'comment' || event.entityType === 'dispute'
               ? /* A comment or a dispute is about a record: that record's sync state tones the row. */
                 (event.data.targetType === 'expense' ? snapshot.expenses : snapshot.transfers).get(event.data.targetId)
               : undefined
@@ -176,7 +184,8 @@ export function ActivityItem({
   const [menuAt, setMenuAt] = useState({x: 0, y: 0})
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
-  const content = useDescribe(event, snapshot, me, locale, navigation, actions, renderInviteActions)
+  const avatarId = avatarPersonId(event, snapshot.requests)
+  const content = useDescribe(event, snapshot, me, locale, navigation, actions, renderInviteActions, renderGroupRequestActions)
   const isDeletedEvent = DELETED_KINDS.has(event.kind)
   /* A request awaiting an answer is one line: the answers on the right in place of "...", whose items are long-press / right-click (ARCHITECTURE 26.18). */
   const isRequestRow = !!content.actions
@@ -204,13 +213,13 @@ export function ActivityItem({
     if (!isRead) void actions.perform('markRead', event, isRead)
     content.open?.()
   }
-  const openMenu = () => {
-    haptics.longPress()
-    menuControl.open()
-  }
+  /* Right-click, the Menu key and a long-press (native and phone-width web) all open the row menu; a request row, which has no "...", hangs it from where the pointer landed. */
+  const trigger = useRowMenuTrigger(menuControl, {onAnchor: setMenuAt})
+  const openMenu = trigger.open
   const onAccessibilityAction = (e: AccessibilityActionEvent) => {
     const name = e.nativeEvent.actionName
     if (name === 'longpress' || name === 'magicTap') openMenu()
+    else if (name === 'openActor' && avatarId) openPerson(navigation, avatarId, me)
     else if (menuActions.includes(name as RowAction)) run(name as RowAction)
   }
 
@@ -269,36 +278,7 @@ export function ActivityItem({
               onBlur: () => setIsFocusWithin(false),
             }
           : {})}
-        {...(IS_WEB && isRequestRow
-          ? {
-              onContextMenu: (e: {
-                preventDefault(): void
-                clientX: number
-                clientY: number
-                currentTarget: Element
-              }) => {
-                e.preventDefault()
-                const box = e.currentTarget.getBoundingClientRect()
-                setMenuAt({x: e.clientX - box.left, y: e.clientY - box.top})
-                haptics.longPress()
-                menuControl.open()
-              },
-              /* Keyboard: the Menu key or Shift+F10 on the row, or on its Accept / Decline, opens the same menu. */
-              onKeyDown: ((e: {
-                key: string
-                shiftKey: boolean
-                preventDefault(): void
-                currentTarget: Element
-              }) => {
-                if (e.key !== 'ContextMenu' && !(e.shiftKey && e.key === 'F10'))
-                  return
-                e.preventDefault()
-                const box = e.currentTarget.getBoundingClientRect()
-                setMenuAt({x: box.width / 2, y: box.height})
-                menuControl.open()
-              }) as never,
-            }
-          : {})}
+        {...(IS_WEB ? {onContextMenu: trigger.onContextMenu, onKeyDown: trigger.onKeyDown as never} : {})}
         style={[
           a.relative,
           isRequestRow ? [a.flex_row, a.align_center] : undefined,
@@ -318,12 +298,14 @@ export function ActivityItem({
                     label: actions.info(name, isRead).label,
                   })),
                   {name: 'longpress', label: l`More actions`},
+                  /* The avatar is a nested link; a screen reader reaches it from the row (owner 178). */
+                  ...(avatarId ? [{name: 'openActor', label: l`Open ${content.avatarName ?? ''}`}] : []),
                 ]
               : undefined
           }
           onAccessibilityAction={onAccessibilityAction}
           onPress={open}
-          onLongPress={IS_NATIVE ? openMenu : undefined}
+          onLongPress={trigger.onLongPress}
           style={[
             a.flex_row,
             a.align_start,
@@ -342,6 +324,7 @@ export function ActivityItem({
           ]}>
           <SubtleHover hover={isHovered} />
           <Avatar
+            id={avatarId}
             name={content.avatarName}
             icon={content.icon}
             tone={content.tone}
@@ -503,6 +486,7 @@ function useDescribe(
   navigation: NavigationProp,
   actions: ActivityActions,
   renderInviteActions?: (request: Entity<FriendRequest>) => React.ReactNode,
+  renderGroupRequestActions?: (request: Entity<GroupRequest>) => React.ReactNode,
 ): {
   avatarName: string | undefined
   icon: React.ComponentType<SVGIconProps>
@@ -631,8 +615,8 @@ function useDescribe(
           requestName(current))
         : requestName(current)
       const subject = <Strong>{friendName}</Strong>
-      const openPerson = current.personId
-        ? () => navigation.push('Person', {personId: current.personId!})
+      const openFriend = current.personId
+        ? () => openPerson(navigation, current.personId!, me)
         : () => navigation.navigate('People')
       if (event.kind === 'friendRequest.received') {
         const isPending = current.status === 'pending'
@@ -658,7 +642,7 @@ function useDescribe(
               onAnswer={accept => actions.answerRequest(event.entityId, accept)}
             />
           ) : undefined,
-          open: openPerson,
+          open: openFriend,
         }
       }
       if (event.kind === 'friendRequest.accepted') {
@@ -677,7 +661,7 @@ function useDescribe(
               <Trans>You can now split anything together</Trans>
             </Detail>
           ),
-          open: openPerson,
+          open: openFriend,
         }
       }
       const sentRequest = snapshot.requests.get(event.entityId)
@@ -697,7 +681,85 @@ function useDescribe(
               {actor} sent {subject} a friend request
             </Trans>
           ),
-        open: openPerson,
+        open: openFriend,
+      }
+    }
+    case 'groupRequest': {
+      /* Group requests carry their answers in the row, like friend requests (owners 195, 197): Join / Decline,
+         Approve / Decline, Cancel. The row shows the request's current state, so an answered one loses its buttons. */
+      const request = snapshot.groupRequests.get(event.entityId)
+      const current = request?.data ?? event.data
+      const group = <Strong>{snapshot.groups.get(current.groupId)?.data.name ?? current.groupName}</Strong>
+      const who = <Strong>{current.name}</Strong>
+      const isPending = !!request && !request.deleted && current.status === 'pending'
+      const actions = isPending ? renderGroupRequestActions?.(request) : undefined
+      const openGroup = snapshot.groups.get(current.groupId)
+        ? () => navigation.push('Group', {groupId: current.groupId})
+        : undefined
+      const answered =
+        current.status === 'accepted' ? (
+          <Trans>Joined</Trans>
+        ) : current.status === 'declined' ? (
+          <Trans>Declined</Trans>
+        ) : current.status === 'cancelled' ? (
+          <Trans>Cancelled</Trans>
+        ) : null
+      switch (event.kind) {
+        case 'groupRequest.invited':
+          return {
+            avatarName: current.name,
+            icon: FriendAddedBadge,
+            tone: 'primary',
+            headline: <Trans>{who} added you to {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Join to split expenses with the group</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.joinRequested':
+          return {
+            avatarName: current.name,
+            icon: FriendAddedBadge,
+            tone: 'primary',
+            headline: <Trans>{who} asked to join {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Approve to let them in</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.sent':
+          return {
+            avatarName: nameOf(event.actor),
+            icon: RequestSentBadge,
+            tone: 'neutral',
+            headline: <Trans>{actor} added {who} to {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Waiting for them to join</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.joinSent':
+          return {
+            avatarName: nameOf(event.actor),
+            icon: RequestSentBadge,
+            tone: 'neutral',
+            headline: <Trans>{actor} asked to join {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Waiting for an admin to approve</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.accepted':
+          return {
+            avatarName: current.name || nameOf(event.actor),
+            icon: FriendAcceptedBadge,
+            tone: 'primary',
+            headline:
+              current.direction === 'incoming' && current.kind === 'invite' ? (
+                <Trans>You joined {group}</Trans>
+              ) : current.kind === 'join' && current.direction === 'outgoing' ? (
+                <Trans>You’re in {group}</Trans>
+              ) : (
+                <Trans>{who} joined {group}</Trans>
+              ),
+            open: openGroup,
+          }
       }
     }
     case 'person': {
@@ -722,7 +784,7 @@ function useDescribe(
         ),
         // A removed friend has no page left to open.
         open: isAdded
-          ? () => navigation.push('Person', {personId: event.entityId})
+          ? () => openPerson(navigation, event.entityId, me)
           : undefined,
       }
     }
@@ -838,11 +900,12 @@ function useDescribe(
           ) : event.kind === 'group.created' ? (
             <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_2xs]}>
               {members.slice(0, MAX_PREVIEW_AVATARS).map(m => (
-                <UserAvatar
+                <PersonLink
                   key={m.personId}
-                  type="user"
-                  size={PREVIEW_AVATAR_SIZE}
+                  id={m.personId}
                   name={nameOf(m.personId)}
+                  show="avatar"
+                  size={PREVIEW_AVATAR_SIZE}
                 />
               ))}
               {members.length > MAX_PREVIEW_AVATARS ? (
@@ -928,7 +991,7 @@ function useDescribe(
         open: () =>
           r.groupId
             ? navigation.push('Group', {groupId: r.groupId})
-            : navigation.push('Person', {personId: other}),
+            : openPerson(navigation, other, me),
       }
     }
     case 'writeoff': {
@@ -1009,7 +1072,7 @@ function useDescribe(
         open: () =>
           w.groupId
             ? navigation.push('Group', {groupId: w.groupId})
-            : navigation.push('Person', {personId: other}),
+            : openPerson(navigation, other, me),
       }
     }
     case 'comment': {
@@ -1112,7 +1175,7 @@ function useDescribe(
       const open = () =>
         r.groupId
           ? navigation.push('Group', {groupId: r.groupId})
-          : navigation.push('Person', {personId: r.personId})
+          : openPerson(navigation, r.personId, me)
       if (event.kind === 'reminder.nudged') {
         return {
           avatarName: actorAvatar,
@@ -1275,11 +1338,14 @@ function formatTimeAgo(i18n: I18n, timestamp: string) {
  * its bottom-end corner that says what kind of change it is.
  */
 function Avatar({
+  id,
   name,
   icon: Icon,
   tone,
   ringColor,
 }: {
+  /** Who the avatar is; it opens them (owner 178). Undefined for an invitee who is not a person yet. */
+  id: string | undefined
   name: string | undefined
   icon: React.ComponentType<SVGIconProps>
   tone: BadgeTone
@@ -1288,7 +1354,12 @@ function Avatar({
   const t = useTheme()
   return (
     <View style={SLOT_SIZE}>
-      <UserAvatar type="user" size={AVATAR_SIZE} name={name} />
+      {/* Its own press target inside a row that opens what changed (owner 178). */}
+      {id ? (
+        <PersonLink id={id} name={name ?? ''} show="avatar" size={AVATAR_SIZE} />
+      ) : (
+        <UserAvatar type="user" size={AVATAR_SIZE} name={name} />
+      )}
       {/*
        * The ring is a padded circle behind the badge rather than a border on
        * it, so the badge's anti-aliased edge doesn't show the ring through.

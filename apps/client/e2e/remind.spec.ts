@@ -1,12 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
-/* F-1118 Remind, F-1119 Remind me, F-1907 local notifications: seeded through window.splito. */
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createGroup(input: unknown): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-}
+import {type SplitoDevTools} from '../src/data/devTools'
+import {openApp} from './app'
 
 /**
  * A browser whose Notification API answers like a granted-after-asking one. The share sheet is never opened: the e2e
@@ -28,15 +23,10 @@ async function stubBrowser(page: Page, permission: 'default' | 'granted' = 'defa
   }, permission)
 }
 
-async function ready(page: Page) {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
-}
-
 /** Bob owes me ₹450 and €20 directly and ₹200 in Goa; Cara owes me nothing. */
 async function seed(page: Page) {
   return page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
+    const s = (window as unknown as {splito: SplitoDevTools}).splito
     const bob = await s.createPerson('Bob Mehta')
     const cara = await s.createPerson('Cara Rao')
     const group = await s.createGroup({name: 'Goa', kind: 'trip', currency: 'INR', startDate: null, endDate: null, memberIds: [bob, cara]})
@@ -51,7 +41,7 @@ async function seed(page: Page) {
 
 test('Remind from the Person page: per-currency message, share sheet, logged in Activity, never "sent"', async ({page}) => {
   await stubBrowser(page)
-  await ready(page)
+  await openApp(page)
   const {bob, cara} = await seed(page)
 
   // Nothing owed, nothing to remind about.
@@ -101,7 +91,7 @@ test('Remind from the Person page: per-currency message, share sheet, logged in 
 
 test('Remind from group Balances: the debtor row, scoped to the group', async ({page}) => {
   await stubBrowser(page)
-  await ready(page)
+  await openApp(page)
   const {group} = await seed(page)
   await page.goto(`/groups/${group}?tab=balances`)
   const row = page.getByTestId('group-owe-Bob Mehta-You')
@@ -118,7 +108,7 @@ test('Remind from group Balances: the debtor row, scoped to the group', async ({
 
 test('Remind from the Settle plan: only when they pay me; Remind me either way', async ({page}) => {
   await stubBrowser(page)
-  await ready(page)
+  await openApp(page)
   const {group} = await seed(page)
   await page.goto(`/groups/${group}/settle`)
   await page.getByTestId('transfer-more').first().click()
@@ -130,7 +120,7 @@ test('Remind from the Settle plan: only when they pay me; Remind me either way',
 
 test('Remind me: primer before the permission, listed on the Person page, edited, cancelled and logged', async ({page}) => {
   await stubBrowser(page)
-  await ready(page)
+  await openApp(page)
   const {bob} = await seed(page)
   await page.goto(`/people/${bob}`)
   await expect(page.getByTestId('person-reminders')).toHaveCount(0)
@@ -182,7 +172,7 @@ test('Remind me: primer before the permission, listed on the Person page, edited
 test('a reminder that comes due while Splito is open shows itself, and one missed while closed shows on the next open', async ({page}) => {
   await page.clock.install({time: new Date('2026-10-27T10:00:00')})
   await stubBrowser(page, 'granted')
-  await ready(page)
+  await openApp(page)
   const {bob} = await seed(page)
   await page.goto(`/people/${bob}`)
   await page.getByTestId('person-more').click()
@@ -206,14 +196,12 @@ test('a reminder that comes due while Splito is open shows itself, and one misse
   await expect(page.getByText(/^While Splito was closed: Settle up with Bob Mehta/)).toBeVisible()
 })
 
-test('Settings: Payments, Comments, Invites and Reminders; none for features that do not exist', async ({page}) => {
-  await ready(page)
+test('Settings > Notifications keeps Reminders only: no switch for alerts that start with sync (F-275)', async ({page}) => {
+  await openApp(page)
   await page.goto('/settings/notifications')
   await expect(page.getByText('Reminders work now.')).toBeVisible()
-  await expect(page.getByTestId('pref-notify.payment')).toContainText('adds an expense with you or records a payment to or from you')
-  await expect(page.getByTestId('pref-notify.comments')).toContainText('@mentions you')
-  await expect(page.getByTestId('pref-notify.expense')).toHaveCount(0)
-  await expect(page.getByTestId('pref-notify.invite')).toBeVisible()
+  await expect(page.getByText(/^Alerts for new expenses, payments, comments and invites come with sync/)).toBeVisible()
+  for (const key of ['payment', 'comments', 'expense', 'invite']) await expect(page.getByTestId(`pref-notify.${key}`)).toHaveCount(0)
   await expect(page.getByTestId('pref-notify.reminders')).toBeVisible()
   await expect(page.getByTestId('pref-notify.recurring')).toHaveCount(0)
   await expect(page.getByTestId('pref-notify.digest')).toHaveCount(0)

@@ -243,7 +243,7 @@ test('a former member cannot be on new expenses, but can be added back', async (
   const {g, bob, draft} = await flat()
   await removeGroupMember(s, ctx, {groupId: g.id, personId: bob.id, choice: 'keep', ...exit})
   expect(await codeOf(createExpense(s, ctx, draft()))).toBe('NOT_A_MEMBER')
-  const back = await addGroupMembers(s, ctx, g.id, [bob.id])
+  const back = (await addGroupMembers(s, ctx, g.id, [bob.id])).group
   const m = back.data.members.find(x => x.personId === bob.id)!
   expect(m.leftAt).toBeNull()
   expect(m.exit).toBeUndefined()
@@ -389,7 +389,7 @@ test('adding a member to a group made before roles existed keeps the creator adm
     await tx.put({...row, data: {...row.data, members}, version: row.version + 1, updatedAt: ++clock})
   })
   const dan = await createPerson(s, ctx, {name: 'Dan'})
-  const added = await addGroupMembers(s, ctx, g.id, [dan.id])
+  const added = (await addGroupMembers(s, ctx, g.id, [dan.id])).group
   expect(groupAdmins(added.data)).toEqual(['me'])
   expect(added.data.members.find(m => m.personId === dan.id)!.role).toBe('member')
   expect(await codeOf(leaveGroup(s, ctx, {groupId: g.id, choice: 'keep', ...exit}))).toBe('LAST_ADMIN')

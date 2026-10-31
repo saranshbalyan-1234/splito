@@ -113,17 +113,6 @@ function Form({
           ]}
           onChange={show => set({show})}
         />
-        <Choices
-          testID="filter-sort"
-          title={l`Sort by`}
-          value={draft.sort}
-          options={[
-            {value: 'recent', label: l`Recent activity`},
-            {value: 'name', label: l`Name`},
-            {value: 'amount', label: l`Amount`},
-          ]}
-          onChange={sort => set({sort})}
-        />
       </View>
     </FormSheet.Inner>
   )

@@ -17,8 +17,8 @@ import {decode} from './codec'
 import {type RowAccess} from './engine'
 import {type Dispute} from './disputes'
 import {type Expense, type Group, normalizeRoles, type Repayment} from './mutations'
-import {ENTITY_STORE, entityOfRow, type Key, type Row} from './schema'
-import {termKey, termRows} from './searchTerms'
+import {ENTITY_STORE, entityOfRow, indexKey, type Key, type Row} from './schema'
+import {RECORD_TYPES, termKey, termRows} from './searchTerms'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from './selectors'
 import {type Entity, type EntityType} from './types'
 
@@ -223,7 +223,13 @@ export async function projectEntity(rows: RowAccess, prev: Entity | undefined, n
       }
     }
   }
-  if (type === 'expense' || type === 'person' || type === 'group') {
+  // A comment (or its edit or delete) on a record is activity for the groups and friends the record names (owner 199).
+  if (type === 'comment' && next) {
+    const c = next.data as {targetType?: string; targetId?: string}
+    const row = c.targetType && c.targetId ? await rows.get(ENTITY_STORE[c.targetType as EntityType], [c.targetId]) : undefined
+    if (row) await bumpTargetActivity(rows, entityOfRow(c.targetType as EntityType, row), next.updatedAt)
+  }
+  if (type === 'expense' || type === 'repayment' || type === 'writeoff' || type === 'comment' || type === 'person' || type === 'group') {
     const was = termRows(prev)
     const is = termRows(next)
     const kept = new Set(is.map(r => JSON.stringify(termKey(r))))
@@ -247,6 +253,14 @@ function peopleOf(e: Entity | undefined): string[] {
 async function isMeAmong(rows: RowAccess, ids: string[]): Promise<boolean> {
   for (const id of ids) if ((await rows.get('people', [id]))?.isMe === 1) return true
   return false
+}
+
+/** A change at `at` to something that names a group and people (a comment on a record): the same bumps a version of the record makes. */
+async function bumpTargetActivity(rows: RowAccess, target: Entity, at: number) {
+  const groupId = groupOf(target)
+  if (groupId) await bumpActivity(rows, 'groups', groupId, at)
+  const names = peopleOf(target)
+  if (await isMeAmong(rows, names)) for (const personId of names) await bumpActivity(rows, 'people', personId, at)
 }
 
 /** Raises a group's `activityAt` or a person's `lastActivityAt`, never lowers it. */
@@ -282,8 +296,47 @@ export async function rebuildProjections(rows: RowAccess, entities: (type: Entit
   await writeSums(rows, nets, pairs, latest)
   await writeAggregates(rows, aggs, latest)
   await rebuildDisputedProjections(rows, entities)
-  for (const type of ['person', 'group', 'expense'] as const) for (const e of type === 'group' ? groups : await entities(type)) for (const r of termRows(e)) await rows.put('search_terms', r)
-  await rebuildActivity(rows, money)
+  await fillSearchTerms(rows, entities, groups)
+  await rows.put('meta', {key: 'searchIndex', value: SEARCH_INDEX_VERSION})
+  await rebuildActivity(rows, money, await entities('comment'))
+}
+
+/** The entity types `search_terms` holds terms for. */
+export const SEARCH_INDEXED = ['person', 'group', 'expense', 'repayment', 'writeoff', 'comment'] as const
+
+async function fillSearchTerms(rows: RowAccess, entities: (type: EntityType) => Promise<Entity[]>, groups?: Entity[]) {
+  for (const type of SEARCH_INDEXED) for (const e of type === 'group' && groups ? groups : await entities(type)) for (const r of termRows(e)) await rows.put('search_terms', r)
+}
+
+/**
+ * The version of what `search_terms` holds. Bumped whenever a term kind is added or changes meaning; a database
+ * opened with an older one rebuilds the terms from its rows (derived data only, nothing else is touched), so no
+ * schema version is spent. 3: contact and UPI words moved from `p` to `k` (F-246 review C1).
+ */
+export const SEARCH_INDEX_VERSION = '3'
+
+/**
+ * Whether `search_terms` must be rebuilt: the stored index version is not the current one, or the version matches
+ * but the `d` keys (one per record) do not number the records. The second catches a tab still running an older build,
+ * or a build rolled back and forward again, that wrote records without the current terms (no schema bump spent).
+ * Counts only, no rows read.
+ */
+export async function isSearchIndexStale(rows: RowAccess): Promise<boolean> {
+  if ((await rows.get('meta', ['searchIndex']))?.value !== SEARCH_INDEX_VERSION) return true
+  let records = 0
+  for (const type of RECORD_TYPES) records += await rows.count(ENTITY_STORE[type], {})
+  return records !== (await rows.count('search_terms', {eq: ['d']}))
+}
+
+/**
+ * Writes the terms of up to `limit` rows of `type` after the primary key `after` (one chunk of a rebuild, its own
+ * transaction); the key to continue after, or null at the end.
+ */
+export async function fillSearchChunk(rows: RowAccess, type: (typeof SEARCH_INDEXED)[number], after: Key | null, limit: number): Promise<Key | null> {
+  // full-read-ok: maintenance, a stale search index is rebuilt once, a chunk per transaction (like rebuildProjections)
+  const found = await rows.range(ENTITY_STORE[type], {after, limit})
+  for (const r of found) for (const t of termRows(entityOfRow(type, r))) await rows.put('search_terms', t)
+  return found.length === limit ? indexKey(ENTITY_STORE[type], undefined, found[found.length - 1]!) : null
 }
 
 /* -------------------------------------------------------------------------- */
@@ -416,9 +469,9 @@ export async function rebuildDisputedProjections(rows: RowAccess, entities: (typ
  * history: every version of a money record bumps the groups and people it and
  * the version before it name, at that version's time, exactly as the write
  * did (a record moved out of a group is activity there too; a friend only counts for a record I am on, audit m20). `money` is the
- * live and deleted money entities, for any whose history is missing.
+ * live and deleted money entities, for any whose history is missing; `comments` are the comments on them.
  */
-export async function rebuildActivity(rows: RowAccess, money: Entity[]): Promise<void> {
+export async function rebuildActivity(rows: RowAccess, money: Entity[], comments: Entity[] = []): Promise<void> {
   const groupAt = new Map<string, number>()
   const personAt = new Map<string, number>()
   const bump = (map: Map<string, number>, id: string, at: number) => map.set(id, Math.max(map.get(id) ?? 0, at))
@@ -441,6 +494,13 @@ export async function rebuildActivity(rows: RowAccess, money: Entity[]): Promise
     previous = {key, entity}
   }
   for (const e of money) touch(e, e.updatedAt)
+  // A comment counts at its last change, on the record it is about.
+  const byKey = new Map(money.map(e => [`${e.type}:${e.id}`, e]))
+  for (const c of comments) {
+    const d = c.data as {targetType?: string; targetId?: string}
+    const target = byKey.get(`${d.targetType}:${d.targetId}`)
+    if (target) touch(target, c.updatedAt)
+  }
   for (const g of await rows.range('groups', {})) {
     const at = Math.max(g.updatedAt as number, groupAt.get(g.id as string) ?? 0)
     if (g.activityAt !== at) await rows.put('groups', {...g, activityAt: at})

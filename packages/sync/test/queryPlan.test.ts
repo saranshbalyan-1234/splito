@@ -38,6 +38,8 @@ test('the typed reads use an index on every table they touch', async () => {
   await scheduleReminder(s, ctx, {personId: a.id, groupId: null, dueAt: 1_800_000_000_000, repeat: 'weekly'})
   await recordNudge(s, ctx, {personId: a.id, groupId: g.id, amounts: {INR: 500n}, via: 'share'})
 
+  // The search index check counts each record table once per open, at idle (maintenance, like a migration): not a hot read.
+  await s.prepareSearch()
   recording = true
   await s.get('expense', e.id)
   await s.page('expense', {index: 'byGroupDate', eq: [g.id], dir: 'prev', limit: 20})

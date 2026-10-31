@@ -7,6 +7,7 @@ import {
   type ViewStyle,
 } from 'react-native'
 
+import {initials, nameHash} from '#/lib/avatarName'
 import {atoms as a, useTheme} from '#/alf'
 
 export type UserAvatarType = 'user' | 'algo' | 'list' | 'labeler'
@@ -25,14 +26,7 @@ interface UserAvatarProps extends BaseUserAvatarProps {
   style?: StyleProp<ViewStyle>
 }
 
-/** Up to two initials, from the first and last words of a display name. */
-export function getInitials(name: string | undefined) {
-  const words = (name ?? '').trim().split(/\s+/).filter(Boolean)
-  if (words.length === 0) return ''
-  const first = Array.from(words[0])[0] ?? ''
-  const last = words.length > 1 ? (Array.from(words.at(-1)!)[0] ?? '') : ''
-  return (first + last).toUpperCase()
-}
+export {initials, nameHash}
 
 /**
  * Eight avatar hues, none of them the money green or red, each holding white
@@ -50,14 +44,9 @@ export const AVATAR_COLORS = [
   '#A16207',
 ] as const
 
-/** The avatar hue for a name (FNV-1a hash, stable across sessions). */
+/** The avatar hue for a name. */
 export function avatarColor(name: string | undefined) {
-  let h = 0x811c9dc5
-  for (const ch of (name ?? '').trim().toLowerCase()) {
-    h ^= ch.codePointAt(0)!
-    h = Math.imul(h, 0x01000193)
-  }
-  return AVATAR_COLORS[(h >>> 0) % AVATAR_COLORS.length]!
+  return AVATAR_COLORS[nameHash(name) % AVATAR_COLORS.length]!
 }
 
 /*
@@ -107,7 +96,7 @@ let DefaultAvatar = ({
         ]}
         allowFontScaling={false}
         numberOfLines={1}>
-        {getInitials(name)}
+        {initials(name)}
       </RNText>
     </View>
   )

@@ -82,11 +82,6 @@
       "count": 8
     }
   },
-  "apps/client/src/view/com/util/EmptyState.tsx": {
-    "typescript/no-explicit-any": {
-      "count": 1
-    }
-  },
   "apps/client/src/view/com/util/Link.tsx": {
     "typescript/no-explicit-any": {
       "count": 1

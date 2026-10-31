@@ -10,7 +10,8 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
-import {cleanPersonName, type Group, type Person, requireLive, write} from './mutations'
+import {cleanPersonName, type Group, joinPolicyOf, type Person, requireLive, write} from './mutations'
+import {type Asked, pendingIn, REQUEST_LIFETIME_MS, type RequestState, type RequestStatus, requestState} from './requests'
 import {type Store, type Tx} from './store'
 import {type Entity, type MutationCtx} from './types'
 
@@ -30,19 +31,13 @@ export interface FriendRemoval {
 /** True for a friend you removed: still stored, with their history, but out of pickers and lists. */
 export const isRemovedFriend = (p: Person): boolean => !!(p as Person & FriendRemoval).removedAt
 
-/** Unanswered requests lapse after 30 days; declining is silent, so the sender sees this too. */
-export const REQUEST_LIFETIME_MS = 30 * 86_400_000
-
-export type RequestStatus = 'pending' | 'accepted' | 'declined' | 'cancelled'
 /** What the directory said when an outgoing request was made. */
 export type RequestReach = 'on-splito' | 'invited' | 'unchecked'
 
-export interface FriendRequest {
-  direction: 'outgoing' | 'incoming'
+export interface FriendRequest extends Asked {
   /** Outgoing: the name you gave (or ''); incoming: theirs. */
   name: string
   contact: Contact | null
-  status: RequestStatus
   /** Outgoing only; null on incoming requests. */
   reach: RequestReach | null
   /** Their account, once known (incoming: always). */
@@ -51,24 +46,15 @@ export interface FriendRequest {
   personId: string | null
   /** The personal invite link sent along, for people not on Splito. */
   inviteCode: string | null
-  /** Epoch ms of the last send (a resend restarts the 30 days). */
-  sentAt: number
 }
 
-export type RequestState = RequestStatus | 'expired'
-
 /** The name a request shows: the one you gave (or theirs), else their number or email. */
-export function requestName(r: FriendRequest) {
+export function requestName(r: {name: string; contact: Contact | null}) {
   return r.name || (r.contact ? formatContact(r.contact) : '')
 }
 
-/** Derived, never stored: a pending request past its 30 days reads as expired. */
-export function requestState(r: FriendRequest, now: number): RequestState {
-  return r.status === 'pending' && now > r.sentAt + REQUEST_LIFETIME_MS ? 'expired' : r.status
-}
-
-const pendingIn = (direction: FriendRequest['direction']) => (rs: Entity<FriendRequest>[], now: number) =>
-  rs.filter(r => !r.deleted && r.data.direction === direction && requestState(r.data, now) === 'pending').sort((x, y) => y.data.sentAt - x.data.sentAt)
+export {REQUEST_LIFETIME_MS, requestState, pendingIn}
+export type {Asked, RequestState, RequestStatus}
 
 /** People > "Invites sent": your requests still waiting, newest first. */
 export const outgoingRequests = pendingIn('outgoing')
@@ -91,8 +77,9 @@ function checkContact(contact: Contact) {
   return contact
 }
 
-async function requirePending(tx: Tx, id: string, direction: FriendRequest['direction']) {
-  const r = await requireLive<FriendRequest>(tx, 'friendRequest', id)
+/** The pending request `id` of `type`, answered in `direction`'s side (shared with group requests). @internal */
+export async function requirePending<R extends Asked = FriendRequest>(tx: Tx, id: string, direction: Asked['direction'], type: 'friendRequest' | 'groupRequest' = 'friendRequest') {
+  const r = await requireLive<R>(tx, type, id)
   if (r.data.direction !== direction) throw new DomainError(direction === 'incoming' ? 'NOT_INCOMING' : 'NOT_OUTGOING')
   if (r.data.status !== 'pending') throw new DomainError('NOT_PENDING')
   return r
@@ -166,14 +153,14 @@ export async function receiveFriendRequest(
   return store.transaction(tx => write(tx, ctx, 'friendRequest', input.id, data, false, 'friendRequest.receive', {remote: true}))
 }
 
-type Account = {accountId: string; name: string; contact: Contact | null}
+export type Account = {accountId: string; name: string; contact: Contact | null}
 
 /**
  * The friend for an account: the one already linked to it, else a private
  * friend with the same contact (linked now: F-616, history kept), else new.
- * `people` is read before the transaction (see sendFriendRequest).
+ * `people` is read before the transaction (see sendFriendRequest). @internal shared with group requests.
  */
-async function linkPerson(tx: Tx, ctx: MutationCtx, people: Entity<Person>[], account: Account, remote: boolean): Promise<Entity<Person>> {
+export async function linkPerson(tx: Tx, ctx: MutationCtx, people: Entity<Person>[], account: Account, remote: boolean): Promise<Entity<Person>> {
   const live = people.filter(p => !p.deleted && !p.data.isMe)
   const linked = live.find(p => p.data.accountId === account.accountId)
   // Someone you removed and who is accepted again is back, not a second row.
@@ -303,6 +290,7 @@ export async function createInviteLink(
     groupId: string | null
     maxUses: number | null
     expiresInMs: number | null
+    /** Friend links ignore it; a group link's is the group's "Who can join" (owner 196), whatever is passed. */
     approveJoins: boolean
     /** The code the directory accepted (`mintInviteCode`); minted here when absent. */
     code?: string
@@ -314,7 +302,13 @@ export async function createInviteLink(
   const code = input.code ?? mintInviteCode(ctx)
   if (!isInviteCode(code)) throw new DomainError('INVALID_INVITE')
   return store.transaction(async tx => {
-    if (input.kind === 'group') await requireLive(tx, 'group', input.groupId ?? '')
+    // The group says whether its link exists and whether each join waits for approval; the link only records it.
+    let approveJoins = false
+    if (input.kind === 'group') {
+      const policy = joinPolicyOf((await requireLive<Group>(tx, 'group', input.groupId ?? '')).data)
+      if (policy === 'invite') throw new DomainError('LINK_DISABLED')
+      approveJoins = policy === 'approve'
+    }
     const now = ctx.now()
     const data: InviteLink = {
       kind: input.kind,
@@ -323,7 +317,7 @@ export async function createInviteLink(
       maxUses,
       uses: 0,
       expiresAt: expiresInMs === null ? null : now + expiresInMs,
-      approveJoins: input.kind === 'group' && input.approveJoins,
+      approveJoins,
       revoked: false,
       createdAt: now,
     }

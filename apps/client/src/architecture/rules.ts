@@ -385,6 +385,11 @@ export const RULES = {
     appliesTo: p => isClient(p) && !under(p, 'lib/haptics/'),
     count: (_p, s) => importsOf(s).filter(m => m === 'expo-haptics').length,
   },
+  rowMenuGesture: {
+    why: "A hand-built `onContextMenu` outside components/RowMenu.tsx. A row's \"more actions\" menu opens through `useRowMenuTrigger` (spread as `trigger.onContextMenu`) / `RowMenu` so right-click, the Menu key and long-press (also on phone-width web) work the same on every row (consolidation finding 5). Baselined: CommentRow (rolls out with P1-d), and the two charge pickers, which are not row menus.",
+    appliesTo: p => isClient(p) && !p.endsWith('/components/RowMenu.tsx'),
+    count: (_p, s) => countMatches(code(s), /\bonContextMenu\s*[=:]\s*(?!\s|trigger\b)/g),
+  },
   viewFiles: {
     why: 'New file under src/view/ (only the frozen Bluesky utilities live there, § 1).',
     appliesTo: p => under(p, 'view/'),
@@ -495,6 +500,11 @@ export const RULES = {
     why: "A record row (expense, payment, write-off, person, group) removed for good: store.erase, a row delete of its table, or DELETE FROM. Deleting is a tombstone and a deleted item stays in its list forever (owner 103); only migration, the store's erase primitive, the engines and the dev tools (HARD_DELETE_ALLOWED) remove rows.",
     appliesTo: p => (isClient(p) || p.startsWith(SYNC)) && !HARD_DELETE_ALLOWED.has(p),
     count: (_p, s) => hardDeletes(s),
+  },
+  personAvatarOutsideLink: {
+    why: 'A `<UserAvatar` outside PersonLink (owner 178, F-261): a person\'s avatar is drawn and pressed by the one `PersonLink` so it always opens that person (Me -> Profile). What is left in the baseline is not a link to a person: the signed-in user\'s own header/drawer/settings avatars, a selection row whose whole row picks (pickers, dialogs), an invitee or contact who is not a person yet, and avatar previews.',
+    appliesTo: p => isClient(p) && !/\/(?:components\/PersonLink|view\/com\/util\/UserAvatar)\.tsx$/.test(p),
+    count: (_p, s) => countMatches(code(s), /<UserAvatar\b/g),
   },
   externalHandOff: {
     why: 'A link or text handed to another app (mailto, tel, sms, whatsapp, upi, https out, the share sheet) without the one gate. Linking.openURL lives only in lib/openExternal.ts and Share.share / navigator.share only in lib/sharing.ts, because an e2e build records the hand-off instead of opening Mail, Messages, WhatsApp or a UPI app (owner 118). Linking.openSettings is not a hand-off of content.',

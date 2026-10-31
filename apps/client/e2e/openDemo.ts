@@ -23,12 +23,14 @@ export async function closeDemo(page: Page) {
   await page.evaluate(() => (window as unknown as Hooks).__splitoTest!.demoMode!(false))
 }
 
+/** Writes a preference through the app's own setter (`window.splito`, so the app is loaded first). */
+export async function setPref(page: Page, key: string, value: unknown) {
+  await page.waitForFunction(() => 'splito' in window, undefined, {timeout: 30_000})
+  await page.evaluate(([k, v]) => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref(k, v), [key, value] as const)
+}
+
 /** Fully settled friends and groups are hidden by default (F-1413); a spec that reads them turns Show settled on first. */
 export async function showSettled(page: Page) {
-  await page.waitForFunction(() => 'splito' in window, undefined, {timeout: 30_000})
-  await page.evaluate(async () => {
-    const s = (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito
-    await s.setPref('people.showSettled', true)
-    await s.setPref('groups.showSettled', true)
-  })
+  await setPref(page, 'people.showSettled', true)
+  await setPref(page, 'groups.showSettled', true)
 }

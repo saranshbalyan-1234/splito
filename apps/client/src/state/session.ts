@@ -116,6 +116,12 @@ export const useSessionApi = () => sessionApi
 /** Outside React (the link layer): whether anyone is signed in. */
 export const isSignedIn = () => state.hasSession
 
+/** The name this account signed up with, for the "me" person of its database (a name typed at sign-up is not thrown away); 'Me' when there is none. */
+export function accountName(accountId: string): string {
+  const account = state.currentAccount
+  return account && account.id === accountId && account.name.trim() ? account.name : 'Me'
+}
+
 /* E2E builds only: `window.__splitoTest.signIn()` and friends (the dev AuthClient's chunk is reached nowhere else). */
 if (process.env.EXPO_PUBLIC_ENV === 'e2e') {
   void import('#/lib/auth/testHook').then(m => m.installAuthTestHook(sessionApi))

@@ -1,6 +1,8 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {composeButton} from './composer'
 import {openDemo as enterDemo} from './openDemo'
+import {DESKTOP, PHONE} from './viewports'
 
 /*
  * Owner rule 7: every form sheet shares one layout. Phones: a sheet from the
@@ -10,8 +12,6 @@ import {openDemo as enterDemo} from './openDemo'
  * pickers close with the cross alone.
  */
 
-const DESKTOP = {width: 1440, height: 900}
-const PHONE = {width: 390, height: 844}
 
 async function openDemo(page: Page, path = '/people') {
   await enterDemo(page, path)
@@ -161,13 +161,13 @@ test('pickers close with the cross alone and apply the choice at once', async ({
 }) => {
   await page.setViewportSize(DESKTOP)
   await openDemo(page)
-  await page.getByTestId('sidebar-add').click()
+  await composeButton(page).click()
   await page.getByTestId('amount-currency').click()
   const picker = page.getByTestId('currency-dialog')
   await expect(picker.getByTestId('sheet-close')).toBeVisible()
   await expect(picker.getByTestId('sheet-save')).toHaveCount(0)
   await expect(picker.getByTestId('sheet-cancel')).toHaveCount(0)
-  await page.getByTestId('currency-EUR').click()
+  await page.getByTestId('currency-dialog-EUR').click()
   await expect(picker).toHaveCount(0)
   await expect(page.getByTestId('amount-currency')).toContainText('EUR')
 
@@ -184,7 +184,7 @@ test('Add expense: the readout sits just above Cancel and Save expense; no Cance
 }) => {
   await page.setViewportSize(PHONE)
   await openDemo(page)
-  await page.getByTestId('fab-add').click()
+  await composeButton(page).click()
   const composer = page.getByTestId('screen-add-expense')
   await expect(
     composer.getByRole('heading', {name: 'Add expense'}),
@@ -209,7 +209,7 @@ test('the top bar shows its hairline only while the form is scrolled under it', 
 }) => {
   await page.setViewportSize(PHONE)
   await openDemo(page)
-  await page.getByTestId('fab-add').click()
+  await composeButton(page).click()
   const header = page
     .getByTestId('screen-add-expense')
     .getByTestId('sheet-header')

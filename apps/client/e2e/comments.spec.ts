@@ -1,35 +1,19 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {type SplitoDevTools} from '../src/data/devTools'
+import {openApp} from './app'
+import {DESKTOP, PHONE} from './viewports'
+
 /*
  * F-1204: comments on expenses and payments. One timeline under the expense (comments
  * and edit-history lines in time order under date dividers), a Bluesky DM composer,
  * @mention of the participants, edit and delete of my own comments only, a count on rows.
  */
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-  createRepayment(input: unknown): Promise<string>
-  commentAs(
-    authorId: string,
-    input: {
-      targetType: string
-      targetId: string
-      body: string
-      mentions?: string[]
-    },
-  ): Promise<string>
-  setPref(key: string, value: unknown): Promise<void>
-}
-
-const PHONE = {width: 390, height: 844}
-const DESKTOP = {width: 1440, height: 900}
 
 async function seed(page: Page) {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
+  await openApp(page)
   return page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
+    const s = (window as unknown as {splito: SplitoDevTools}).splito
     const friend = await s.createPerson('Kavya Rao')
     const expense = await s.createExpense({
       title: 'Concert',
@@ -113,7 +97,7 @@ test('edit with Up arrow, cancel with Escape, delete with confirmation; only my 
   const {friend, expense} = await seed(page)
   await page.evaluate(
     ([f, e]) =>
-      (window as unknown as {splito: Splito}).splito.commentAs(f!, {
+      (window as unknown as {splito: SplitoDevTools}).splito.commentAs(f!, {
         targetType: 'expense',
         targetId: e!,
         body: 'I bought them',
@@ -232,7 +216,7 @@ test('desktop: Tab from a bubble lands on its "..." button and Enter opens the m
   const {friend, expense} = await seed(page)
   await page.evaluate(
     ([f, e]) =>
-      (window as unknown as {splito: Splito}).splito.commentAs(f!, {
+      (window as unknown as {splito: SplitoDevTools}).splito.commentAs(f!, {
         targetType: 'expense',
         targetId: e!,
         body: 'Keyboard only',

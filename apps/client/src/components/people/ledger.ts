@@ -2,7 +2,6 @@ import {
   decimalMark,
   DomainError,
   evaluateAmount,
-  getCurrency,
   groupMemberNet,
   pairBalance,
   toDecimalString,
@@ -145,16 +144,4 @@ export function upiPayUrl({
     .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
     .join('&')
   return `upi://pay?${q}`
-}
-
-/** A currency's name in the UI language (Intl), or the catalog's English name where Intl lacks it. */
-export function currencyName(code: string, locale: string): string {
-  try {
-    return (
-      new Intl.DisplayNames([locale], {type: 'currency'}).of(code) ??
-      getCurrency(code).name
-    )
-  } catch {
-    return getCurrency(code).name
-  }
 }

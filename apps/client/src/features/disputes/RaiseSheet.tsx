@@ -6,7 +6,6 @@ import {
   type DisputeReason,
   type Entity,
   type Expense,
-  type Group,
   type HistoryEntry,
   type ProposedFix,
   type Repayment,
@@ -16,13 +15,13 @@ import {useHaptics} from '#/lib/haptics'
 import {type DisputeRequest} from '#/lib/disputes/bus'
 import {logger} from '#/logger'
 import {useDisputeAccess, useDisputeActions} from '#/state/disputes'
-import {useAllEntities, useEntity, useGroupHistory, useRecentTransactions} from '#/data/hooks'
+import {useEntity, useGroupHistory, useRecentTransactions} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import * as TextField from '#/components/forms/TextField'
-import {Chip} from '#/components/disputes/Chip'
+import {ChoiceChips} from '#/components/forms/ChoiceChips'
 import {reasonsFor, useDisputeWords} from '#/components/disputes/words'
 import {parseTypedAmount} from '#/components/people/ledger'
 import {useAvatarName, useDisplayName, useErrorText} from '#/components/split/shared'
@@ -63,7 +62,6 @@ function Form({request}: {request: Raise}) {
   const itemId = request.kind === 'raise' ? request.itemId : undefined
   const record = useEntity<Expense & Repayment>(targetType, targetId)
   const access = useDisputeAccess(targetType, targetId)
-  const groups = useAllEntities<Group>('group')
   const d = record?.data
   const currency = d?.currency ?? 'INR'
   const item = targetType === 'expense' && itemId !== undefined && d?.split.mode === 'items' ? d.split.items.find(i => i.id === itemId) : undefined
@@ -77,8 +75,8 @@ function Form({request}: {request: Raise}) {
   const [raisedBy, setRaisedBy] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  const group = d?.groupId ? groups?.find(g => g.id === d.groupId)?.data : undefined
-  const members = group ? group.members.filter(m => m.leftAt === null).map(m => m.personId) : []
+  /* The live group's members, as the mutation reads them (a deleted group has none). */
+  const members = access.record?.groupMembers ?? []
   /* Who it can be raised as: the people on the record; a group member who is not on it may only say they were left out. */
   const candidates = reason === 'left_out' ? [...new Set([...members.filter(m => !participants.includes(m))])] : participants
   const defaultWho = candidates.includes(access.me) ? access.me : (candidates[0] ?? access.me)
@@ -157,15 +155,17 @@ function Form({request}: {request: Raise}) {
         </View>
 
         {candidates.length > 1 && (
-          <View style={[a.gap_xs]} accessibilityRole="radiogroup">
+          <View style={[a.gap_xs]}>
             <TextField.LabelText>
               <Trans>Raised by</Trans>
             </TextField.LabelText>
-            <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
-              {candidates.map(id => (
-                <Chip key={id} testID={`dispute-by-${avatarName(id)}`} label={name(id)} selected={id === who} onPress={() => setRaisedBy(id)} />
-              ))}
-            </View>
+            <ChoiceChips
+              gap="sm"
+              label={l`Raised by`}
+              value={who}
+              onChange={setRaisedBy}
+              options={candidates.map(id => ({value: id, label: name(id), testID: `dispute-by-${avatarName(id)}`}))}
+            />
             {who !== access.me && (
               <Text testID="dispute-recorded-by" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
                 <Trans>Recorded by you. It becomes two-sided once people share this.</Trans>
@@ -176,23 +176,29 @@ function Form({request}: {request: Raise}) {
 
         {isHold ? (
           <View style={[a.gap_xs]}>
-            <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
-              {HOLD_SUGGESTIONS.map(s => {
+            <ChoiceChips
+              gap="sm"
+              label={l`Note`}
+              value={note}
+              onChange={setNote}
+              options={HOLD_SUGGESTIONS.map(s => {
                 const text = s === 'Waiting for the refund' ? l`Waiting for the refund` : s === 'Need the receipt' ? l`Need the receipt` : l`Checking the amount`
-                return <Chip key={s} testID={`hold-suggestion-${s}`} label={text} selected={note === text} onPress={() => setNote(text)} />
+                return {value: text, label: text, testID: `hold-suggestion-${s}`}
               })}
-            </View>
+            />
           </View>
         ) : (
-          <View style={[a.gap_xs]} accessibilityRole="radiogroup">
+          <View style={[a.gap_xs]}>
             <TextField.LabelText>
               <Trans>What looks wrong?</Trans>
             </TextField.LabelText>
-            <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
-              {shown.map(r => (
-                <Chip key={r} testID={`dispute-reason-${r}`} label={words.reason(r)} selected={reason === r} onPress={() => setReason(r)} />
-              ))}
-            </View>
+            <ChoiceChips
+              gap="sm"
+              label={l`What looks wrong?`}
+              value={reason}
+              onChange={setReason}
+              options={shown.map(r => ({value: r, label: words.reason(r), testID: `dispute-reason-${r}`}))}
+            />
           </View>
         )}
 
@@ -218,15 +224,17 @@ function Form({request}: {request: Raise}) {
         )}
 
         {!isHold && reason === 'wrong_payer' && (
-          <View style={[a.gap_xs]} accessibilityRole="radiogroup">
+          <View style={[a.gap_xs]}>
             <TextField.LabelText>
               <Trans>Who really paid? (optional)</Trans>
             </TextField.LabelText>
-            <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
-              {(members.length ? members : participants).map(id => (
-                <Chip key={id} testID={`dispute-payer-${avatarName(id)}`} label={name(id)} selected={payerId === id} onPress={() => setPayerId(payerId === id ? null : id)} />
-              ))}
-            </View>
+            <ChoiceChips
+              gap="sm"
+              label={l`Who really paid? (optional)`}
+              value={payerId}
+              onChange={id => setPayerId(payerId === id ? null : id)}
+              options={(members.length ? members : participants).map(id => ({value: id, label: name(id), testID: `dispute-payer-${avatarName(id)}`}))}
+            />
           </View>
         )}
 
@@ -277,27 +285,24 @@ function RecentCandidates(props: PickerProps) {
 }
 
 function Candidates({entries, currency, selfId, value, onChange}: PickerProps & {entries: HistoryEntry[] | undefined}) {
+  const {t: l} = useLingui()
   const locale = useNumberLocale()
   const options = (entries ?? [])
     .flatMap(e => (e.kind === 'expense' && !e.entity.deleted && e.entity.id !== selfId && e.entity.data.currency === currency ? [e.entity as Entity<Expense>] : []))
     .slice(0, 8)
   if (options.length === 0) return null
   return (
-    <View style={[a.gap_xs]} accessibilityRole="radiogroup">
+    <View style={[a.gap_xs]}>
       <TextField.LabelText>
         <Trans>Which expense is this the same as? (optional)</Trans>
       </TextField.LabelText>
-      <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
-        {options.map(o => (
-          <Chip
-            key={o.id}
-            testID={`dispute-duplicate-${o.data.title}`}
-            label={`${o.data.title} · ${formatAmount(o.data.total, currency, locale)}`}
-            selected={value === o.id}
-            onPress={() => onChange(value === o.id ? null : o.id)}
-          />
-        ))}
-      </View>
+      <ChoiceChips
+        gap="sm"
+        label={l`Which expense is this the same as? (optional)`}
+        value={value}
+        onChange={id => onChange(value === id ? null : id)}
+        options={options.map(o => ({value: o.id, label: `${o.data.title} · ${formatAmount(o.data.total, currency, locale)}`, testID: `dispute-duplicate-${o.data.title}`}))}
+      />
     </View>
   )
 }

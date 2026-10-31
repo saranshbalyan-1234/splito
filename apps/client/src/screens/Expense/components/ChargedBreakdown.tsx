@@ -12,7 +12,7 @@ import {
   ZERO,
 } from '@splito/domain'
 
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {atoms as a, useTheme} from '#/alf'
 import {useTaxClasses} from '#/components/split/charges/hooks'
@@ -215,10 +215,7 @@ export function ChargedBreakdown({
               testID={`expense-person-${name(id)}`}
               style={[a.px_md, a.py_md, a.gap_xs, k > 0 && [a.border_t, t.atoms.border_contrast_low]]}>
               <View style={[a.flex_row, a.align_center, a.gap_sm]}>
-                <UserAvatar size={22} name={avatarName(id)} type="user" />
-                <Text style={[a.flex_1, a.text_md, a.font_semi_bold]} numberOfLines={1}>
-                  {name(id)}
-                </Text>
+                <PersonLink id={id} name={name(id)} avatarName={avatarName(id)} size={22} style={a.flex_1} />
                 <Text style={[a.text_md, a.font_semi_bold, tabular]}>{fmt(total)}</Text>
               </View>
               {rows.map(r => (

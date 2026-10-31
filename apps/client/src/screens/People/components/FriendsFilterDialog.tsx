@@ -15,7 +15,6 @@ import {type FriendFilter} from '../sort'
 /** Everything the People filter sets; applied together with Apply. */
 export type PeopleFilters = FriendFilter & {
   includeGroups: boolean
-  sort: 'amount' | 'name' | 'recent'
   /** The one "Show hidden" switch (decision 105): the removed friends I hid come back. */
   showHidden: boolean
   /** "Show settled" (decision 90, 112): off, friends settled up leave the list. */
@@ -25,7 +24,7 @@ export type PeopleFilters = FriendFilter & {
 /**
  * People's filters (owner: "filters option in friends, also add option for
  * include group there"): Include groups, one currency or all, which
- * balances to show, and the order. Nothing changes until Apply (spec:
+ * balances to show. The order is its own Sort button (owner 199). Nothing changes until Apply (spec:
  * filters use Apply); they drive the summary card and the list alike.
  */
 export function FriendsFilterDialog({
@@ -124,17 +123,6 @@ function Form({
             {value: 'youOwe', label: l`You owe`},
           ]}
           onChange={show => set({show})}
-        />
-        <Choices
-          testID="filter-sort"
-          title={l`Sort by`}
-          value={draft.sort}
-          options={[
-            {value: 'amount', label: l`Amount`},
-            {value: 'name', label: l`Name`},
-            {value: 'recent', label: l`Recent`},
-          ]}
-          onChange={sort => set({sort})}
         />
       </View>
     </FormSheet.Inner>

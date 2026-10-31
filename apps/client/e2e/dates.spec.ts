@@ -1,22 +1,15 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {type SplitoDevTools} from '../src/data/devTools'
+import {openApp} from './app'
+import {DESKTOP} from './viewports'
+
 /*
  * F-115 (logic audit M9, M18, m23, m25, m29): the Timezone, Date format and
  * Number format preferences apply on every screen, and "today" moves on with
  * the clock. The device is in Los Angeles while the preference says Kolkata,
  * so a screen that reads the device zone shows the wrong day.
  */
-
-type Row = {id: string; data: Record<string, unknown>}
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-  setPref(key: string, value: unknown): Promise<void>
-  list(type: string): Promise<Row[]>
-}
-
-const DESKTOP = {width: 1440, height: 900}
 
 test.use({viewport: DESKTOP, timezoneId: 'America/Los_Angeles', locale: 'en-US'})
 
@@ -25,14 +18,13 @@ const AT = '2026-10-26T20:00:00Z'
 
 async function boot(page: Page, at = AT) {
   await page.clock.install({time: new Date(at)})
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
+  await openApp(page)
 }
 
 /** Bob owes me INR 500, dated in Kolkata (the preference). */
 async function seed(page: Page, extra: Record<string, unknown> = {}) {
   return page.evaluate(async extra => {
-    const s = (window as unknown as {splito: Splito}).splito
+    const s = (window as unknown as {splito: SplitoDevTools}).splito
     await s.setPref('timezone', 'Asia/Kolkata')
     const bob = await s.createPerson('Bob Lee')
     const expense = await s.createExpense({
@@ -52,9 +44,9 @@ async function seed(page: Page, extra: Record<string, unknown> = {}) {
   }, extra)
 }
 
-const list = (page: Page, type: string) =>
+const list = (page: Page, type: Parameters<SplitoDevTools['list']>[0]) =>
   page.evaluate(
-    t => (window as unknown as {splito: Splito}).splito.list(t),
+    t => (window as unknown as {splito: SplitoDevTools}).splito.list(t),
     type,
   )
 
@@ -66,7 +58,7 @@ test('M9: Record payment is dated in the Timezone preference, like the expense i
   await page.goto(`/people/${bob}`)
   await page.getByTestId('person-record-payment').click()
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
   const [payment] = await list(page, 'repayment')
   expect(payment!.data.date).toBe('2026-10-27')
   expect(payment!.data.tz).toBe('Asia/Kolkata')
@@ -79,7 +71,7 @@ test('M9: Call it even is dated in the Timezone preference', async ({page}) => {
   await page.getByTestId('person-more').click()
   await page.getByTestId('person-call-even').click()
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('call-even-done')).toBeVisible()
+  await expect(page.getByText(/^(All even|Written off)$/)).toBeVisible()
   const [writeOff] = await list(page, 'writeoff')
   expect(writeOff!.data.date).toBe('2026-10-27')
   expect(writeOff!.data.tz).toBe('Asia/Kolkata')
@@ -91,7 +83,7 @@ test('M18: the Date format preference applies on the Expense screen and the edit
   await boot(page)
   const {expense} = await seed(page, {date: '2026-10-20'})
   await page.evaluate(() =>
-    (window as unknown as {splito: Splito}).splito.setPref('dateFormat', 'ymd'),
+    (window as unknown as {splito: SplitoDevTools}).splito.setPref('dateFormat', 'ymd'),
   )
   await page.goto(`/expense/${expense}`)
   await expect(page.getByTestId('expense-detail-date')).toHaveText(
@@ -104,7 +96,7 @@ test('M18: the Date format preference applies on the Expense screen and the edit
 test('m25: percentages follow the Number format preference', async ({page}) => {
   await boot(page)
   const {expense} = await page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
+    const s = (window as unknown as {splito: SplitoDevTools}).splito
     await s.setPref('numberLocale', 'de-DE')
     const bob = await s.createPerson('Bob Lee')
     const expense = await s.createExpense({

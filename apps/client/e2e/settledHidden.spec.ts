@@ -47,11 +47,11 @@ async function seed(page: Page) {
   })
 }
 
-test('Home hides friends settled up by default; Show settled brings them back and survives a reload', async ({page}) => {
+test('People hides friends settled up by default; Show settled brings them back and survives a reload', async ({page}) => {
   await seed(page)
-  // The counts line on Home keeps saying how many are settled, so nothing looks lost.
-  await page.goto('/')
-  await expect(page.getByTestId('home-overview-counts')).toContainText(/settled/)
+  // The counts line of the Overview (top of Analytics) keeps saying how many are settled, so nothing looks lost.
+  await page.goto('/analytics')
+  await expect(page.getByTestId('analytics-overview-counts')).toContainText(/settled/)
   await page.goto('/people')
   const home = page.getByTestId('screen-people')
   await expect(home.getByTestId('person-Open Olive')).toBeVisible()
@@ -155,36 +155,42 @@ test('when everything left is settled up the list says so with one Show settled 
   await expect(groups.getByTestId('group-Even Trip')).toBeVisible()
 })
 
-test('Apply saves Sort and Include groups as preferences: both are still applied after a reload', async ({page}) => {
+test('Apply saves Include groups and the Sort button saves its order as preferences: both are still applied after a reload', async ({page}) => {
   await seed(page)
   await page.goto('/people')
   const home = page.getByTestId('screen-people')
   await expect(home.getByTestId('person-Open Olive')).toBeVisible()
   await home.getByTestId('list-filters').click()
-  await page.getByTestId('filter-sort-name').click()
   await page.getByTestId('filter-include-groups').click()
   await page.getByTestId('sheet-save').click()
   await expect(home.getByTestId('list-filters-dot')).toBeVisible()
-  await page.reload()
+  // Sort is its own button (owner 199), not a filter: it does not light the Filters dot.
+  await home.getByTestId('list-sort').click()
+  await page.getByTestId('list-sort-name').click()
+  await expect(page).toHaveURL(/\/people\?.*sort=name/)
+  await expect(home.getByTestId('list-sort')).toHaveAttribute('aria-label', 'Sort, by Name')
+  // The preference is written after the pick; reload only once it is in the database.
+  await expect
+    .poll(() => page.evaluate(async () => JSON.stringify(await (window as unknown as {splito: {list(t: string): Promise<unknown>}}).splito.list('preference'))))
+    .toContain('peopleSort')
+  // The bare address reads the saved order and the saved Include groups.
+  await page.goto('/people')
   const after = page.getByTestId('screen-people')
   await expect(after.getByTestId('person-Open Olive')).toBeVisible()
   await expect(after.getByTestId('list-filters-dot')).toBeVisible()
+  await expect(after.getByTestId('list-sort')).toHaveAttribute('aria-label', 'Sort, by Name')
   await after.getByTestId('list-filters').click()
-  await expect(page.getByTestId('filter-sort-name')).toHaveAttribute('aria-checked', 'true')
   await expect(page.getByTestId('filter-include-groups')).toHaveAttribute('aria-checked', 'false')
   await page.getByTestId('sheet-cancel').click()
 
   // Groups' sort is saved the same way.
   await page.goto('/groups')
   const groups = page.getByTestId('screen-groups')
-  await groups.getByTestId('list-filters').click()
-  await page.getByTestId('filter-sort-amount').click()
-  await page.getByTestId('sheet-save').click()
-  // The preference is written after Apply closes the sheet; reload only once it is in the database.
+  await groups.getByTestId('list-sort').click()
+  await page.getByTestId('list-sort-amount').click()
   await expect
     .poll(() => page.evaluate(async () => JSON.stringify(await (window as unknown as {splito: {list(t: string): Promise<unknown>}}).splito.list('preference'))))
-    .toContain('groups.sort')
-  await page.reload()
-  await page.getByTestId('screen-groups').getByTestId('list-filters').click()
-  await expect(page.getByTestId('filter-sort-amount')).toHaveAttribute('aria-checked', 'true')
+    .toContain('groupsSort')
+  await page.goto('/groups')
+  await expect(page.getByTestId('screen-groups').getByTestId('list-sort')).toHaveAttribute('aria-label', 'Sort, by Amount, largest first')
 })

@@ -1,54 +1,26 @@
 import {expect, type Page, test} from '@playwright/test'
 
-/* Seeds through the app's own mutations (window.splito, dev/E2E builds only). Amounts are minor units. */
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createGroup(input: unknown): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-}
-
-async function ready(page: Page) {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
-}
+import {openApp} from './app'
+import {seedGroup} from './seed'
+import {PHONE} from './viewports'
 
 /** A07 group: me (A), Bela (B), Chirag (C). Chirag paid 100 for me, so I owe Chirag 100. */
 async function seedA07(page: Page) {
-  return page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
-    const b = await s.createPerson('Bela Joshi')
-    const c = await s.createPerson('Chirag Shah')
-    const group = await s.createGroup({
-      name: 'Rishikesh',
-      kind: 'trip',
-      currency: 'INR',
-      startDate: '2026-09-04',
-      endDate: '2026-09-07',
-      memberIds: [b, c],
-    })
-    await s.createExpense({
-      title: 'Rafting',
-      groupId: group,
-      currency: 'INR',
-      total: '10000',
-      payers: {[c]: '10000'},
-      split: {mode: 'equal', participants: [s.me]},
-      date: '2026-09-05',
-      tz: 'Asia/Kolkata',
-      category: 'entertainment',
-      notes: '',
-    })
-    return {group, me: s.me, b, c}
+  const {group, me, people: [b, c]} = await seedGroup(page, {
+    people: ['Bela Joshi', 'Chirag Shah'],
+    startDate: '2026-09-04',
+    endDate: '2026-09-07',
+    expenses: [{title: 'Rafting', total: '10000', paidBy: 2, among: [0], date: '2026-09-05', category: 'entertainment'}],
   })
+  return {group, me, b: b!, c: c!}
 }
 
 test('phones: the group page has the FAB and its own Add expense, both pre-select the group (owner 190)', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {group} = await seedA07(page)
-  await page.setViewportSize({width: 390, height: 844})
+  await page.setViewportSize(PHONE)
   await page.goto(`/groups/${group}`)
   await expect(page.getByTestId('screen-group')).toBeVisible()
   await expect(page.getByTestId('screen-group').getByTestId('fab-add')).toBeVisible()
@@ -62,7 +34,7 @@ test('phones: the group page has the FAB and its own Add expense, both pre-selec
 test('group page: header, my balance, expenses, member balances and members', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {group} = await seedA07(page)
   await page.goto(`/groups/${group}`)
 
@@ -111,7 +83,7 @@ test('group page: header, my balance, expenses, member balances and members', as
 test('A07 / F-113 M11: when A->C is excluded the plan goes outside the rules, says why, and People, Balances and Settle up agree', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {group, me, c} = await seedA07(page)
 
   // Rule set in the Payment rules sheet ("Who you settle with"), as a user would.
@@ -160,7 +132,7 @@ test('A07 / F-113 M11: when A->C is excluded the plan goes outside the rules, sa
 test('a plan goes stale when the ledger changes, and updates on request', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {group, b} = await seedA07(page)
   await page.goto(`/groups/${group}/settle`)
   await expect(page.getByTestId('transfer-You-Chirag Shah').getByTestId('transfer-amount')).toHaveText('↗ ₹100.00')
@@ -206,7 +178,7 @@ test('a plan goes stale when the ledger changes, and updates on request', async 
 test('"Record this payment" records a part payment and the plan follows', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {group} = await seedA07(page)
   await page.goto(`/groups/${group}/settle`)
   const transfer = page.getByTestId('transfer-You-Chirag Shah')
@@ -227,7 +199,7 @@ test('"Record this payment" records a part payment and the plan follows', async 
   await expect(page.getByTestId('payment-amount')).toHaveValue('100.00')
   await page.getByTestId('payment-amount').fill('60')
   await page.getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByText('Payment recorded', {exact: true})).toBeVisible()
 
   await expect(transfer.getByTestId('transfer-amount')).toHaveText('↗ ₹40.00')
   await expect(page.getByText('Balances or rules changed since this plan was made.')).toHaveCount(0)
@@ -241,7 +213,7 @@ test('"Record this payment" records a part payment and the plan follows', async 
 })
 
 test('create a group with a new member, then land on it', async ({page}) => {
-  await ready(page)
+  await openApp(page)
   await page.evaluate(() => (window as any).splito.createPerson('Isha Kapoor'))
   await page.goto('/groups/new')
   await page.getByTestId('create-group-name').fill('Weekend in Goa')
@@ -249,7 +221,7 @@ test('create a group with a new member, then land on it', async ({page}) => {
   await page.getByTestId('create-group-new-member').fill('Rohan Gill')
   await page.getByTestId('create-group-add-member').click()
   await page.getByTestId('create-group-currency').click()
-  await page.getByTestId('currency-EUR').click()
+  await page.getByTestId('currency-dialog-EUR').click()
   await expect(page.getByTestId('create-group-currency')).toContainText(
     'EUR · Euro',
   )

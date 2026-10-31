@@ -173,27 +173,14 @@ function RulesEditor({
           a.border,
           t.atoms.border_contrast_low,
         ]}>
-        <Toggle.Item type="switch"
+        <Toggle.SwitchRow
           testID="rules-allow-list"
           name="allowListOnly"
           label={l`Only allowed pairs`}
+          hint={l`Pairs you haven’t marked Allowed or Preferred are treated as excluded.`}
           value={rules.allowListOnly}
           onChange={v => save(r => ({...r, allowListOnly: v}))}
-          style={[a.w_full]}>
-          <View style={[a.flex_1, a.gap_2xs, a.pr_md]}>
-            <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
-              <Trans>Only allowed pairs</Trans>
-            </Toggle.LabelText>
-            <Text
-              style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-              <Trans>
-                Pairs you haven’t marked Allowed or Preferred are treated as
-                excluded.
-              </Trans>
-            </Text>
-          </View>
-          <Toggle.Switch />
-        </Toggle.Item>
+        />
       </View>
 
       {members.map(from => (

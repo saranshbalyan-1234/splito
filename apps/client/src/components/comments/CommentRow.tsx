@@ -8,7 +8,7 @@ import {type Comment, type Entity, mentionRanges} from '@splito/sync'
 import {useHaptics} from '#/lib/haptics'
 import {copyText} from '#/lib/sharing'
 import {useTimeZone} from '#/locale/useDates'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {isOnlyEmoji} from '#/alf/typography'
 import {atoms as a, platform, useBreakpoints, useTheme} from '#/alf'
 import {
@@ -164,7 +164,7 @@ let CommentRow = ({
           {!isMine ? (
             <View style={{width: AVATAR_SIZE}}>
               {isLastInCluster ? (
-                <UserAvatar size={AVATAR_SIZE} name={avatarName} type="user" />
+                <PersonLink id={comment.data.authorId} name={authorName} avatarName={avatarName} show="avatar" size={AVATAR_SIZE} />
               ) : null}
             </View>
           ) : null}
@@ -175,16 +175,14 @@ let CommentRow = ({
               isMine ? a.align_end : a.align_start,
             ]}>
             {!isMine && isFirstInCluster && !isDeleted && !isEmojiOnly ? (
-              <Text
-                emoji
-                style={[
-                  a.text_xs,
-                  t.atoms.text_contrast_medium,
-                  a.pb_2xs,
-                  {paddingLeft: 12},
-                ]}>
-                {authorName}
-              </Text>
+              <View style={[a.pb_2xs, {paddingLeft: 12}]}>
+                <PersonLink
+                  id={comment.data.authorId}
+                  name={authorName}
+                  show="name"
+                  textStyle={[a.text_xs, a.font_normal, t.atoms.text_contrast_medium]}
+                />
+              </View>
             ) : null}
             <Pressable
               testID="comment-bubble"

@@ -17,7 +17,7 @@ import {RemoveFriendDialog} from '#/features/friends/RemoveFriendDialog'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {List, type ListMethods} from '#/view/com/util/List'
 import {useInviteLinkRows} from '#/screens/Invites/InviteLinks'
-import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -44,7 +44,6 @@ const DEFAULT_PREFS = [
   'invites.defaultMaxUses.friend',
   'invites.defaultMaxUses.group',
   'invites.defaultExpiry',
-  'invites.approveJoins',
 ] as const
 
 type Item =
@@ -245,7 +244,6 @@ function useOpenBalances(personId: string) {
 
 function FriendRow({person, onRemove}: {person: Entity<Person>; onRemove: () => void}) {
   const {t: l} = useLingui()
-  const navigation = useNavigation<NavigationProp>()
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const open = useOpenBalances(person.id)
@@ -259,18 +257,7 @@ function FriendRow({person, onRemove}: {person: Entity<Person>; onRemove: () => 
       <Plural value={open.length} one="Open in # currency" other="Open in # currencies" />
     )
   return (
-    <RequestRow testID={`hub-friend-${name}`} name={name} sync={person} detail={detail}>
-      <Button
-        testID="hub-friend-open"
-        label={l`Open ${name}`}
-        size="small"
-        color="secondary"
-        variant="ghost"
-        onPress={() => navigation.navigate('Person', {personId: person.id})}>
-        <ButtonText>
-          <Trans>Open</Trans>
-        </ButtonText>
-      </Button>
+    <RequestRow testID={`hub-friend-${name}`} personId={person.id} name={name} sync={person} detail={detail}>
       {gtMobile ? (
         <RequestAction
           testID="hub-friend-remove"
@@ -309,7 +296,7 @@ function RemovedRow({person}: {person: Entity<Person>}) {
   const haptics = useHaptics()
   const name = person.data.name
   return (
-    <RequestRow testID={`hub-removed-${name}`} name={name} detail={<Trans>Removed · history kept</Trans>}>
+    <RequestRow testID={`hub-removed-${name}`} personId={person.id} name={name} detail={<Trans>Removed · history kept</Trans>}>
       <RequestAction
         testID="hub-removed-add-back"
         label={l`Add ${name} back`}

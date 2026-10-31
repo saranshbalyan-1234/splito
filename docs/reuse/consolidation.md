@@ -591,3 +591,18 @@ Rules:
 Do these first when slots are free: P0-e (it contains the possible phone crash, finding 4), P0-b, P0-d and
 P0-a, which are user-visible and have no builder overlap. Then P1-a, which holds finding 1, the bug that shows
 "settled up" on an open balance.
+
+## Status
+
+- **P0-b Row menu core, built on `c-p0bf` (2026-10-31).** `components/RowMenu.tsx` (`useRowMenuTrigger`, `RowMenu`) replaces
+  the Hide and Dispute row menus (`features/hidden/HideItem` `HideRow`, `features/disputes/RowMenu`), and `ActivityItem` now
+  uses the same trigger (long-press on phone-width web, right-click and the Menu key on every row, not only requests).
+  `GestureActionView` and `LaunchScreen` read `useShouldReduceMotion`. Not done, left to P1-d as listed: `CommentRow` keeps its
+  own handlers (they already work at phone width; baselined by the `rowMenuGesture` architecture rule), and the other "..."
+  triggers (finding 45). `useRowMenuTrigger` does not return `accessibilityActions`: the row render functions only hand over
+  `onLongPress`, so a screen-reader action would need their signature changed.
+- **P0-f Expense history and category, built on `c-p0bf` (2026-10-31).** `useCategoryLookup` / `useCategory` in
+  `components/split/shared.tsx` name categories in the UI language (a gone id is the real Other); `CategoryTile` is the one tile
+  (`EntryIcon` and Analytics' `CategoryIcon` draw it, so Analytics rows are rounded squares with the full glyph set);
+  `historyKind` and a `titles` prop on `HistoryLine` serve the expense and payment pages (a later live version of a payment is
+  "edited", no longer "restored"); Ask answers name categories in the UI language and a gone category is Other.

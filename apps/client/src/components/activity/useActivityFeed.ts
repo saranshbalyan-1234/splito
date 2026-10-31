@@ -9,6 +9,7 @@ import {
   type Expense,
   type FriendRequest,
   type Group,
+  type GroupRequest,
   type Person,
   type Repayment,
   type WriteOff,
@@ -35,6 +36,8 @@ export type ActivitySnapshot = {
   transfers: Map<string, Entity<Repayment | WriteOff>>
   /** Friend requests by id, for their current state (a request row shows Accept until answered). */
   requests: Map<string, Entity<FriendRequest>>
+  /** Group requests by id, for their current state (a row shows Join / Approve until answered). */
+  groupRequests: Map<string, Entity<GroupRequest>>
 }
 
 const snapshots = new WeakMap<ActivityState, ActivitySnapshot>()
@@ -62,6 +65,12 @@ function snapshotOf(state: ActivityState): ActivitySnapshot {
       ),
       requests: new Map(
         (state.entities.friendRequest as Entity<FriendRequest>[]).map(r => [
+          r.id,
+          r,
+        ]),
+      ),
+      groupRequests: new Map(
+        (state.entities.groupRequest as Entity<GroupRequest>[]).map(r => [
           r.id,
           r,
         ]),

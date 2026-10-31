@@ -1,4 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/JoinRequest.tsx (preview card, Wrapper, broken-link state)
+import {startPage} from '#/lib/routes/startTab'
 import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import Animated, {FadeIn} from 'react-native-reanimated'
@@ -8,7 +9,10 @@ import {
   acceptInvite,
   type InvitePreview,
   isInviteCode,
+  joinGroupViaLink,
+  linkOutcome,
   type Person,
+  requestToJoin,
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -72,7 +76,8 @@ export function InviteScreen() {
       </Layout.Header.Outer>
       <Layout.Content contentContainerStyle={[a.flex_1]}>
         <View style={[a.flex_1, a.align_center, a.justify_center, a.px_lg, a.py_4xl]}>
-          {!isValid || answer === 'not-found' ? (
+          {!isValid || answer === 'not-found' || (typeof answer === 'object' && answer.group?.joinPolicy === 'invite') ? (
+            /* An invite-only group has no working link (owner 196). */
             <Broken />
           ) : links === undefined ? (
             <Loader size="xl" />
@@ -138,6 +143,24 @@ function Preview({code, preview}: {code: string; preview: InvitePreview}) {
     busy.current = true
     setIsSaving(true)
     try {
+      if (preview.kind === 'group' && preview.group) {
+        // The group's rule decides (owner 196): "Anyone with the link" joins at once, "I approve each join" asks.
+        const snapshot = {groupId: preview.group.id, groupName: preview.groupName ?? '', groupKind: preview.group.kind, groupCurrency: preview.group.currency, groupJoinPolicy: preview.group.joinPolicy}
+        if (linkOutcome(preview.group) === 'join') {
+          const group = await joinGroupViaLink(store, ctx, {...snapshot, inviter, code})
+          await directory.accept(code)
+          haptics.success()
+          Toast.show(l`You joined ${snapshot.groupName}`, {type: 'success'})
+          navigation.replace('Group', {groupId: group.id})
+          return
+        }
+        await requestToJoin(store, ctx, {...snapshot, admin: inviter})
+        await directory.accept(code)
+        haptics.success()
+        Toast.show(l`Request sent. An admin of ${snapshot.groupName} will answer it.`, {type: 'success'})
+        navigation.navigate('Groups')
+        return
+      }
       if (preview.kind === 'group') {
         const delivery = await directory.accept(code)
         Toast.show(
@@ -207,7 +230,11 @@ function Preview({code, preview}: {code: string; preview: InvitePreview}) {
         <>
           <Text style={[a.text_sm, a.text_center, a.leading_snug, t.atoms.text_contrast_medium]}>
             {preview.kind === 'group' ? (
-              <Trans>Accept to see the group’s expenses and split with its members.</Trans>
+              preview.group?.joinPolicy === 'approve' ? (
+                <Trans>An admin approves each join. Ask to join and you’ll hear back.</Trans>
+              ) : (
+                <Trans>Accept to see the group’s expenses and split with its members.</Trans>
+              )
             ) : (
               <Trans>Accept to split expenses with {inviter.name}. You’ll both see what you share.</Trans>
             )}
@@ -221,7 +248,7 @@ function Preview({code, preview}: {code: string; preview: InvitePreview}) {
               disabled={isSaving}
               onPress={() => void accept()}>
               <ButtonText>
-                <Trans>Accept</Trans>
+                {preview.group?.joinPolicy === 'approve' ? <Trans>Ask to join</Trans> : <Trans>Accept</Trans>}
               </ButtonText>
             </Button>
             <Button
@@ -232,7 +259,7 @@ function Preview({code, preview}: {code: string; preview: InvitePreview}) {
               disabled={isSaving}
               onPress={() => {
                 Toast.show(l`Invite declined`)
-                navigation.navigate('Home')
+                navigation.navigate(startPage() as never)
               }}>
               <ButtonText>
                 <Trans>Decline</Trans>

@@ -4,6 +4,7 @@ import {type PrefValue} from '@splito/sync'
 
 import {getFontScale, useAlf} from '#/alf'
 import {usePref} from '#/data/hooks'
+import {setStartTab} from '#/lib/routes/startTab'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {type Device, device} from '#/storage'
 
@@ -67,6 +68,8 @@ export function PrefsMirror() {
     put('hapticsEnabled', haptics)
     put('moneyPalette', moneyPalette)
     put('startTab', startTab)
+    // Back's fallbacks, the logo and unknown links follow the choice at once, on every address (not only a load of '/').
+    setStartTab(startTab)
     const scale = fontScaleFor(textScale)
     if (scale !== getFontScale()) setFontScale(scale)
   }, [theme, darkTheme, accent, textScale, haptics, startTab, moneyPalette, setFontScale])

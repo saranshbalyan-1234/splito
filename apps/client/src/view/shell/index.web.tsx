@@ -13,7 +13,7 @@ import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {DrawerContent} from '#/navigation/Drawer'
 import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {FlatNavigator, RoutesContainer} from '#/navigation/Navigation'
-import {atoms as a, flatten, select, useTheme} from '#/alf'
+import {atoms as a, flatten, select, useBreakpoints, useTheme} from '#/alf'
 import {DemoBusy} from '#/components/DemoBusy'
 import {Outlet as PortalOutlet} from '#/components/Portal'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
@@ -44,10 +44,54 @@ function ShellInner() {
   )
 }
 
+/** A touch must start this close to the left edge to open the drawer (owner 201). */
+const EDGE_PX = 24
+/** ... and travel this far sideways, mostly sideways, to count as a swipe rather than a scroll. */
+const SWIPE_PX = 48
+
+/**
+ * Phone web has no hamburger and no swipe of its own (Bluesky's web shell has none), so a touch that starts at the
+ * left edge and moves right opens the drawer. Document-level and passive: nothing covers the page, vertical scrolling
+ * and sideways chip rows are untouched (a swipe must start within `EDGE_PX` and be at least twice as wide as tall).
+ */
+function useEdgeSwipe(isOn: boolean, onSwipe: () => void) {
+  const latest = useRef(onSwipe)
+  latest.current = onSwipe
+  useEffect(() => {
+    if (!isOn) return
+    let start: {x: number; y: number} | null = null
+    const down = (e: TouchEvent) => {
+      const t = e.touches[0]
+      start = e.touches.length === 1 && t && t.clientX <= EDGE_PX ? {x: t.clientX, y: t.clientY} : null
+    }
+    const move = (e: TouchEvent) => {
+      const t = e.touches[0]
+      if (!start || !t) return
+      const dx = t.clientX - start.x
+      const dy = Math.abs(t.clientY - start.y)
+      if (dx >= SWIPE_PX && dx >= dy * 2) {
+        start = null
+        latest.current()
+      } else if (dy > dx + SWIPE_PX) start = null
+    }
+    const end = () => (start = null)
+    document.addEventListener('touchstart', down, {passive: true})
+    document.addEventListener('touchmove', move, {passive: true})
+    document.addEventListener('touchend', end, {passive: true})
+    document.addEventListener('touchcancel', end, {passive: true})
+    return () => {
+      document.removeEventListener('touchstart', down)
+      document.removeEventListener('touchmove', move)
+      document.removeEventListener('touchend', end)
+      document.removeEventListener('touchcancel', end)
+    }
+  }, [isOn])
+}
+
 /*
  * Bluesky only shows this drawer below the tablet breakpoint, where its
- * hamburger lives. Splito's avatar opens it at every width (owner
- * directive), so it isn't gated on the breakpoint. Focus is trapped in the
+ * hamburger lives. Splito opens it by a swipe from the left edge on phones (owner 201); the avatar opens
+ * Profile. Focus is trapped in the
  * panel and Escape closes it, as in Splito's web dialogs.
  */
 function DrawerLayout({children}: {children: React.ReactNode}) {
@@ -57,6 +101,8 @@ function DrawerLayout({children}: {children: React.ReactNode}) {
   const setDrawerOpen = useSetDrawerOpen()
   const shouldReduceMotion = useShouldReduceMotion()
   const showDrawer = isDrawerOpen
+  const {gtMobile} = useBreakpoints()
+  useEdgeSwipe(!gtMobile && !isDrawerOpen, () => setDrawerOpen(true))
   const [showDrawerDelayedExit, setShowDrawerDelayedExit] = useState(showDrawer)
 
   useLayoutEffect(() => {

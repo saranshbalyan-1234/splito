@@ -1,5 +1,6 @@
 import {type ActivityTypeId} from '@splito/sync'
 
+import {type NavigationProp} from '#/lib/routes/types'
 import {buildPath, type LinkTarget} from './resolve'
 import {webLink} from './hosts'
 
@@ -17,13 +18,28 @@ export function pathTo(name: LinkTarget['name'], params: Record<string, string> 
 }
 
 /**
+ * Where a person opens (owner 178, 206): me -> Profile, anyone else (removed or unknown too) -> their page. The one
+ * rule behind `PersonLink`, `openPerson` and every link or push that names a person.
+ */
+export function personPath(personId: string, isMe: boolean) {
+  return isMe ? pathTo('Profile') : pathTo('Person', {personId})
+}
+
+/** Opens a person's page by the same rule as `personPath` (for a handler that cannot be a link). */
+export function openPerson(navigation: Pick<NavigationProp, 'push' | 'navigate'>, personId: string, myId: string, action: 'push' | 'navigate' = 'push') {
+  const go = action === 'push' ? navigation.push : navigation.navigate
+  if (personId === myId) go.call(navigation, 'Profile')
+  else go.call(navigation, 'Person', {personId})
+}
+
+/**
  * Activity behind every "see all" of past events (owners 173, 179, 192-195): All tab (so a saved Me or Others never
  * narrows it), the types named, and the group and/or friend the link sits in. Opened with `navigationAction="push"`
  * (or `openLink`) it lands as a pushed page with Back. The tab is a query here because `Link` matches a bare route
  * pattern (`/activity`); the address bar prints it as `/activity/all`.
  */
-export function activityPath({types = [], groupId, personId}: {types?: readonly ActivityTypeId[]; groupId?: string; personId?: string} = {}) {
-  return `/activity?${new URLSearchParams({tab: 'all', ...(types.length > 0 ? {type: types.join() === 'expenses,payments' ? 'transactions' : types.join(',')} : {}), ...(groupId ? {group: groupId} : {}), ...(personId ? {person: personId} : {})})}`
+export function activityPath({types = [], groupId, personId, tab = 'all'}: {types?: readonly ActivityTypeId[]; groupId?: string; personId?: string; /** `me` for what I did (Profile's Expenses and recent activity). */ tab?: 'all' | 'me'} = {}) {
+  return `/activity?${new URLSearchParams({tab, ...(types.length > 0 ? {type: types.join() === 'expenses,payments' ? 'transactions' : types.join(',')} : {}), ...(groupId ? {group: groupId} : {}), ...(personId ? {person: personId} : {})})}`
 }
 
 /** Every transactions heading, count and "See all": Expenses and Payments (owners 173, 193). */

@@ -20,3 +20,11 @@ export async function openAddExpense(page: Page, size: {width: number; height: n
   await composeButton(page).click()
   await expect(page.getByTestId('screen-add-expense')).toBeVisible()
 }
+
+/** Opens the composer's people picker, taps each name, and closes it (the split is then with those people). */
+export async function pickPeople(page: Page, names: string[]) {
+  await page.getByTestId('expense-people').click()
+  for (const name of names) await page.getByTestId(`person-option-${name}`).click()
+  await page.getByTestId('people-dialog').getByTestId('sheet-close').click()
+  await expect(page.getByTestId('people-dialog')).toHaveCount(0)
+}

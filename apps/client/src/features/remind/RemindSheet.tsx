@@ -12,10 +12,11 @@ import {
 
 import {useHaptics} from '#/lib/haptics'
 import {useGetTimeAgo} from '#/lib/hooks/useTimeAgo'
+import {openExternal} from '#/lib/openExternal'
 import {type RemindRequest} from '#/lib/remind/bus'
 import {buildRemindMessage, sortedAmounts, upiLinkWithoutPlaceholderName, whatsappUrl} from '#/lib/remind/message'
-import {copyReminder, openWhatsapp, shareText} from '#/lib/remind/share'
 import {remindWords} from '#/lib/remind/words'
+import {copyText, shareText} from '#/lib/sharing'
 import {logger} from '#/logger'
 import {useEntities, useMe, useMutationCtx, useStore} from '#/data/hooks'
 import {useLastNudge} from '#/data/remind'
@@ -127,12 +128,12 @@ function Form({request}: {request: Remind}) {
     })
   const copy = () =>
     run(async () => {
-      await copyReminder(message)
+      await copyText(message, {toast: false})
       return 'copy'
     })
   const openChat = () =>
     run(async () => {
-      await openWhatsapp(whatsapp!)
+      await openExternal(whatsapp!)
       return 'whatsapp'
     })
 

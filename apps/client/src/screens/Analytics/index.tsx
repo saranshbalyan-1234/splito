@@ -2,11 +2,9 @@ import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {useNavigation} from '@react-navigation/native'
 import {formatAmount, reportCsv} from '@splito/domain'
 import {type ListedExpense} from '#/data/analyticsQueries'
 
-import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
@@ -17,12 +15,12 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
-import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Layout from '#/components/Layout'
 import {TabScreen} from '#/components/TabScreen'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {Shimmer} from '#/motion/Shimmer'
 import {Charts, ChartsPlaceholder} from '#/screens/Analytics/components/Charts'
 import {
@@ -30,6 +28,7 @@ import {
   ExpenseRowPlaceholder,
 } from '#/screens/Analytics/components/ExpenseRow'
 import {FilterBar} from '#/screens/Analytics/components/FilterBar'
+import {OverviewSection} from '#/screens/Analytics/components/OverviewSection'
 import {
   Summary,
   SummaryPlaceholder,
@@ -37,7 +36,7 @@ import {
 import {exportCsv} from '#/screens/Analytics/exportCsv'
 import {type Report, useReport} from '#/screens/Analytics/useReport'
 import {seeAllTransactionsPath} from '#/lib/links/make'
-import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 
 const PLACEHOLDER_ROWS = 4
 
@@ -50,11 +49,15 @@ const PLACEHOLDER_ROWS = 4
 export function AnalyticsScreen() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
-  const navigation = useNavigation<NavigationProp>()
   const report = useReport()
   const [view = 'charts', setView] = usePref('analyticsView')
   const isTable = view === 'table'
   const exportRows = useExportRows()
+  /* The data layer reads 200 rows at once; the web list draws every row it is given (20,000 px of page, a 240 ms commit on each revisit), so draw a page and add the next as the end comes near (usePagedRows, as Activity and Group do). */
+  const pageOf = usePagedRows(
+    report && `${report.currency}|${report.range.from}|${report.range.to}|${report.selection?.label}|${report.shareOf}`,
+  )
+  const {shown, onEndReached: showMore} = pageOf(report?.rows ?? [])
   
 
   return (
@@ -95,21 +98,15 @@ export function AnalyticsScreen() {
           testID="analytics-empty"
           illustration="empty-analytics"
           message={l`Your spending shows up here – by month, category, person and group – once you add an expense.`}
-          button={{
-            label: l({message: 'Add expense', context: 'action'}),
-            text: l({message: 'Add expense', context: 'action'}),
-            icon: PlusIcon,
-            onPress: () => navigation.navigate('AddExpense', {}),
-            size: 'small',
-            color: 'secondary',
-          }}
+          /* No button of its own (F-275): the FAB is the one Add expense. */
         />
       ) : (
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
-            data={report.rows}
+            data={shown}
             onEndReached={() => {
-              if (!report.isRowsDone) report.loadMoreRows()
+              showMore()
+              if (shown.length >= report.rows.length && !report.isRowsDone) report.loadMoreRows()
             }}
             keyExtractor={(e: ListedExpense) => e.id}
             renderItem={({item}: {item: ListedExpense}) => (
@@ -130,6 +127,8 @@ export function AnalyticsScreen() {
             )}
             ListHeaderComponent={
               <>
+                {/* Balances right now come first (owner 198), above the filter row they ignore. */}
+                <OverviewSection />
                 <FilterBar
                   report={report}
                   isTable={isTable}

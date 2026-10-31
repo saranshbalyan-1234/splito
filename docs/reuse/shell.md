@@ -42,14 +42,13 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/alf/themes.ts` | `src/alf/themes.ts` | Bluesky blue default; emerald optional accent |
 | `src/components/Layout/index.tsx` | `src/components/Layout/index.tsx` | `Center` is full width; centre-column borders removed |
 | `src/components/Layout/Header/index.tsx` | `src/components/Layout/Header/index.tsx` | Full width (no centre-column max width or offset); header rule set in `preview-shell.md` |
-| `src/components/FeedCard.tsx` | `src/components/FeedCard.tsx` | - |
 | `src/screens/Groups/components/GroupRow.tsx` | `src/components/FeedCard.tsx (list card layout)` | Group row: square avatar, title, byline, balance per currency |
 | `src/components/ProfileCard.tsx` | `src/components/ProfileCard.tsx` | Takes a local name instead of an AT Protocol profile |
 | `src/components/Pills.tsx` | `src/components/Pills.tsx` | - |
 | `src/components/Fill.tsx` | `src/components/Fill.tsx` | - |
 | `src/components/MediaInsetBorder.tsx` | `src/components/MediaInsetBorder.tsx` | - |
 | `src/components/SubtleHover.tsx` | `src/components/SubtleHover.tsx` | - |
-| `src/screens/Profile.tsx` | `src/screens/Settings/Settings.tsx` | Profile page, opened from the drawer (back button header): account block, what I have in Splito, Settings / About rows, a plain note that sign-in arrives with sync |
+| `src/screens/Profile/index.tsx` | `src/screens/Settings/Settings.tsx`, `src/screens/Profile/Header` | Profile page (owners 201, 206, 209), opened from the header avatar (back button header): header, stat row, balance cards, payment details, Add me, recent activity, Log out |
 | `src/screens/Settings/components/SettingsList.tsx` | `src/screens/Settings/components/SettingsList.tsx` | `LinkItem` built on `#/view/com/util/Link` |
 | `src/view/com/util/EmptyState.tsx` | `src/view/com/util/EmptyState.tsx` | Optional animated `Illustration` in place of the icon |
 | `src/view/com/util/Link.tsx` | `src/view/com/util/Link.tsx` | App routes only |

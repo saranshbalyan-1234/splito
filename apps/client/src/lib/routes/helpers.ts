@@ -2,6 +2,7 @@
 import {type NavigationProp} from '@react-navigation/native'
 
 import {currentSection} from './section'
+import {startPage} from './startTab'
 import {type RouteParams, type State, type TabParams} from './types'
 
 export function getRootNavigation<T extends {}>(
@@ -15,7 +16,7 @@ export function getRootNavigation<T extends {}>(
 
 export function getCurrentRoute(state?: State) {
   if (!state) {
-    return {name: 'Home', params: undefined}
+    return {name: startPage(), params: undefined}
   }
 
   /*
@@ -55,11 +56,11 @@ export function isStateAtTabRoot(state: State | undefined) {
   }
   const currentRoute = getCurrentRoute(state)
   return (
-    isTab(currentRoute.name, 'Home') ||
     isTab(currentRoute.name, 'People') ||
     isTab(currentRoute.name, 'Groups') ||
     isTab(currentRoute.name, 'Analytics') ||
-    isTab(currentRoute.name, 'Activity')
+    isTab(currentRoute.name, 'Activity') ||
+    isTab(currentRoute.name, 'Settings')
   )
 }
 
@@ -135,17 +136,21 @@ export function buildStateObject(
 }
 
 /* Exhaustive on purpose: a tab added to TabParams (People came with decision 153) fails to compile here until it is listed. */
-const TAB_ROUTES: readonly string[] = Object.keys({Home: 1, People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
+const TAB_ROUTES: readonly string[] = Object.keys({People: 1, Groups: 1, Analytics: 1, Activity: 1, Settings: 1} satisfies Record<keyof TabParams, 1>)
 
 /** The main screens, as a link's `from` names them. */
-const FROM_TABS = {home: 'Home', people: 'People', groups: 'Groups', analytics: 'Analytics', activity: 'Activity'} as const
+const FROM_TABS = {people: 'People', groups: 'Groups', analytics: 'Analytics', activity: 'Activity', settings: 'Settings'} as const
 
-/** The tab a `from` value names (`/activity?from=home` -> Home), else null (Analytics' custom range uses `from` for a date too). */
+/**
+ * The tab a `from` value names (`/activity?from=people` -> People), else null (Analytics' custom range uses `from` for a
+ * date too). An address saved before owner 198 says `from=home`: that is the start tab now.
+ */
 export function fromTab(value: unknown): (typeof FROM_TABS)[keyof typeof FROM_TABS] | null {
+  if (value === 'home') return startPage()
   return typeof value === 'string' && Object.hasOwn(FROM_TABS, value) ? FROM_TABS[value as keyof typeof FROM_TABS] : null
 }
 
-/** The route param that marks a tab screen pushed as a copy on web: the tab it was opened from (`from=home`), in the address so a refresh keeps Back (owner 184). */
+/** The route param that marks a tab screen pushed as a copy on web: the tab it was opened from (`from=groups`), in the address so a refresh keeps Back (owner 184). */
 export const FROM_PARAM = 'from'
 
 /** Native pushes the copy under its own root-stack name (`PushedGroups`), since the tabs live in the nested `Tabs` screen. */
@@ -171,8 +176,8 @@ export function pushedCopyOf(state: State | undefined, tab: string): {params: ob
 }
 
 /**
- * How a pressed link reaches its route (owner 179, § 26.3). A main screen (Home, People, Groups, Analytics,
- * Activity) opened from a link, rather than from its own tab or sidebar item, is a pushed page: a stack copy of the
+ * How a pressed link reaches its route (owner 179, § 26.3). A main screen (People, Groups, Analytics,
+ * Activity, Settings) opened from a link, rather than from its own tab or sidebar item, is a pushed page: a stack copy of the
  * screen carrying its params, with Back in the header (returning to where the link was) and no FAB; the tab itself
  * still gives the plain tab screen with the avatar. On web the tab routes live in the one flat stack, so the copy is
  * the same route pushed with `from=<the tab the link was pressed on>` (in the address, so a refresh keeps Back there,
@@ -184,20 +189,20 @@ export function tabLink(
   routeName: string,
   params: object | undefined,
   isWeb: boolean,
-  from: string = 'home',
+  from: string = startPage().toLowerCase(),
 ): {kind: 'push'; name: string; params: object | undefined} | null {
   if (!TAB_ROUTES.includes(routeName)) return null
   return isWeb
-    ? {kind: 'push', name: routeName, params: {...params, [FROM_PARAM]: fromTab(from) ? from : 'home'}}
+    ? {kind: 'push', name: routeName, params: {...params, [FROM_PARAM]: fromTab(from) ? from : startPage().toLowerCase()}}
     : {kind: 'push', name: `${PUSHED_PREFIX}${routeName}`, params}
 }
 
-/** The tab a link pressed on `state`'s page counts as opened from (its section, lower-cased); Home when the page is outside the tabs. */
+/** The tab a link pressed on `state`'s page counts as opened from (its section, lower-cased); the start tab when the page is outside the tabs. */
 export function originTab(state: State | undefined): string {
   const route = state ? getCurrentRoute(state) : undefined
-  if (!route) return 'home'
+  if (!route) return startPage().toLowerCase()
   const name = route.name.startsWith(PUSHED_PREFIX) ? route.name.slice(PUSHED_PREFIX.length) : route.name
   if (TAB_ROUTES.includes(name)) return name.toLowerCase()
   const section = currentSection(state).toLowerCase()
-  return fromTab(section) ? section : 'home'
+  return fromTab(section) ? section : startPage().toLowerCase()
 }

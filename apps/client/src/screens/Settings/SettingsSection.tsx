@@ -10,7 +10,9 @@ import {useHaptics} from '#/lib/haptics'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useData} from '#/data/StoreProvider'
 import {FeedbackList} from '#/features/feedback/FeedbackList'
+import {DataSettings} from '#/screens/Settings/components/DataSettings'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
+import {SupportSettings} from '#/screens/Settings/components/SupportSettings'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
@@ -36,8 +38,9 @@ import {Text} from '#/components/Typography'
 /**
  * One Settings page. Pages are generated from the preferences registry: the
  * route's section is a registry group, and each preference in it renders its
- * control, in registry order. `/settings/about`, `/help` and `/feedback` are
- * the pages that are not groups; Privacy is a group that also links Friends and
+ * control, in registry order. `/settings/support` and `/settings/data` (owners
+ * 204, 205) hold the help items and the data items; `/settings/about`, `/help` and `/feedback` are
+ * the other pages that are not groups; Privacy is a group that also links Friends and
  * invites. `/settings/motion` and `/settings/lists` (gone in F-251) redirect.
  */
 export function SettingsSectionScreen() {
@@ -46,6 +49,20 @@ export function SettingsSectionScreen() {
     useRoute<RouteProp<AllNavigatorParams, 'SettingsSection'>>().params
   const sections = useSectionInfo()
 
+  if (section === 'support') {
+    return (
+      <Frame title={l`Support`}>
+        <SupportSettings />
+      </Frame>
+    )
+  }
+  if (section === 'data') {
+    return (
+      <Frame title={l`Your data`}>
+        <DataSettings />
+      </Frame>
+    )
+  }
   if (section === 'about') {
     return (
       <Frame title={l`About`}>
@@ -113,12 +130,16 @@ function Frame({title, children}: {title: string; children: React.ReactNode}) {
   )
 }
 
+/** Preferences whose feature is not built yet: kept in the registry, never shown as a switch that does nothing. */
+const NOT_BUILT: ReadonlySet<string> = new Set(['notify.payment', 'notify.comments', 'notify.invite', 'privacy.findByContact'])
+
 function Section({group, title}: {group: SettingsSectionId; title: string}) {
   const {t: l} = useLingui()
   const {store, ctx} = useData()
   const haptics = useHaptics()
   const resetPrompt = Prompt.usePromptControl()
-  const keys = prefsIn(group)
+  /* Only what works (F-275): alerts and the directory choice start with sync, so their switches are not drawn. */
+  const keys = prefsIn(group).filter(key => !NOT_BUILT.has(key))
   const controls = keys.flatMap(key => {
     const Control = PREF_CONTROLS[key]
     return Control ? [{key, Control}] : []
@@ -129,14 +150,14 @@ function Section({group, title}: {group: SettingsSectionId; title: string}) {
       {group === 'notifications' && (
         <Notice>
           <Trans>
-            New expense, payment, comment and invite alerts start once sync is
-            on. Reminders work now.
+            Alerts for new expenses, payments, comments and invites come with
+            sync. Reminders work now.
           </Trans>
         </Notice>
       )}
       {group === 'privacy' && (
         <Notice>
-          <Trans>Saved now; applies once the directory is live.</Trans>
+          <Trans>Choosing who can find you comes with sync.</Trans>
         </Notice>
       )}
       {controls.map(({key, Control}, i) => (

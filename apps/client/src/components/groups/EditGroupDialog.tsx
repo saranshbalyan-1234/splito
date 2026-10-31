@@ -2,11 +2,11 @@ import {useState} from 'react'
 import {View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import {DomainError} from '@splito/domain'
-import {type Entity, type Group, updateGroup} from '@splito/sync'
+import {type Entity, type Group, groupAdmins, inviteLinkState, type JoinPolicy, joinPolicyOf, updateGroup} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {useMutationCtx, useStore} from '#/data/hooks'
+import {revokeGroupLinks, useInviteLinks, useMutationCtx, useStore} from '#/data/hooks'
 import {atoms as a} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
@@ -14,7 +14,8 @@ import {
   GroupFields,
   type GroupFieldValues,
 } from '#/components/groups/GroupFields'
-import {CurrencyDialog} from '#/components/split/pickers'
+import {JoinPolicyField} from '#/components/groups/JoinPolicyField'
+import {CurrencyDialog} from '#/components/CurrencyDialog'
 import * as Toast from '#/components/Toast'
 
 /**
@@ -52,6 +53,10 @@ function Form({group}: {group: Entity<Group>}) {
     location: group.data.location ?? '',
   }))
   const [value, setValue] = useState(initial)
+  const [joinPolicy, setJoinPolicy] = useState<JoinPolicy>(joinPolicyOf(group.data))
+  const isAdmin = groupAdmins(group.data).includes(ctx.actor)
+  const links = useInviteLinks()
+  const isChanged = JSON.stringify(value) !== JSON.stringify(initial) || joinPolicy !== joinPolicyOf(group.data)
   const [error, setError] = useState<'name' | 'dates' | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const isTrip = value.kind === 'trip'
@@ -59,6 +64,8 @@ function Form({group}: {group: Entity<Group>}) {
   const save = async () => {
     setIsSaving(true)
     try {
+      /* The links that stop working when the group goes invite only: the directory is told after the change. */
+      const stopping = joinPolicy === 'invite' && joinPolicyOf(group.data) !== 'invite' ? (links ?? []).filter(x => x.data.groupId === group.id && inviteLinkState(x.data, ctx.now()) !== 'revoked').map(x => x.id) : []
       await updateGroup(store, ctx, group.id, {
         name: value.name,
         kind: value.kind,
@@ -66,7 +73,9 @@ function Form({group}: {group: Entity<Group>}) {
         startDate: isTrip && value.startDate ? value.startDate : null,
         endDate: isTrip && value.endDate ? value.endDate : null,
         location: value.location,
+        joinPolicy,
       })
+      void revokeGroupLinks(stopping)
       haptics.success()
       control.close(() => Toast.show(l`Group updated`, {type: 'success'}))
     } catch (e) {
@@ -89,12 +98,10 @@ function Form({group}: {group: Entity<Group>}) {
     <>
       <FormSheet.Inner
         title={l`Edit group`}
-        isDirty={JSON.stringify(value) !== JSON.stringify(initial)}
+        isDirty={isChanged}
         footer={{
           saveLabel: l`Save`,
-          canSave:
-            value.name.trim() !== '' &&
-            JSON.stringify(value) !== JSON.stringify(initial),
+          canSave: value.name.trim() !== '' && isChanged,
           isSaving,
           onSave: () => void save(),
         }}>
@@ -109,6 +116,7 @@ function Form({group}: {group: Entity<Group>}) {
             }}
             onPressCurrency={() => currencyControl.open()}
           />
+          <JoinPolicyField testIDPrefix="edit-join-policy" value={joinPolicy} onChange={setJoinPolicy} isDisabled={!isAdmin} />
         </View>
       </FormSheet.Inner>
       <CurrencyDialog

@@ -48,7 +48,7 @@ test('web launch mark is served and the app replaces it on first render', async 
     expect(await res.text(), src).toContain('fill="#1185fe"')
   }
   await page.goto('/')
-  await expect(page.getByTestId('screen-home')).toBeVisible()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await expect(page.locator('#launch-mark')).toHaveCount(0)
 })
 

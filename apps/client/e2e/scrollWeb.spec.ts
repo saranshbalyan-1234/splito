@@ -17,9 +17,9 @@ const PHONE = {width: 390, height: 844}
 type Win = {__long?: number[]}
 
 const screenPadTop = (page: Page) =>
-  page.getByTestId('screen-home').evaluate(el => parseFloat(getComputedStyle(el).paddingTop))
+  page.getByTestId('screen-people').evaluate(el => parseFloat(getComputedStyle(el).paddingTop))
 
-async function openHome(page: Page) {
+async function openPeople(page: Page) {
   await page.setViewportSize(PHONE)
   await openDemo(page)
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
@@ -29,7 +29,7 @@ async function openHome(page: Page) {
 
 test.describe('mobile web scroll', () => {
   test('a resize while scrolled never moves the screen (no blank page)', async ({page}) => {
-    await openHome(page)
+    await openPeople(page)
     const top = await page.getByTestId('person-Arjun Mehta').boundingBox()
     expect(await screenPadTop(page)).toBeLessThan(1)
 
@@ -44,11 +44,11 @@ test.describe('mobile web scroll', () => {
     expect(Math.abs(back!.y - top!.y)).toBeLessThan(2)
   })
 
-  test('touch scrolling Home runs no JS long task over 50 ms and the header stays put on a resize', async ({
+  test('touch scrolling People runs no JS long task over 50 ms and the header stays put on a resize', async ({
     page,
     context,
   }) => {
-    await openHome(page)
+    await openPeople(page)
     await page.evaluate(() => {
       const w = window as unknown as Win
       w.__long = []
@@ -57,7 +57,7 @@ test.describe('mobile web scroll', () => {
       })
     })
     const cdp = await context.newCDPSession(page)
-    const header = page.getByTestId('screen-home').getByTestId('header-avatar')
+    const header = page.getByTestId('screen-people').getByTestId('header-avatar')
     for (let i = 0; i < 6; i++) {
       await cdp.send('Input.synthesizeScrollGesture', {
         x: 200,

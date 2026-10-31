@@ -3,15 +3,15 @@ import {expect, test} from 'bun:test'
 import {fabParams} from './fab'
 
 test('the FAB shows on the main screens, their pushed copies, a Person and a Group, with what Add expense pre-selects (owner 190)', () => {
-  for (const name of ['Home', 'People', 'Groups', 'Analytics', 'Activity', 'PushedHome', 'PushedGroups', 'PushedActivity'])
+  for (const name of ['People', 'Groups', 'Analytics', 'Activity', 'PushedPeople', 'PushedGroups', 'PushedActivity'])
     expect(fabParams({name})).toEqual({})
   // A tab copied by link keeps the FAB, however its address reads.
-  expect(fabParams({name: 'Groups', params: {from: 'home', sort: 'name'}})).toEqual({})
+  expect(fabParams({name: 'Groups', params: {from: 'people', sort: 'name'}})).toEqual({})
   expect(fabParams({name: 'Person', params: {personId: 'p1'}})).toEqual({personId: 'p1'})
   expect(fabParams({name: 'Group', params: {groupId: 'g1'}})).toEqual({groupId: 'g1'})
 })
 
-test('it is hidden on settings, profile, detail pages, forms and the composer', () => {
-  for (const name of ['Settings', 'SettingsSection', 'Profile', 'Expense', 'Repayment', 'EditExpense', 'AddExpense', 'AddFriend', 'CreateGroup', 'Settle', 'FriendsAndInvites', 'SignIn', 'Invite', 'Search', 'Sheet', 'Unknown'])
+test('it is hidden on Settings (a tab, but not where you add an expense, owner 206), its sections, profile, detail pages, forms and the composer', () => {
+  for (const name of ['Settings', 'PushedSettings', 'SettingsSection', 'Profile', 'Expense', 'Repayment', 'EditExpense', 'AddExpense', 'AddFriend', 'CreateGroup', 'Settle', 'FriendsAndInvites', 'SignIn', 'Invite', 'Search', 'Sheet', 'Unknown'])
     expect(fabParams({name})).toBeNull()
 })

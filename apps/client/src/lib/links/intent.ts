@@ -16,7 +16,7 @@ export function holdLinkIntent(path: string) {
   device.set(['linkIntent'], path)
 }
 
-/** A link opened while signed out (the address the page loaded with, a cold-start or later URL): held when it names somewhere inside the app. Home and the intro itself are not "somewhere". */
+/** A link opened while signed out (the address the page loaded with, a cold-start or later URL): held when it names somewhere inside the app. The bare address and the intro itself are not "somewhere". */
 export function holdSignedOutLink(input: string) {
   /* The legal and help pages and a public invite page are shown as they are; there is nothing to resume. */
   if (publicPageFor(input)) return

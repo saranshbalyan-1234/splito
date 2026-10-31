@@ -13,7 +13,7 @@ import {useTourRef} from '#/lib/tour/registry'
 
 import {HideRow} from '#/features/hidden/HideItem'
 import {Link} from '#/view/com/util/Link'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink, personHref} from '#/components/PersonLink'
 import {atoms as a, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {BalanceText, SettledPill} from '#/components/BalanceText'
@@ -171,7 +171,7 @@ export function PersonRow({
         testID={`person-${row.name}`}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
-        href={`/people/${row.id}`}
+        href={personHref(row.id, false)}
         asAnchor
         anchorNoUnderline
         accessibilityLabel={tone.isUnsynced ? l`${row.name}, not synced yet` : row.name}
@@ -194,13 +194,10 @@ export function PersonRow({
             press.style,
             tone.fade,
           ]}>
-          <UserAvatar size={AVATAR_SIZE} name={row.name} type="user" />
+          <PersonLink id={row.id} name={row.name} show="avatar" size={AVATAR_SIZE} isInsideLink />
           {/* Two lines at most: the name, then the group chips (or a state); the nets are the right column. */}
           <View style={[a.flex_1, a.gap_2xs, {minWidth: 0}]}>
-            <ProfileCard.Name
-              profile={row}
-              textStyle={isDeleted ? struck : undefined}
-            />
+            <PersonLink id={row.id} name={row.name} show="name" textStyle={isDeleted ? struck : undefined} isInsideLink />
             {row.isRemoved ? (
               <Pills.Row style={[a.pt_2xs]}>
                 <Pills.Tag>

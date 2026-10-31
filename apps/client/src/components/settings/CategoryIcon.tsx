@@ -1,5 +1,5 @@
 import {View} from 'react-native'
-import {type Category, DEFAULT_CATEGORIES} from '@splito/sync'
+import {type Category} from '@splito/sync'
 import {useLingui} from '@lingui/react/macro'
 import {
   Baby,
@@ -39,6 +39,7 @@ import {
 
 import {atoms as a, utils} from '#/alf'
 import {createIcon} from '#/components/icons/lucide'
+import {hasStockName} from '#/components/split/categoryLookup'
 
 /*
  * Category glyphs by the id stored in the `categories` preference. Lucide
@@ -132,10 +133,7 @@ export function useCategoryName() {
     other: l`Other`,
   }
   return (category: Pick<Category, 'id' | 'name'>) => {
-    const stock = DEFAULT_CATEGORIES.find(c => c.id === category.id)
-    return stock?.name === category.name
-      ? (builtIn[category.id] ?? category.name)
-      : category.name
+    return hasStockName(category) ? (builtIn[category.id] ?? category.name) : category.name
   }
 }
 

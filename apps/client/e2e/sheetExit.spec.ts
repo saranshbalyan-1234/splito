@@ -1,15 +1,14 @@
 /** Phone drawers: the page behind is usable the moment a sheet starts to leave. */
 import {expect, test} from '@playwright/test'
 
-import {openDemo} from './openDemo'
+import {openAddExpense} from './composer'
+import {DESKTOP, PHONE} from './viewports'
 
 test.describe('phone', () => {
-test.use({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true})
+test.use({viewport: PHONE, isMobile: true, hasTouch: true})
 
 test('typing into the page right after a sheet is closed is not lost to the exiting sheet', async ({page}) => {
-  await openDemo(page, '/people')
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-  await page.getByTestId('fab-add').click()
+  await openAddExpense(page, PHONE)
   await page.getByTestId('expense-title').fill('Race')
   await page.getByTestId('amount-input').fill('500')
   await page.getByTestId('split-mode-items').click()
@@ -41,12 +40,10 @@ test('typing into the page right after a sheet is closed is not lost to the exit
 })
 
 test.describe('desktop', () => {
-  test.use({viewport: {width: 1440, height: 900}})
+  test.use({viewport: DESKTOP})
 
   test('Escape closes a popup and focus returns to the control that opened it', async ({page}) => {
-    await openDemo(page, '/people')
-    await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-    await page.getByTestId('sidebar-add').click()
+    await openAddExpense(page, DESKTOP)
     const opener = page.getByTestId('expense-people')
     await opener.click()
     await expect(page.getByTestId('people-dialog')).toBeVisible()

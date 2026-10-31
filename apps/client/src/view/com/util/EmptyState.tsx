@@ -1,7 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/util/EmptyState.tsx
-import {isValidElement} from 'react'
-import {type StyleProp, type TextStyle, type ViewStyle} from 'react-native'
-import {View} from 'react-native'
+import {type StyleProp, type TextStyle, type ViewStyle, View} from 'react-native'
 
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {
@@ -10,7 +8,6 @@ import {
   type ButtonProps,
   ButtonText,
 } from '#/components/Button'
-import {EditBig_Stroke1_Corner0_Rounded as EditIcon} from '#/components/icons/EditBig'
 import {Text} from '#/components/Typography'
 import {Illustration} from '#/motion/Illustration'
 import {type IllustrationName} from '#/motion/illustrations'
@@ -21,18 +18,23 @@ export type EmptyStateButtonProps = Omit<ButtonProps, 'children' | 'label'> & {
   icon?: React.ComponentProps<typeof ButtonIcon>['icon']
 }
 
+/**
+ * The one empty state (owners 146, 172): original animated art about the
+ * screen, an optional title, one short message, at most a primary and a
+ * lesser button, the same size and spacing everywhere. `illustration` is
+ * required, so an empty state without art does not compile (and
+ * `emptyStateArt.test.ts` reads every call site).
+ */
 export function EmptyState({
   testID,
   illustration,
-  icon,
-  iconSize = '3xl',
-  iconColor,
   title,
   message,
   style,
   textStyle,
   button,
   secondaryButton,
+  children,
 }: {
   testID?: string
   /** Splito: a headline above the message (title, body, primary action). */
@@ -40,81 +42,30 @@ export function EmptyState({
   /** Splito: a second, lesser action beside `button`. */
   secondaryButton?: EmptyStateButtonProps
   /**
-   * Splito: an animated illustration in place of the icon (main pages' empty
-   * states). Static under reduce motion.
+   * Splito: original animated art about this screen, light and dark, played
+   * once and resting, static under reduce motion. Required.
    */
-  illustration?: IllustrationName
-  icon?: React.ComponentType<any> | React.ReactElement | null
-  iconSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl'
-  iconColor?: string
+  illustration: IllustrationName
   message: string
   style?: StyleProp<ViewStyle>
   textStyle?: StyleProp<TextStyle>
   button?: EmptyStateButtonProps
+  /** Splito: extra content under the message (Ask's suggested questions). */
+  children?: React.ReactNode
 }) {
   const t = useTheme()
   const {gtMobile, gtTablet} = useBreakpoints()
-
-  const placeholderIcon = (
-    <EditIcon size="2xl" fill={t.atoms.text_contrast_medium.color} />
-  )
-
-  const renderIcon = () => {
-    if (icon === null) {
-      return null
-    }
-
-    if (!icon) {
-      return placeholderIcon
-    }
-
-    if (isValidElement(icon)) {
-      return icon
-    }
-
-    if (
-      typeof icon === 'function' ||
-      (typeof icon === 'object' && icon && 'render' in icon)
-    ) {
-      const IconComponent = icon
-      return (
-        <IconComponent
-          size={iconSize}
-          style={{color: iconColor ?? t.atoms.text_contrast_low.color}}
-        />
-      )
-    }
-
-    return placeholderIcon
-  }
+  const hasActions = !!button || !!children
 
   return (
     <View testID={testID} style={[a.w_full, style]}>
-      {illustration ? (
-        <View style={[a.self_center, a.mt_3xl, gtTablet && {marginTop: 50}]}>
-          <Illustration
-            name={illustration}
-            size={gtMobile ? 200 : 168}
-            testID={testID && `${testID}-illustration`}
-          />
-        </View>
-      ) : (
-        <View
-          style={[
-            a.flex_row,
-            a.align_center,
-            a.justify_center,
-            a.self_center,
-            a.rounded_full,
-            a.mt_5xl,
-            {height: 64, width: 64},
-            isValidElement(icon)
-              ? a.bg_transparent
-              : [gtTablet && {marginTop: 50}],
-          ]}>
-          {renderIcon()}
-        </View>
-      )}
+      <View style={[a.self_center, a.mt_3xl, gtTablet && {marginTop: 50}]}>
+        <Illustration
+          name={illustration}
+          size={gtMobile ? 200 : 168}
+          testID={testID && `${testID}-illustration`}
+        />
+      </View>
       {title && (
         <Text
           role="heading"
@@ -141,7 +92,7 @@ export function EmptyState({
           a.leading_snug,
           a.text_center,
           a.self_center,
-          !button && a.mb_5xl,
+          !hasActions && a.mb_5xl,
           textStyle,
         ]}>
         {message}
@@ -156,7 +107,7 @@ export function EmptyState({
             a.px_lg,
             title ? a.mt_xl : a.mt_md,
             a.self_center,
-            a.mb_5xl,
+            !children && a.mb_5xl,
           ]}>
           <Button {...button}>
             {button.icon && <ButtonIcon icon={button.icon} />}
@@ -170,6 +121,11 @@ export function EmptyState({
               <ButtonText>{secondaryButton.text}</ButtonText>
             </Button>
           )}
+        </View>
+      )}
+      {children && (
+        <View style={[a.px_lg, a.pt_lg, a.pb_lg, a.self_center]}>
+          {children}
         </View>
       )}
     </View>

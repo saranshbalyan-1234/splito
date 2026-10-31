@@ -1,11 +1,12 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDrawer} from './nav'
 import {openDemo} from './openDemo'
 
 /*
  * F-2301 Ask Splito: the chat inside the Search & Ask drawer, answered on the
- * device from the demo set. F-222 acc 9: the phone bar takes any number of
- * tabs, and an Ask tab opens the drawer in Ask mode.
+ * device from the demo set. Owner 200: it is reached from the header icon, "/" and
+ * Cmd/Ctrl+K, never from a tab.
  */
 
 const PHONE = {width: 390, height: 844}
@@ -16,9 +17,10 @@ async function home(page: Page) {
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 
-/* Ask Splito is off the default bar but always on the sidebar (owner 155, 26.3). */
+/* Ask Splito is not a nav item (owner 200): the Search & Ask drawer opens in Ask mode by its address, as the header icon's Ask row does. */
 async function openAsk(page: Page) {
-  await page.getByTestId('tab-ask').click()
+  await page.evaluate(() => (window as unknown as {__splitoTest: {openLink(u: string): void}}).__splitoTest.openLink('/search?mode=ask'))
+  await expect(page.getByTestId('ask-chat')).toBeVisible()
 }
 
 async function ask(page: Page, question: string) {
@@ -176,40 +178,39 @@ test('the chat and the draft survive closing, and Clear chat empties it', async 
   await expect(page.getByTestId('ask-empty')).toBeVisible()
 })
 
-test('the sidebar, the drawer and a pinned bar tab all open the drawer in Ask mode', async ({page}) => {
+test('Ask Splito is not a nav item anywhere; the header icon, Cmd/Ctrl+K and the /search address reach it (owner 200)', async ({page}) => {
   await home(page)
-  await openAsk(page)
-  await expect(page.getByTestId('ask-chat')).toBeVisible()
-  await page.keyboard.press('Escape')
-
-  await page.setViewportSize(PHONE)
+  // Not on the sidebar, nor in Settings > Navigation, nor in the phone drawer.
+  await expect(page.getByTestId('tab-ask')).toHaveCount(0)
   await page.goto('/settings/navigation')
-  await page.getByTestId('tabs-toggle-ask').click()
-  // The bar follows the saved preference; wait for that before leaving.
-  await expect(page.getByTestId('tab-ask')).toBeVisible()
-  await page.goto('/')
-  await expect(page.getByTestId('tab-ask')).toBeVisible()
-  await page.getByTestId('tab-ask').click()
+  await expect(page.getByTestId('tabs-toggle-ask')).toHaveCount(0)
+  await page.setViewportSize(PHONE)
+  await page.goto('/people')
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('tab-ask')).toHaveCount(0)
+  await page.waitForTimeout(500)
+  await openDrawer(page)
+  await expect(page.getByTestId('drawer-ask')).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  // The header icon opens the drawer on search; its Ask row (or a question and Enter) opens the chat.
+  await page.getByTestId('screen-people').getByTestId('header-search-ask').click()
+  await expect(page.getByTestId('search-input')).toBeVisible()
+  await page.getByTestId('search-input').fill('Who owes me the most?')
+  await page.getByTestId('search-row-0').click()
   await expect(page.getByTestId('ask-chat')).toBeVisible()
   await page.getByTestId('ask-back').click()
   await expect(page.getByTestId('search-input')).toBeVisible()
   await page.getByTestId('search-ask-cancel').click()
-
-  await page.getByTestId('screen-home').getByTestId('header-avatar').click()
-  await page.getByTestId('drawer-ask').click()
-  await expect(page.getByTestId('ask-chat')).toBeVisible()
+  await expect(page.getByTestId('search-input')).toHaveCount(0)
+  // The address opens it straight in Ask mode.
+  await openAsk(page)
 })
 
-test('a seven-tab bar fits a phone: every tab is on screen, equal in width, with its badge', async ({page}) => {
+test('the five-tab bar fits a phone: every tab is on screen, equal in width, with its badge', async ({page}) => {
   await page.setViewportSize(PHONE)
-  await openDemo(page, '/settings/navigation')
-  for (const tab of ['ask', 'settings']) {
-    await page.getByTestId(`tabs-toggle-${tab}`).click()
-    await expect(page.getByTestId(`tab-${tab}`)).toHaveCount(1)
-  }
-  await page.goto('/people')
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-  const ids = ['home', 'people', 'groups', 'analytics', 'ask', 'activity', 'settings']
+  const ids = ['people', 'groups', 'analytics', 'activity', 'settings']
   const boxes = []
   for (const id of ids) {
     const box = await page.getByTestId(`tab-${id}`).boundingBox()
@@ -220,14 +221,13 @@ test('a seven-tab bar fits a phone: every tab is on screen, equal in width, with
   }
   const widths = boxes.map(b => Math.round(b.width))
   expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(2)
+  await expect(page.getByTestId('nav-badge-activity')).toBeVisible()
   // Icons keep their size however many tabs there are.
   const icon = await page.getByTestId('tab-groups').locator('svg').first().boundingBox()
   await page.goto('/settings/navigation')
-  for (const tab of ['ask', 'settings']) {
-    await page.getByTestId(`tabs-toggle-${tab}`).click()
-    await expect(page.getByTestId(`tab-${tab}`)).toHaveCount(0)
-  }
-  await page.goto('/')
+  await page.getByTestId('tabs-toggle-settings').click()
+  await expect(page.getByTestId('tab-settings')).toHaveCount(0)
+  await page.goto('/people')
   await expect(page.getByTestId('tab-settings')).toHaveCount(0)
   const four = await page.getByTestId('tab-groups').locator('svg').first().boundingBox()
   expect(Math.round(icon!.width)).toBe(Math.round(four!.width))

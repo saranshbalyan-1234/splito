@@ -1,7 +1,8 @@
 import {expect, test} from 'bun:test'
 import {type Comment, type Entity} from '@splito/sync'
 
-import {dayKey, mergeTimeline, withDividers} from './timeline'
+import {dayOfInstant} from '#/locale/dayLabel'
+import {mergeTimeline, withDividers} from './timeline'
 
 const comment = (id: string, at: number): Entity<Comment> => ({
   type: 'comment',
@@ -88,8 +89,8 @@ test('a date divider opens each local day, in the given zone', () => {
     'c',
   ])
   // 23:30 UTC on the 26th is already the 27th in Kolkata
-  expect(dayKey(Date.UTC(2026, 9, 26, 23, 30), 'Asia/Kolkata')).toBe(
+  expect(dayOfInstant(Date.UTC(2026, 9, 26, 23, 30), 'Asia/Kolkata')).toBe(
     '2026-10-27',
   )
-  expect(dayKey(Date.UTC(2026, 9, 26, 23, 30), 'UTC')).toBe('2026-10-26')
+  expect(dayOfInstant(Date.UTC(2026, 9, 26, 23, 30), 'UTC')).toBe('2026-10-26')
 })

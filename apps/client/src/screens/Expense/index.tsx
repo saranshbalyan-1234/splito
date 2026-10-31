@@ -1,4 +1,5 @@
 import {useRef} from 'react'
+import {startPage} from '#/lib/routes/startTab'
 import {ScrollView, View} from 'react-native'
 import {useAnimatedRef} from 'react-native-reanimated'
 import type Animated from 'react-native-reanimated'
@@ -43,7 +44,7 @@ import {markOf, useDisputeEvents, useOpenDisputes} from '#/state/disputes'
 import {DisputeBadge} from '#/components/disputes/DisputeBadge'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useBreakpoints, useTheme, utils} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {
@@ -150,7 +151,7 @@ export function ExpenseScreen() {
       ) : expense === null ? (
         <EmptyState
           testID="expense-not-found"
-          illustration="empty-activity"
+          illustration="empty-not-found"
           message={l`This expense doesn’t exist. The link may be wrong.`}
           button={{
             label: l`Go to People`,
@@ -182,7 +183,7 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
       return
     }
     if (navigation.canGoBack()) navigation.goBack()
-    else navigation.navigate('Home')
+    else navigation.navigate(startPage() as never)
     Toast.show(
       <Toast.Outer>
         <Toast.Icon icon={TrashIcon} />
@@ -456,6 +457,7 @@ function Detail({
       {payers.map(id => (
         <PersonAmount
           key={id}
+          id={id}
           avatar={avatarName(id)}
           name={name(id)}
           amount={fmt(e.payers[id]!)}
@@ -467,6 +469,7 @@ function Detail({
       {people.map(id => (
         <PersonAmount
           key={id}
+          id={id}
           avatar={avatarName(id)}
           name={name(id)}
           amount={fmt(e.shares[id]!)}
@@ -678,6 +681,7 @@ function shareDetail(
 }
 
 function PersonAmount({
+  id,
   avatar,
   name,
   amount,
@@ -685,6 +689,7 @@ function PersonAmount({
   isMe = false,
   testID,
 }: {
+  id: string
   avatar: string
   name: string
   amount: string
@@ -708,17 +713,21 @@ function PersonAmount({
           ? [a.mx_sm, a.px_md, a.rounded_md, t.atoms.bg_contrast_25]
           : a.px_lg,
       ]}>
-      <UserAvatar size={36} name={avatar} type="user" />
-      <View style={[a.flex_1]}>
-        <Text style={[a.text_md, a.font_medium]} numberOfLines={1}>
-          {name}
-        </Text>
-        {detail ? (
-          <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-            {detail}
-          </Text>
-        ) : null}
-      </View>
+      <PersonLink
+        id={id}
+        name={name}
+        avatarName={avatar}
+        size={36}
+        textStyle={a.font_medium}
+        style={a.flex_1}
+        below={
+          detail ? (
+            <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+              {detail}
+            </Text>
+          ) : undefined
+        }
+      />
       <Text
         style={[
           a.text_md,

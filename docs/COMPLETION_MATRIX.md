@@ -71,6 +71,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | AI | Ask Splito: nav item, Sparkles Search & Ask button, Search row; DM-style chat; on-device answers (English and Hindi) with rich cards | F-2301 | done (web e2e; native pass pending) |
 | AI | Free-form answers via the backend model; AI opt-in and privacy | F-2302, F-2303 | todo (needs backend) |
 | Data | Free search across expenses | F-1401 | in progress (built and tested on feat/b-*, unmerged) |
+| Data | Search understands every field: title, notes, items, people (names, contacts, UPI), group and trip place, category, amounts and ranges (`1k`, lakh, between, around), dates and periods, currency, payer, status (settled, owed, disputed, deleted, hidden, inactive), types, comments, payments and write-offs; English and Hindi; removable facet chips; the matched field named on each result | F-246 | built on c-search, unmerged (2026-10-31, main merged). Answered from index keys, not rows (ARCHITECTURE 9.8, 17.1). Checks: sync `search.test.ts` + `searchFields.test.ts` (every field on SQLite and IndexedDB) + `searchOracle.test.ts` (keys equal the rows, order and totals, 1,200 random expenses) + `searchQuery.test.ts` (90-query table) + `searchMatch.test.ts`; `search.spec.ts` 13/13 at 390 and 1440 with `disputes.spec` Disputed filter and `tripLocation.spec` 4/4; lingui en + hi 1,959 messages 0 missing; lint, typecheck and `lessonsGate` green. NO USABLE SPEED RUN: the machine sat at load 70-90 all session. Unusable numbers (load 75-81, median of 3, `openSearch` = people, groups, payments, count, totals and first page): worst query 5,000 expenses 337 ms wall / 14.7 ms cpu, 10,000 expenses 517 ms wall / 41.8 ms cpu; before the change, whole answers at 5,000 cost 61-80 ms cpu per broad query at load 17-22. Renders gate: ask phase 1,020 mounts + 851 updates against baseline 1,018 + 944 (within); the scroll phase reports Activity components (`TimeElapsed`, `DeletedMeta`, `RequestAction`, `OutgoingRow`) above baseline at load 75, untouched by this change. Web verified, native not run |
 | Accessibility | Money direction never shown by colour alone | F-1801 | in progress (built and tested on feat/b-*, unmerged) |
 | Motion | Lottie illustrations, animated balances, success check, list animations | F-1704 | in progress (built on ui/brand, wiring) |
 | Expenses+ | Recurring expenses (rent, subscriptions) | F-306 | todo |
@@ -301,3 +302,24 @@ Checks, 2026-10-30, machine load under 6 for the perf runs (e2e at load 5-135 fr
 - Perf `schema-v2` (Home now shows recent transactions in its body): large demo set (1,590 expenses) Home cold open 27 ms (was 25),
   write + UI 16 ms; 10,000 expenses cold open 25 ms (24), write + UI 16-32 ms (16), Analytics 43 ms (44), search 20-25 ms; Ask open 35 ms, answer 30 ms.
 - Screenshots: apps/client/qa/home2/ (Home, People, Groups; light and Dim; 390 and 1440; demo on).
+
+### F-261 PersonLink (c-personlink, 2026-10-31)
+
+Renders gate re-recorded on purpose (median of three, machine at load 30-80, mount counts are not timing dependent): the scroll phase (1,000 Activity rows) mounts about 364 `PersonLink` and `Link`, and `Pressable` 2,218 to about 2,950 (one actor-avatar link per row); launch 10 and Ask 19 more `PersonLink`. No wasted-render report was added. People rows and Members pass `isInsideLink` and mount nothing extra.
+
+Activity scroll at 6x CPU (large demo, 60 wheel steps), long tasks over 50 ms, with / without the actor-avatar links: 54 and 53 against 46 and 42 (total 9.3 s and 10.3 s against 10.5 s and 9.2 s; largest 592 and 835 ms against 963 and 728 ms); machine load 37-57, two runs each. No clear difference in time; the same over-50 ms tasks occur without any links.
+## Animated icons and empty-state art (F-1713, F-260; owners 96, 172, 210, 213; branch c-anim, web, measured 2026-10-31)
+
+- Web first-load JS (`expo export -p web`, e2e build; the `index`, `__common` and runtime scripts): 7,305,880 B before, 7,021,333 B after
+  (-284,547 B, -3.9 %); gzip 1,545,216 B before, 1,495,320 B after. Lazy: 415 KB raw in 53 chunks (`lottie-web` 168 KB plus 52 animation files: 19 empty
+  states, the 5 intro slides, loading and success, light and dark).
+- Animations are UI-thread only (Reanimated shared values); each icon motion is 180-380 ms; the sync dot loops only while syncing and rests on blur or reduced motion.
+- Not profiled: the 1,000-row list scroll with animated icons visible (F-1713 acceptance 4). Native (iOS, Android) was not run for the art: the once-and-rest play on
+  `lottie-react-native` (`play(0, staticFrame)`) and the lid/tick motion are untested on a device.
+- Tests: `e2e/emptyArt.spec.ts` (every empty state at 390 and 1440 shows its own art and a button; reduced motion holds one frame, light and dark; one art plays once and rests),
+  `architecture/emptyStateArt.test.ts`, `activityEmptyArt` in `feed.test.ts`.
+- Renders gate (`e2e-renders/baseline.json`, re-recorded as the median of three runs, machine load about 75 so only counts are used): launch 2,090 -> 2,127 mounts, tabs 468 -> 500 updates
+  (mounts 69 -> 75), scroll 43,735 -> 43,740 mounts, ask 944 -> 957 updates, other phases unchanged. Reviewed causes: the new `MorphIcon` wrapper (7 icons mount, 8 update on the tab
+  round) and its `Animated.View` (+7 mounts, +8 updates), the Activity tick glyph (`AnimatedIcon`, `Layer`, `Nodes`, `AnimatedPath`: 3 mounts), and two `View`/`Circle` mounts
+  from the ContactRound and Users glyphs. No new wasted-render report. A first version that kept both the outline and filled glyph mounted cost 624 tab updates and one new
+  wasted `Rect` report, so only the glyph in use is mounted.

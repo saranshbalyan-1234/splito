@@ -28,7 +28,7 @@ test('a fresh install opens the intro at /welcome/1, with the app nowhere in sig
   await expect(page.getByTestId('welcome-art')).toHaveAttribute('data-static', 'false')
   await expect(page.getByTestId('welcome-next')).toHaveText('Next')
   // No ledger, no tab bar, no database.
-  await expect(page.getByTestId('screen-home')).toHaveCount(0)
+  await expect(page.getByTestId('screen-people')).toHaveCount(0)
   expect(await databases(page)).toEqual([])
 })
 

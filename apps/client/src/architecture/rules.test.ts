@@ -79,6 +79,13 @@ describe('counters', () => {
     expect(count('hardDelete', 'if (refs.length) await store.erase(refs)', `${CLIENT}data/demoSeed.ts`)).toBe(0)
   })
 
+  test('personAvatarOutsideLink: a UserAvatar outside PersonLink', () => {
+    const screen = `${CLIENT}screens/Group/X.tsx`
+    expect(count('personAvatarOutsideLink', '<UserAvatar size={32} name={n} type="user" />', screen)).toBe(1)
+    expect(count('personAvatarOutsideLink', '// <UserAvatar here\n<PersonLink id={id} name={n} />', screen)).toBe(0)
+    expect(count('personAvatarOutsideLink', '<UserAvatar size={32} name={n} type="user" />', `${CLIENT}components/PersonLink.tsx`)).toBe(0)
+  })
+
   test('externalHandOff: Linking.openURL, Share.share and navigator.share outside their one gate', () => {
     const screen = `${CLIENT}screens/Person/index.tsx`
     expect(count('externalHandOff', 'await Linking.openURL(url)', screen)).toBe(1)
@@ -172,6 +179,12 @@ describe('counters', () => {
   test('rnModal', () => {
     expect(count('rnModal', "import {Modal, View} from 'react-native'")).toBe(1)
     expect(count('rnModal', "import {View} from 'react-native'\nimport {Modal} from '#/components/Modal'")).toBe(0)
+  })
+
+  test('rowMenuGesture', () => {
+    expect(count('rowMenuGesture', 'const p = {onContextMenu: open}')).toBe(1)
+    expect(count('rowMenuGesture', 'const p = {onContextMenu: open}', `${CLIENT}components/RowMenu.tsx`)).toBe(0)
+    expect(count('rowMenuGesture', '// onContextMenu is only named in a comment')).toBe(0)
   })
 
   test('expoHaptics', () => {

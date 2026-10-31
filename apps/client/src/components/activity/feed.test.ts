@@ -3,10 +3,13 @@ import {expect, test} from 'bun:test'
 import {type ActivityEvent} from '@splito/sync'
 
 import {
+  ACTIVITY_TYPE_ART,
+  activityEmptyArt,
   buildRows,
   dayOf,
   daysAgo,
   EMPTY_FEED_STATE,
+  type FeedFilter,
   ALL_ACTIVITY,
   activityTypeOf,
   isRead,
@@ -209,4 +212,21 @@ test('the person filter keeps what involves that friend: their expenses and paym
   expect(yes.map(x => matchesFilter(x, f, 'me', undefined, parties))).toEqual(yes.map(() => true))
   expect(no.map(x => matchesFilter(x, f, 'me', undefined, parties))).toEqual(no.map(() => false))
   expect(matchesFilter(yes[0]!, {...f, types: ['payments']}, 'me')).toBe(false)
+})
+
+test('an empty Activity shows art about what is missing (F-260)', () => {
+  const none = {hiddenCount: 0, canLookFurther: false}
+  const art = (f: Partial<FeedFilter>, o = none) => activityEmptyArt({...ALL_ACTIVITY, ...f}, o)
+  expect(art({})).toBe('empty-activity')
+  expect(art({tab: 'me'})).toBe('empty-activity')
+  expect(art({}, {...none, hiddenCount: 3})).toBe('empty-activity')
+  expect(art({tab: 'others'}, {...none, canLookFurther: true})).toBe('empty-search')
+  expect(art({}, {...none, canLookFurther: true})).toBe('empty-activity')
+  for (const type of Object.keys(ACTIVITY_TYPE_ART) as (keyof typeof ACTIVITY_TYPE_ART)[])
+    expect(art({types: [type]})).toBe(ACTIVITY_TYPE_ART[type])
+  expect(new Set(Object.values(ACTIVITY_TYPE_ART)).size).toBe(7)
+  expect(art({types: ['expenses', 'payments']})).toBe('empty-expenses')
+  expect(art({types: ['comments', 'payments']})).toBe('empty-filter')
+  expect(art({types: ['expenses'], group: 'g1'})).toBe('empty-filter')
+  expect(art({person: 'p1'})).toBe('empty-filter')
 })

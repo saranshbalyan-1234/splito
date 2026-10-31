@@ -14,13 +14,13 @@ import {useTourRef} from '#/lib/tour/registry'
 
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {Link} from '#/view/com/util/Link'
+import {noteTabSlide, slideDirection} from '#/lib/routes/tabSlide'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a, useTheme} from '#/alf'
 import {
   describeUnread,
   useActivityBadge,
 } from '#/components/activity/useActivityFeed'
-import {PressableScale} from '#/motion/PressableScale'
-import {useSearchAsk} from '#/components/SearchAsk/context'
 import {MAX_LABELLED_TABS, NAV_LABELS, TabGlyph, TabLabel} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
@@ -34,7 +34,7 @@ const PENDING_NET_MS = 3000
 /*
  * Bluesky's signed-in mobile-web bottom bar with the items the `tabs`
  * preference picks from the shared nav list (Settings > Navigation), in its
- * order. Ask Splito opens the Search & Ask drawer instead of a page. There is
+ * order. There is
  * no centre button: Add expense is the FAB, as Bluesky's compose action is.
  */
 export function BottomBarWeb() {
@@ -46,9 +46,8 @@ export function BottomBarWeb() {
   const iconWidth = 26
   const hasLabels = tabs.length <= MAX_LABELLED_TABS
   const activityBadge = useActivityBadge()
-  const searchAsk = useSearchAsk()
   /* Only the bar's own pages light up; under any other page the tab it was opened from stays lit. */
-  const sections = tabs.flatMap(tab => NAV_ITEM_ROUTE[tab] ?? [])
+  const sections = tabs.map(tab => NAV_ITEM_ROUTE[tab])
   /*
    * The tab under the finger lights up in the press-in's own commit, before the page behind it switches (the
    * switch is a frame later and may be heavy on a phone): the bar never waits for its screen. Cleared when the
@@ -78,22 +77,6 @@ export function BottomBarWeb() {
         {tabs.map(tab => {
           const routeName = NAV_ITEM_ROUTE[tab]
           const href = NAV_ITEM_HREF[tab]
-          if (!routeName || !href) {
-            return (
-              <PressableScale
-                key={tab}
-                testID={`tab-${tab}`}
-                style={[styles.ctrl, hasLabels && styles.ctrlLabelled, a.pb_sm]}
-                accessibilityRole="button"
-                accessibilityLabel={_(NAV_LABELS[tab])}
-                accessibilityHint=""
-                targetScale={0.8}
-                onPress={() => searchAsk.open({mode: 'ask'})}>
-                <TabGlyph tab={tab} isActive={false} size={iconWidth} />
-                {hasLabels && <TabLabel label={_(NAV_LABELS[tab])} isActive={false} />}
-              </PressableScale>
-            )
-          }
           return (
             <NavItem
               key={tab}
@@ -111,7 +94,7 @@ export function BottomBarWeb() {
               }>
               {({isActive}) => (
                 <>
-                  <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
+                  <TabGlyph tab={tab} isActive={isActive} size={iconWidth} badge={tab === 'activity' ? activityBadge : undefined} />
                   {hasLabels && <TabLabel label={_(NAV_LABELS[tab])} isActive={isActive} />}
                 </>
               )}
@@ -161,6 +144,7 @@ const NavItem: React.FC<{
   const groupsTourRef = useTourRef('tab-groups')
   /* Under a page that is not in the bar (Settings, unless added) the tab it was opened from stays lit, as Bluesky's does. */
   const section = useNavigationState(state => currentSection(state, sections))
+  const isReducedMotion = useShouldReduceMotion()
 
   const onBeforePress = useCallback(() => {
     ax.metric('nav:click', {item: navItem, surface: 'bottomBar'})
@@ -179,7 +163,11 @@ const NavItem: React.FC<{
       style={[styles.ctrl, hasLabels && styles.ctrlLabelled, hasLabels ? a.pb_sm : a.pb_lg]}
       navigationAction="navigate"
       activateOnPressIn
-      onActivated={onPressStart}
+      onActivated={() => {
+        // The new screen slides in from the side it sits on in the bar (owner 174), unless motion is reduced.
+        noteTabSlide(isReducedMotion ? undefined : slideDirection(sections, section, routeName))
+        onPressStart()
+      }}
       aria-role="link"
       aria-label={label}
       aria-current={isActive ? 'page' : undefined}

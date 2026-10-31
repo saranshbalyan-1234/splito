@@ -489,10 +489,10 @@ Opus audits every Settings row and registry key against decision 128 (keep only 
 
 After the first sign-in and setup, a short coach-mark walkthrough over the real app (FAB / Add expense, a friend row, Groups +, Settle up, Search & Ask, Activity), one spotlight at a time with Next / Skip; Expensify FeatureTraining and Bluesky ProgressGuide patterns, Bluesky look.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** built on branch worktree-agent-a50f8ca7f9ae10c7d (unmerged, web checked, native and Android/iOS not run): exactly 3 steps (Add an expense: FAB or sidebar pill; See who owes whom: first friend row; Settle up: that row's balance, else the Groups tab), empty-state wording on Add friend when there are no friends, once per account (`onboarding.tourSeen`), replay from Settings > Support > Help "Take the tour", never in demo mode; e2e `tour.spec.ts` at 390 and 1440; first-use tips (`tips.enabled`) dropped by owner 213 · **Deps** F-249, F-250, F-211
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** built on branch worktree-agent-a50f8ca7f9ae10c7d (unmerged, web checked, native and Android/iOS not run): exactly 3 steps (Add an expense: FAB or sidebar pill; See who owes whom: first friend row; Settle up: that row's balance, else the Groups tab), empty-state wording on Add friend when there are no friends, once per account (`onboarding.tourSeen`), replay from Settings > Support "Take the tour", never in demo mode; e2e `tour.spec.ts` at 390 and 1440; first-use tips (`tips.enabled`) dropped by owner 213 · **Deps** F-249, F-250, F-211
 - **Prefs** `onboarding.tourSeen` (account, `app` group, no Settings row); `tips.enabled` not built
 - **Acceptance**
-  1. Runs once per account right after sign-in lands on People (there is no Home tab, owner 198); Skip ends it; Settings > Support > Help "Take the tour" replays it.
+  1. Runs once per account right after sign-in lands on People (there is no Home tab, owner 198); Skip ends it; Settings > Support "Take the tour" replays it.
   2. Each step keeps the real control sharp and blurs the rest of the screen (owner 143: blur + slight dim, rounded cut-out, caption beside it; web backdrop-filter, native expo-blur, plain dim under reduced transparency), focus moved to it, screen reader reads the step and "Step N of 3"), adapts to phone, rail and desktop (sidebar items on desktop).
   3. Steps that need data use empty-state wording when there is none; the tour never creates records.
   4. Never in demo mode or e2e unless its spec asks; reduced motion respected; no overlap with toasts or sheets.
@@ -545,7 +545,7 @@ Home shows the Overview and Recent transactions (F-1415); a new People tab holds
 
 Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between main tabs (native sceneStyleInterpolator ~220 ms, web ~200 ms), the springing bottom-bar indicator, the icon pop with haptic, the badge spring and re-tap-scrolls-to-top are not built (web switches instantly; "no soft reset yet"). Build them interruptible from the start (owner 150: a new tap redirects the running slide from its current value), reduced-motion aware.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo, after F-256 · **Deps** F-255
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** slide built 2026-10-31 (web CSS, native 'shift'; indicator spring, badge spring and re-tap scroll-to-top still todo; icon pop came with F-1713) · **Deps** F-255
 - **Prefs** -
 - **Acceptance**
   1. Slide direction follows tab order; a tap mid-slide redirects from the current position; the landing tab is the last tapped (tabTaps.spec stays green).
@@ -556,12 +556,12 @@ Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between 
 
 Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Group to refresh; the header stays fixed and visible throughout; native RefreshControl, phone-web pull handler.
 
-- **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** todo, Wave C (next free slot) · **Deps** F-255, F-256
+- **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** built on c-refresh (web: `usePullToRefresh` + `pullController`; native: `useRefreshControl` in `List` and `Layout.Content`; `refreshAll` = `syncNow()` (a no-op until F-2103) + 400 ms minimum spinner, none offline; `e2e/pullRefresh.spec.ts` green in Chrome touch and Playwright WebKit; native RefreshControl and real iOS Safari / Android Chrome not run) · **Deps** F-255, F-256
 - **Prefs** -
 - **Acceptance**
   1. Every full screen refreshes on pull at the top, header or not (owners 169, 170), built once in the shared scaffold with a test over every route; sheets and popups keep drag-to-close (§ 26.8); the spinner sits under the header; the header never moves or hides during the pull (e2e checks its top stays at 0 while pulling at 390).
   2. Native: List RefreshControl on iOS and Android (simulator checked); phone web: a pull handler on the window scroll in iOS Safari (simulator) and Android Chrome, no fight with browser overscroll, scrolling unaffected (scrollWeb.spec green).
-  3. Until sync: re-reads local data and ends in under 1 s with honest status; offline ends at once, no error toast; with the backend it calls syncNow().
+  3. Calls syncNow() (a no-op until F-2103) and holds the spinner 400 ms; offline ends at once, no error toast. Projections are not re-run (they re-read on every commit).
   4. Nothing redraws unless data changed (owner 166); renders gate and tap-latency spec do not regress.
 
 ### F-259 Activity type filter; See all transactions lands there `spec: owner § 26.14 (decision 173)`
@@ -579,7 +579,7 @@ Activity Filters gain the type (Expenses, Payments, Comments, Groups, Friends an
 
 Original animated illustrations (light and dark) for every empty state: search no match, filtered no match, all settled, no history, no balances, nothing to settle, no feedback, no invite links, not found, Ask empty, besides the existing people, groups, activity and analytics.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (every empty state animated with the 4 existing pieces; screen-specific art next) · **Deps** -
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** done on `c-anim` (19 pieces, every EmptyState has its own art, one CTA and lazy JSON; merge pending) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. Each empty state uses art about its own screen, original (scripts/lottie.ts style), light and dark, lazy-loaded, plays once then rests, static under reduced motion.
@@ -590,7 +590,7 @@ Original animated illustrations (light and dark) for every empty state: search n
 
 One shared PersonLink (avatar + name) used on every screen; tapping either opens /people/:id (Me -> Profile).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (next free slot, with F-1213 / F-259) · **Deps** F-256
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (web, `c-personlink`; native unverified), Wave C · **Deps** F-256
 - **Prefs** -
 - **Acceptance**
   1. Every avatar or name of a person (expense/payment detail, items, Activity actor, comments, Members, Balances, Settle plan, search/Ask results, recent people, requests/invites, right column) opens that person; Me opens Profile; removed/unknown open the read-only page or "Not on this device yet".
@@ -670,8 +670,8 @@ Every disputed amount or count opens Activity on All with Expenses, Payments and
 
 Each group has a join setting (anyone with the link / approve each join / invite only), and adding someone sends them a group request.
 
-- **Effort** M · **Impact** 8 · **Backend** partly (real link joins and cross-device requests need F-2105; local flow and demo now) · **Status** todo, Wave C (after F-268) · **Deps** F-268
-- **Prefs** `group:joinPolicy` (per group: link / approve / invite)
+- **Effort** M · **Impact** 8 · **Backend** partly (real link joins and cross-device requests need F-2105; local flow and demo now) · **Status** done locally, Wave C (branch c-joins, 2026-10-31; link joins and cross-device requests stay local until F-2105; e2e `groupJoins.spec.ts`) · **Deps** F-268
+- **Prefs** none: `joinPolicy` (link / approve / invite; absent = approve) is a field of the group, with history, not a preference; the old `invites.approveJoins` preference is removed
 - **Acceptance**
   1. New/Edit group and the Add members sheet show "Who can join" with the three options (default approve); admins only can change it; the group page shows the current rule under Members.
   2. Invite only hides and revokes the group link; anyone-with-link joins at once; approve sends a join request that admins Approve/Decline in Activity rows.
@@ -682,7 +682,7 @@ Each group has a join setting (anyone with the link / approve each join / invite
 
 Home drops its Requests section; People shows friend requests and invites, Groups shows group requests/join requests/invites, a group page its own.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo, Wave C (with F-268, before F-269) · **Deps** F-268
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** People done (F-268); Groups top section done with F-269 (c-joins, `groupJoins.spec.ts`); Home's Requests section goes with F-271 · **Deps** F-268
 - **Prefs** -
 - **Acceptance**
   1. Home has no requests or invites section; People's top section holds friend requests and friend invites sent; Groups' top section holds group requests, join requests and group invites sent (fills in with F-269); a group page shows its own under Members.
@@ -693,8 +693,8 @@ Home drops its Requests section; People shows friend requests and invites, Group
 
 The Home tab goes; its Overview becomes the first section of Analytics; the app opens on People.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress, Wave C · **Deps** F-256
-- **Prefs** start tab default `people`; `tabs` migration drops `home`
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** built on c-nohome (unmerged, 2026-10-31): criteria 1-9 met on web in e2e at 390 and 1440 (`peopleTabs`, `overviewLayout`, `settingsTab`, `profilePage`, `sidebar` specs); native not run on a simulator; the Profile avatar opens the edit sheet, because the data model has no avatar image (owner 209 "changeable" is the name only); "You paid this year" is in the currency used most · **Deps** F-256
+- **Prefs** start tab default `people`; `tabs` migration drops `home` and `ask` (the old default bar becomes the new one, which gains Settings, owner 206)
 - **Acceptance**
   1. Tabs People, Groups, Analytics, Activity (+ Ask, Settings); no Home route or screen; `/` opens the start tab; `/?overview=` -> `/analytics?overview=`; saved `tabs`/`startTab` naming home migrate (tests).
   2. Analytics shows the Overview cards (All / Groups / Direct, owner 161 layout) above its filter row, labelled as balances now, ignoring period/currency; a card opens Analytics in that currency.
@@ -710,7 +710,7 @@ The Home tab goes; its Overview becomes the first section of Analytics; the app 
 
 A Sort button beside Filters: Last active (default), Name, Amount, Newest; remembered and in the URL.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** built on c-nohome (unmerged, 2026-10-31): unit tests for each order (`People/sort.test`, `Groups/filter.test`), the comment projection (`historyIntegrity.test`), the preference migration (`preferences.test`); e2e at 390 and 1440 (`peopleTabs.spec`) · **Deps** -
 - **Prefs** `peopleSort` (default `lastActive`), `groupsSort` (default `lastActive`)
 - **Acceptance**
   1. People and Groups headers: search, Filters, Sort (and People's gear last); Sort opens a radio menu; non-default tints the button.
@@ -3217,7 +3217,7 @@ On Home/People and Groups, each currency card is its own box of equal size in a 
 
 Search & Ask understands people, places, amounts, category, type, group, dates, currency, payer and status, and combines them logically, with removable facet chips.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo, Wave C (after the first slot merges; search across every field, front end) · **Deps** F-117, F-222
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** built on c-search, unmerged (2026-10-31): every field below is a term kind and every query is resolved from the keys (ARCHITECTURE 9.8, 17.1, 26.19); chips, matched-field rows, a Payments section, English and Hindi, a 90-query table, per-field tests on both engines, an oracle test against the rows, speed at 5,000 and 10,000, e2e at 390 and 1440, Hindi 0 missing. Not built: invites and friend requests are not searched; the Claude-powered parser is F-247. · **Deps** F-117, F-222
 - **Prefs** -
 - **Acceptance**
   1. `search_terms` indexes every field: title, notes, item names, group name and trip location, people (paid by / with), category, type (expense, payment, write-off, comment, group, friend, invite), currency, date (day, month, year), status (settled, owed, deleted, hidden, inactive), amount keys per currency.
@@ -3489,7 +3489,7 @@ One table mapping intents to haptics, e.g. a rigid tick when remaining hits zero
 
 Animate icons where the motion carries meaning, and add Expensify-style success, empty-state and celebration animations, all on the UI thread with static fallbacks. Queued for Wave C.
 
-- **Effort** L · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1704
+- **Effort** L · **Impact** 7 · **Backend** no · **Status** in progress (`c-anim`: the `AnimatedIcon` primitive with fill morph, tick, draw, lid, pulse, rotate wired; twinkle and plus-to-X skipped by owner 213; Expensify-style moments, `motion.iconAnimations` / `motion.celebrations` and the 1,000-row profile not built) · **Deps** F-1704
 - **Prefs** `motion` (existing: full / reduced / off), `motion.iconAnimations` (account, default on), `motion.celebrations` (account, default on)
 - **Acceptance**
   1. An `AnimatedIcon` primitive (react-native-svg animated props + Reanimated, Lucide geometry only) with variants: fill morph (bottom bar, sidebar, drawer selected state), draw (check on Save / Settle / Accept), lid (trash on Delete), pulse (sync dot while syncing), rotate (FAB plus to X, chevrons on expand), twinkle (Search & Ask sparkles on open), tick (Activity icon when a new item arrives).

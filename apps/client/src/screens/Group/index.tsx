@@ -1,5 +1,5 @@
 import {useDeferredValue, useState} from 'react'
-import {View} from 'react-native'
+import {Pressable, View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
@@ -7,7 +7,9 @@ import {
   type Entity,
   type Group,
   groupAdmins,
+  type GroupRequest,
   isGroupInactive,
+  joinPolicyOf,
   type Person,
   type Repayment,
   type WriteOff,
@@ -19,7 +21,9 @@ import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {
   useAllEntities,
   useGroupHistory,
+  useGroupJoinRequests,
   useGroupNets,
+  useInvitedPeople,
   useMe,
 } from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -28,13 +32,15 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {GroupBalanceCards} from '#/screens/Group/components/GroupBalanceCards'
-import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionHeader} from '#/components/SectionHeader'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {ExportMenuItem, useExportSheet} from '#/features/export/ExportSheet'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
+import {useJoinPolicyText} from '#/components/groups/JoinPolicyField'
+import {GroupRequestRow} from '#/screens/Groups/components/GroupRequests'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {EditGroupDialog} from '#/components/groups/EditGroupDialog'
 import {NO_RULES, RulesDialog} from '#/components/groups/RulesEditor'
@@ -43,11 +49,12 @@ import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/P
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {historyRowHide, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
 import {rowMenuWrap} from '#/features/disputes/RowMenu'
-import {seeAllTransactionsPath, seeDisputedPath} from '#/lib/links/make'
+import {activityPath, seeAllTransactionsPath, seeDisputedPath} from '#/lib/links/make'
+import {SectionLink} from '#/components/SectionLink'
 import {markOf, useDisputedBalances, useDisputedRecords, useOpenDisputes} from '#/state/disputes'
 import {useHideItem} from '#/features/hidden/HideItem'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
-import {Handshake_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
+import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Admonition from '#/components/Admonition'
@@ -108,6 +115,9 @@ type Item =
   | {type: 'net'; key: string; currency: string; personId: string; net: bigint}
   | {type: 'membersHeader'; key: string; count: number}
   | {type: 'member'; key: string; personId: string; hasLeft: boolean}
+  | {type: 'joinRule'; key: string}
+  | {type: 'groupRequest'; key: string; request: Entity<GroupRequest>}
+  | {type: 'seeAllRequests'; key: string}
   | {type: 'owesHeader'; key: string}
   | {
       type: 'owe'
@@ -164,6 +174,9 @@ export function GroupScreen() {
   const openDisputes = useOpenDisputes()
   const disputedRecords = useDisputedRecords(onlyDisputed)
   const disputedRows = useDisputedBalances({groupId})
+  const joinRuleText = useJoinPolicyText()
+  const invited = useInvitedPeople(groupId)
+  const joinRequests = useGroupJoinRequests(groupId)
   const addMembersControl = useDialogControl({url: 'add-members'})
   const editControl = useDialogControl({url: 'edit'})
   const rulesControl = useDialogControl({url: 'rules'})
@@ -187,6 +200,8 @@ export function GroupScreen() {
   /* The FAB pre-selects this group (owner 190); a group that takes no expense has none (decision 89). */
   useSuppressFab(!group || isDeleted || isGroupInactive(group.data))
   const isMeAdmin = !!group && !!me && groupAdmins(group.data).includes(me.id)
+  /* The admins see the join requests; everyone sees who was invited. */
+  const waiting = [...(isMeAdmin ? joinRequests : []), ...invited]
   /* Deleted records stay in their date place, struck; the ones I hid are out unless "Show hidden" is on. */
   const {visible, hidden, showHidden} = useVisibleEntries(groupHistory?.entries ?? [])
 
@@ -205,7 +220,7 @@ export function GroupScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="group-not-found"
-          illustration="empty-groups"
+          illustration="empty-not-found"
           message={l`This group isn’t on this device. It may have been removed.`}
           button={{
             label: l`Back to Groups`,
@@ -338,6 +353,15 @@ export function GroupScreen() {
           key: 'members-header',
           count: members.filter(m => m.leftAt === null).length,
         },
+        /* Who can join (owner 196): everyone sees the rule; the admins also see the join requests, everyone the invited. */
+        {type: 'joinRule' as const, key: 'join-rule'},
+        /* Five rows at most, then "See all" into Activity on this group (owner 197). */
+        ...waiting.slice(0, 5).map(request => ({
+          type: 'groupRequest' as const,
+          key: `request-${request.id}`,
+          request,
+        })),
+        ...(waiting.length > 5 ? [{type: 'seeAllRequests' as const, key: 'requests-all'}] : []),
         ...members.map(m => ({
           type: 'member' as const,
           key: `member-${m.personId}`,
@@ -412,7 +436,14 @@ export function GroupScreen() {
           </View>
           <View style={[a.gap_xs]}>
             <View style={[a.flex_row, a.align_center, a.gap_sm]}>
-              <View style={[a.flex_row, a.align_center]}>
+              {/* The whole stack opens Members, not each face (a stack is one control, owner ruling F-261). */}
+              <Pressable
+                testID="group-avatar-stack"
+                accessibilityRole="button"
+                accessibilityLabel={l`Members`}
+                accessibilityHint=""
+                onPress={() => setTab('members')}
+                style={[a.flex_row, a.align_center]}>
                 {stack.map((m, i) => (
                   <View
                     key={m.personId}
@@ -463,7 +494,7 @@ export function GroupScreen() {
                     </Text>
                   </View>
                 )}
-              </View>
+              </Pressable>
               <Text
                 emoji
                 numberOfLines={1}
@@ -540,6 +571,19 @@ export function GroupScreen() {
       </>
     )
 
+  /* One next step on both empty tabs (owner 213); an inactive group takes no new expenses, and on phones the FAB is that step. */
+  const addExpenseButton =
+    !gtMobile || (group && isGroupInactive(group.data))
+      ? undefined
+      : {
+          label: l`Add expense`,
+          text: l`Add expense`,
+          icon: PlusIcon,
+          onPress: () => navigation.navigate('AddExpense', {groupId}),
+          size: 'small' as const,
+          color: 'secondary' as const,
+        }
+
   const empty = isLoading ? (
     <Shimmer testID="group-history-loading">
       {Array.from({length: 5}, (_, i) => (
@@ -549,26 +593,16 @@ export function GroupScreen() {
   ) : !rowsReady ? <></> : bodyTab === 'balances' ? (
     <EmptyState
       testID="group-balances-empty"
-      illustration="empty-groups"
+      illustration="empty-balances"
       message={l`No balances yet. They appear once the group has an expense.`}
+      button={addExpenseButton}
     />
   ) : (
     <EmptyState
       testID="group-expenses-empty"
-      illustration="empty-groups"
+      illustration="empty-expenses"
       message={l`No expenses in this group yet. Add the first one and everyone’s share is worked out for you.`}
-      button={
-        gtMobile && !(group && isGroupInactive(group.data))
-          ? {
-              label: l`Add expense`,
-              text: l`Add expense`,
-              icon: PlusIcon,
-              onPress: () => navigation.navigate('AddExpense', {groupId}),
-              size: 'small',
-              color: 'secondary',
-            }
-          : undefined
-      }
+      button={addExpenseButton}
     />
   )
 
@@ -709,6 +743,7 @@ export function GroupScreen() {
               case 'net':
                 return (
                   <MemberBalanceRow
+                    personId={item.personId}
                     name={names.get(item.personId) ?? l`Someone`}
                     avatarName={
                       item.personId === me?.id ? me.data.name : undefined
@@ -740,6 +775,22 @@ export function GroupScreen() {
                       )
                     }
                   />
+                )
+              case 'joinRule':
+                return group ? (
+                  <Text testID="group-join-rule" style={[a.px_lg, a.pb_sm, a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+                    {joinRuleText.rule(joinPolicyOf(group.data))}
+                  </Text>
+                ) : null
+              case 'groupRequest':
+                return <GroupRequestRow request={item.request} />
+              case 'seeAllRequests':
+                return (
+                  <View style={[a.px_lg, a.pb_sm, a.align_start]}>
+                    <SectionLink testID="group-requests-all" href={activityPath({types: ['friends'], groupId})} label={l`See all requests and invites`}>
+                      <Trans>See all</Trans>
+                    </SectionLink>
+                  </View>
                 )
               case 'member':
                 return (
@@ -773,6 +824,7 @@ export function GroupScreen() {
                 return (
                   <OweRow
                     testID={`group-owe-${from}-${to}`}
+                    personId={item.from}
                     sentence={
                       item.from === me?.id
                         ? l`You owe ${to}`
@@ -879,6 +931,7 @@ export function GroupScreen() {
         <AddMembersDialog
           control={addMembersControl}
           group={group}
+          onChangeRule={() => addMembersControl.close(() => editControl.open())}
           inviteRow={
             <SettingsList.Container>
               <SettingsList.PressableItem

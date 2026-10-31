@@ -26,11 +26,13 @@ import {
   createWriteOffs,
   deleteExpense,
   ensureMe,
+  joinPolicyOf,
 } from '../src/mutations'
 import {deleteFeedback, loadFeedback, saveFeedback} from '../src/feedback'
 import {setPref} from '../src/preferences'
 import {raiseDispute} from '../src/disputes'
 import {scheduleReminder} from '../src/reminders'
+import {receiveGroupInvite} from '../src/groupJoins'
 import {createInviteLink, sendFriendRequest} from '../src/friends'
 import {SCHEMA_VERSION, STORES} from '../src/schema'
 import {openSqlStore, type SqlExecutor} from '../src/sqlStore'
@@ -104,8 +106,8 @@ beforeAll(async () => {
     history: full.history.filter(h => !types.includes(h.entityType)),
     outbox: full.outbox.filter(o => !types.includes(o.entityType)),
   })
-  large = without(['reminder', 'dispute'])
-  largeWithDisputes = without(['reminder'])
+  large = without(['reminder', 'dispute', 'groupRequest'])
+  largeWithDisputes = without(['reminder', 'groupRequest'])
   largeBalances = await s.balances()
   await s.close()
 }, 120_000)
@@ -309,13 +311,14 @@ describe.each(Object.keys(open))('%s v1 -> current', engine => {
 /* -------------------------------------------------------------------------- */
 
 /** Rewrites a current (v3) IndexedDB database as the v2 layout that shipped before: no aggregates, no search terms, no people activity. */
-async function downgradeIdb(from: IDBFactory, name: string, version: 2 | 3 | 4 = 2): Promise<IDBFactory> {
+async function downgradeIdb(from: IDBFactory, name: string, version: 2 | 3 | 4 | 5 = 2): Promise<IDBFactory> {
   const source = (await wrap(from.open(name))) as IDBPDatabase
   const to = new IDBFactory()
   const req = to.open(name, version)
   // v3 (and v2) had no `reminders`; v2 had neither projections nor the people activity column.
-  const v5 = ['disputes', 'disputed_balances', 'disputed_pairs']
-  const gone = version === 4 ? v5 : version === 3 ? ['reminders', ...v5] : ['aggregates', 'search_terms', 'reminders', ...v5]
+  const v6 = ['group_requests']
+  const v5 = ['disputes', 'disputed_balances', 'disputed_pairs', ...v6]
+  const gone = version === 5 ? v6 : version === 4 ? v5 : version === 3 ? ['reminders', ...v5] : ['aggregates', 'search_terms', 'reminders', ...v5]
   const kept = Object.keys(STORES).filter(n => !gone.includes(n)) as Array<keyof typeof STORES>
   req.onupgradeneeded = () => {
     for (const store of kept) {
@@ -342,6 +345,7 @@ async function downgradeIdb(from: IDBFactory, name: string, version: 2 | 3 | 4 =
 /** The same for SQLite: drop what v3 added and stamp version 2. */
 function downgradeSql(path: string) {
   const db = new Database(path)
+  db.run('DROP TABLE group_requests')
   for (const t of ['disputes', 'disputed_balances', 'disputed_pairs']) db.run(`DROP TABLE ${t}`)
   db.run('DROP TABLE reminders')
   db.run('DROP TABLE aggregates')
@@ -406,6 +410,7 @@ describe.each(['IndexedDB', 'SQLite'])('%s v2 -> v3', engine => {
 /** The same for SQLite: drop the v4 table and stamp version 3. */
 function downgradeSqlToV3(path: string) {
   const db = new Database(path)
+  db.run('DROP TABLE group_requests')
   for (const t of ['disputes', 'disputed_balances', 'disputed_pairs']) db.run(`DROP TABLE ${t}`)
   db.run('DROP TABLE reminders')
   db.run("UPDATE meta SET value = '3' WHERE key = 'schemaVersion'")
@@ -478,6 +483,7 @@ describe.each(['IndexedDB', 'SQLite'])('%s v3 -> v4 (the reminders store)', engi
 /** The same for SQLite: drop the v5 tables and stamp version 4. */
 function downgradeSqlToV4(path: string) {
   const db = new Database(path)
+  db.run('DROP TABLE group_requests')
   for (const t of ['disputes', 'disputed_balances', 'disputed_pairs']) db.run(`DROP TABLE ${t}`)
   db.run("UPDATE meta SET value = '4' WHERE key = 'schemaVersion'")
   db.run('PRAGMA user_version = 4')
@@ -536,6 +542,74 @@ describe.each(['IndexedDB', 'SQLite'])('%s v4 -> v5 (the disputes store)', engin
     const again = await v4.reopen()
     expect((await again.getAll('dispute')).map(e => e.id)).toEqual([d.id])
     expect((await again.disputedBalances({personId: me})).length).toBeGreaterThan(0)
+    await again.close()
+  }, 120_000)
+})
+
+/* -------------------------------------------------------------------------- */
+/* v5 -> v6                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** The same for SQLite: drop the v6 table and stamp version 5. */
+function downgradeSqlToV5(path: string) {
+  const db = new Database(path)
+  db.run('DROP TABLE group_requests')
+  db.run("UPDATE meta SET value = '5' WHERE key = 'schemaVersion'")
+  db.run('PRAGMA user_version = 5')
+  db.close()
+}
+
+describe.each(['IndexedDB', 'SQLite'])('%s v5 -> v6 (the group requests store)', engine => {
+  let smallDump: StoreDump
+  beforeAll(async () => {
+    smallDump = await smallSet()
+  })
+  const fixtures: Array<[string, () => StoreDump]> = [['a small set', () => smallDump], ['the large demo set', () => large]]
+
+  async function v5Of(set: StoreDump) {
+    const handle = await open[engine]!('v5', set)
+    const current = await handle.store()
+    const before = await current.dump()
+    const balances = await current.balances()
+    await current.close()
+    if (engine === 'IndexedDB') {
+      const factory = (handle as unknown as {factory: IDBFactory}).factory
+      const v5 = await downgradeIdb(factory, 'v5', 5)
+      return {before, balances, reopen: () => openIdbStore('v5', v5), version: async () => { const db = (await wrap(v5.open('v5'))) as IDBPDatabase; const v = db.version; db.close(); return v }}
+    }
+    const path = (handle as unknown as {path: string}).path
+    downgradeSqlToV5(path)
+    return {
+      before, balances, reopen: () => openSqlStore(bunExecutor(path)),
+      version: async () => { const db = new Database(path); const v = (db.query('PRAGMA user_version').get() as {user_version: number}).user_version; db.close(); return v },
+    }
+  }
+
+  /** Lost `user_version` on a v5 file (SQLite): `meta.schemaVersion` still says 5, so the step still runs. */
+  test.each(fixtures)('%s: every row, history entry, op and balance survives; the group requests store starts empty and works', async (_name, dump) => {
+    const v5 = await v5Of(dump())
+    expect(await v5.version()).toBe(5)
+    const store = await v5.reopen()
+    expect(await store.dump()).toEqual(v5.before)
+    expect(sorted(await store.balances())).toEqual(sorted(v5.balances))
+    await expectDerivedTablesMatch(store)
+    expect(await store.getAll('groupRequest')).toEqual([])
+    expect((await store.syncCounts()).group_requests).toEqual({local: 0, pending: 0, syncing: 0, synced: 0, failed: 0})
+    // Groups made before the rule existed read as "approve each join".
+    const group = v5.before.entities.find(e => e.type === 'group' && !e.deleted)!
+    expect(joinPolicyOf(group.data as never)).toBe('approve')
+    // A request lands in the new store, found by its group, and leaves every other table exact.
+    const me = v5.before.entities.find(e => e.type === 'person' && (e.data as {isMe: boolean}).isMe)!.id
+    const ctx = {...makeCtx(), actor: me, newId: () => 'later-' + Math.random().toString(36).slice(2)}
+    const r = await receiveGroupInvite(store, ctx, {id: 'gr-after', groupId: 'goa-remote', groupName: 'Goa', groupKind: 'trip', groupCurrency: 'INR', inviter: {accountId: 'acc-riya', name: 'Riya', contact: null}})
+    expect((await store.page('groupRequest', {index: 'byGroup', eq: ['goa-remote', 'pending']})).items.map(e => e.id)).toEqual([r.id])
+    expect(sorted(await store.balances())).toEqual(sorted(v5.balances))
+    await expectDerivedTablesMatch(store)
+    await store.close()
+    expect(await v5.version()).toBe(SCHEMA_VERSION)
+    // Idempotent: a second open runs no step and keeps the request.
+    const again = await v5.reopen()
+    expect((await again.getAll('groupRequest')).map(e => e.id)).toEqual([r.id])
     await again.close()
   }, 120_000)
 })
@@ -698,6 +772,26 @@ test('a v3 SQLite file with a lost user_version (reminders table gone too) still
   expect(parties.items.map(p => [p.expenseId, p.deleted])).toEqual([[e.id, true]])
   expect(await second.getAll('reminder')).toEqual([])
   await expectDerivedTablesMatch(second)
+  await second.close()
+})
+
+test('a v5 SQLite file with a lost user_version still gets the group requests table, and keeps its rows', async () => {
+  const path = join(mkdtempSync(join(tmpdir(), 'splito-v5-lost-')), 'db.sqlite')
+  const first = await openSqlStore(bunExecutor(path))
+  const ctx = makeCtx()
+  await ensureMe(first, ctx, 'Me')
+  const a = await createPerson(first, ctx, {name: 'Asha'})
+  await first.close()
+  downgradeSqlToV5(path)
+  const raw = new Database(path)
+  raw.run('PRAGMA user_version = 0')
+  raw.close()
+  const second = await openSqlStore(bunExecutor(path))
+  expect((await second.getAll('person')).map(p => p.id).sort()).toEqual(['me', a.id].sort())
+  expect(await second.getAll('groupRequest')).toEqual([])
+  const check = new Database(path)
+  expect((check.query('PRAGMA user_version').get() as {user_version: number}).user_version).toBe(SCHEMA_VERSION)
+  check.close()
   await second.close()
 })
 

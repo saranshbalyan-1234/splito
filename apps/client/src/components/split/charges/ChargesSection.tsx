@@ -15,6 +15,7 @@ import {useHaptics} from '#/lib/haptics'
 import {useA11y} from '#/state/a11y'
 import {atoms as a, tokens, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {ChoiceChips} from '#/components/forms/ChoiceChips'
 import {useDialogControl} from '#/components/Dialog'
 import {SortableList} from '#/components/DraggableList'
 import {
@@ -107,7 +108,6 @@ export function ChargePresets({
     !!setup && setup.charges.length > 0 && (form.charges?.length ?? 0) === 0
 
   const apply = (templates: ChargeTemplate[] | undefined) => {
-    haptics.selection()
     update(f => ({
       ...f,
       charges: templates && chargesFromTemplates(templates, () => nanoid(8), mark),
@@ -122,65 +122,43 @@ export function ChargePresets({
         showsHorizontalScrollIndicator={false}
         style={[{marginHorizontal: -tokens.space.lg}]}
         contentContainerStyle={[a.px_lg]}>
-        <View
-          role="radiogroup"
-          accessibilityLabel={l`Charge setup`}
-          style={[a.flex_row, a.gap_xs]}>
-          {presets.map(p => {
-            const isOn = activeId === p.id
-            return (
-              <Button
-                key={p.id}
-                testID={`charge-preset-${p.id}`}
-                label={p.name}
-                role="radio"
-                aria-checked={isOn}
-                accessibilityState={{checked: isOn}}
-                size="small"
-                color={isOn ? 'primary' : 'secondary'}
-                onPress={() => apply(p.id === 'simple' ? undefined : p.charges)}>
-                <ButtonText>{p.name}</ButtonText>
-              </Button>
-            )
-          })}
-          <Button
-            testID="charge-preset-custom"
-            label={l`Custom`}
-            role="radio"
-            aria-checked={activeId === 'custom'}
-            accessibilityState={{checked: activeId === 'custom'}}
-            size="small"
-            color={activeId === 'custom' ? 'primary' : 'secondary'}
-            onPress={() => {
-              /* An open list of your own: keep the charges you have; from Simple, start from the rows typed there. */
-              if (form.charges !== undefined) return
-              haptics.selection()
-              update(f => ({
-                ...f,
-                charges: chargesFromSimple(f, {
-                  mark,
-                  shorthand: true,
-                  names: {
-                    tax: l`Tax`,
-                    tip: l`Tip`,
-                    service: l`Service charge`,
-                    discount: l`Discount`,
-                  },
-                }),
-                roundOff: undefined,
-              }))
-            }}>
-            <ButtonText>
-              <Trans>Custom</Trans>
-            </ButtonText>
-          </Button>
-        </View>
+        <ChoiceChips
+          wrap={false}
+          label={l`Charge setup`}
+          value={activeId}
+          onChange={id => {
+            if (id !== 'custom') return apply(id === 'simple' ? undefined : presets.find(p => p.id === id)?.charges)
+            /* An open list of your own: keep the charges you have; from Simple, start from the rows typed there. */
+            if (form.charges !== undefined) return
+            update(f => ({
+              ...f,
+              charges: chargesFromSimple(f, {
+                mark,
+                shorthand: true,
+                names: {
+                  tax: l`Tax`,
+                  tip: l`Tip`,
+                  service: l`Service charge`,
+                  discount: l`Discount`,
+                },
+              }),
+              roundOff: undefined,
+            }))
+          }}
+          options={[
+            ...presets.map(p => ({value: p.id, label: p.name, testID: `charge-preset-${p.id}`})),
+            {value: 'custom', label: l`Custom`, testID: 'charge-preset-custom'},
+          ]}
+        />
       </ScrollView>
       {isSuggesting ? (
         <Button
           testID="charges-suggestion"
           label={l`Use the charges from your last bill at ${setup.name}`}
-          onPress={() => apply(setup.charges)}
+          onPress={() => {
+            haptics.selection()
+            apply(setup.charges)
+          }}
           style={[
             a.flex_row,
             a.align_center,

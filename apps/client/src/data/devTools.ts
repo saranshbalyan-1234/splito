@@ -49,10 +49,8 @@ function toBig(v: unknown, key = ''): unknown {
   return MONEY_KEYS.has(key) && typeof v === 'string' ? parseMinor(v) : v
 }
 
-/** Dev and E2E builds only: `window.splito` seeds data through the real mutations. */
-export function installDevTools(store: Store, ctx: MutationCtx) {
-  if (!(IS_DEV || IS_E2E) || typeof window === 'undefined') return
-  ;(window as unknown as {splito: unknown}).splito = {
+function makeDevTools(store: Store, ctx: MutationCtx) {
+  return {
     me: ctx.actor,
     createPerson: (name: string) => createPerson(store, ctx, {name}).then(e => e.id),
     createGroup: (input: Parameters<typeof createGroup>[2]) => createGroup(store, ctx, input).then(e => e.id),
@@ -82,7 +80,7 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
         const prev = await tx.get('preference', key)
         await tx.put({type: 'preference', id: key, data: {value}, version: (prev?.version ?? 0) + 1, deleted: false, updatedAt: ctx.now()})
       }),
-    /** What Home did before schema v2, for the perf spec's baseline: read the whole ledger, then work every balance out of it. */
+    /** What the first screen did before schema v2, for the perf spec's baseline: read the whole ledger, then work every balance out of it. */
     legacyHomeMs: async () => {
       const t0 = performance.now()
       const ledger = await loadLedger(store)
@@ -160,4 +158,13 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
       return person.id
     },
   }
+}
+
+/** The shape of `window.splito`, for the e2e specs that seed through it: `(window as unknown as {splito: SplitoDevTools}).splito`. */
+export type SplitoDevTools = ReturnType<typeof makeDevTools>
+
+/** Dev and E2E builds only: `window.splito` seeds data through the real mutations. */
+export function installDevTools(store: Store, ctx: MutationCtx) {
+  if (!(IS_DEV || IS_E2E) || typeof window === 'undefined') return
+  ;(window as unknown as {splito: SplitoDevTools}).splito = makeDevTools(store, ctx)
 }

@@ -111,26 +111,31 @@ const deny = (r: PermissionResult) => {
   if (!r.ok) throw new DomainError(r.code)
 }
 
+/**
+ * The record a dispute names, as the permission checks need it, built from what a caller has already read: the entity's
+ * data, who added it (its first history row) and its group (undefined when it has none or is deleted). The mutations and
+ * the buttons that preview them both call this, so a button never shows for an action the mutation refuses.
+ */
+export function disputeRecordOf(type: DisputeTarget, d: Expense & Repayment, addedBy: string | undefined, group: Group | undefined): DisputeRecord {
+  const isExpense = type === 'expense'
+  const payers = isExpense ? Object.keys(d.payers ?? {}) : [d.from]
+  const participants = isExpense ? [...new Set([...payers, ...Object.keys(d.shares ?? {})])] : [d.from, d.to]
+  return {
+    addedBy: addedBy ?? '',
+    participants,
+    payers,
+    groupMembers: group ? group.members.filter(m => m.leftAt === null).map(m => m.personId) : [],
+    groupAdmins: group ? groupAdmins(group) : [],
+  }
+}
+
 /** The record a dispute names, as the permission checks need it. */
 async function recordOf(tx: Tx, type: DisputeTarget, id: string): Promise<{entity: Entity<Expense & Repayment>; record: DisputeRecord}> {
   const entity = await requireLive<Expense & Repayment>(tx, type, id)
   const d = entity.data
-  const isExpense = type === 'expense'
-  const payers = isExpense ? Object.keys(d.payers) : [d.from]
-  const participants = isExpense ? [...new Set([...Object.keys(d.payers), ...Object.keys(d.shares)])] : [d.from, d.to]
   const first = (await tx.history(type, id))[0]
   const group = d.groupId ? await tx.get<Group>('group', d.groupId) : undefined
-  const live = group && !group.deleted ? group.data : undefined
-  return {
-    entity,
-    record: {
-      addedBy: first?.actor ?? '',
-      participants,
-      payers,
-      groupMembers: live ? live.members.filter(m => m.leftAt === null).map(m => m.personId) : [],
-      groupAdmins: live ? groupAdmins(live) : [],
-    },
-  }
+  return {entity, record: disputeRecordOf(type, d, first?.actor, group && !group.deleted ? group.data : undefined)}
 }
 
 /** One record's open disputes and holds (a handful at most). */

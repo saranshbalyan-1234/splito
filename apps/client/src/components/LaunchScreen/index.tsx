@@ -14,6 +14,7 @@ import Animated, {
 import {scheduleOnRN} from 'react-native-worklets'
 
 import {atoms as a} from '#/alf'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {dim, light} from '#/alf/themes'
 
 /*
@@ -46,7 +47,10 @@ function hideNativeSplash() {
 
 export function LaunchScreen() {
   const isDark = useColorScheme() === 'dark'
-  const shouldReduceMotion = useReducedMotion()
+  /* The launch screen sits above the store, so only the OS setting can be known here (`useShouldReduceMotion` falls
+     back to it signed out); Reanimated's own read is synchronous, so the first frame is already right. */
+  const isOsReduced = useReducedMotion()
+  const shouldReduceMotion = useShouldReduceMotion() || isOsReduced
   const [isGone, setIsGone] = useState(false)
   const scale = useSharedValue(1)
   const pulse = useSharedValue(1)

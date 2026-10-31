@@ -1,4 +1,4 @@
-import {expect, type Page, test} from '@playwright/test'
+import {expect, type Locator, type Page, test} from '@playwright/test'
 
 import {formatAmount, getCurrency} from '@splito/domain'
 import {DEMO_LARGE_PREFIX, generateLargeDemo, localToday, planRecords} from '@splito/sync/demoLarge'
@@ -26,9 +26,17 @@ function plannedExpenses(): Planned[] {
     if (op.kind === 'expense' && !created.has(op.id)) created.set(op.id, op.at)
     if (op.kind === 'expense' || op.kind === 'expense.update') drafts.set(op.id, op)
   }
+  /* A live comment's words find the expense it hangs on (F-246): the last edit of its text, none once deleted. */
+  const comments = new Map<string, {target: string; body: string; isLive: boolean}>()
+  for (const op of plan.ops) {
+    if (op.kind === 'comment') comments.set(op.id, {target: op.input.targetId, body: op.input.body, isLive: true})
+    if (op.kind === 'comment.edit') comments.get(op.id)!.body = op.body
+    if (op.kind === 'comment.delete') comments.get(op.id)!.isLive = false
+  }
+  const commentText = (id: string) => [...comments.values()].filter(c => c.isLive && c.target === id).map(c => c.body).join(' ')
   return [...drafts].map(([id, op]) => {
     const d = op.draft
-    const text = [d.title, d.notes, ...(d.split.mode === 'items' ? d.split.items.map(i => i.name) : [])].join(' ')
+    const text = [d.title, d.notes, commentText(id), ...(d.split.mode === 'items' ? d.split.items.map(i => i.name) : [])].join(' ')
     return {id, title: d.title, date: d.date, created: created.get(id) ?? 0, currency: d.currency, total: d.total, isLive: live.has(id), words: wordsOf(text), groupId: d.groupId}
   })
 }
@@ -52,16 +60,18 @@ function expectedSearch(word: string) {
   const people = plan.ops.flatMap(o => (o.kind === 'person' ? [o.name] : []))
   expect(people.filter(n => wordsOf(n).some(w => w.startsWith(word)))).toEqual([])
   const groups = new Set(plan.ops.flatMap(o => (o.kind === 'group' && wordsOf(o.input.name).some(w => w.startsWith(word)) ? [o.id] : [])))
-  // The matching groups are listed before the expenses (people and groups come first), each taking a row.
-  return {...expectedMatches(e => e.words.some(w => w.startsWith(word)) || (e.groupId !== null && groups.has(e.groupId))), lead: groups.size}
+  return expectedMatches(e => e.words.some(w => w.startsWith(word)) || (e.groupId !== null && groups.has(e.groupId)))
 }
+
+/** The i-th expense row: payments that match are listed above the expenses (F-246), so rows are counted from the Expenses heading. */
+const expenseRow = (screen: Locator, i: number) => screen.getByTestId('search-section-expenses').locator('xpath=following::*[starts-with(@data-testid, "search-row-")]').nth(i)
 
 const PHONE = {width: 390, height: 844}
 const DESKTOP = {width: 1440, height: 900}
 
 async function openSearch(page: Page) {
   await openDemo(page)
-  await expect(page.getByTestId('screen-home')).toBeVisible()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await page.getByTestId('header-search-ask').click()
   const screen = page.getByTestId('search-ask')
   await expect(screen).toBeVisible()
@@ -99,8 +109,8 @@ test('the header button opens the drawer; a title finds it, a note finds its exp
   await expect(screen.getByTestId('search-section-expenses')).toContainText(new RegExp(`Expenses\\s+${dinner.rows.length}(?!\\d)`), {timeout: 30_000})
   // The totals arrive once every match is read; only live matches are added up.
   await expect(screen.getByTestId('search-totals')).toHaveText(dinner.line, {timeout: 30_000})
-  // Row 0 is the "Ask Splito" row; the expenses follow it, newest first.
-  for (const [i, r] of dinner.rows.slice(0, 8).entries()) await expect(screen.getByTestId(`search-row-${i + 1 + dinner.lead}`)).toContainText(r.title)
+  // The expenses follow the "Ask Splito" row, the groups and any payments, newest first.
+  for (const [i, r] of dinner.rows.slice(0, 8).entries()) await expect(expenseRow(screen, i)).toContainText(r.title)
 })
 
 test('a deleted match stays in the list but never in the totals', async ({page}) => {
@@ -128,21 +138,21 @@ test('amount and date queries', async ({page}) => {
   await page.getByTestId('search-input').fill('> 1000')
   await expect(screen.getByTestId('search-section-expenses')).toContainText(count(over.rows.length), {timeout: 30_000})
   await expect(screen.getByTestId('search-totals')).toHaveText(over.line, {timeout: 30_000})
-  await expect(screen.getByTestId('search-row-1')).toContainText(over.rows[0]!.title)
+  await expect(expenseRow(screen, 0)).toContainText(over.rows[0]!.title)
 
   // An exact amount (or a word that starts with it): every expense of exactly 4500 in its own currency.
   const exact = expectedMatches(e => e.total === 4500n * unit(e.currency) || e.words.some(w => w.startsWith('4500')))
   expect(exact.rows.length).toBeGreaterThan(0)
   await page.getByTestId('search-input').fill('4500')
   await expect(screen.getByTestId('search-section-expenses')).toContainText(count(exact.rows.length), {timeout: 30_000})
-  await expect(screen.getByTestId('search-row-1')).toContainText(exact.rows[0]!.title)
-  await expect(screen.getByTestId(`search-row-${exact.rows.length + 1}`)).toHaveCount(0)
+  await expect(expenseRow(screen, 0)).toContainText(exact.rows[0]!.title)
+  await expect(expenseRow(screen, exact.rows.length)).toHaveCount(0)
 
   // A month by name, in any year, newest first.
   const march = expectedMatches(e => e.date.slice(5, 7) === '03' || e.words.some(w => w.startsWith('march')))
   await page.getByTestId('search-input').fill('march')
   await expect(screen.getByTestId('search-section-expenses')).toContainText(count(march.rows.length), {timeout: 30_000})
-  for (const [i, r] of march.rows.slice(0, 5).entries()) await expect(screen.getByTestId(`search-row-${i + 1}`)).toContainText(r.title)
+  for (const [i, r] of march.rows.slice(0, 5).entries()) await expect(expenseRow(screen, i)).toContainText(r.title)
 
   await page.getByTestId('search-input').fill('zzzz')
   await expect(screen.getByTestId('search-empty')).toContainText(
@@ -242,7 +252,7 @@ test.describe('phone', () => {
     page,
   }) => {
     await openDemo(page)
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
     for (const [path, screen, action] of [
       ['/people', 'screen-people', 'people-add-friend'],
       ['/groups', 'screen-groups', 'groups-new'],
@@ -268,12 +278,12 @@ test.describe('phone', () => {
     await expect(sheet.getByTestId('search-section-groups')).toBeVisible()
     await page.getByTestId('search-ask-cancel').click()
     await expect(sheet).toHaveCount(0)
-    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
   })
 })
 
-test.describe('a broad query pages: the first page at once, the totals after, more by cursor', () => {
-  test('600 matches show 30 rows, "Calculating totals…" then the count and totals, and Show more adds a page', async ({
+test.describe('a broad query pages: the first page, the count and totals at once, more by cursor', () => {
+  test('600 matches show 30 rows with the real count and totals, and Show more adds a page', async ({
     page,
   }) => {
     await page.goto('/')
@@ -296,17 +306,13 @@ test.describe('a broad query pages: the first page at once, the totals after, mo
     const screen = page.getByTestId('search-ask')
     await expect(screen).toBeVisible()
     await page.getByTestId('search-input').fill('bulk')
-    // The first page: 30 expenses (and the people and groups), however many match.
+    // The first page: 30 expenses (and the people and groups), however many match, with the count and totals already there.
     await expect(screen.getByTestId('search-row-0')).toBeVisible()
     const rows = screen.locator('[data-testid^="search-row-"]')
     const shown = await screen.locator('[data-testid^="search-row-"]').count()
     expect(shown).toBeLessThan(80)
     await expect(screen.getByTestId('search-show-more')).toBeVisible()
-    // Totals fill in after it: the heading's count becomes the real one, with one total per currency.
-    await expect(screen.getByTestId('search-totals')).toBeVisible({
-      timeout: 30_000,
-    })
-    await expect(screen.getByTestId('search-totals-pending')).toHaveCount(0)
+    await expect(screen.getByTestId('search-totals')).toBeVisible()
     await expect(screen.getByTestId('search-section-expenses')).toContainText(
       '600',
     )
@@ -318,3 +324,75 @@ test.describe('a broad query pages: the first page at once, the totals after, mo
     await expect(screen.getByTestId('search-row-0')).toBeVisible()
   })
 })
+
+/*
+ * F-246: facets become chips, a result names the field that matched, and the engine reads statuses, comments and
+ * payments. The same searches at a phone (390) and a desktop (1440) width, with no horizontal overflow.
+ */
+for (const [name, viewport] of [
+  ['phone 390', PHONE],
+  ['desktop 1440', DESKTOP],
+] as const) {
+  test.describe(`search by every field (${name})`, () => {
+    test.use({viewport})
+
+    test('a facet is a removable chip; the field that matched is named and marked', async ({page}) => {
+      const screen = await openSearch(page)
+      const input = page.getByTestId('search-input')
+
+      // "Dinner at Thalassa" is 12,500: over 20,000 leaves no expense, and removing the chip brings it back.
+      await input.fill('thalassa over 20000')
+      const chip = screen.getByTestId('search-chip-amount')
+      await expect(chip).toContainText('over 20000')
+      await expect(screen.getByTestId('search-section-expenses')).toHaveCount(0)
+      await chip.click()
+      await expect(input).toHaveValue('thalassa')
+      await expect(screen.getByTestId('search-chip-amount')).toHaveCount(0)
+      await expect(screen.getByTestId('search-section-expenses')).toContainText('1')
+      await expect(screen.getByTestId('search-row-1')).toContainText('Dinner at Thalassa')
+
+      // A word only in a note: the row says "Notes" and marks the words.
+      await input.fill('before the film')
+      const note = screen.locator('[data-testid$="-notes"]')
+      await expect(note).toContainText('Notes')
+      await expect(note).toContainText('Pizza dinner at Riya’s before the film')
+
+      // A comment on the dinner finds it, and says so.
+      await input.fill('sunset')
+      // (The deleted "Sunset cruise" is newer and comes first; the dinner is found by its comment.)
+      await expect(screen.getByText('Dinner at Thalassa').first()).toBeVisible()
+      await expect(screen.locator('[data-testid$="-comment"]').first()).toContainText('Booked the table for eight')
+
+      // An amount facet is named on the row too (the amount itself is in the right column, never printed twice).
+      await input.fill('thalassa between 12000 and 13000')
+      await expect(screen.getByTestId('search-chip-amount')).toBeVisible()
+      const amount = screen.locator('[data-testid^="search-match-"][data-testid$="-amount"]').first()
+      await expect(amount).toHaveText('Amount')
+      await expect(expenseRow(screen, 0)).toContainText('₹12,500.00')
+
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      expect(overflow).toBeLessThanOrEqual(0)
+    })
+
+    test('status and type words: deleted, payments, and a comment on a payment', async ({page}) => {
+      const screen = await openSearch(page)
+      const input = page.getByTestId('search-input')
+
+      // The deleted duplicate is listed, struck, found by "deleted" and a word of its title; the chip says Status.
+      await input.fill('deleted scooter')
+      await expect(screen.getByTestId('search-chip-status')).toContainText('deleted')
+      await expect(screen.getByTestId('search-row-1')).toContainText('Scooter rentals (duplicate)')
+      await expect(screen.locator('[data-testid^="search-deleted-"]').first()).toBeVisible()
+
+      // A payment is found through its comment, under its own heading.
+      await input.fill('payments sent')
+      await expect(screen.getByTestId('search-chip-type')).toBeVisible()
+      await expect(screen.getByTestId('search-section-payments')).toBeVisible()
+      await expect(screen.locator('[data-testid$="-comment"]').first()).toContainText('Sent!')
+      await expect(screen.getByTestId('search-section-expenses')).toHaveCount(0)
+
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      expect(overflow).toBeLessThanOrEqual(0)
+    })
+  })
+}

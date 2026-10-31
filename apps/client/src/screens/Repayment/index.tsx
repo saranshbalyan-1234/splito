@@ -17,7 +17,7 @@ import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {realParentsFor} from '#/navigation/goBack'
 import {useRealParents} from '#/navigation/realParents'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useFormatDay, useTimeZone} from '#/locale/useDates'
+import {useFormatDay} from '#/locale/useDates'
 import {
   useEntities,
   useEntity,
@@ -27,6 +27,8 @@ import {
   useStore,
 } from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
+import {HistoryLine, type HistoryLineData} from '#/screens/Expense/components/History'
+import {historyKind} from '#/screens/Expense/components/historyKind'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {
@@ -35,7 +37,6 @@ import {
   DiscussionTimeline,
 } from '#/components/comments/Discussion'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
-import {CirclePlus_Stroke2_Corner0_Rounded as CreatedIcon} from '#/components/icons/CirclePlus'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
 import {
@@ -116,7 +117,7 @@ export function RepaymentScreen() {
       {payment === undefined || !history ? null : payment === null ? (
         <EmptyState
           testID="repayment-not-found"
-          illustration="empty-activity"
+          illustration="empty-not-found"
           message={l`This payment doesn’t exist. The link may be wrong.`}
           button={{
             label: l`Go to People`,
@@ -141,13 +142,12 @@ function Detail({
   history: HistoryRow[]
 }) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
   const {gtTablet} = useBreakpoints()
   const store = useStore()
   const ctx = useMutationCtx()
   const locale = useNumberLocale()
   const formatDay = useFormatDay()
-  const tz = useTimeZone()
   const name = useDisplayName()
   const avatarName = useAvatarName()
   const errorText = useErrorText()
@@ -164,26 +164,22 @@ function Detail({
         : l`${name(from)} paid ${name(to)}`
 
   /* A payment is never edited: a version is its recording, a delete or a restore. */
-  const historyLines = history.map((row, i) => ({
+  const historyLines: HistoryLineData[] = history.map((row, i) => ({
     key: `history:${row.version}`,
     at: row.at,
-    kind:
-      i === 0
-        ? ('created' as const)
-        : row.deleted
-          ? ('deleted' as const)
-          : ('restored' as const),
+    kind: historyKind(row, history[i - 1]),
     actor: row.actor,
+    changes: [],
   }))
   const lines = [...historyLines, ...useDisputeEvents('repayment', payment.id)]
   const open = useOpenDisputes()
   const mark = markOf(open, 'repayment', payment.id)
-  const lineText = (kind: 'created' | 'deleted' | 'restored', who: string) =>
-    ({
-      created: l`${who} recorded this payment`,
-      deleted: l`${who} deleted this payment`,
-      restored: l`${who} restored this payment`,
-    })[kind]
+  const lineTitles = (who: string) => ({
+    created: l`${who} recorded this payment`,
+    edited: l`${who} edited this payment`,
+    deleted: l`${who} deleted this payment`,
+    restored: l`${who} restored this payment`,
+  })
 
   const people = [from, to]
     .filter((id, i, all) => id !== ctx.actor && all.indexOf(id) === i)
@@ -286,44 +282,7 @@ function Detail({
           isDisputeLine(line) ? (
             <DisputeLine event={line} />
           ) : (
-          <View
-            testID={`history-${line.kind}`}
-            style={[
-              a.flex_row,
-              a.align_center,
-              a.justify_center,
-              a.gap_xs,
-              a.px_xl,
-              a.pt_md,
-            ]}>
-            {line.kind === 'created' ? (
-              <CreatedIcon
-                size="xs"
-                fill={t.atoms.text_contrast_medium.color}
-              />
-            ) : line.kind === 'deleted' ? (
-              <TrashIcon size="xs" fill={t.palette.negative_500} />
-            ) : (
-              <UndoIcon size="xs" fill={t.atoms.text_contrast_medium.color} />
-            )}
-            <Text
-              style={[
-                a.text_sm,
-                a.font_medium,
-                a.leading_snug,
-                a.text_center,
-                t.atoms.text_contrast_high,
-              ]}>
-              {lineText(line.kind, name(line.actor))}
-              <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-                {' · '}
-                {i18n.date(new Date(line.at), {
-                  timeStyle: 'short',
-                  timeZone: tz,
-                })}
-              </Text>
-            </Text>
-          </View>
+            <HistoryLine line={line} titles={lineTitles} />
           )
         }
       />

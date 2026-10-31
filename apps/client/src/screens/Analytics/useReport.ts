@@ -15,9 +15,10 @@ import {
   type WeekStart,
   ZERO,
 } from '@splito/domain'
-import {DEFAULT_CATEGORIES, type Group, isGroupInactive, type Person} from '@splito/sync'
+import {type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {useFormatDay, useToday} from '#/locale/useDates'
+import {useCategoryLookup} from '#/components/split/shared'
 import {type ListedExpense, readRows} from '#/data/analyticsQueries'
 import {
   useAnalyticsBounds,
@@ -101,7 +102,7 @@ export function useReport() {
   const overview = useAnalyticsOverview()
   const groups = useEntities<Group>('group')
   const people = useEntities<Person>('person')
-  const [categories = DEFAULT_CATEGORIES] = usePref('categories')
+  const category = useCategoryLookup()
   const [defaultPeriod, saveDefaultPeriod] = usePref('analyticsPeriod')
   const [scopePref, setScopePref] = usePref('analyticsScope')
   const [defaultCurrency] = usePref('defaultCurrency')
@@ -326,16 +327,11 @@ export function useReport() {
           : spanLabel(shownRangeNow)
 
   const personName = new Map(people.map(p => [p.id, p.data.name]))
-  const categoryById = new Map(categories.map(c => [c.id, c]))
   const nameOfPerson = (id: string) =>
     id === me ? l`You` : (personName.get(id) ?? l`Someone`)
   const nameOfGroup = (id: string | null) =>
     id === null ? l`Non-group` : (groupName.get(id) ?? l`Group`)
   const locationOfGroup = (id: string | null) => (id === null ? '' : (groups.find(g => g.id === id)?.data.location ?? ''))
-  /* A category deleted since its expenses were saved shows as Other. */
-  const other = categoryById.get('other') ?? DEFAULT_CATEGORIES.at(-1)!
-  const category = (id: string) =>
-    categoryById.get(id) ?? {...other, id, name: l`Other`}
 
   return {
     me,

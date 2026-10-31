@@ -12,7 +12,7 @@ import {
   type Entity,
   type Expense,
   type Group,
-  groupAdmins,
+  disputeRecordOf,
   holdRecord,
   type HistoryEntry,
   loadDisputedRecords,
@@ -164,16 +164,8 @@ export function useDisputeAccess(type: DisputeTarget, id: string | undefined) {
   const groupId = entity?.data.groupId ?? null
   const record = useMemo((): DisputeRecord | undefined => {
     if (!entity || !history || !groups) return undefined
-    const d = entity.data
-    const isExpense = type === 'expense'
     const group = groupId ? groups.find(g => g.id === groupId && !g.deleted)?.data : undefined
-    return {
-      addedBy: history[0]?.actor ?? '',
-      participants: isExpense ? [...new Set([...Object.keys(d.payers ?? {}), ...Object.keys(d.shares ?? {})])] : [d.from, d.to],
-      payers: isExpense ? Object.keys(d.payers ?? {}) : [d.from],
-      groupMembers: group ? group.members.filter(m => m.leftAt === null).map(m => m.personId) : [],
-      groupAdmins: group ? groupAdmins(group) : [],
-    }
+    return disputeRecordOf(type, entity.data, history[0]?.actor, group)
   }, [entity, history, groups, groupId, type])
   return {
     me: actor,

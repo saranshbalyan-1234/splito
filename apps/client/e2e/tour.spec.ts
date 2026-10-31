@@ -46,9 +46,9 @@ async function seedFriend(page: Page) {
   })
 }
 
-/** The first screen: the start tab is Home until F-271 removes it, People after. */
+/** The first screen: the app opens on People. */
 async function appShown(page: Page) {
-  await expect(page.locator('[data-testid="screen-home"], [data-testid="screen-people"]').first()).toBeVisible({timeout: 30_000})
+  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 30_000})
 }
 
 async function expectInsideViewport(page: Page, testID: string) {
@@ -72,10 +72,10 @@ for (const vp of VIEWPORTS) {
       await page.goto('/')
       const tour = page.getByTestId('tour')
       await expect(tour).toBeVisible({timeout: 15_000})
-      /* No friends yet: step 2 stands on Add friend and says so, step 3 on the Groups tab; step 1 is the sidebar pill on desktop (always there) and Add friend on a phone (the FAB is held back). */
+      /* No friends yet: step 1 is the FAB (phone) or the sidebar pill, step 2 stands on Add friend and says so, step 3 is the Groups tab. */
       await expect(page.getByTestId('tour-step')).toHaveText('Step 1 of 3')
       await expect(page.getByTestId('tour-title')).toHaveText('Add an expense')
-      await expect(page.getByTestId('tour-body')).toContainText(vp.width >= 1000 ? 'Start here' : 'Add a friend here first')
+      await expect(page.getByTestId('tour-body')).toContainText('Start here')
       await expectInsideViewport(page, 'tour-card')
       await page.screenshot({path: `qa/tour/${vp.name}-1-new-account.png`})
 
@@ -161,10 +161,10 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByTestId('tour')).toHaveCount(0)
     })
 
-    test('Settings > Support > Help "Take the tour" replays it on People', async ({page}) => {
-      await page.goto('/settings/help')
+    test('Settings > Support "Take the tour" replays it on People', async ({page}) => {
+      await page.goto('/settings/support')
       await expect(page.getByTestId('screen-settings-section')).toBeVisible()
-      await page.getByTestId('help-take-tour').click()
+      await page.getByTestId('settings-take-tour').click()
       await expect(page.getByTestId('tour')).toBeVisible({timeout: 15_000})
       await expect(page.getByTestId('screen-people')).toBeVisible()
       await expect(page.getByTestId('tour-step')).toHaveText('Step 1 of 3')
@@ -182,9 +182,9 @@ for (const vp of VIEWPORTS) {
       await appShown(page)
       await page.waitForTimeout(2500)
       await expect(page.getByTestId('tour')).toHaveCount(0)
-      await page.goto('/settings/help')
-      await expect(page.getByTestId('help-see-intro')).toBeVisible()
-      await expect(page.getByTestId('help-take-tour')).toHaveCount(0)
+      await page.goto('/settings/support')
+      await expect(page.getByTestId('settings-help')).toBeVisible()
+      await expect(page.getByTestId('settings-take-tour')).toHaveCount(0)
     })
   })
 }

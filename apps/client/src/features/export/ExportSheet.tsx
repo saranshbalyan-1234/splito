@@ -11,7 +11,7 @@ import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
 import {loadDisputeMarks, loadStatement} from '#/data/exportLedger'
 import {useMutationCtx, usePref, useStore} from '#/data/hooks'
-import {useToday} from '#/locale/useDates'
+import {useFormatDay, useToday} from '#/locale/useDates'
 import {RangeDialog} from '#/screens/Analytics/components/RangeDialog'
 import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
@@ -74,7 +74,7 @@ export function ExportMenuItem({testID, label, onPress}: {testID: string; label:
 
 function Form({preset}: {preset?: ExportPreset}) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
   const store = useStore()
   const ctx = useMutationCtx()
@@ -103,7 +103,7 @@ function Form({preset}: {preset?: ExportPreset}) {
     if (period === 'year') return periodRange('year', today, ws, 0)
     return period === 'custom' ? custom : undefined
   }
-  const day = (d: string) => i18n.date(new Date(`${d}T00:00:00Z`), {dateStyle: 'medium', timeZone: 'UTC'})
+  const day = useFormatDay()
   const periodLabel = (p: Period) =>
     ({all: l`All time`, month: l`This month`, lastMonth: l`Last month`, year: l`This year`, custom: custom ? `${day(custom.from)} – ${day(custom.to)}` : l`Custom range`})[p]
 

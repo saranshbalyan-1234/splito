@@ -15,6 +15,7 @@ import {
   setPref,
   type Store,
 } from '@splito/sync'
+import {bunExecutor} from '@splito/sync/testing'
 import {IDBFactory} from 'fake-indexeddb'
 import {parseMinor} from '@splito/domain'
 
@@ -36,25 +37,8 @@ function sqlite(): Engine {
       // The same file reopened sees its rows: keep each in-memory database alive for the test.
       let db = dbs.get(which)
       if (!db) dbs.set(which, (db = new Database(':memory:')))
-      const d = db
-      return openSqlStore({
-        exec: async sql => void d.run(sql),
-        run: async (sql, params) => void d.query(sql).run(...(params as never[])),
-        all: async (sql, params) => d.query(sql).all(...(params as never[])) as never,
-        withTransaction: async fn => {
-          d.run('BEGIN IMMEDIATE')
-          try {
-            const r = await fn()
-            d.run('COMMIT')
-            return r
-          } catch (e) {
-            d.run('ROLLBACK')
-            throw e
-          }
-        },
-        // Closing a connection must not drop the data: the file stays.
-        close: async () => {},
-      })
+      // Closing a connection must not drop the data: a shared Database is left open by the executor.
+      return openSqlStore(bunExecutor(db))
     },
   }
 }
@@ -199,7 +183,7 @@ for (const engine of [sqlite, indexedDb]) {
         // A cut-off block is finished by the next open (M2): the marker is written last, so with it gone (and part of the
         // block missing) the block is erased and written again, never doubled.
         const requests = await demo.getAll('friendRequest')
-        await demo.erase([...requests.slice(0, 4).map(r => ({type: 'friendRequest' as const, id: r.id})), {type: 'preference', id: 'demo.seed.invites'}])
+        await demo.erase([...requests.slice(0, 4).map(r => ({type: 'friendRequest' as const, id: r.id})), {type: 'preference', id: 'demo.seed.invites.2'}])
         await demo.erase([{type: 'preference', id: 'demo.seed.feedback'}])
         expect((await demo.getAll('friendRequest')).length).toBe(5)
         expect(await seedDemo(demo, demoCtx)).toBe(true)

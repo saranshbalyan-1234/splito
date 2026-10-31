@@ -2,21 +2,13 @@ import {View} from 'react-native'
 import {type Group} from '@splito/sync'
 import {Heart, House, Plane, Users} from 'lucide-react-native'
 
+import {initials, nameHash} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme, utils} from '#/alf'
 import {createIcon} from '#/components/icons/lucide'
 import {Text} from '#/components/Typography'
 
 /** Below this size the tile shows the kind glyph only; initials would not read. */
 const INITIALS_MIN_SIZE = 32
-
-function initialsOf(name: string) {
-  const words = name.trim().split(/\s+/).filter(Boolean)
-  const letters =
-    words.length > 1
-      ? [words[0]!, words[1]!].map(w => [...w][0])
-      : [...(words[0] ?? '?')].slice(0, 2)
-  return letters.join('').toLocaleUpperCase()
-}
 
 /*
  * A group's tile: the group's initials on a soft tint of a hue picked from
@@ -44,12 +36,7 @@ const HUES = [
 ] as const
 
 function hueFor(name: string) {
-  let h = 0x811c9dc5
-  for (const ch of name.trim().toLowerCase()) {
-    h ^= ch.codePointAt(0)!
-    h = Math.imul(h, 0x01000193)
-  }
-  return HUES[(h >>> 0) % HUES.length]!
+  return HUES[nameHash(name) % HUES.length]!
 }
 
 /** The rounded-square tile for a group, sized like Bluesky's list avatar. */
@@ -102,7 +89,7 @@ export function GroupAvatar({
             a.font_bold,
             {color, fontSize: Math.round(size * 0.36), letterSpacing: 0.3},
           ]}>
-          {initialsOf(name)}
+          {initials(name, 'group')}
         </Text>
       </View>
       <View

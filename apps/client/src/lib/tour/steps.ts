@@ -1,7 +1,7 @@
 /**
  * The guided tour's steps (F-253, owner 142/213): exactly three, only what a new user must know to start. A pure model:
  * which control each step points at, what to point at when the preferred one is not there (a new account has no friends,
- * so no FAB and no friend row), and which copy variant applies. The words live in `features/tour/copy.ts` (Lingui).
+ * so no friend row), and which copy variant applies. The words live in `features/tour/copy.ts` (Lingui).
  */
 
 /** The controls a step can spotlight; each registers itself with `useTourRef` (`registry.ts`). */
@@ -23,7 +23,7 @@ type StepDef = {
 }
 
 const STEPS: readonly StepDef[] = [
-  /* The FAB on phones, the sidebar pill on rail and desktop; with no friends the FAB is held back, so Add friend stands in. */
+  /* The FAB on phones, the sidebar pill on rail and desktop; Add friend stands in if neither is on screen. */
   {id: 'add-expense', targets: ['fab', 'sidebar-add'], fallback: 'add-friend'},
   {id: 'balances', targets: ['friend-row'], fallback: 'add-friend'},
   /* The balance on the first friend row, else the Groups tab; with nothing to point at the step is left out. */
