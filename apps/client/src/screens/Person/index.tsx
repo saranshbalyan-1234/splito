@@ -604,8 +604,8 @@ export function PersonScreen() {
                     : l`No direct expenses with ${person!.data.name}. Group expenses are hidden by the filter.`
                 }
                 button={
-                  /* On phones the FAB is the next step (owner 213); a deleted friend takes no new expenses. */
-                  gtMobile && !isDeleted
+                  /* The next step (owner 213), a small secondary button beside the FAB; a deleted friend takes no new expenses. */
+                  !isDeleted
                     ? {
                         label: l`Add expense`,
                         text: l`Add expense`,

@@ -17,7 +17,7 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {type NavigationProp} from '#/lib/routes/types'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {GroupRequestActions} from '#/screens/Groups/components/GroupRequests'
 import {OutgoingActions} from '#/screens/People/components/RequestsSection'
 import {ActivityItem} from '#/components/activity/ActivityItem'
@@ -65,7 +65,6 @@ const isUnreadRow = (row: FeedRow | undefined) =>
  */
 export function ActivityScreen() {
   const t = useTheme()
-  const {gtMobile} = useBreakpoints()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const listAnimations = useListAnimations()
@@ -158,9 +157,7 @@ export function ActivityScreen() {
   const nextStepButton =
     hiddenCount > 0
       ? {testID: 'activity-empty-unhide', label: l`Show hidden changes`, text: l`Show hidden changes`, onPress: actions.unhideAll, size: 'small' as const, color: 'secondary' as const}
-      : !gtMobile
-        ? undefined // on phones the FAB is the next step (owner 213)
-        : {testID: 'activity-empty-add-expense', label: l({message: 'Add expense', context: 'action'}), text: l({message: 'Add expense', context: 'action'}), icon: PlusIcon, onPress: () => navigation.navigate('AddExpense', {}), size: 'small' as const, color: 'secondary' as const}
+      : {testID: 'activity-empty-add-expense', label: l({message: 'Add expense', context: 'action'}), text: l({message: 'Add expense', context: 'action'}), icon: PlusIcon, onPress: () => navigation.navigate('AddExpense', {}), size: 'small' as const, color: 'secondary' as const}
 
   const renderItem = ({item: row, index}: {item: FeedRow; index: number}) => {
     if (!snapshot) return null

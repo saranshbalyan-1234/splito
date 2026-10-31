@@ -1,4 +1,5 @@
 import {View} from 'react-native'
+import {useNavigation} from '@react-navigation/native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -15,12 +16,14 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
+import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Layout from '#/components/Layout'
 import {TabScreen} from '#/components/TabScreen'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {usePagedRows} from '#/lib/hooks/usePagedRows'
+import {type NavigationProp} from '#/lib/routes/types'
 import {Shimmer} from '#/motion/Shimmer'
 import {Charts, ChartsPlaceholder} from '#/screens/Analytics/components/Charts'
 import {
@@ -49,6 +52,7 @@ const NO_ROWS: ListedExpense[] = []
  */
 export function AnalyticsScreen() {
   const {t: l} = useLingui()
+  const navigation = useNavigation<NavigationProp>()
   const locale = useNumberLocale()
   const report = useReport()
   const [view = 'charts', setView] = usePref('analyticsView')
@@ -110,7 +114,16 @@ export function AnalyticsScreen() {
               testID="analytics-empty"
               illustration="empty-analytics"
               message={l`Your spending shows up here – by month, category, person and group – once you add an expense.`}
-              /* No button of its own (F-275): the FAB is the one Add expense. */
+              /* The next step (owner 213): one small secondary button; the FAB stays the primary action (owner 146). */
+              button={{
+                testID: 'analytics-empty-add-expense',
+                label: l`Add expense`,
+                text: l`Add expense`,
+                icon: PlusIcon,
+                onPress: () => navigation.navigate('AddExpense', {}),
+                size: 'small',
+                color: 'secondary',
+              }}
             />
           }
         />
