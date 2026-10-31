@@ -9,7 +9,7 @@ test('the launch tab: startTab, else the old homeTab key, else People (owner 198
   expect(resolveStartTab('people', 'groups')).toBe('people')
   expect(resolveStartTab('nonsense', undefined)).toBe('people')
   expect(resolveStartTab('home', undefined)).toBe('people')
-  expect(resolveStartTab('home', 'activity')).toBe('activity')
+  expect(resolveStartTab('home', 'activity')).toBe('people')
 })
 
 test('every "Home" fallback is the start tab route', () => {
@@ -17,4 +17,11 @@ test('every "Home" fallback is the start tab route', () => {
   setStartTab('analytics')
   expect(startPage()).toBe('Analytics')
   setStartTab('people')
+})
+
+test('the mirror sets the start tab whenever the preference changes, not only at launch (c-nohome review)', async () => {
+  const mirror = await Bun.file(new URL('../../state/preferences/mirror.tsx', import.meta.url)).text()
+  expect(mirror).toContain('setStartTab(startTab)')
+  const web = await Bun.file(new URL('../../navigation/linking.web.ts', import.meta.url)).text()
+  expect(web.indexOf('bootStartTab()')).toBeLessThan(web.indexOf("if (window.location.pathname === '/')"))
 })

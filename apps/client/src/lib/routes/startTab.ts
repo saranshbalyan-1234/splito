@@ -1,4 +1,4 @@
-import {type TabId} from '@splito/sync'
+import {START_TAB_IDS, type TabId} from '@splito/sync'
 
 import {type TabParams} from '#/lib/routes/types'
 
@@ -12,14 +12,15 @@ export const TAB_ROUTE = {
 } as const satisfies Record<TabId, keyof TabParams>
 
 /** What the app can open on: Settings is a tab (owner 206) but not a place to start. */
-const TAB_IDS: readonly string[] = ['people', 'groups', 'analytics', 'activity']
+const TAB_IDS: readonly string[] = START_TAB_IDS
 
 /**
  * The tab the app opens on, from the device mirror's `startTab`, else the old `homeTab` key of a build before F-256,
  * else People (owner 198: there is no Home; a saved 'home' is People). Pure, so a test pins the fallback.
  */
 export function resolveStartTab(start: string | undefined, old: string | undefined): TabId {
-  if (start && TAB_IDS.includes(start)) return start as TabId
+  // A mirror that holds any value is the current word: a stale 'home' there is People, never the older key's tab.
+  if (start !== undefined) return TAB_IDS.includes(start) ? (start as TabId) : 'people'
   return old && TAB_IDS.includes(old) ? (old as TabId) : 'people'
 }
 

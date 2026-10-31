@@ -72,7 +72,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
 /** The shared list's order: People, Groups, Analytics, Activity, Settings. */
 export const NAV_ITEM_IDS: readonly NavItemId[] = ['people', 'groups', 'analytics', 'activity', 'settings']
 /** The tabs that hold the user's data: what the app can open on (Settings cannot be the start tab). */
-const START_TAB_IDS = ['people', 'groups', 'analytics', 'activity'] as const satisfies readonly TabId[]
+/** The tabs the app can open on (owner 198: no Home). */
+export const START_TAB_IDS = ['people', 'groups', 'analytics', 'activity'] as const satisfies readonly TabId[]
 /** The default bar before owners 198 and 206 (it had Home and no Settings): a saved list that is exactly this was never customised, so it reads as the new default. */
 const OLD_DEFAULT_BAR = 'home,people,groups,analytics,activity'
 /** What Activity can be filtered by (owner 173): "transactions" in an address is `expenses` and `payments` together. */
@@ -279,7 +280,14 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
     const isPreAnalytics = value.includes('profile')
     const isOldDefault = value.join() === OLD_DEFAULT_BAR
     // Profile, Home (owner 198) and Ask Splito (owner 200) are not items now: a saved list loses them and keeps the order of the rest.
-    const kept = (value as string[]).filter((t): t is NavItemId => (NAV_ITEM_IDS as readonly string[]).includes(t))
+    const saved = value as string[]
+    const kept = saved.filter((t): t is NavItemId => (NAV_ITEM_IDS as readonly string[]).includes(t))
+    // Home was always in the bar: a bar that held it (and more) keeps what it guaranteed, People (the start tab) where Home stood and Settings (owner 206, reachable from no other row on phones).
+    if (saved.includes('home') && kept.length > 0) {
+      const isItem = (t: string) => (NAV_ITEM_IDS as readonly string[]).includes(t)
+      if (!kept.includes('people')) kept.splice(saved.slice(0, saved.indexOf('home')).filter(isItem).length, 0, 'people')
+      if (!kept.includes('settings')) kept.push('settings')
+    }
     value = isPreAnalytics && !kept.includes('analytics') ? [...kept, 'analytics'] : kept
     // The default bar lost Home and gained Settings (owners 198, 206): a saved bar that is exactly the old default never was customised, so it becomes the new one; any other choice keeps its tabs.
     if (isOldDefault) value = [...NAV_ITEM_IDS]
@@ -310,7 +318,9 @@ export function prefFrom<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K
   const value = readRaw(rows, key)
   if (key === 'startTab') {
     const tabs = readRaw(rows, 'tabs')
-    return (tabs.includes(value as TabId) ? value : PREFS.startTab.default) as PrefValue<K>
+    // A start tab the bar does not hold falls back to the first one it does, so the app never opens on an unlit tab.
+    const fallback = tabs.find(t => (START_TAB_IDS as readonly string[]).includes(t)) ?? PREFS.startTab.default
+    return (tabs.includes(value as TabId) ? value : fallback) as PrefValue<K>
   }
   return value
 }
@@ -327,6 +337,15 @@ async function putPref(tx: Tx, ctx: MutationCtx, key: PrefKey, value: unknown, d
   if (def.scope === 'account') await enqueuePref(tx, ctx, key, prev?.version ?? 0, deleted, value)
   // The folded-in "New expenses" row would keep reading as off after Payments is changed here: this write is the latest word,
   // and its tombstone is queued too, so another device pulling the old row cannot win by its newer updatedAt.
+  // A key read through an older one (Groups' sort was `groups.sort`, the start tab `homeTab`): this write is the latest word, so the old row goes (Reset included).
+  const older = ({groupsSort: 'groups.sort', startTab: 'homeTab'} as Partial<Record<PrefKey, string>>)[key]
+  if (older) {
+    const old = await tx.get('preference', older)
+    if (old && !old.deleted) {
+      await tx.put({...old, version: old.version + 1, deleted: true, updatedAt: ctx.now()})
+      await enqueuePref(tx, ctx, older, old.version, true, null)
+    }
+  }
   if (key === 'notify.payment') {
     const old = await tx.get('preference', 'notify.expense')
     if (old && !old.deleted) {

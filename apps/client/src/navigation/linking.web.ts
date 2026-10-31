@@ -12,12 +12,13 @@ import {type FlatNavigatorParams} from '#/lib/routes/types'
  * The bare address is the start tab (owner 198): a visit to "/" opens it, and the old Home address with its Overview
  * (`/?overview=groups`) opens Analytics. Runs once, before the navigator reads the URL.
  */
+const bootTab = bootStartTab() // every load, so a load of /activity knows the start tab too
 if (window.location.pathname === '/') {
   const old = redirectOldPath(`/${window.location.search}`)
   window.history.replaceState(
     window.history.state,
     '',
-    old === '/' || old.startsWith('/?') ? tabHref(bootStartTab()) + window.location.search : old,
+    old === '/' || old.startsWith('/?') ? tabHref(bootTab) + window.location.search : old,
   )
 }
 
