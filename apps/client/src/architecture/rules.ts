@@ -511,6 +511,16 @@ export const RULES = {
     appliesTo: p => isClient(p) && !/\/lib\/(?:openExternal|sharing)\.ts$/.test(p),
     count: (_p, s) => externalHandOffs(s),
   },
+  clipboardOutsideSharing: {
+    why: "'expo-clipboard' imported or navigator.clipboard used outside src/lib/sharing.ts. Copying goes through `copyText(text, {toast})` so every copy confirms the same way and an e2e build can see it (consolidation finding 60, ARCHITECTURE 14).",
+    appliesTo: p => isClient(p) && !p.endsWith('/lib/sharing.ts'),
+    count: (_p, s) => importsOf(s).filter(m => m === 'expo-clipboard').length + countMatches(blank(s, {strings: true}), /\bnavigator\s*\.\s*clipboard\b/g),
+  },
+  timeFormatOutsideLocale: {
+    why: "A time of day written by hand (`timeStyle`, an `hour:` option, toLocaleTimeString) outside src/locale/. Times in the Timezone preference come from `useFormatTime()` / `useFormatDateTime()` in locale/useDates.ts so every line shows the same moment the same way (consolidation finding 50). Baselined: reminders and the import date, which are shown in the device's own zone, and the Ask chat (rolls out with P1-e).",
+    appliesTo: p => isClient(p) && !under(p, 'locale/'),
+    count: (_p, s) => countMatches(code(s), /\btimeStyle\s*:|\bhour\s*:|\.toLocaleTimeString\s*\(/g),
+  },
   demoStaticImport: {
     why: 'A static import of demo mode (#/data/demoMode, #/data/demoSeed, #/screens/Settings/DemoMode, #/components/DemoBusyCover, @splito/sync/demoLarge) outside the demo files: `import x from`, `export ... from`, a side-effect `import \'...\'` and `require()` all bundle it. It must load with import() under __DEV__ / EXPO_PUBLIC_ENV so production bundles hold none of it (ARCHITECTURE 26.1).',
     appliesTo: p => isClient(p) && !/\/(?:data\/demo(?:Mode|Seed)|screens\/Settings\/DemoMode|components\/DemoBusyCover)\.tsx?$/.test(p),

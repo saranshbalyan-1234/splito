@@ -99,6 +99,14 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/screens/Profile/index.tsx': 1,
   },
   externalHandOff: {},
+  clipboardOutsideSharing: {},
+  timeFormatOutsideLocale: {
+    'apps/client/src/components/activity/ActivityItem.tsx': 1, // a reminder fires on the device clock, so it is shown in the device's zone
+    'apps/client/src/features/export/ImportSheet.tsx': 1, // the file's own export time, device zone
+    'apps/client/src/features/remind/PersonReminders.tsx': 1, // device clock
+    'apps/client/src/features/remind/RemindMeSheet.tsx': 1, // device clock
+    'apps/client/src/features/searchAsk/AskChat.tsx': 2, // rolls out with P1-e (Ask and chat)
+  },
   demoStaticImport: {},
   attribution: {},
 }

@@ -27,7 +27,7 @@ export type TabbedPage = keyof typeof PAGE_TABS
 export const SHEETS = {
   People: ['filters'],
   Groups: ['filters'],
-  Analytics: ['scope', 'range'],
+  Analytics: ['scope', 'range', 'export', 'export/period', 'export/range', 'export/group', 'export/person', 'export/currency'],
   Activity: ['filters'],
   Person: [
     'filters',

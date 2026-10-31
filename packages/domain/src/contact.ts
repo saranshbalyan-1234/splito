@@ -3,11 +3,6 @@
  * API, so both accept the same input.
  */
 
-/** A plausible email address: something@domain.tld, no spaces. */
-export function isEmail(input: string): boolean {
-  return /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(input.trim())
-}
-
 /**
  * A phone number in international form ("+91 98765 43210"): the leading +
  * and country code are required, spaces, dashes, dots and brackets are
@@ -36,7 +31,7 @@ export type Contact = {kind: 'email'; value: string} | {kind: 'phone'; value: st
 // ponytail: shape check only; the directory (or the mail server) is the real validator.
 const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[^\s@.]{2,}$/
 
-/** An email's shape: name@domain.tld, with a top-level domain of 2+ characters. */
+/** The one email check (sign-in, friends, feedback): name@domain.tld, a top-level domain of 2+ characters, no spaces. Callers trim first. */
 export function isContactEmail(v: string): boolean {
   return EMAIL_RE.test(v)
 }

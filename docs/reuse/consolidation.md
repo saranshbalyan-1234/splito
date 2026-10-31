@@ -606,3 +606,25 @@ P0-a, which are user-visible and have no builder overlap. Then P1-a, which holds
   (`EntryIcon` and Analytics' `CategoryIcon` draw it, so Analytics rows are rounded squares with the full glyph set);
   `historyKind` and a `titles` prop on `HistoryLine` serve the expense and payment pages (a later live version of a payment is
   "edited", no longer "restored"); Ask answers name categories in the UI language and a gone category is Other.
+- **Cleanup round 2, built on `worktree-agent-a7aa8a3c4c3fba583` (2026-10-31).**
+  - Finding 50 (time of day): `useFormatTime()` serves Comments (`CommentRow`), the Expense history line and Activity's
+    timestamp; new `useFormatDateTime()` (`locale/useDates.ts`) serves Activity's tooltip and `DeletedMeta`. Left on their
+    own on purpose, baselined by the `timeFormatOutsideLocale` rule: device-zone reminders (`ActivityItem` reminder line,
+    `PersonReminders`, `RemindMeSheet`), `ImportSheet` and `AskChat` (P1-e).
+  - Finding 49 (partly): `activity/feed.ts` no longer has `dayOf` / `daysAgo`; it and `ActivityItem` use `dayOfInstant` /
+    `dayBucket` from `locale/dayLabel.ts`. `comments/timeline.ts` (instant to day) is a separate copy; not touched.
+  - Finding 60 (CommentRow): Copy link goes through `copyText(link, {toast: false})`; the rule `clipboardOutsideSharing`
+    keeps `expo-clipboard` and `navigator.clipboard` inside `lib/sharing.ts`.
+  - Finding 14/44 (Include groups): `components/IncludeGroupsToggle.tsx` (a `Toggle.SwitchRow`) replaces the hand-built row in
+    `screens/Person/components/HistoryFilterDialog.tsx`. NOT done: `screens/People/components/FriendsFilterDialog.tsx` still
+    holds its own copy (not in this slice's remit); replace the `<Toggle.Item type="switch" testID="filter-include-groups">...`
+    block with `<IncludeGroupsToggle value={draft.includeGroups} onChange={includeGroups => set({includeGroups})} />`
+    and drop the then-unused `Toggle`, `Text`, `useTheme` imports.
+  - Finding 33 (emails): one check, `isContactEmail` in `packages/domain`; the sync feedback regex and the unused domain
+    `isEmail` are gone. Finding 16: the "links aren't shown" note in `FriendsAndInvites` uses a `plural` (same message id as
+    `InviteLinks`, Hindi kept).
+  - Already done before this round (checked): findings 71 (FeedCard), 80 (groups/net.ts), 73 (PickerTrigger), 72 (ImportSheet
+    Admonition), 81 (DemoBusyCover Loader).
+  - NOT done, and why: finding 13/`CATEGORY_ICONS` (`categoryIcon` and `CATEGORY_ICONS` in `components/split/icons.tsx` have no
+    importer at all and can be deleted with the Lucide imports only they use; the file is under `components/split/**`, which
+    this slice may not touch); finding 26 (`RaiseSheet` is under `features/disputes`); finding 6 (AskChat day divider, P1-e).

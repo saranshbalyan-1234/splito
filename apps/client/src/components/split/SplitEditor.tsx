@@ -1,5 +1,6 @@
 import {useState} from 'react'
-import {ScrollView, View} from 'react-native'
+import {View} from 'react-native'
+import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {amountInputText, decimalMark, formatAmount, ZERO} from '@splito/domain'
 import {type AdjustmentModes} from '@splito/sync'
@@ -19,12 +20,11 @@ import {
   ArrowTop_Stroke2_Corner0_Rounded as ArrowUpIcon,
 } from '#/components/icons/Arrow'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
-import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
-import {startItemize} from './charges/chargeForm'
+import {hasCharges, startItemize} from './charges/chargeForm'
 import {ChargeList, ChargePresets} from './charges/ChargesSection'
 import {useChargePresets} from './charges/hooks'
 import {
@@ -32,7 +32,7 @@ import {
   ClassSelectionBar,
   ItemClassChip,
 } from './charges/ItemClass'
-import {FieldError, MoneyInput, PercentInput} from './fields'
+import {DisclosureRow, FieldError, MoneyInput, PercentInput} from './fields'
 import {
   type ExpenseForm,
   type FormEvaluation,
@@ -51,7 +51,7 @@ import {
 type Update = (fn: (f: ExpenseForm) => ExpenseForm) => void
 
 /** Split modes whose shares can be rounded to cash (F-402); the others are typed amounts. */
-const ROUNDABLE: SplitMode[] = ['equal', 'shares', 'percent']
+export const ROUNDABLE: SplitMode[] = ['equal', 'shares', 'percent']
 /** The cash units on offer, in whole currency units (the `split.roundTo` choices). */
 const ROUND_UNITS = [1, 5, 10, 50, 100] as const
 
@@ -60,37 +60,32 @@ const MAX_PORTIONS = 9
 /** One width for every money field in Itemize, so items and charges line up. */
 const ITEM_AMOUNT_WIDTH = 120
 
+/** The split modes' names in the person's language. */
+export function useSplitModeLabels(): Record<SplitMode, string> {
+  const {t: l} = useLingui()
+  return {
+    equal: l`Equally`,
+    exact: l`Exact`,
+    percent: l`Percent`,
+    shares: l`Shares`,
+    adjusted: l`Equal + extra`,
+    items: l`Itemize`,
+  }
+}
+
 /**
- * The split section of the expense form: a segmented control for the mode
- * (equal, exact, percent, shares, equal with adjustments, itemised) and one
- * row per person with that mode's input and their resulting share.
+ * The chips that choose how an expense is split (equal, exact, percent, shares,
+ * equal with extras, itemised) and one line of help for the chosen one. They
+ * sit behind the form's "More options" row (F-275): most expenses are equal.
  */
-export function SplitEditor({
+export function SplitModeChips({
   form,
   update,
-  evaluation,
   locale,
-  onAddPeople,
-  adjustModes,
-  onAdjustModesChanged,
-  defaultRoundTo,
-  onRoundingChanged,
-  me,
 }: {
   form: ExpenseForm
   update: Update
-  evaluation: FormEvaluation
   locale: string
-  onAddPeople: () => void
-  /** The remembered amount / % choice per itemize charge (preference read by the caller). */
-  adjustModes: AdjustmentModes | undefined
-  onAdjustModesChanged: (modes: AdjustmentModes) => void
-  /** The cash unit rounding starts with (the `split.roundTo` preference). */
-  defaultRoundTo: number
-  /** The user toggled or picked the cash unit (0: off): remembered for the next expense. */
-  onRoundingChanged: (unit: number) => void
-  /** My person id: the readout says when the remainder lands on me. */
-  me: string
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -99,116 +94,98 @@ export function SplitEditor({
   const presets = useChargePresets()
   const defaultPresetId = usePrefControl('bill.defaultPreset').value ?? 'simple'
 
-  const labels: Record<SplitMode, string> = {
-    equal: l`Equally`,
-    exact: l`Exact`,
-    percent: l`Percent`,
-    shares: l`Shares`,
-    adjusted: l`Adjust`,
-    items: l`Itemize`,
-  }
+  const labels = useSplitModeLabels()
   const help: Record<SplitMode, string> = {
     equal: l`Everyone ticked pays the same.`,
     exact: l`Type what each person owes.`,
     percent: l`Give each person a percentage.`,
     shares: l`Split by shares – say 2 for a couple, 1 for everyone else.`,
     adjusted: l`Split equally, then add or take away an amount for someone.`,
-    /* One line; the way to take someone off matches the device (hold on touch, right-click with a mouse). */
+    /* One line; the way to take someone off matches the device (a tap toggles; hold or right-click also takes them off). */
     items: isPointer
-      ? l`Add each item and who had it. Tap a name again for another portion; right-click to take them off.`
-      : l`Add each item and who had it. Tap a name again for another portion; hold to take them off.`,
+      ? l`Add each item, then tap the people who had it. Right-click a name to take them off.`
+      : l`Add each item, then tap the people who had it. Hold a name to take them off.`,
   }
 
   return (
+    <View style={[a.px_lg, a.pb_sm]}>
+      <ChoiceChips
+        label={l`How to split`}
+        value={form.mode}
+        onChange={mode =>
+          update(f =>
+            f.mode === mode
+              ? f
+              : mode === 'items'
+                ? startItemize(
+                    {...f, mode},
+                    {
+                      preset: presets.find(p => p.id === defaultPresetId),
+                      newKey: () => nanoid(8),
+                      mark: decimalMark(locale),
+                    },
+                  )
+                : {...f, mode},
+          )
+        }
+        options={SPLIT_MODES.map(mode => ({value: mode, label: labels[mode], testID: `split-mode-${mode}`}))}
+      />
+      <Text
+        style={[
+          a.text_sm,
+          a.leading_snug,
+          a.pt_sm,
+          t.atoms.text_contrast_medium,
+        ]}>
+        {help[form.mode]}
+      </Text>
+    </View>
+  )
+}
+
+/**
+ * Who owes what for the chosen split: one row per person with that mode's
+ * input and their resulting share, or the item list for an itemised bill.
+ */
+export function SplitRows({
+  form,
+  update,
+  evaluation,
+  locale,
+  adjustModes,
+  onAdjustModesChanged,
+}: {
+  form: ExpenseForm
+  update: Update
+  evaluation: FormEvaluation
+  locale: string
+  /** The remembered amount / % choice per itemize charge (preference read by the caller). */
+  adjustModes: AdjustmentModes | undefined
+  onAdjustModesChanged: (modes: AdjustmentModes) => void
+}) {
+  if (form.mode === 'items')
+    return (
+      <ItemsEditor
+        form={form}
+        update={update}
+        evaluation={evaluation}
+        locale={locale}
+        savedModes={adjustModes}
+        saveModes={onAdjustModesChanged}
+      />
+    )
+  return (
     <View>
-      <View style={[a.px_lg, a.pb_sm]}>
-        {/* One row of choice chips on every width; it scrolls sideways when six do not fit. */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={[{marginHorizontal: -tokens.space.lg}]}
-          contentContainerStyle={[a.px_lg]}>
-          <ChoiceChips
-            wrap={false}
-            label={l`How to split`}
-            value={form.mode}
-            onChange={mode =>
-              update(f =>
-                f.mode === mode
-                  ? f
-                  : mode === 'items'
-                    ? startItemize(
-                        {...f, mode},
-                        {
-                          preset: presets.find(p => p.id === defaultPresetId),
-                          newKey: () => nanoid(8),
-                          mark: decimalMark(locale),
-                        },
-                      )
-                    : {...f, mode},
-              )
-            }
-            options={SPLIT_MODES.map(mode => ({value: mode, label: labels[mode], testID: `split-mode-${mode}`}))}
-          />
-        </ScrollView>
-        <Text
-          style={[
-            a.text_sm,
-            a.leading_snug,
-            a.pt_sm,
-            t.atoms.text_contrast_medium,
-          ]}>
-          {help[form.mode]}
-        </Text>
-      </View>
-      {form.mode === 'items' ? (
-        <ItemsEditor
+      {form.people.map(id => (
+        <SplitRow
+          key={id}
+          id={id}
           form={form}
           update={update}
           evaluation={evaluation}
           locale={locale}
-          savedModes={adjustModes}
-          saveModes={onAdjustModesChanged}
         />
-      ) : (
-        <View>
-          {form.people.map(id => (
-            <SplitRow
-              key={id}
-              id={id}
-              form={form}
-              update={update}
-              evaluation={evaluation}
-              locale={locale}
-            />
-          ))}
-          <View style={[a.px_lg, a.pt_xs]}>
-            <Button
-              testID="split-add-people"
-              label={l`Add people`}
-              size="small"
-              color="secondary"
-              onPress={onAddPeople}
-              style={[a.self_start]}>
-              <ButtonIcon icon={PersonPlusIcon} />
-              <ButtonText>
-                <Trans>Add people</Trans>
-              </ButtonText>
-            </Button>
-          </View>
-          {ROUNDABLE.includes(form.mode) ? (
-            <CashRounding
-              form={form}
-              update={update}
-              evaluation={evaluation}
-              locale={locale}
-              defaultUnit={defaultRoundTo}
-              onChanged={onRoundingChanged}
-              actor={me}
-            />
-          ) : null}
-        </View>
-      )}
+      ))}
     </View>
   )
 }
@@ -378,11 +355,19 @@ function Stepper({
   onChange,
   label,
   testID,
+  min = 0,
+  max = 99,
+  minusLabel,
+  plusLabel,
 }: {
   value: number
   onChange: (v: number) => void
   label: string
   testID?: string
+  min?: number
+  max?: number
+  minusLabel?: string
+  plusLabel?: string
 }) {
   const {t: l} = useLingui()
   return (
@@ -391,12 +376,12 @@ function Stepper({
       accessibilityLabel={label}>
       <Button
         testID={testID ? `${testID}-minus` : undefined}
-        label={l`Fewer shares`}
+        label={minusLabel ?? l`Fewer shares`}
         size="small"
         color="secondary"
         shape="round"
-        disabled={value <= 0}
-        onPress={() => onChange(Math.max(0, value - 1))}>
+        disabled={value <= min}
+        onPress={() => onChange(Math.max(min, value - 1))}>
         <ButtonIcon icon={MinusIcon} />
       </Button>
       <Text
@@ -411,12 +396,12 @@ function Stepper({
       </Text>
       <Button
         testID={testID ? `${testID}-plus` : undefined}
-        label={l`More shares`}
+        label={plusLabel ?? l`More shares`}
         size="small"
         color="secondary"
         shape="round"
-        disabled={value >= 99}
-        onPress={() => onChange(Math.min(99, value + 1))}>
+        disabled={value >= max}
+        onPress={() => onChange(Math.min(max, value + 1))}>
         <ButtonIcon icon={PlusIcon} />
       </Button>
     </View>
@@ -447,6 +432,8 @@ function ItemsEditor({
   const classPicker = useDialogControl({url: 'tax-class'})
   const [pickingFor, setPickingFor] = useState<string>()
   const [selection, setSelection] = useState<string[]>()
+  /* The charges stay behind one row until the bill carries some (F-275); a bill that already has them opens showing them. */
+  const [isChargesOpen, setIsChargesOpen] = useState(() => hasCharges(form))
 
   const setItem = (key: string, patch: Partial<ExpenseForm['items'][number]>) =>
     update(f => ({
@@ -468,6 +455,21 @@ function ItemsEditor({
     {key: 'service', label: l`Service charge`},
     {key: 'discount', label: l`Discount`},
   ] as const
+
+  /* What is set behind the charges row, in the domain's own figures (a percentage already worked out). */
+  const chargesSummary = !hasCharges(form)
+    ? undefined
+    : form.charges
+      ? plural(form.charges.length, {one: '# charge', other: '# charges'})
+      : extras
+          .filter(x => !!form[x.key]?.trim())
+          .map(x => {
+            const resolved = evaluation.adjustments?.[x.key]
+            return resolved === undefined
+              ? x.label
+              : `${x.label} ${formatAmount(resolved, form.currency, locale)}`
+          })
+          .join(' · ')
 
   return (
     <View style={[a.px_lg, a.gap_sm]}>
@@ -599,9 +601,12 @@ function ItemsEditor({
               />
             </View>
             {/*
-             * Who had it: a tap adds someone, another tap gives them one more
-             * portion ("2 of 3 beers"), a long press or right-click takes
-             * them off. "Everyone" puts the whole split on it, one each.
+             * Who had it: one tap assigns a person (one portion), another
+             * takes them off again; a long press or right-click takes them
+             * off too. A bill's untouched "Everyone" narrows to the person
+             * tapped, so a first tap never leaves the others charged. A
+             * stepper for portions ("2 of 3 beers") shows once two or more
+             * people share the item. "Everyone" puts the whole split on it.
              */}
             <View style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
               {(() => {
@@ -632,6 +637,9 @@ function ItemsEditor({
               {form.people.map(id => {
                 const isOn = item.people.includes(id)
                 const portions = item.portions?.[id] ?? 1
+                const isEveryone =
+                  form.people.every(p => item.people.includes(p)) &&
+                  Object.keys(item.portions ?? {}).length === 0
                 const takeOff = () =>
                   setItem(item.key, {
                     people: item.people.filter(p => p !== id),
@@ -652,7 +660,7 @@ function ItemsEditor({
                     }
                     accessibilityHint={
                       isOn
-                        ? l`Tap for one more portion; hold to take them off`
+                        ? l`Tap to take them off this item`
                         : l`Adds them to this item`
                     }
                     accessibilityState={{selected: isOn}}
@@ -661,17 +669,11 @@ function ItemsEditor({
                     variant="outline"
                     color={isOn ? 'primary' : 'secondary'}
                     onPress={() =>
-                      setItem(
-                        item.key,
-                        isOn
-                          ? {
-                              portions: {
-                                ...item.portions,
-                                [id]: Math.min(portions + 1, MAX_PORTIONS),
-                              },
-                            }
-                          : {people: [...item.people, id]},
-                      )
+                      isEveryone && form.people.length > 1
+                        ? setItem(item.key, {people: [id], portions: {}})
+                        : isOn
+                          ? takeOff()
+                          : setItem(item.key, {people: [...item.people, id]})
                     }
                     onLongPress={isOn ? takeOff : undefined}
                     {...web({
@@ -695,6 +697,40 @@ function ItemsEditor({
                 )
               })}
             </View>
+            {/* Portions: only for people who are on the item, and only worth asking when it is shared. */}
+            {item.people.length > 1 ? (
+              <View
+                testID={`item-${index}-portion-steppers`}
+                style={[a.flex_row, a.flex_wrap, a.align_center, a.gap_md]}>
+                <Text
+                  style={[a.text_sm, a.font_medium, t.atoms.text_contrast_medium]}>
+                  <Trans>Portions</Trans>
+                </Text>
+                {item.people.map(id => (
+                  <View
+                    key={id}
+                    style={[a.flex_row, a.align_center, a.gap_xs]}>
+                    <Text style={[a.text_sm]} numberOfLines={1}>
+                      {name(id)}
+                    </Text>
+                    <Stepper
+                      testID={`item-${index}-portion-${name(id)}`}
+                      label={l`Portions for ${name(id)}`}
+                      min={1}
+                      max={MAX_PORTIONS}
+                      minusLabel={l`Fewer portions`}
+                      plusLabel={l`More portions`}
+                      value={item.portions?.[id] ?? 1}
+                      onChange={v =>
+                        setItem(item.key, {
+                          portions: {...item.portions, [id]: v},
+                        })
+                      }
+                    />
+                  </View>
+                ))}
+              </View>
+            ) : null}
             {/* What each person's portions of this item come to. */}
             {evaluation.itemParts?.[item.key] ? (
               <Text
@@ -755,116 +791,127 @@ function ItemsEditor({
        * Charges (F-403): the four plain rows (Simple), or an ordered list of
        * scoped, stacked charges once a preset or "Add charge" is chosen.
        * Each plain row is an amount or a percentage of the items (owner
-       * rule), remembered per kind for the next bill.
+       * rule), remembered per kind for the next bill. They sit behind one
+       * row, with a one-line summary of what is set (F-275).
        */}
       <View style={[a.pt_sm, a.gap_xs]}>
-        <Text style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
-          <Trans>Charges</Trans>
-        </Text>
-        <ChargePresets form={form} update={update} locale={locale} />
-        {form.charges ? (
-          <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-            <Trans>
-              Each charge is shared only by the people who had the items it
-              applies to. Drag to reorder: a charge can stack on the ones above
-              it.
-            </Trans>
-          </Text>
-        ) : (
-          <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-            <Trans>
-              Discount comes off the items first; service, tax and tip are then
-              worked out on what is left.
-            </Trans>
-          </Text>
-        )}
-        {form.charges ? (
-          <ChargeList
-            form={form}
-            update={update}
-            evaluation={evaluation}
-            locale={locale}
+        <View style={{marginHorizontal: -tokens.space.lg}}>
+          <DisclosureRow
+            testID="item-charges-row"
+            label={l`Tax, tip and discounts`}
+            summary={chargesSummary}
+            isOpen={isChargesOpen}
+            onPress={() => setIsChargesOpen(open => !open)}
           />
+        </View>
+        {isChargesOpen ? (
+          <View testID="item-charges" style={[a.gap_xs]}>
+            <ChargePresets form={form} update={update} locale={locale} />
+            {form.charges ? (
+              <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+                <Trans>
+                  Each charge is shared only by the people who had the items it
+                  applies to. Drag to reorder: a charge can stack on the ones
+                  above it.
+                </Trans>
+              </Text>
+            ) : (
+              <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+                <Trans>
+                  Discount comes off the items first; service, tax and tip are
+                  then worked out on what is left.
+                </Trans>
+              </Text>
+            )}
+            {form.charges ? (
+              <ChargeList
+                form={form}
+                update={update}
+                evaluation={evaluation}
+                locale={locale}
+              />
+            ) : null}
+            {!form.charges
+              ? extras.map(x => {
+                  const isPercent = form.adjustModes?.[x.key] === 'percent'
+                  const resolved = evaluation.adjustments?.[x.key]
+                  return (
+                    <View
+                      key={x.key}
+                      style={[a.flex_row, a.align_center, a.gap_sm, a.py_xs]}>
+                      <View style={[a.flex_1, a.gap_2xs]}>
+                        <Text style={[a.text_md]}>{x.label}</Text>
+                        {/* A percentage shows what it comes to. */}
+                        {isPercent && resolved !== undefined && resolved !== ZERO ? (
+                          <Text
+                            testID={`item-${x.key}-resolved`}
+                            style={[
+                              a.text_xs,
+                              t.atoms.text_contrast_medium,
+                              {fontVariant: ['tabular-nums']},
+                            ]}>
+                            {formatAmount(resolved, form.currency, locale)}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <View style={{width: 96}}>
+                        <SegmentedControl.Root
+                          type="radio"
+                          size="small"
+                          label={l`${x.label} as`}
+                          value={isPercent ? 'percent' : 'amount'}
+                          onChange={value => {
+                            const next = value as 'amount' | 'percent'
+                            update(f => ({
+                              ...f,
+                              /* The figure meant something else in the other unit. */
+                              [x.key]: '',
+                              adjustModes: {...f.adjustModes, [x.key]: next},
+                            }))
+                            if (savedModes) saveModes({...savedModes, [x.key]: next})
+                          }}>
+                          <SegmentedControl.Item
+                            testID={`item-${x.key}-mode-amount`}
+                            label={l`${x.label} as an amount in ${form.currency}`}
+                            value="amount">
+                            <SegmentedControl.ItemText>
+                              {form.currency}
+                            </SegmentedControl.ItemText>
+                          </SegmentedControl.Item>
+                          <SegmentedControl.Item
+                            testID={`item-${x.key}-mode-percent`}
+                            label={l`${x.label} as a percentage`}
+                            value="percent">
+                            <SegmentedControl.ItemText>%</SegmentedControl.ItemText>
+                          </SegmentedControl.Item>
+                        </SegmentedControl.Root>
+                      </View>
+                      {isPercent ? (
+                        <PercentInput
+                          testID={`item-${x.key}`}
+                          label={x.label}
+                          value={form[x.key] ?? ''}
+                          isInvalid={!!evaluation.rowErrors[x.key]}
+                          width={ITEM_AMOUNT_WIDTH}
+                          onChangeText={v => update(f => ({...f, [x.key]: v}))}
+                        />
+                      ) : (
+                        <MoneyInput
+                          testID={`item-${x.key}`}
+                          label={x.label}
+                          currency={form.currency}
+                          value={form[x.key] ?? ''}
+                          isInvalid={!!evaluation.rowErrors[x.key]}
+                          width={ITEM_AMOUNT_WIDTH}
+                          onChangeText={v => update(f => ({...f, [x.key]: v}))}
+                        />
+                      )}
+                    </View>
+                  )
+                })
+              : null}
+          </View>
         ) : null}
-        {!form.charges
-          ? extras.map(x => {
-          const isPercent = form.adjustModes?.[x.key] === 'percent'
-          const resolved = evaluation.adjustments?.[x.key]
-          return (
-            <View
-              key={x.key}
-              style={[a.flex_row, a.align_center, a.gap_sm, a.py_xs]}>
-              <View style={[a.flex_1, a.gap_2xs]}>
-                <Text style={[a.text_md]}>{x.label}</Text>
-                {/* A percentage shows what it comes to. */}
-                {isPercent && resolved !== undefined && resolved !== ZERO ? (
-                  <Text
-                    testID={`item-${x.key}-resolved`}
-                    style={[
-                      a.text_xs,
-                      t.atoms.text_contrast_medium,
-                      {fontVariant: ['tabular-nums']},
-                    ]}>
-                    {formatAmount(resolved, form.currency, locale)}
-                  </Text>
-                ) : null}
-              </View>
-              <View style={{width: 96}}>
-                <SegmentedControl.Root
-                  type="radio"
-                  size="small"
-                  label={l`${x.label} as`}
-                  value={isPercent ? 'percent' : 'amount'}
-                  onChange={value => {
-                    const next = value as 'amount' | 'percent'
-                    update(f => ({
-                      ...f,
-                      /* The figure meant something else in the other unit. */
-                      [x.key]: '',
-                      adjustModes: {...f.adjustModes, [x.key]: next},
-                    }))
-                    if (savedModes) saveModes({...savedModes, [x.key]: next})
-                  }}>
-                  <SegmentedControl.Item
-                    testID={`item-${x.key}-mode-amount`}
-                    label={l`${x.label} as an amount in ${form.currency}`}
-                    value="amount">
-                    <SegmentedControl.ItemText>
-                      {form.currency}
-                    </SegmentedControl.ItemText>
-                  </SegmentedControl.Item>
-                  <SegmentedControl.Item
-                    testID={`item-${x.key}-mode-percent`}
-                    label={l`${x.label} as a percentage`}
-                    value="percent">
-                    <SegmentedControl.ItemText>%</SegmentedControl.ItemText>
-                  </SegmentedControl.Item>
-                </SegmentedControl.Root>
-              </View>
-              {isPercent ? (
-                <PercentInput
-                  testID={`item-${x.key}`}
-                  label={x.label}
-                  value={form[x.key] ?? ''}
-                  isInvalid={!!evaluation.rowErrors[x.key]}
-                  width={ITEM_AMOUNT_WIDTH}
-                  onChangeText={v => update(f => ({...f, [x.key]: v}))}
-                />
-              ) : (
-                <MoneyInput
-                  testID={`item-${x.key}`}
-                  label={x.label}
-                  currency={form.currency}
-                  value={form[x.key] ?? ''}
-                  isInvalid={!!evaluation.rowErrors[x.key]}
-                  width={ITEM_AMOUNT_WIDTH}
-                  onChangeText={v => update(f => ({...f, [x.key]: v}))}
-                />
-              )}
-            </View>
-          )
-        })
-          : null}
       </View>
 
       {evaluation.shares ? (
@@ -966,7 +1013,7 @@ function ItemsEditor({
  * so nothing is ever lost or hidden. The rounding itself is
  * `@splito/domain` `allocateCash`; this only shows it.
  */
-function CashRounding({
+export function CashRounding({
   form,
   update,
   evaluation,

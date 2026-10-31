@@ -91,9 +91,10 @@ for (const {name, size} of WIDTHS) {
     )
 
     // Search finds the group by its place.
-    await page.goto('/groups')
+    // Search & Ask is on the start tab (People) only (owner 218).
+    await page.goto('/people')
     await page
-      .getByTestId('screen-groups')
+      .getByTestId('screen-people')
       .getByTestId('header-search-ask')
       .click()
     await page.getByTestId('search-input').fill('gokarna')
