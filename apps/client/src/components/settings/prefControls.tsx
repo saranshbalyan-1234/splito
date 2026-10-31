@@ -17,6 +17,7 @@ import {
   formatLocalDate,
   utcOffsetLabel,
 } from '#/locale/dates'
+import {currencyName} from '#/locale/currencyName'
 import {resolveNumberLocale} from '#/locale/numberLocale'
 import {APP_LANGUAGES} from '#/locale/languages'
 import {useDateLocale, useToday} from '#/locale/useDates'
@@ -215,11 +216,7 @@ function HomeTabPref() {
 
 function useCurrencyName() {
   const [language = 'en'] = usePref('language')
-  let names: Intl.DisplayNames | undefined
-  try {
-    names = new Intl.DisplayNames([language], {type: 'currency'})
-  } catch {}
-  return (code: string) => names?.of(code) ?? CURRENCIES[code]?.name ?? code
+  return (code: string) => currencyName(code, language)
 }
 
 function CurrencyPref() {

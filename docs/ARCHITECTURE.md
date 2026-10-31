@@ -1632,6 +1632,19 @@ Splito lessons (add newest last, dated, with PR):
   reach cannot sit in a file that imports `react-native` (bun cannot parse its Flow source); put the pure part in
   its own file and re-export.
 
+- 2026-10-31, merge of F-274 cleanup round 1 (c-p0ijk, c-p0bf, c-p0eh, c-p0adg), from the combined Opus review: **a
+  clean textual merge is not a correct merge.** c-p0eh added `joinList(..., i18n.locale)` to `statementText.ts` while
+  c-p0adg narrowed the same hook to `const {t: l} = useLingui()`: git merged both without a conflict and the merged
+  file referenced an `i18n` that no longer existed. Typecheck and lint run on the merged tree before any e2e. Three
+  more: (1) deleting a file means sweeping every architecture baseline on the target branch, including rules other
+  branches added meanwhile (`FeedCard.tsx` was in the new `personAvatarOutsideLink` baseline, a STALE line fails the
+  gate); (2) Hermes has no `Intl.ListFormat`, `DisplayNames`, `RelativeTimeFormat` or `Segmenter`: they go only through
+  the guarded `locale/` helpers (`joinList`, `currencyName`), and an exported file never depends on runtime Intl
+  support (the statement's "Paid by" column is a plain join, so it reads the same on web and phones); (3) a "nothing
+  else does X" claim in this file needs a counter or a grep test: two such claims of the round were already false
+  (specs with their own viewport sizes; clipboard use outside `lib/sharing.ts`); the remaining duplicates the review
+  listed (time-of-day formatting in four files, `dayOf` / `daysAgo` in `activity/feed.ts`, dead `CATEGORY_ICONS`, two
+  filter-sheet switches) are cleanup round 2 (BACKLOG F-274).
 
 ## 24. Checklists
 

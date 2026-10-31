@@ -20,11 +20,13 @@ export function CurrencyDialog({
   onSelect: (code: string) => void
 }) {
   const {t: l, i18n} = useLingui()
-  const options = Object.values(CURRENCIES).map(c => ({
+  // The chosen currency first, so the sheet opens on it (as the old composer picker did).
+  const currencies = Object.values(CURRENCIES).sort((x, y) => Number(y.code === value) - Number(x.code === value))
+  const options = currencies.map(c => ({
     value: c.code,
     label: currencyName(c.code, i18n.locale),
     hint: `${c.code} · ${c.symbol}`,
-    keywords: c.name,
+    keywords: `${c.name} ${c.symbol}`,
   }))
   return (
     <OptionDialog
