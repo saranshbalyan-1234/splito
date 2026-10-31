@@ -1131,6 +1131,15 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
 - **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
   10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
   three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+- **A kept tab's size is paid on every switch to it, so a tab draws only what is on screen.** Showing a parked tab
+  again re-lays out and restyles its whole tree: Analytics drew all 200 report rows the data layer read (about 4,700
+  layout objects), so a switch to it cost 540-930 ms at CPU x6 (one 187 ms layout of 5,878 objects, 428 ms of style).
+  Drawing a page at a time (`usePagedRows`, from c-perf) cut it to 209-466 ms (1,960 objects, longest task 727 -> 345
+  ms). Measured 2026-10-31 in Chromium at 390 px, touch, the large demo, rapid taps between visited tabs (scratch
+  spec, load under 4). The other tabs (600-1,250 objects) take 165-400 ms at x6: about 150 ms style, layout and paint,
+  65 ms the navigation commit in the bar's animation frame, 60-90 ms touch handling; React re-renders only the bar
+  and the navigator shell (the renders gate's "switching back" legs), but `propagateParentContextChanges` still walks
+  the shown and hidden screens' trees (about 30 ms at x6). Every tap landed on the last tab tapped.
 - **A cache read during render is re-synced in the effect when the cache filled between render and effect.** Two
   empty states of the same art: the second rendered while the chunk loaded, the first's import filled the module cache
   before the second's effect ran, and the second returned early, keeping the `undefined` it read and staying blank (the
@@ -1722,6 +1731,12 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-31, process: **a worktree's `node_modules` links point at whoever ran `pnpm install` last.** A fork that installed
   in a scratch copy re-pointed `@splito/*` and `@bsky.app/bottom-sheet` at its copy; typecheck then failed everywhere. Run
   `pnpm install --frozen-lockfile --offline` once in the worktree only, and never in a copy that shares it.
+- 2026-10-31, owner on iPhone Safari again ("tab taps within ms still take time"): **measure the case the owner
+  describes, between tabs already visited.** `perf/tapLatency.spec.ts` reloads before every tap, so it times first
+  visits only; a rapid round over visited tabs at CPU x6 showed taps are no longer lost (the last tap always wins) but
+  each switch takes 165-930 ms, and Analytics was the worst because it drew every report row. Rule in 17.1. Not yet
+  verified on a real iPhone: this container has no WebKit or simulator, so iPhone numbers still need the owner's
+  phone or Mac.
 
 ## 24. Checklists
 
