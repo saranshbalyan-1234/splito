@@ -359,13 +359,12 @@ test('Activity: the first fling mounts rows a slice at a time', async ({page}) =
   }
   console.log(`LISTWORK activity-fling x${CPU} ${JSON.stringify(result)}`)
   /*
-   * Structural budget (17.1): the next page grows a few rows a commit (one commit mounted all 27 before), rows already
-   * mounted never re-render because more were added under them, and a row costs what it draws (130 renders a row
-   * before, with the closed row menu mounted on every row; 97 after).
+   * Structural budget (17.1): rows already mounted never re-render because more were added under them, and a row costs
+   * what it draws (130 renders a row before, with the closed row menu mounted on every row; 91 after). The page is built
+   * as a transition, so its render yields; how long its one commit takes is printed, not gated (it depends on load).
    */
   const added = result.rowsAfter - result.rowsBefore
   expect(added, 'the fling reached the next page').toBeGreaterThan(10)
-  expect(result.mostRowsInOneCommit, 'activity rows mounted by one commit').toBeLessThanOrEqual(8)
   expect(result.activityRowUpdates, 'mounted activity rows re-rendered by the fling').toBeLessThanOrEqual(2)
   expect(result.renders / added, 'React renders per added activity row').toBeLessThan(110)
 })

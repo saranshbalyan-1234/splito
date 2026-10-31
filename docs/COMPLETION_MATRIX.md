@@ -394,29 +394,30 @@ the exit scope touch web code only; `LayoutAnimationConfig skipExiting` still do
 ## People search and Activity's first fling (F-266 sweep misses, owner 189; web, measured 2026-10-31)
 
 `perf/listWork.spec.ts` (new): Chromium, 390 x 844, touch, large demo (42 friends), CPU x6, accessibility tree off. Base =
-`claude/repo-status-other-chat-xmr0l3` at the merge base of this branch, after = this branch, both `e2e:build`, three runs
-each interleaved. Machine load 23-41 during every run (other builders), so the timings are upper bounds and not a budget
-claim; the counts do not depend on load and are what the spec gates. Run: `E2E_PORT=8933 pnpm perf listWork` (`PERF_DIST`
-for another build).
+`claude/repo-status-other-chat-xmr0l3` as merged into this branch, after = this branch, both `e2e:build`, three runs each
+interleaved, 1-minute load 2.3-9.9 (one base run started at 12.6 and fell to 9.9). The counts do not depend on load and
+are what the spec gates; the timings are the method's medians. Run: `E2E_PORT=8933 pnpm perf listWork` (`PERF_DIST` for
+another build).
 
 | People search, "rahul sharma 120" (16 keys) | Base (3 runs) | After (3 runs) |
 |---|---|---|
-| React renders per key | 210.6 (every run) | 58.5-74.3 |
-| Person rows re-rendered (whole search) | 83 | 4 |
+| React renders per key | 210.6 (every run) | 59.0 / 64.0 / 65.5 |
+| Person rows re-rendered (whole search) | 83 | 2 / 4 / 4 |
 | Rows cloned out by Reanimated's exit | 46 | 0 |
-| Worst key-to-echo, ms (median) | 1,108 / 1,842 / 737 (1,108) | 496 / 227 / 226 (227) |
-| Longest task, ms (median) | 1,030 / 1,158 / 674 (1,030) | 373 / 79 / 86 (86) |
+| Worst key-to-echo, ms (median) | 1,299 / 987 / 560 (987) | 98 / 248 / 89 (98) |
+| Median key-to-echo, ms | 124 / 74 / 79 | 38 / 45 / 60 |
+| Longest task, ms (median) | 630 / 536 / 513 (536) | 58 / 227 / 69 (69) |
 
 | Activity, first fling (adds 27 rows) | Base | After |
 |---|---|---|
-| React renders | 3,496 | 2,618 |
-| Most rows mounted by one commit | 27 | 6 |
-| Worst frame gap, ms (median) | 2,462 / 482 / 1,755 (1,755) | 518 / 171 / 310 (310) |
-| Longest task, ms (median) | 2,083 / 356 / 1,668 (1,668) | 500 / 110 / 242 (242) |
+| React renders | 3,475 | 2,475 |
+| Worst frame gap, ms (median) | 763 / 773 / 884 (773) | 178 / 154 / 40 (154) |
+| Longest task, ms (median) | 721 / 721 / 822 (721) | 170 / 152 / 229 (170) |
 
-Causes and fixes in ARCHITECTURE 17.1 (rule) and 23 (lesson): the query state re-rendered the whole People screen and
-every row (an unmemoised summary chain), rows a key removed ran exit clones, every Activity row mounted its closed Radix
-menu and phone drawer, and a page of rows was one commit. Still to measure on a quiet machine, in WebKit and on devices.
-Renders gate not re-recorded here (port 8191 shared; the gate is red on base for the 806-row scroll and the pre-People
-baseline, 2026-10-31 c-perf note above); its scroll phase will count fewer renders (no closed menus) and a few more
-`ActivityScreen` updates per page (the six-row steps), and the next re-record should take both.
+Still over budget: the Activity page's commit (27 rows in one commit, about 150-230 ms at x6). Growing a page six rows per
+commit measured 53-86 ms (load 11) but slowed reading far back, so it was dropped (ARCHITECTURE 17.1, 23); cheaper rows
+(about 92 renders each) are the next step. Causes and fixes in ARCHITECTURE 17.1 and 23.
+
+Renders gate not re-recorded here (port 8191 is shared, and the gate is red on base for the 806-row scroll and the
+pre-People baseline: the c-perf note above). Its scroll phase will count fewer renders (no closed menus: about 1,000
+fewer mounts and the popper chain's after-mount updates per 27 rows), so the next re-record should take that.
