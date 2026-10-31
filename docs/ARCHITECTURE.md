@@ -1753,7 +1753,7 @@ Splito lessons (add newest last, dated, with PR):
   support (the statement's "Paid by" column is a plain join, so it reads the same on web and phones); (3) a "nothing
   else does X" claim in this file needs a counter or a grep test: two such claims of the round were already false
   (specs with their own viewport sizes; clipboard use outside `lib/sharing.ts`); the remaining duplicates the review
-  listed (time-of-day formatting in four files, `dayOf` / `daysAgo` in `activity/feed.ts`, dead `CATEGORY_ICONS`, two
+  listed (time-of-day formatting in four files, `dayOf` / `daysAgo` in `activity/feed.ts`, dead `CATEGORY_ICONS` (removed in the round-2 follow-up), two
   filter-sheet switches) are cleanup round 2 (BACKLOG F-274).
 - 2026-10-31, F-274 cleanup round 2 (c-r2): **a clean-up brief that lists files not to touch leaves duplicates behind, so
   record them where the next slice finds them.** (1) Time of day: `useFormatTime()` and a new `useFormatDateTime()`
@@ -1764,7 +1764,7 @@ Splito lessons (add newest last, dated, with PR):
   (`dayOfInstant` / `dayBucket` in `locale/dayLabel.ts` are the one rule; `daysAgo(...) === 0` is `dayBucket(...) === 'today'`).
   (3) `clipboardOutsideSharing` fails `expo-clipboard` or `navigator.clipboard` outside `lib/sharing.ts` (CommentRow's Copy
   link was the last). (4) `IncludeGroupsToggle` is the one "Include groups" row (a `Toggle.SwitchRow`); People's
-  `FriendsFilterDialog` still holds its own copy (screens/People was another builder's). (5) One email check: the sync
+  `FriendsFilterDialog` now uses it too (its own copy went in the orchestrator's follow-up). (5) One email check: the sync
   feedback regex and the unused domain `isEmail` went; `isContactEmail` is the only one. (6) A `plural` macro from
   `@lingui/core/macro` produces the same message id as `<Plural>`, so moving a hand-written "N links" note onto it kept its
   Hindi. Not obvious: builders that share one scratchpad directory overwrite each other's scripts of the same name

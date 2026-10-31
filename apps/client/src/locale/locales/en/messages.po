@@ -1668,7 +1668,7 @@ msgstr "Alerts for new expenses, payments, comments and invites come with sync. 
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:89
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:99
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:110
-#: src/screens/People/components/FriendsFilterDialog.tsx:110
+#: src/screens/People/components/FriendsFilterDialog.tsx:89
 msgid "All"
 msgstr "All"
 
@@ -1898,7 +1898,7 @@ msgstr "Applies to"
 #: src/screens/Analytics/components/RangeDialog.tsx:83
 #: src/screens/Analytics/components/ScopeDialog.tsx:108
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:63
-#: src/screens/People/components/FriendsFilterDialog.tsx:75
+#: src/screens/People/components/FriendsFilterDialog.tsx:74
 #: src/screens/Person/components/HistoryFilterDialog.tsx:70
 msgid "Apply"
 msgstr "Apply"
@@ -2741,7 +2741,6 @@ msgid "Couldn’t update your lists. Please try again."
 msgstr "Couldn’t update your lists. Please try again."
 
 #: src/components/IncludeGroupsToggle.tsx:14
-#: src/screens/People/components/FriendsFilterDialog.tsx:92
 msgid "Count balances from groups you share with each friend. Off shows only what is between you and them."
 msgstr "Count balances from groups you share with each friend. Off shows only what is between you and them."
 
@@ -2816,7 +2815,7 @@ msgstr "CSV"
 #: src/features/export/statementText.ts:47
 #: src/features/settlement/CallItEvenDialog.tsx:298
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:96
-#: src/screens/People/components/FriendsFilterDialog.tsx:107
+#: src/screens/People/components/FriendsFilterDialog.tsx:86
 msgid "Currency"
 msgstr "Currency"
 
@@ -3515,7 +3514,7 @@ msgstr "Every week"
 #: src/components/split/SplitEditor.tsx:632
 #: src/features/export/ExportSheet.tsx:228
 #: src/features/export/ExportSheet.tsx:272
-#: src/screens/People/components/FriendsFilterDialog.tsx:121
+#: src/screens/People/components/FriendsFilterDialog.tsx:100
 msgid "Everyone"
 msgstr "Everyone"
 
@@ -3708,7 +3707,7 @@ msgstr "Filter"
 #: src/components/ListToolsHeader.tsx:155
 #: src/screens/Activity.tsx:214
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:60
-#: src/screens/People/components/FriendsFilterDialog.tsx:72
+#: src/screens/People/components/FriendsFilterDialog.tsx:71
 msgid "Filters"
 msgstr "Filters"
 
@@ -4283,8 +4282,6 @@ msgid "Include disputed"
 msgstr "Include disputed"
 
 #: src/components/IncludeGroupsToggle.tsx:15
-#: src/screens/People/components/FriendsFilterDialog.tsx:82
-#: src/screens/People/components/FriendsFilterDialog.tsx:88
 msgid "Include groups"
 msgstr "Include groups"
 
@@ -5809,7 +5806,7 @@ msgid "owes you"
 msgstr "owes you"
 
 #: src/features/searchAsk/AskAnswer.tsx:211
-#: src/screens/People/components/FriendsFilterDialog.tsx:122
+#: src/screens/People/components/FriendsFilterDialog.tsx:101
 #: src/screens/Person/components/PersonBalances.tsx:142
 msgid "Owes you"
 msgstr "Owes you"
@@ -7212,7 +7209,7 @@ msgstr "Shopping"
 
 #: src/screens/Group/components/GroupLifecycle.tsx:417
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:107
-#: src/screens/People/components/FriendsFilterDialog.tsx:118
+#: src/screens/People/components/FriendsFilterDialog.tsx:97
 msgid "Show"
 msgstr "Show"
 
@@ -9134,7 +9131,7 @@ msgstr "you owe"
 #: src/features/searchAsk/AskAnswer.tsx:222
 #: src/screens/Group/components/GroupBalanceCards.tsx:80
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:112
-#: src/screens/People/components/FriendsFilterDialog.tsx:123
+#: src/screens/People/components/FriendsFilterDialog.tsx:102
 #: src/screens/Person/components/PersonBalances.tsx:144
 msgid "You owe"
 msgstr "You owe"
