@@ -1,6 +1,5 @@
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 
-import {atoms as a} from '#/alf'
 import * as Toggle from '#/components/forms/Toggle'
 
 /**
@@ -10,12 +9,5 @@ import * as Toggle from '#/components/forms/Toggle'
  */
 export function ShowSettledToggle({value, onChange}: {value: boolean; onChange: (v: boolean) => void}) {
   const {t: l} = useLingui()
-  return (
-    <Toggle.Item type="switch" testID="filter-settled-toggle" name="showSettled" label={l`Show settled`} value={value} onChange={onChange} style={[a.w_full]}>
-      <Toggle.LabelText style={[a.flex_1, a.text_md, a.font_semi_bold, a.pr_md]}>
-        <Trans>Show settled</Trans>
-      </Toggle.LabelText>
-      <Toggle.Switch />
-    </Toggle.Item>
-  )
+  return <Toggle.SwitchRow testID="filter-settled-toggle" name="showSettled" label={l`Show settled`} value={value} onChange={onChange} />
 }

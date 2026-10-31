@@ -20,6 +20,7 @@ import {useSession} from '#/state/session'
 import {useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {ChoiceChips} from '#/components/forms/ChoiceChips'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import * as TextField from '#/components/forms/TextField'
@@ -177,33 +178,18 @@ function Inner({screen}: {screen: string}) {
           <TextField.LabelText>
             <Trans>What is it about?</Trans>
           </TextField.LabelText>
-          <View
-            role="radiogroup"
-            accessibilityLabel={l`Type of feedback`}
-            style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
-            {FEEDBACK_TYPES.map(kind => {
-              const isSelected = kind === type
-              const Icon = TYPE_ICONS[kind]
-              return (
-                <Button
-                  key={kind}
-                  testID={`feedback-type-${kind}`}
-                  label={types[kind]}
-                  role="radio"
-                  accessibilityState={{checked: isSelected}}
-                  aria-checked={isSelected}
-                  size="small"
-                  color={isSelected ? 'primary' : 'secondary'}
-                  onPress={() => {
-                    haptics.selection()
-                    setType(kind)
-                  }}>
-                  <ButtonIcon icon={isSelected ? CheckIcon : Icon} />
-                  <ButtonText>{types[kind]}</ButtonText>
-                </Button>
-              )
-            })}
-          </View>
+          <ChoiceChips
+            gap="sm"
+            label={l`Type of feedback`}
+            value={type}
+            onChange={setType}
+            options={FEEDBACK_TYPES.map(kind => ({
+              value: kind,
+              label: types[kind],
+              testID: `feedback-type-${kind}`,
+              icon: kind === type ? CheckIcon : TYPE_ICONS[kind],
+            }))}
+          />
         </View>
 
         <View>
@@ -260,20 +246,13 @@ function Inner({screen}: {screen: string}) {
         </View>
 
         <View style={[a.gap_sm]}>
-          <Toggle.Item type="switch"
+          <Toggle.SwitchRow
             testID="feedback-include-info"
             name="includeAppInfo"
             label={l`Include app info`}
             value={includeInfo}
             onChange={v => void setIncludeInfo(v)}
-            style={[a.w_full]}>
-            <View style={[a.flex_1, a.pr_md]}>
-              <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
-                <Trans>Include app info</Trans>
-              </Toggle.LabelText>
-            </View>
-            <Toggle.Switch />
-          </Toggle.Item>
+          />
           <AppInfoPreview isIncluded={includeInfo} info={info} />
         </View>
 

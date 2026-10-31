@@ -1,36 +1,31 @@
 import {type ComponentProps, useMemo, useState} from 'react'
 import {View} from 'react-native'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as Toggle from '#/components/forms/Toggle'
 import * as FormSheet from '#/components/FormSheet'
 import {HideRow} from '#/features/hidden/HideItem'
 import {DisputedOnlyToggle} from '#/components/disputes/DisputedOnlyToggle'
 import {type HistoryEntry} from '#/components/people/ledger'
-import {Text} from '#/components/Typography'
 
 /**
  * The one "Show hidden" switch (decision 105) in a list's filters: off, what I hid (deleted items, and groups hidden
  * from my lists) stays out; on, it is back, each with "Unhide". The same switch on every list, remembered.
  */
 export function ShowHiddenToggle({value, onChange}: {value: boolean; onChange: (v: boolean) => void}) {
-  const t = useTheme()
   const {t: l} = useLingui()
   return (
-    <Toggle.Item type="switch" testID="filter-show-hidden" name="showHidden" label={l`Show hidden`} value={value} onChange={onChange} style={[a.w_full]}>
-      <View style={[a.flex_1, a.gap_2xs, a.pr_md]}>
-        <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
-          <Trans>Show hidden</Trans>
-        </Toggle.LabelText>
-        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>Bring back what you hid from your lists. Only you ever see this choice.</Trans>
-        </Text>
-      </View>
-      <Toggle.Switch />
-    </Toggle.Item>
+    <Toggle.SwitchRow
+      testID="filter-show-hidden"
+      name="showHidden"
+      label={l`Show hidden`}
+      hint={l`Bring back what you hid from your lists. Only you ever see this choice.`}
+      value={value}
+      onChange={onChange}
+    />
   )
 }
 

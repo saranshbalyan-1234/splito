@@ -41,6 +41,7 @@ import {
   type State,
   type TabParams,
 } from '#/lib/routes/types'
+import {joinList} from '#/locale/joinList'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {
   useEntities,
@@ -432,13 +433,6 @@ function ComposeBtn({minimal}: {minimal: boolean}) {
       </Button>
     </View>
   )
-}
-
-/* A spoken list in the app language; Hermes has no Intl.ListFormat, so phones fall back to commas (ponytail: add a polyfill if a language needs its own "and"). */
-function joinList(items: string[], locale: string): string {
-  return typeof Intl.ListFormat === 'function'
-    ? new Intl.ListFormat(locale, {style: 'long', type: 'conjunction'}).format(items)
-    : items.join(', ')
 }
 
 /*

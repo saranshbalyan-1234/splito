@@ -14,7 +14,7 @@ import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons
 import {Handshake_Stroke2_Corner0_Rounded as HandshakeIcon} from '#/components/icons/Money'
 import {LogOutIcon as ExitIcon} from '#/screens/Group/components/groupIcons'
 import * as Menu from '#/components/Menu'
-import {currencyName} from '#/components/people/ledger'
+import {currencyName} from '#/locale/currencyName'
 import * as Pills from '#/components/Pills'
 import {Text} from '#/components/Typography'
 import {moneyGlyph, useMoneyStyle} from '#/components/MoneyDirection'

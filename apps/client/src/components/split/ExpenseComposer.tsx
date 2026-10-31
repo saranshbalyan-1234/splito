@@ -29,6 +29,7 @@ import {
 } from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
+import {joinList} from '#/locale/joinList'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useA11y} from '#/state/a11y'
@@ -68,7 +69,8 @@ import {
 } from './icons'
 import {PayersDialog} from './PayersDialog'
 import {PeopleDialog} from './PeopleDialog'
-import {CategoryDialog, CurrencyDialog, GroupDialog} from './pickers'
+import {CurrencyDialog} from '#/components/CurrencyDialog'
+import {CategoryDialog, GroupDialog} from './pickers'
 import {
   CategoryTile,
   SectionLabel,
@@ -669,7 +671,7 @@ function ResolvePrompt({
 }) {
   const {t: l, i18n} = useLingui()
   /* "Bob, Cy and Dee" in the person's language, never a hand-built join. */
-  const who = new Intl.ListFormat(i18n.locale, {style: 'long', type: 'conjunction'}).format(names)
+  const who = joinList(names, i18n.locale)
   return (
     <Prompt.Outer control={control} testID="expense-resolve-prompt">
       <Prompt.Content>

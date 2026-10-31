@@ -4,6 +4,7 @@ import {type StatementRow, ZERO} from '@splito/domain'
 
 import {type StatementPage, type StatementText} from '#/lib/export/statementFormat'
 import {useEntities, useMutationCtx} from '#/data/hooks'
+import {joinList} from '#/locale/joinList'
 import {useNumberLocale} from '#/locale/numberLocale'
 
 /**
@@ -32,7 +33,7 @@ export function useStatementText() {
     groupLocation: location,
     paidBy: row => {
       const r = row.record
-      return r.kind === 'expense' ? Object.keys(r.payers).map(person).join(', ') : person(r.from)
+      return r.kind === 'expense' ? joinList(Object.keys(r.payers).map(person), i18n.locale) : person(r.from)
     },
     kind: kind => ({expense: l`Expense`, repayment: l`Payment`, writeoff: l`Call it even`})[kind],
     columns: {

@@ -221,7 +221,7 @@ test('create a group with a new member, then land on it', async ({page}) => {
   await page.getByTestId('create-group-new-member').fill('Rohan Gill')
   await page.getByTestId('create-group-add-member').click()
   await page.getByTestId('create-group-currency').click()
-  await page.getByTestId('currency-EUR').click()
+  await page.getByTestId('currency-dialog-EUR').click()
   await expect(page.getByTestId('create-group-currency')).toContainText(
     'EUR · Euro',
   )

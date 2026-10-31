@@ -27,10 +27,8 @@ import * as FormSheet from '#/components/FormSheet'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import {Handshake_Stroke2_Corner0_Rounded as HandshakeIcon} from '#/components/icons/Money'
-import {
-  currencyName,
-  parseTypedAmount,
-} from '#/components/people/ledger'
+import {parseTypedAmount} from '#/components/people/ledger'
+import {currencyName} from '#/locale/currencyName'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {SuccessCheck} from '#/motion/SuccessCheck'

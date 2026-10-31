@@ -30,7 +30,7 @@ import {GroupFields} from '#/components/groups/GroupFields'
 import {JoinPolicyField} from '#/components/groups/JoinPolicyField'
 import {AvatarPreview} from '#/components/people/AvatarPreview'
 import {PendingPeople} from '#/components/people/PendingPeople'
-import {CurrencyDialog} from '#/components/split/pickers'
+import {CurrencyDialog} from '#/components/CurrencyDialog'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 

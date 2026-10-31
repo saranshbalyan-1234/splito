@@ -8,8 +8,8 @@ import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {MapPin_Stroke2_Corner0_Rounded as MapPinIcon} from '#/components/icons/MapPin'
-import {currencyName} from '#/components/people/ledger'
 import {PickerTrigger} from '#/components/settings/controls'
+import {currencyName} from '#/locale/currencyName'
 import {Text} from '#/components/Typography'
 
 export type GroupFieldValues = Pick<Group, 'name' | 'kind' | 'currency'> & {
