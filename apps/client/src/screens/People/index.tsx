@@ -8,7 +8,7 @@ import {type Group, type Person} from '@splito/sync'
 import {type Params, readSort} from '#/lib/links/listState'
 import {perfMark} from '#/lib/perfMark'
 import {type NavigationProp} from '#/lib/routes/types'
-import {usePublishPeopleState, useTourRef} from '#/lib/tour/registry'
+import {type PeopleState, usePublishPeopleState, useTourRef} from '#/lib/tour/registry'
 import {useGroupChipNames} from '#/data/groupVisibility'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -129,12 +129,12 @@ export function PeopleScreen() {
     return {friends, seenCurrencies, currencies, filtered}
   }, [balanceRows, includeGroups, people, hiddenIds, seen, filters, showHidden, sort, currency, lastActivity])
 
-  /* The guided tour starts here once People has loaded (F-253). */
-  usePublishPeopleState(isLoading ? 'loading' : friends.length === 0 ? 'empty' : 'friends')
   const addFriendRef = useTourRef('add-friend')
 
   return (
     <TabScreen testID="screen-people">
+      {/* The guided tour starts here once People has loaded (F-253). */}
+      <PublishPeopleState state={isLoading ? 'loading' : friends.length === 0 ? 'empty' : 'friends'} />
       <Layout.Header.Outer>
         <HeaderAvatar />
         {/* Balances Search & Ask on the right (start tab only, owner 218), so the title stays centred. */}
@@ -228,4 +228,13 @@ function FriendsHeader({count}: {count: number | undefined}) {
       count={count}
     />
   )
+}
+
+/*
+ * A leaf, so the focus it follows (`useIsFocused`) re-renders only it: in the screen, every switch to or from People
+ * re-rendered the whole screen (owner 166; the renders gate's "switching back" legs caught it).
+ */
+function PublishPeopleState({state}: {state: PeopleState}) {
+  usePublishPeopleState(state)
+  return null
 }
