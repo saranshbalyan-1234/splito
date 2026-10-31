@@ -1882,6 +1882,20 @@ Splito lessons (add newest last, dated, with PR):
   and `shell.spec` checks the selected bar icon is filled. The pulse redraw went with it, so the `tick` variant and
   `playKey` left `AnimatedIcon`; `react-native-drawer-layout` left the dependencies.
 
+- 2026-10-31, F-275 (new-user audit, add friend / report a problem / sign-in): three things a "show only what works"
+  change needs. (1) **Decide "does a server exist" in one reactive place.** Add friend branched on the directory,
+  and the first idea (a module function reading the active directory) is not reactive: demo mode swaps the directory
+  while the sheet is open (`demo-mode.spec` "the store swapping under an open Add friend sheet"), so it reads
+  `useDemoMode().hasDirectory`, which `StoreProvider` sets with the swap. (2) **Merging two entries into one keeps
+  both kinds in one sheet, not one mutation:** Dispute and Put on hold stay two mutations (`raise`, `hold`); the sheet
+  holds a `kind` and only the footer, description and fields change, so a note typed for one kind is cleared when the
+  other is picked (a hold's quick reason is not a dispute note). A bus request of kind `report` has no `hold`
+  twin; the old `record-dispute` / `record-hold` / `payment-dispute` / `payment-hold` test ids are gone. (3) **A
+  fix that an earlier commit already made still needs its test:** the sign-up name was kept by `accountName()` since
+  3420360 but nothing asserted it, so the audit's report could not be closed; `auth.spec` now checks Profile shows the
+  typed name. Dead code goes with the entry point it served: `SocialButtons`, `NotLiveYet` and `alf/authBrand.ts`
+  (Google's brand colours, used nowhere else) were deleted.
+
 ## 24. Checklists
 
 **Adding a split mode:** domain `SplitInput` union + `computeShares` + `validateExpense` codes + Lingui
@@ -3101,7 +3115,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 - **Signed out, the app is the logged-out flow** (owners 125, 138-140): Bluesky's logged-out look, copied screen
   for screen where it still applies (`view/com/auth/LoggedOut.tsx`, `SplashScreen(.web).tsx` with the logo mark and
   tagline, `screens/Login/FormContainer` and `LoginForm` layout, Bluesky's step indicator and `BackNextButtons`),
-  reduced to one Continue screen: Apple, Google, "Email or phone"; then password (or a one-time code) for an
+  reduced to one Continue screen: "Email or phone" (Apple and Google arrive with the auth API, below); then password (or a one-time code) for an
   existing account, or, for a new one, verify, the missing details, a password and setup (owner 141). No Create
   account, handle or captcha screens. It is the whole app while signed out and cannot be closed. Every
   field is validated. Until the auth backend exists (F-2101..F-2105) the code step shows Bluesky's Admonition
@@ -3154,7 +3168,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 - **One "Continue" screen, no separate sign-up, with a password** (owners 140, 141; replaces the separate Create
   account / Sign in screens). The logged-out flow starts on one screen built from Bluesky's `LoginForm` layout:
-  "Continue with Apple", "Continue with Google", then one "Email or phone" field and Continue. Splito then checks
+  one "Email or phone" field and Continue (the Apple and Google buttons of owner 138 come back with the auth API; until then one muted line, below). Splito then checks
   whether that account exists:
   - **Existing account: password or one-time code, the user's choice** (owner 144): the next step offers both as
     equals, a segmented choice "Password | Code" over the field (Bluesky's password field with "Forgot?", or the
@@ -3169,6 +3183,10 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
     and may set a password later in Settings > Account.
   *Why:* "we can have signup and login as same screen only, no separate screen needed, basically no signup
   needed"; then "password should be there as well".
+- **The name typed while signing up is the account's and "me" person's name** [Built; test `auth.spec` "a new
+  account"]: `createAccount` returns it on the session account and `accountName()` (`state/session.ts`) hands it to
+  `ensureMe` when the account's database opens, so Profile shows it and never "Add your name" (the audit saw "M" and
+  "Add your name" after typing "Asha"). "Me" is used only when an account has no name (a Google or Apple one).
 - **Every account has both an email and a phone number, both verified** (owner 139; F-250 UI, F-2102 server).
   A new account needs name, email and phone (E.164, region default); both email and phone are required and
   each is confirmed with a one-time code before the account is usable (owner 140: collected in the one Continue
@@ -3178,16 +3196,17 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   other action is Log out. Offline the step says it needs a connection. The directory lookup (§ 26.18) uses both.
   *Why:* "on signup, make email and phone both mandatory; if logged in via email only and no phone is there, ask
   to update phone first".
-- **Sign in with Google and Apple** (owner 138; UI with F-250 in Wave C, real with F-2102). The Continue
-  screen (owner 140) offers "Continue with Apple" and "Continue with Google" above the email or phone
-  option, on every platform (Apple first on iOS, Google first on Android and web; the platforms' own button
-  styles: Apple's black/white button, Google's branded button). Native: `expo-apple-authentication` and Google
-  Sign-In; web: Sign in with Apple JS and Google Identity Services. The server verifies the ID token, creates or
-  finds the account and links by verified email (never merges silently on an unverified one; asks); Apple's
-  "Hide my email" relay works. A new account from Google/Apple still goes through setup (F-211). Until the auth
-  API exists, the buttons are shown in dev/e2e builds but say "Sign-in with Google and Apple arrives with
-  sync" (no fake success); the dev account stays the only working path there. *Why:* "on login, sign in with
-  google and apple as well".
+- **Sign in with Google and Apple** (owner 138; real with F-2102). Once the auth API exists the Continue screen
+  (owner 140) offers "Continue with Apple" and "Continue with Google" above the email or phone option, on every
+  platform (Apple first on iOS, Google first on Android and web; the platforms' own button styles: Apple's
+  black/white button, Google's branded button). Native: `expo-apple-authentication` and Google Sign-In; web: Sign
+  in with Apple JS and Google Identity Services. The server verifies the ID token, creates or finds the account and
+  links by verified email (never merges silently on an unverified one; asks); Apple's "Hide my email" relay works.
+  A new account from Google/Apple still goes through setup (F-211). **Until then they are not buttons** [Built,
+  F-275, assistant's ruling 2026-10-31; § 0 rule 6, owner 212]: the two biggest buttons on the first screen did
+  nothing, so the Continue screen shows the email or phone field first and, under the form, one small muted line,
+  "Google and Apple sign-in come with sync." (`SocialComing`); the button code was deleted (git history has it).
+  *Why:* "on login, sign in with google and apple as well".
 - **Sign-in is required: without an account nothing of the app is visible** (owner 125; replaces "signing in
   is optional" and F-211's zero-signup start; F-250, Wave C, right after the welcome tour). Signed out, the app
   shows only: the welcome tour (owner 123), Bluesky's logged-out flow (splash, Sign in, Create account, Forgot
@@ -3271,8 +3290,15 @@ if they are not on splito (we should check before)"; "if they are not there show
 add anyway (only for you)"; "also i should be able to select from contacts". *Where:* `components/people/AddFriend*`,
 `screens/Invites/`, `packages/sync` (friend requests, invite links), backend directory + invites API.
 
-- **Add friend asks for an email or mobile number** (one field, auto-detects which; phone in E.164 with the
-  user's region as default), plus an optional display name. A "Choose from contacts" button sits in the same
+- **With no directory (no backend yet) Add friend makes a normal local friend** [Built, F-275, assistant's ruling
+  2026-10-31; fixes audit blocker 2]: the sheet is a plain form with the **name first and required** (focused), an
+  optional "Email or mobile number (optional)" and "Choose from contacts"; **Add friend** creates the "only for you"
+  friend below at once, usable in any expense or group, and keeps the contact for a later invite. No lookup, no
+  "request to accept" or "when you're online" copy (§ 0 rule 6), no invite-link row (it fails closed offline). The
+  request flow below starts only when a directory answers (`useDemoMode().hasDirectory`: demo mode today, the
+  backend later).
+- **Add friend asks for an email or mobile number** (with a directory: one field, auto-detects which; phone in
+  E.164 with the user's region as default), plus an optional display name. A "Choose from contacts" button sits in the same
   sheet: native contacts picker (expo-contacts, permission primer first, § F-216); on web the Contact Picker API
   where the browser has it, otherwise the button is hidden. Picking a contact with several numbers/emails asks
   which one.
@@ -3286,8 +3312,9 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     (SMS / email / share sheet with a personal invite link) and **"Add anyway (only for you)"**, which creates a
     private friend (F-601) visible and usable only on your side. When that person later joins and accepts, the
     private friend is linked to their account (history merges, F-616).
-  - **Offline / check unavailable:** "We'll check when you're online"; the request is queued in the outbox, and
-    "Add anyway (only for you)" is still offered.
+  - **Directory unavailable (offline while a directory exists):** "We'll check when you're online"; the request is
+    queued in the outbox, and "Add anyway (only for you)" is still offered. With no directory at all see the first
+    bullet: no request is made.
 - **Pending people are not selectable** in expenses or groups until they accept (they show greyed with
   "Waiting for <name> to accept"); a private "only for you" friend is selectable at once.
 - **Request and invite rows share one layout:** avatar, name, status line, and the actions on the right of the
@@ -3462,6 +3489,13 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   - **Hold is the light version** (Expensify's hold): "Put on hold" with a required reason ("waiting for the
     refund", "need the receipt") pauses a record that is not wrong yet; any participant may release it in one
     tap. Disputes and holds share the badge, the sub-total and the settle rule below.
+  - **One entry: "Report a problem"** [Built, F-275, assistant's ruling 2026-10-31; keeps both of owner 119's kinds,
+    replaces the separate Dispute and Put on hold menu items and buttons, audit F-15]: the expense and payment "..."
+    menus, a history row's menu and the payment details have one item, "Report a problem" (`record-report`,
+    `payment-report`), which opens one sheet. Its first choice is **Dispute** (chosen) or **Put on hold**, then the
+    reason chips (or the hold reason) as before. It is raised as me: no "Raised by" picker is shown; a small
+    secondary button, "Record this for someone else", reveals it (before the backend, below). One item of an itemised
+    bill keeps its own "Dispute my portion" (a hold applies to the whole record).
   - **States:** Open, then exactly one of Accepted (the fix was applied: one tap applies the proposed fix as a
     normal edit with history, or the resolver edits by hand; **one tap only when the fix keeps the record's split mode:** an
     amount fix scales an equal, percent, shares or adjusted split, a share fix needs an exact split, a payer fix never touches
@@ -3499,8 +3533,9 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     `byTarget` and `byStatus`; every change a sync mutation with history and an outbox op; the
     "of which disputed" figures come from a projection kept in the same transaction as `balances`, never a scan.
     Permission checks (`canDispute`, `canResolveDispute`) live in `domain/permissions.ts`; the server re-checks.
-  - **Before the backend** every record is mine, so a dispute raised on this device records "raised by" a chosen
-    participant (default me, labelled "recorded by you", like recording a payment for others); it becomes
+  - **Before the backend** every record is mine, so a dispute raised on this device is raised by me, and only
+    after "Record this for someone else" does it record "raised by" a chosen participant (labelled "recorded by
+    you", like recording a payment for others); it becomes
     two-sided with sync (F-2208). Demo data carries every state (owner 109).
   *Why:* "add an option for disputes as well, think about it properly"; "should we calculate disputed expense
   or wait until they are resolved".
@@ -3517,7 +3552,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     only records that the resolver agreed. A deleted record closes its open disputes as Gone in the deleting transaction
     (`write()` does it for every path, a group delete included).
   - Where it shows: Expense and Payment pages (badge, panel, thread lines), history rows (badge; right-click, long-press or a
-    "..." button on wide screens opens Dispute / Put on hold), an itemised bill's items ("Dispute my portion"), Person and Group
+    "..." button on wide screens opens Report a problem), an itemised bill's items ("Dispute my portion"), Person and Group
     balances ("of which ₹400 disputed", per currency, pointing the way the balance does and never above it), Settle up (disputed
     and held amounts left out by default with the amount stated, "Include disputed" remembered per group in
     `group:settleIncludeDisputed`, a new plan hash on every raise, accept and release), the edit prompt "Does this resolve
@@ -3818,6 +3853,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 215 | "Tab ui issue"; "make the navigation selector white again like it was previously" | Bottom bar, sidebar and drawer icons in the text colour (white in dark), active shown by the filled glyph and bold label; never the accent | § 26.5 | Accent-coloured icons (a regression of the c-anim review fix) |
 | 216 | "People tab when selected is not correct"; "Sidebar opens up when swiping"; "Remove profile from settings"; "Swipe doesn't look good to go to last screen" (iPhone screenshots, 2026-10-31) | Selected People glyph is a solid card with the person cut out; no swipe opens the drawer (address only); no Profile row in Settings; Back (Safari's swipe) shows the page at its saved scroll from the first frame, no app gesture at the left edge | § 26.5, § 26.7, § 26.15 | Filled outline (a plain square); edge swipe opened the drawer (201); Settings Account row with Profile |
 | 217 | "Also we need to choose a diff icon for activity, it doesn't make any diff if it's selected or not"; "Remove the sidebar in mobile completely, either sidebar or bottom navigation" | Activity is a Lucide Bell, solid when selected; no side drawer anywhere (phone: bottom bar only; wide: sidebar only); Settings and the start tab cannot leave the bar; old `?drawer=menu` opens the page alone | § 26.3, § 26.7, § 26.14 | Activity pulse icon (unchanged when selected); phone drawer opened by its address (216) |
+| 218 | Assistant rulings for F-275 (new-user audit, 2026-10-31; owners 212/213 apply) | Add friend with no directory makes a usable local friend (name first, contact optional); one "Report a problem" entry whose first choice is Dispute or Put on hold, "Raised by" only behind "Record this for someone else"; Google and Apple are one muted "come with sync" line, not buttons; the sign-up name is kept | § 26.15, § 26.18, § 26.20 | Request-to-accept sheet with no server to answer; separate Dispute and Put on hold entries with a Raised by picker; dead Google and Apple buttons (138) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

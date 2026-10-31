@@ -758,6 +758,8 @@ Fixes from the Opus new-user audit (3 blockers, 19 major, 21 minor). Rulings (as
 - **Add expense shows essentials first:** amount, title, split with, paid by, group; focus lands on the amount; no duplicate "Add people" button; Itemize and more behind "More options".
 - **Sign-up keeps the typed name** (bug) and stays as owners 139-143 decided.
 
+**F-275 progress (builder, 2026-10-31, branch `worktree-agent-a7e9e4be62149a001`):** built and checked on web (native not run): (1) Add friend with no directory = a usable local friend, name first (blocker 2); (2) one "Report a problem" entry replaces Dispute and Put on hold, no "Raised by" unless "Record this for someone else" (audit F-15); (3) the sign-up name is kept (already fixed by `accountName()`; now asserted in `auth.spec`) (F-9, name part only; the shorter sign-up steps are not done); (4) Google and Apple are one muted line, not buttons (F-10); Settings rows for unbuilt features verified hidden (`NOT_BUILT`). Still open in F-275: the other items above.
+
 - **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress, Wave C (overlapping items handed to running builders; the rest after they merge) · **Deps** F-271, F-1713, F-266
 - **Acceptance**
   1. Every blocker and major finding in the audit is fixed or has a recorded ruling; minors fixed or listed with a reason.

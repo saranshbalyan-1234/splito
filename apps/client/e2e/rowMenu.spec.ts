@@ -107,14 +107,15 @@ function suite(title: string, openBrowser: (chrome: Browser) => Promise<Browser>
       if (browser.browserType().name() === 'webkit') await browser.close()
     })
 
-    test('a live history row opens Dispute and Put on hold, with no "..." button on the phone', async () => {
+    test('a live history row opens Report a problem, with no "..." button on the phone', async () => {
       await page.goto(`/people/${ids.bela}`)
       const row = page.getByTestId(`history-${ids.live}`)
       await expect(row).toBeVisible()
       await expect(page.getByTestId(`history-${ids.live}-record-menu`)).toHaveCount(0)
       await longPress(page, row, async () => {
-        await expect(page.getByTestId('record-dispute')).toBeVisible()
-        await expect(page.getByTestId('record-hold')).toBeVisible()
+        await expect(page.getByTestId('record-report')).toBeVisible()
+        await expect(page.getByTestId('record-dispute')).toHaveCount(0)
+        await expect(page.getByTestId('record-hold')).toHaveCount(0)
       })
     })
 
@@ -122,7 +123,7 @@ function suite(title: string, openBrowser: (chrome: Browser) => Promise<Browser>
       await page.goto(`/people/${ids.bela}`)
       const row = page.getByTestId(`history-${ids.disputed}`)
       await expect(row).toBeVisible()
-      await longPress(page, row, () => expect(page.getByTestId('record-dispute')).toBeVisible())
+      await longPress(page, row, () => expect(page.getByTestId('record-report')).toBeVisible())
     })
 
     test('a deleted history row opens Hide', async () => {
@@ -160,17 +161,17 @@ test.describe('wide screens', () => {
     await page.goto(`/people/${ids.bela}`)
     const live = page.getByTestId(`history-${ids.live}`)
     await live.click({button: 'right'})
-    await expect(page.getByTestId('record-dispute')).toBeVisible()
+    await expect(page.getByTestId('record-report')).toBeVisible()
     await page.keyboard.press('Escape')
-    await expect(page.getByTestId('record-dispute')).toHaveCount(0)
+    await expect(page.getByTestId('record-report')).toHaveCount(0)
 
     await live.focus()
     await page.keyboard.press('Shift+F10')
-    await expect(page.getByTestId('record-hold')).toBeVisible()
+    await expect(page.getByTestId('record-report')).toBeVisible()
     await page.keyboard.press('Escape')
 
     await page.getByTestId(`history-${ids.live}-record-menu`).click()
-    await expect(page.getByTestId('record-dispute')).toBeVisible()
+    await expect(page.getByTestId('record-report')).toBeVisible()
     await page.keyboard.press('Escape')
 
     await page.getByTestId(`history-${ids.gone}-more`).click()
@@ -187,7 +188,7 @@ test.describe('wide screens', () => {
     await page.mouse.down()
     await page.waitForTimeout(900)
     await page.mouse.up()
-    await expect(page.getByTestId('record-dispute')).toHaveCount(0)
+    await expect(page.getByTestId('record-report')).toHaveCount(0)
     await page.goto('/activity')
     const row = page.getByTestId('screen-activity').getByTestId('activity-expense.created').first()
     await row.click({button: 'right'})

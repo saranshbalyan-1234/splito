@@ -174,7 +174,7 @@ msgid "{0} − {1} discount"
 msgstr "{0} − {1} discount"
 
 #. placeholder {0}: person.data.name
-#: src/screens/AddFriend.tsx:201
+#: src/screens/AddFriend.tsx:208
 msgid "{0} added, only for you"
 msgstr "{0} added, only for you"
 
@@ -263,12 +263,12 @@ msgid "{0} groups"
 msgstr "{0} groups"
 
 #. placeholder {0}: picked.name
-#: src/screens/AddFriend.tsx:269
+#: src/screens/AddFriend.tsx:276
 msgid "{0} has no email or mobile number."
 msgstr "{0} has no email or mobile number."
 
 #. placeholder {0}: check.person.data.name
-#: src/screens/AddFriend.tsx:647
+#: src/screens/AddFriend.tsx:692
 msgid "{0} is already your friend."
 msgstr "{0} is already your friend."
 
@@ -1110,11 +1110,11 @@ msgstr "{who}'s share {scope} {period} was {amount}."
 msgid "+ earlier charges"
 msgstr "+ earlier charges"
 
-#: src/screens/AddFriend.tsx:596
+#: src/screens/AddFriend.tsx:641
 msgid "<0>{value}</0> is on Splito. They’ll get your friend request to accept."
 msgstr "<0>{value}</0> is on Splito. They’ll get your friend request to accept."
 
-#: src/screens/AddFriend.tsx:612
+#: src/screens/AddFriend.tsx:657
 msgid "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just for you and link them when they join."
 msgstr "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just for you and link them when they join."
 
@@ -1274,8 +1274,8 @@ msgstr "a write-off"
 
 #: src/components/NavFooterLinks.tsx:35
 #: src/screens/LoggedOut/PublicPage.tsx:20
+#: src/screens/Login/ContinueForm.tsx:115
 #: src/screens/Login/ContinueForm.tsx:116
-#: src/screens/Login/ContinueForm.tsx:117
 #: src/screens/Settings/components/SupportSettings.tsx:64
 #: src/screens/Settings/components/SupportSettings.tsx:67
 #: src/screens/Settings/SettingsSection.tsx:70
@@ -1379,7 +1379,7 @@ msgid "Add {0} as round-off"
 msgstr "Add {0} as round-off"
 
 #. placeholder {0}: check.person.data.name
-#: src/screens/AddFriend.tsx:675
+#: src/screens/AddFriend.tsx:720
 msgid "Add {0} back"
 msgstr "Add {0} back"
 
@@ -1400,6 +1400,7 @@ msgctxt "placeholder"
 msgid "Add a comment"
 msgstr "Add a comment"
 
+#: src/screens/AddFriend.tsx:454
 #: src/screens/People/index.tsx:284
 #: src/screens/People/index.tsx:285
 msgid "Add a friend"
@@ -1443,15 +1444,15 @@ msgstr "Add an email to keep using Splito. We’ll send a code to confirm it."
 msgid "Add an expense"
 msgstr "Add an expense"
 
-#: src/screens/AddFriend.tsx:311
+#: src/screens/AddFriend.tsx:318
 msgid "Add another"
 msgstr "Add another"
 
-#: src/screens/AddFriend.tsx:565
+#: src/screens/AddFriend.tsx:609
 msgid "Add anyway (only for you)"
 msgstr "Add anyway (only for you)"
 
-#: src/screens/AddFriend.tsx:560
+#: src/screens/AddFriend.tsx:604
 msgid "Add anyway, only for you"
 msgstr "Add anyway, only for you"
 
@@ -1463,7 +1464,7 @@ msgstr "Add as round-off"
 msgid "Add at least one item"
 msgstr "Add at least one item"
 
-#: src/screens/AddFriend.tsx:679
+#: src/screens/AddFriend.tsx:724
 msgid "Add back"
 msgstr "Add back"
 
@@ -1472,7 +1473,7 @@ msgctxt "button"
 msgid "Add back"
 msgstr "Add back"
 
-#: src/screens/AddFriend.tsx:416
+#: src/screens/AddFriend.tsx:452
 msgid "Add by email or number"
 msgstr "Add by email or number"
 
@@ -1522,8 +1523,9 @@ msgid "Add expense"
 msgstr "Add expense"
 
 #: src/navigation/Navigation.tsx:86
-#: src/screens/AddFriend.tsx:323
-#: src/screens/AddFriend.tsx:377
+#: src/screens/AddFriend.tsx:329
+#: src/screens/AddFriend.tsx:337
+#: src/screens/AddFriend.tsx:412
 #: src/screens/FriendsAndInvites/index.tsx:151
 #: src/screens/FriendsAndInvites/index.tsx:157
 msgid "Add friend"
@@ -1584,6 +1586,10 @@ msgstr "Add Splito to your Home Screen"
 #: src/components/settings/TaxClassesEditor.tsx:122
 msgid "Add tax class"
 msgstr "Add tax class"
+
+#: src/screens/AddFriend.tsx:469
+msgid "Add their name and split right away. Only you see them for now."
+msgstr "Add their name and split right away. Only you see them for now."
 
 #: src/features/searchAsk/AskAnswer.tsx:419
 msgid "Add this expense"
@@ -1733,7 +1739,7 @@ msgstr "All uses taken"
 msgid "Allow"
 msgstr "Allow"
 
-#: src/screens/AddFriend.tsx:717
+#: src/screens/AddFriend.tsx:762
 msgid "Allow access to contacts"
 msgstr "Allow access to contacts"
 
@@ -1962,9 +1968,9 @@ msgstr "Ask to join"
 msgid "Automatic"
 msgstr "Automatic"
 
-#: src/screens/AddFriend.tsx:290
-#: src/screens/AddFriend.tsx:796
-#: src/screens/AddFriend.tsx:803
+#: src/screens/AddFriend.tsx:297
+#: src/screens/AddFriend.tsx:841
+#: src/screens/AddFriend.tsx:848
 #: src/screens/LoggedOut/PublicPage.tsx:47
 #: src/screens/LoggedOut/PublicPage.tsx:49
 #: src/screens/Login/FormActions.tsx:33
@@ -2243,11 +2249,11 @@ msgstr "Check the balances in {group}"
 msgid "Check the dates: the trip can’t end before it starts."
 msgstr "Check the dates: the trip can’t end before it starts."
 
-#: src/screens/AddFriend.tsx:585
+#: src/screens/AddFriend.tsx:630
 msgid "Checking Splito…"
 msgstr "Checking Splito…"
 
-#: src/features/disputes/RaiseSheet.tsx:185
+#: src/features/disputes/RaiseSheet.tsx:189
 msgid "Checking the amount"
 msgstr "Checking the amount"
 
@@ -2284,8 +2290,8 @@ msgstr "Choose file"
 msgid "Choose friend"
 msgstr "Choose friend"
 
-#: src/screens/AddFriend.tsx:460
-#: src/screens/AddFriend.tsx:468
+#: src/screens/AddFriend.tsx:512
+#: src/screens/AddFriend.tsx:520
 msgid "Choose from contacts"
 msgstr "Choose from contacts"
 
@@ -2293,7 +2299,7 @@ msgstr "Choose from contacts"
 msgid "Choose group"
 msgstr "Choose group"
 
-#: src/screens/AddFriend.tsx:376
+#: src/screens/AddFriend.tsx:411
 msgid "Choose one"
 msgstr "Choose one"
 
@@ -2416,7 +2422,7 @@ msgstr "Closes Add expense; your draft is kept"
 msgid "Closes password update alert"
 msgstr "Closes password update alert"
 
-#: src/screens/AddFriend.tsx:379
+#: src/screens/AddFriend.tsx:414
 msgid "Closes without adding anyone"
 msgstr "Closes without adding anyone"
 
@@ -2499,7 +2505,7 @@ msgstr "Confirm your phone number"
 msgid "Context menu backdrop, click to close the menu."
 msgstr "Context menu backdrop, click to close the menu."
 
-#: src/screens/AddFriend.tsx:295
+#: src/screens/AddFriend.tsx:302
 #: src/screens/LoggedOut/PublicPage.tsx:41
 #: src/screens/LoggedOut/PublicPage.tsx:43
 #: src/screens/Login/FormActions.tsx:41
@@ -2507,20 +2513,10 @@ msgstr "Context menu backdrop, click to close the menu."
 msgid "Continue"
 msgstr "Continue"
 
-#: src/screens/Login/ContinueForm.tsx:104
-#: src/screens/Login/ContinueForm.tsx:106
+#: src/screens/Login/ContinueForm.tsx:103
+#: src/screens/Login/ContinueForm.tsx:105
 msgid "Continue with a dev account"
 msgstr "Continue with a dev account"
-
-#: src/screens/Login/SocialButtons.tsx:45
-#: src/screens/Login/SocialButtons.tsx:48
-msgid "Continue with Apple"
-msgstr "Continue with Apple"
-
-#: src/screens/Login/SocialButtons.tsx:53
-#: src/screens/Login/SocialButtons.tsx:56
-msgid "Continue with Google"
-msgstr "Continue with Google"
 
 #: src/lib/sharing.ts:56
 msgid "Copied to clipboard"
@@ -2573,13 +2569,13 @@ msgstr "Couldn’t add members. Please try again."
 msgid "Couldn’t add that person. Please try again."
 msgstr "Couldn’t add that person. Please try again."
 
-#: src/screens/AddFriend.tsx:512
+#: src/screens/AddFriend.tsx:550
 #: src/screens/FriendsAndInvites/index.tsx:312
 #: src/screens/Person/index.tsx:324
 msgid "Couldn’t add them back. Please try again."
 msgstr "Couldn’t add them back. Please try again."
 
-#: src/screens/AddFriend.tsx:187
+#: src/screens/AddFriend.tsx:194
 msgid "Couldn’t add your friend. Please try again."
 msgstr "Couldn’t add your friend. Please try again."
 
@@ -2996,8 +2992,8 @@ msgstr "Delete expense"
 msgid "Delete group"
 msgstr "Delete group"
 
-#: src/components/people/PaymentDetailsDialog.tsx:322
-#: src/components/people/PaymentDetailsDialog.tsx:328
+#: src/components/people/PaymentDetailsDialog.tsx:310
+#: src/components/people/PaymentDetailsDialog.tsx:316
 msgid "Delete payment"
 msgstr "Delete payment"
 
@@ -3067,7 +3063,7 @@ msgstr "Description"
 msgid "Dev build: code for {0} is"
 msgstr "Dev build: code for {0} is"
 
-#: src/screens/Login/ContinueForm.tsx:110
+#: src/screens/Login/ContinueForm.tsx:109
 msgid "Dev builds only: a local account, nothing is sent."
 msgstr "Dev builds only: a local account, nothing is sent."
 
@@ -3144,15 +3140,13 @@ msgstr "Discussion"
 msgid "Dismiss"
 msgstr "Dismiss"
 
-#: src/components/disputes/RecordMenuItems.tsx:17
-#: src/components/disputes/RecordMenuItems.tsx:19
-#: src/components/people/PaymentDetailsDialog.tsx:263
-#: src/features/disputes/RaiseSheet.tsx:123
+#: src/features/disputes/RaiseSheet.tsx:131
+#: src/features/disputes/RaiseSheet.tsx:175
 #: src/features/export/statementText.ts:55
 msgid "Dispute"
 msgstr "Dispute"
 
-#: src/features/disputes/RaiseSheet.tsx:123
+#: src/features/disputes/RaiseSheet.tsx:131
 msgid "Dispute {itemName}"
 msgstr "Dispute {itemName}"
 
@@ -3164,17 +3158,9 @@ msgstr "Dispute my portion"
 msgid "Dispute my portion of {itemLabel}"
 msgstr "Dispute my portion of {itemLabel}"
 
-#: src/features/disputes/RaiseSheet.tsx:113
+#: src/features/disputes/RaiseSheet.tsx:121
 msgid "Dispute raised. It still counts in balances."
 msgstr "Dispute raised. It still counts in balances."
-
-#: src/components/people/PaymentDetailsDialog.tsx:257
-msgid "Dispute this payment"
-msgstr "Dispute this payment"
-
-#: src/components/people/PaymentDetailsDialog.tsx:257
-msgid "Dispute this write-off"
-msgstr "Dispute this write-off"
 
 #: src/components/disputes/words.ts:31
 #: src/components/SearchAsk/ResultRows.tsx:311
@@ -3211,7 +3197,7 @@ msgstr "Does this resolve the disputes from {who}?"
 #: src/features/feedback/FeedbackSheet.tsx:140
 #: src/features/tour/TourStepView.tsx:185
 #: src/features/tour/TourStepView.tsx:186
-#: src/screens/AddFriend.tsx:310
+#: src/screens/AddFriend.tsx:317
 #: src/screens/Invites/CreateInvite.tsx:134
 msgid "Done"
 msgstr "Done"
@@ -3362,10 +3348,14 @@ msgstr "Email"
 msgid "Email draft opened. Press send in your mail app."
 msgstr "Email draft opened. Press send in your mail app."
 
-#: src/screens/AddFriend.tsx:434
-#: src/screens/AddFriend.tsx:440
+#: src/screens/AddFriend.tsx:483
+#: src/screens/AddFriend.tsx:492
 msgid "Email or mobile number"
 msgstr "Email or mobile number"
+
+#: src/screens/AddFriend.tsx:485
+msgid "Email or mobile number (optional)"
+msgstr "Email or mobile number (optional)"
 
 #: src/screens/Login/ContactField.tsx:35
 msgid "Email or phone"
@@ -3383,15 +3373,15 @@ msgstr "Emerald"
 msgid "End date"
 msgstr "End date"
 
-#: src/screens/AddFriend.tsx:360
+#: src/screens/AddFriend.tsx:374
 msgid "Enter a full email address, like name@example.com."
 msgstr "Enter a full email address, like name@example.com."
 
-#: src/screens/AddFriend.tsx:362
+#: src/screens/AddFriend.tsx:376
 msgid "Enter a mobile number with its country code, like +91 98765 43210."
 msgstr "Enter a mobile number with its country code, like +91 98765 43210."
 
-#: src/screens/AddFriend.tsx:184
+#: src/screens/AddFriend.tsx:191
 msgid "Enter a name or an email or number."
 msgstr "Enter a name or an email or number."
 
@@ -3804,7 +3794,7 @@ msgstr "FRIEND INVITE"
 msgid "Friend links work for"
 msgstr "Friend links work for"
 
-#: src/screens/AddFriend.tsx:216
+#: src/screens/AddFriend.tsx:223
 msgid "Friend request sent to {shownName}"
 msgstr "Friend request sent to {shownName}"
 
@@ -3908,6 +3898,10 @@ msgstr "Go to Settings"
 #: src/components/disputes/words.ts:36
 msgid "Gone"
 msgstr "Gone"
+
+#: src/screens/Login/SocialComing.tsx:15
+msgid "Google and Apple sign-in come with sync."
+msgstr "Google and Apple sign-in come with sync."
 
 #: src/components/settings/AccentPicker.tsx:35
 msgid "Graphite"
@@ -4013,8 +4007,8 @@ msgstr "Haptics"
 
 #: src/components/NavFooterLinks.tsx:33
 #: src/screens/LoggedOut/PublicPage.tsx:20
+#: src/screens/Login/ContinueForm.tsx:115
 #: src/screens/Login/ContinueForm.tsx:116
-#: src/screens/Login/ContinueForm.tsx:117
 #: src/screens/Settings/components/SupportSettings.tsx:43
 #: src/screens/Settings/components/SupportSettings.tsx:46
 #: src/screens/Settings/SettingsSection.tsx:84
@@ -4085,8 +4079,8 @@ msgstr "Hidden from your lists. Only you see this; the group is unchanged for ev
 msgid "Hidden shown"
 msgstr "Hidden shown"
 
-#: src/components/people/PaymentDetailsDialog.tsx:295
-#: src/components/people/PaymentDetailsDialog.tsx:303
+#: src/components/people/PaymentDetailsDialog.tsx:283
+#: src/components/people/PaymentDetailsDialog.tsx:291
 #: src/features/hidden/HideItem.tsx:67
 #: src/features/hidden/HideItem.tsx:69
 #: src/screens/Expense/index.tsx:558
@@ -4194,7 +4188,7 @@ msgstr "Icon"
 msgid "Idea"
 msgstr "Idea"
 
-#: src/features/disputes/RaiseSheet.tsx:221
+#: src/features/disputes/RaiseSheet.tsx:225
 msgid "If you add it, whoever answers can accept and apply it in one tap."
 msgstr "If you add it, whoever answers can accept and apply it in one tap."
 
@@ -4349,7 +4343,7 @@ msgid "Invite"
 msgstr "Invite"
 
 #. placeholder {0}: step.shownName
-#: src/screens/AddFriend.tsx:374
+#: src/screens/AddFriend.tsx:409
 msgid "Invite {0}"
 msgstr "Invite {0}"
 
@@ -4368,7 +4362,7 @@ msgstr "Invite for {0}"
 msgid "Invite link"
 msgstr "Invite link"
 
-#: src/screens/AddFriend.tsx:528
+#: src/screens/AddFriend.tsx:571
 #: src/screens/Group/index.tsx:953
 msgid "Invite link or QR code"
 msgstr "Invite link or QR code"
@@ -4412,7 +4406,7 @@ msgstr "Invite to {0}"
 msgid "Invite to {who} cancelled"
 msgstr "Invite to {who} cancelled"
 
-#: src/screens/AddFriend.tsx:521
+#: src/screens/AddFriend.tsx:564
 #: src/screens/Group/index.tsx:941
 msgid "Invite with a link or QR code"
 msgstr "Invite with a link or QR code"
@@ -4442,7 +4436,7 @@ msgstr "Invited, not on Splito yet"
 msgid "Invites"
 msgstr "Invites"
 
-#: src/screens/AddFriend.tsx:235
+#: src/screens/AddFriend.tsx:242
 msgid "Invites need a connection. Try again when you’re online."
 msgstr "Invites need a connection. Try again when you’re online."
 
@@ -4500,7 +4494,7 @@ msgid "It will take no new expenses, but you can still settle up. Money is still
 msgstr "It will take no new expenses, but you can still settle up. Money is still open in this group:"
 
 #: src/components/SearchAsk/ResultRows.tsx:325
-#: src/features/disputes/RaiseSheet.tsx:125
+#: src/features/disputes/RaiseSheet.tsx:133
 msgid "Item"
 msgstr "Item"
 
@@ -4558,13 +4552,13 @@ msgstr "Join {0} on Splito:"
 msgid "Join {group}"
 msgstr "Join {group}"
 
-#: src/screens/AddFriend.tsx:406
+#: src/screens/AddFriend.tsx:441
 #: src/screens/Invites/CreateInvite.tsx:161
 #: src/screens/Profile/index.tsx:445
 msgid "Join me on Splito"
 msgstr "Join me on Splito"
 
-#: src/screens/AddFriend.tsx:407
+#: src/screens/AddFriend.tsx:442
 #: src/screens/Invites/CreateInvite.tsx:165
 #: src/screens/Profile/index.tsx:446
 msgid "Join me on Splito so we can split expenses:"
@@ -5021,12 +5015,13 @@ msgstr "Multiple payers"
 #: src/components/settings/TaxClassDialog.tsx:71
 #: src/components/split/charges/ChargeSheet.tsx:129
 #: src/components/split/charges/ChargeSheet.tsx:134
-#: src/screens/AddFriend.tsx:482
+#: src/screens/AddFriend.tsx:386
+#: src/screens/AddFriend.tsx:392
 #: src/screens/Login/NameForm.tsx:32
 msgid "Name"
 msgstr "Name"
 
-#: src/screens/AddFriend.tsx:476
+#: src/screens/AddFriend.tsx:386
 msgid "Name (optional)"
 msgstr "Name (optional)"
 
@@ -5035,7 +5030,7 @@ msgstr "Name (optional)"
 msgid "Name of item {0}"
 msgstr "Name of item {0}"
 
-#: src/screens/AddFriend.tsx:447
+#: src/screens/AddFriend.tsx:499
 msgid "name@example.com or +91 98765 43210"
 msgstr "name@example.com or +91 98765 43210"
 
@@ -5047,7 +5042,7 @@ msgstr "Navigates to the next screen"
 msgid "Navigation"
 msgstr "Navigation"
 
-#: src/features/disputes/RaiseSheet.tsx:185
+#: src/features/disputes/RaiseSheet.tsx:189
 msgid "Need the receipt"
 msgstr "Need the receipt"
 
@@ -5199,7 +5194,7 @@ msgstr "No disputes or holds. When someone questions an expense or puts it on ho
 msgid "No email app found. Your feedback is saved on this device."
 msgstr "No email app found. Your feedback is saved on this device."
 
-#: src/screens/AddFriend.tsx:573
+#: src/screens/AddFriend.tsx:617
 msgid "No email or number? Add just a name and they’re only for you."
 msgstr "No email or number? Add just a name and they’re only for you."
 
@@ -5342,7 +5337,7 @@ msgstr "not involved"
 
 #: src/features/account/LegacyDataOffer.tsx:80
 #: src/features/remind/RemindMeSheet.tsx:132
-#: src/screens/AddFriend.tsx:296
+#: src/screens/AddFriend.tsx:303
 msgid "Not now"
 msgstr "Not now"
 
@@ -5366,15 +5361,15 @@ msgstr "Not yet"
 
 #: src/components/people/PaymentDetailsDialog.tsx:212
 #: src/components/people/RecordPaymentDialog.tsx:415
-#: src/features/disputes/RaiseSheet.tsx:181
-#: src/features/disputes/RaiseSheet.tsx:252
+#: src/features/disputes/RaiseSheet.tsx:185
+#: src/features/disputes/RaiseSheet.tsx:256
 #: src/features/settlement/CallItEvenDialog.tsx:383
 #: src/screens/Repayment/index.tsx:224
 msgid "Note"
 msgstr "Note"
 
 #: src/components/people/RecordPaymentDialog.tsx:410
-#: src/features/disputes/RaiseSheet.tsx:247
+#: src/features/disputes/RaiseSheet.tsx:251
 #: src/features/settlement/CallItEvenDialog.tsx:378
 msgid "Note (optional)"
 msgstr "Note (optional)"
@@ -5630,7 +5625,7 @@ msgstr "Only used to answer you."
 msgid "Only whoever added this, its payer or a group admin can answer"
 msgstr "Only whoever added this, its payer or a group admin can answer"
 
-#: src/screens/AddFriend.tsx:655
+#: src/screens/AddFriend.tsx:700
 #: src/screens/Invites/Invite.tsx:225
 msgid "Open"
 msgstr "Open"
@@ -5639,7 +5634,7 @@ msgstr "Open"
 #. placeholder {0}: content.avatarName ?? ''
 #. placeholder {0}: existing.data.name
 #: src/components/activity/ActivityItem.tsx:302
-#: src/screens/AddFriend.tsx:651
+#: src/screens/AddFriend.tsx:696
 #: src/screens/Invites/Invite.tsx:219
 msgid "Open {0}"
 msgstr "Open {0}"
@@ -5685,7 +5680,7 @@ msgstr "Open profile"
 #: src/components/settings/NotifyRemindersPref.tsx:36
 #: src/features/remind/RemindMeSheet.tsx:258
 #: src/features/remind/RemindMeSheet.tsx:260
-#: src/screens/AddFriend.tsx:289
+#: src/screens/AddFriend.tsx:296
 msgid "Open Settings"
 msgstr "Open Settings"
 
@@ -5880,7 +5875,7 @@ msgstr "Password updated"
 msgid "Password updated!"
 msgstr "Password updated!"
 
-#: src/features/disputes/RaiseSheet.tsx:140
+#: src/features/disputes/RaiseSheet.tsx:148
 msgid "Pauses this while something is sorted out. It still counts in balances, but Settle up leaves it out. Anyone on it can release it with one tap."
 msgstr "Pauses this while something is sorted out. It still counts in balances, but Settle up leaves it out. Anyone on it can release it with one tap."
 
@@ -6016,7 +6011,7 @@ msgstr "Pick a backup file saved by Splito. You see what it will change before a
 msgid "Pick a date between 1900 and 2200"
 msgstr "Pick a date between 1900 and 2200"
 
-#: src/screens/AddFriend.tsx:719
+#: src/screens/AddFriend.tsx:764
 msgid "Pick a friend from your contacts"
 msgstr "Pick a friend from your contacts"
 
@@ -6093,7 +6088,7 @@ msgstr "Preferred"
 msgid "Preview"
 msgstr "Preview"
 
-#: src/screens/Login/ContinueForm.tsx:96
+#: src/screens/Login/ContinueForm.tsx:95
 msgid "Preview build: local dev account, data stays in this browser, don't use a real password."
 msgstr "Preview build: local dev account, data stays in this browser, don't use a real password."
 
@@ -6121,8 +6116,8 @@ msgstr "Print dialog opened. Choose Save as PDF."
 #: src/components/NavFooterLinks.tsx:34
 #: src/components/settings/sections.ts:52
 #: src/screens/LoggedOut/PublicPage.tsx:20
+#: src/screens/Login/ContinueForm.tsx:115
 #: src/screens/Login/ContinueForm.tsx:116
-#: src/screens/Login/ContinueForm.tsx:117
 #: src/screens/Settings/components/SupportSettings.tsx:58
 #: src/screens/Settings/components/SupportSettings.tsx:61
 msgid "Privacy"
@@ -6141,16 +6136,12 @@ msgstr "Proposed: {fixText}"
 msgid "Pull to refresh"
 msgstr "Pull to refresh"
 
-#: src/components/disputes/RecordMenuItems.tsx:23
-#: src/components/disputes/RecordMenuItems.tsx:25
-#: src/components/people/PaymentDetailsDialog.tsx:268
-#: src/components/people/PaymentDetailsDialog.tsx:274
-#: src/features/disputes/RaiseSheet.tsx:123
-#: src/features/disputes/RaiseSheet.tsx:133
+#: src/features/disputes/RaiseSheet.tsx:141
+#: src/features/disputes/RaiseSheet.tsx:176
 msgid "Put on hold"
 msgstr "Put on hold"
 
-#: src/features/disputes/RaiseSheet.tsx:113
+#: src/features/disputes/RaiseSheet.tsx:121
 msgid "Put on hold. It still counts in balances."
 msgstr "Put on hold. It still counts in balances."
 
@@ -6162,12 +6153,11 @@ msgstr "QR and share"
 msgid "Question"
 msgstr "Question"
 
-#: src/features/disputes/RaiseSheet.tsx:133
+#: src/features/disputes/RaiseSheet.tsx:141
 msgid "Raise dispute"
 msgstr "Raise dispute"
 
-#: src/features/disputes/RaiseSheet.tsx:160
-#: src/features/disputes/RaiseSheet.tsx:164
+#: src/features/disputes/RaiseSheet.tsx:285
 msgid "Raised by"
 msgstr "Raised by"
 
@@ -6176,7 +6166,7 @@ msgstr "Raised by"
 msgid "Rate"
 msgstr "Rate"
 
-#: src/features/disputes/RaiseSheet.tsx:247
+#: src/features/disputes/RaiseSheet.tsx:251
 msgid "Reason"
 msgstr "Reason"
 
@@ -6206,11 +6196,21 @@ msgstr "Record a payment"
 msgid "Record payment"
 msgstr "Record payment"
 
+#: src/features/disputes/RaiseSheet.tsx:270
+#: src/features/disputes/RaiseSheet.tsx:279
+msgid "Record this as me"
+msgstr "Record this as me"
+
+#: src/features/disputes/RaiseSheet.tsx:270
+#: src/features/disputes/RaiseSheet.tsx:279
+msgid "Record this for someone else"
+msgstr "Record this for someone else"
+
 #: src/screens/Settle/components/TransferRow.tsx:141
 msgid "Record this payment"
 msgstr "Record this payment"
 
-#: src/features/disputes/RaiseSheet.tsx:171
+#: src/features/disputes/RaiseSheet.tsx:292
 msgid "Recorded by you. It becomes two-sided once people share this."
 msgstr "Recorded by you. It becomes two-sided once people share this."
 
@@ -6482,6 +6482,21 @@ msgstr "Reply email"
 msgid "Reply email (optional)"
 msgstr "Reply email (optional)"
 
+#: src/components/disputes/RecordMenuItems.tsx:17
+#: src/components/disputes/RecordMenuItems.tsx:19
+#: src/components/people/PaymentDetailsDialog.tsx:263
+#: src/features/disputes/RaiseSheet.tsx:131
+msgid "Report a problem"
+msgstr "Report a problem"
+
+#: src/components/people/PaymentDetailsDialog.tsx:256
+msgid "Report a problem with this payment"
+msgstr "Report a problem with this payment"
+
+#: src/components/people/PaymentDetailsDialog.tsx:256
+msgid "Report a problem with this write-off"
+msgstr "Report a problem with this write-off"
+
 #: src/components/activity/ActivityItem.tsx:1418
 #: src/screens/People/components/RequestsSection.tsx:101
 msgid "Request declined. {name} isn’t told."
@@ -6588,7 +6603,7 @@ msgstr "Restaurant EU"
 msgid "Restaurant India"
 msgstr "Restaurant India"
 
-#: src/components/people/PaymentDetailsDialog.tsx:289
+#: src/components/people/PaymentDetailsDialog.tsx:277
 #: src/features/export/ImportSheet.tsx:187
 #: src/screens/Expense/index.tsx:553
 #: src/screens/Group/components/GroupLifecycle.tsx:486
@@ -6611,12 +6626,12 @@ msgstr "Restore friend"
 msgid "Restore group"
 msgstr "Restore group"
 
-#: src/components/people/PaymentDetailsDialog.tsx:283
+#: src/components/people/PaymentDetailsDialog.tsx:271
 #: src/screens/Repayment/index.tsx:256
 msgid "Restore payment"
 msgstr "Restore payment"
 
-#: src/components/people/PaymentDetailsDialog.tsx:283
+#: src/components/people/PaymentDetailsDialog.tsx:271
 msgid "Restore write-off"
 msgstr "Restore write-off"
 
@@ -6797,7 +6812,7 @@ msgstr "Saved on this device. It will sync to your other devices once sync arriv
 msgid "Saved the charges for {title}"
 msgstr "Saved the charges for {title}"
 
-#: src/screens/AddFriend.tsx:217
+#: src/screens/AddFriend.tsx:224
 msgid "Saved. We’ll check and send it when you’re online."
 msgstr "Saved. We’ll check and send it when you’re online."
 
@@ -6810,7 +6825,7 @@ msgstr "Saved. We’ll send it when you’re online."
 msgid "Saving applies your edit either way. Yes marks it accepted; No leaves it open for them to answer."
 msgstr "Saving applies your edit either way. Yes marks it accepted; No leaves it open for them to answer."
 
-#: src/features/disputes/RaiseSheet.tsx:144
+#: src/features/disputes/RaiseSheet.tsx:152
 msgid "Say what looks wrong without editing it. It still counts in balances until someone changes it; Settle up leaves it out by default."
 msgstr "Say what looks wrong without editing it. It still counts in balances until someone changes it; Settle up leaves it out by default."
 
@@ -7011,12 +7026,12 @@ msgstr "Send email"
 msgid "Send feedback"
 msgstr "Send feedback"
 
-#: src/screens/AddFriend.tsx:338
-#: src/screens/AddFriend.tsx:347
+#: src/screens/AddFriend.tsx:352
+#: src/screens/AddFriend.tsx:361
 msgid "Send friend request"
 msgstr "Send friend request"
 
-#: src/screens/AddFriend.tsx:330
+#: src/screens/AddFriend.tsx:344
 msgid "Send invite"
 msgstr "Send invite"
 
@@ -7028,8 +7043,8 @@ msgstr "Send message"
 msgid "Send on WhatsApp"
 msgstr "Send on WhatsApp"
 
-#: src/screens/AddFriend.tsx:338
-#: src/screens/AddFriend.tsx:347
+#: src/screens/AddFriend.tsx:352
+#: src/screens/AddFriend.tsx:361
 msgid "Send request"
 msgstr "Send request"
 
@@ -7349,13 +7364,8 @@ msgid "Sign in or create an account to see this invite."
 msgstr "Sign in or create an account to see this invite."
 
 #: src/screens/Login/messages.ts:10
-#: src/screens/Login/NotLiveYet.tsx:22
 msgid "Sign-in arrives with sync. Your data stays safe on this device."
 msgstr "Sign-in arrives with sync. Your data stays safe on this device."
-
-#: src/screens/Login/NotLiveYet.tsx:20
-msgid "Sign-in with Google and Apple arrives with sync. Your data stays safe on this device."
-msgstr "Sign-in with Google and Apple arrives with sync. Your data stays safe on this device."
 
 #. placeholder {0}: formatContact(contact)
 #: src/screens/Login/CredentialForm.tsx:105
@@ -7533,7 +7543,7 @@ msgstr "Split with"
 msgid "Splito"
 msgstr "Splito"
 
-#: src/screens/AddFriend.tsx:730
+#: src/screens/AddFriend.tsx:775
 msgid "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 msgstr "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 
@@ -7737,7 +7747,7 @@ msgstr "Tax class: {name}"
 msgid "Tax classes"
 msgstr "Tax classes"
 
-#: src/features/disputes/RaiseSheet.tsx:257
+#: src/features/disputes/RaiseSheet.tsx:261
 msgid "Tell them what you saw"
 msgstr "Tell them what you saw"
 
@@ -7897,11 +7907,11 @@ msgstr "The receipt says…"
 msgid "The record was deleted"
 msgstr "The record was deleted"
 
-#: src/features/disputes/RaiseSheet.tsx:93
+#: src/features/disputes/RaiseSheet.tsx:101
 msgid "The right amount (optional)"
 msgstr "The right amount (optional)"
 
-#: src/features/disputes/RaiseSheet.tsx:93
+#: src/features/disputes/RaiseSheet.tsx:101
 msgid "The right share (optional)"
 msgstr "The right share (optional)"
 
@@ -7955,7 +7965,7 @@ msgstr "These are scheduled on this device and arrive even offline."
 msgid "They are on this already, so they weren’t left out"
 msgstr "They are on this already, so they weren’t left out"
 
-#: src/screens/AddFriend.tsx:424
+#: src/screens/AddFriend.tsx:464
 msgid "They get a request to accept. Once they do, you can split anything together."
 msgstr "They get a request to accept. Once they do, you can split anything together."
 
@@ -8011,7 +8021,7 @@ msgstr "This comment or its expense no longer exists"
 msgid "This comment was deleted"
 msgstr "This comment was deleted"
 
-#: src/screens/AddFriend.tsx:270
+#: src/screens/AddFriend.tsx:277
 msgid "This contact has no email or mobile number."
 msgstr "This contact has no email or mobile number."
 
@@ -8110,7 +8120,7 @@ msgstr "This is your invite link"
 msgid "This isn’t a Splito backup file."
 msgstr "This isn’t a Splito backup file."
 
-#: src/features/disputes/RaiseSheet.tsx:122
+#: src/features/disputes/RaiseSheet.tsx:130
 msgid "this item"
 msgstr "this item"
 
@@ -8365,13 +8375,13 @@ msgctxt "action"
 msgid "Undo"
 msgstr "Undo"
 
-#: src/components/people/PaymentDetailsDialog.tsx:310
-#: src/components/people/PaymentDetailsDialog.tsx:316
+#: src/components/people/PaymentDetailsDialog.tsx:298
+#: src/components/people/PaymentDetailsDialog.tsx:304
 msgid "Undo write-off"
 msgstr "Undo write-off"
 
-#: src/components/people/PaymentDetailsDialog.tsx:295
-#: src/components/people/PaymentDetailsDialog.tsx:303
+#: src/components/people/PaymentDetailsDialog.tsx:283
+#: src/components/people/PaymentDetailsDialog.tsx:291
 #: src/features/hidden/HideItem.tsx:67
 #: src/features/hidden/HideItem.tsx:69
 #: src/screens/Expense/index.tsx:558
@@ -8429,7 +8439,7 @@ msgstr "Use"
 #. placeholder {0}: format(v)
 #. placeholder {0}: formatContact(c)
 #: src/components/split/fields.tsx:277
-#: src/screens/AddFriend.tsx:783
+#: src/screens/AddFriend.tsx:828
 msgid "Use {0}"
 msgstr "Use {0}"
 
@@ -8510,7 +8520,7 @@ msgstr "Waiting for an admin to approve"
 msgid "Waiting for an admin to approve · {when}"
 msgstr "Waiting for an admin to approve · {when}"
 
-#: src/features/disputes/RaiseSheet.tsx:185
+#: src/features/disputes/RaiseSheet.tsx:189
 msgid "Waiting for the refund"
 msgstr "Waiting for the refund"
 
@@ -8557,7 +8567,7 @@ msgstr "We sent a 6-digit code to {0}."
 msgid "We sent a code to {0}."
 msgstr "We sent a code to {0}."
 
-#: src/screens/AddFriend.tsx:630
+#: src/screens/AddFriend.tsx:675
 msgid "We’ll check when you’re online. Your request waits on this device until then."
 msgstr "We’ll check when you’re online. Your request waits on this device until then."
 
@@ -8599,6 +8609,10 @@ msgstr "Welcome"
 msgid "Welcome back"
 msgstr "Welcome back"
 
+#: src/features/disputes/RaiseSheet.tsx:168
+msgid "What do you want to do?"
+msgstr "What do you want to do?"
+
 #: src/features/searchAsk/askQuestions.ts:15
 msgid "What does {name} owe me?"
 msgstr "What does {name} owe me?"
@@ -8628,8 +8642,8 @@ msgstr "What is it about?"
 msgid "What is open is disputed or on hold. Include disputed to call it even."
 msgstr "What is open is disputed or on hold. Include disputed to call it even."
 
-#: src/features/disputes/RaiseSheet.tsx:193
 #: src/features/disputes/RaiseSheet.tsx:197
+#: src/features/disputes/RaiseSheet.tsx:201
 msgid "What looks wrong?"
 msgstr "What looks wrong?"
 
@@ -8657,7 +8671,7 @@ msgstr "What would make Splito better for you?"
 msgid "What would you like to know?"
 msgstr "What would you like to know?"
 
-#: src/screens/AddFriend.tsx:485
+#: src/screens/AddFriend.tsx:395
 msgid "What you call them, e.g. Riya"
 msgstr "What you call them, e.g. Riya"
 
@@ -8677,7 +8691,7 @@ msgstr "What you paid"
 msgid "What you paid for everyone, against what was yours"
 msgstr "What you paid for everyone, against what was yours"
 
-#: src/screens/AddFriend.tsx:382
+#: src/screens/AddFriend.tsx:417
 msgid "What you typed won’t be kept."
 msgstr "What you typed won’t be kept."
 
@@ -8732,12 +8746,12 @@ msgstr "Where? (optional)"
 msgid "Which “{0}” do you mean?"
 msgstr "Which “{0}” do you mean?"
 
-#: src/features/disputes/RaiseSheet.tsx:297
-#: src/features/disputes/RaiseSheet.tsx:301
+#: src/features/disputes/RaiseSheet.tsx:335
+#: src/features/disputes/RaiseSheet.tsx:339
 msgid "Which expense is this the same as? (optional)"
 msgstr "Which expense is this the same as? (optional)"
 
-#: src/screens/AddFriend.tsx:774
+#: src/screens/AddFriend.tsx:819
 msgid "Which one should Splito use?"
 msgstr "Which one should Splito use?"
 
@@ -8773,8 +8787,8 @@ msgstr "Who owes whom in {name}?"
 msgid "Who paid?"
 msgstr "Who paid?"
 
-#: src/features/disputes/RaiseSheet.tsx:229
 #: src/features/disputes/RaiseSheet.tsx:233
+#: src/features/disputes/RaiseSheet.tsx:237
 msgid "Who really paid? (optional)"
 msgstr "Who really paid? (optional)"
 
@@ -8794,8 +8808,8 @@ msgstr "Whole amounts that are easy to hand over"
 msgid "Whom do I owe the most?"
 msgstr "Whom do I owe the most?"
 
-#: src/features/disputes/RaiseSheet.tsx:252
-#: src/features/disputes/RaiseSheet.tsx:257
+#: src/features/disputes/RaiseSheet.tsx:256
+#: src/features/disputes/RaiseSheet.tsx:261
 msgid "Why is it on hold?"
 msgstr "Why is it on hold?"
 
@@ -9220,7 +9234,7 @@ msgid "You pay {0}"
 msgstr "You pay {0}"
 
 #. placeholder {0}: check.person.data.name
-#: src/screens/AddFriend.tsx:670
+#: src/screens/AddFriend.tsx:715
 msgid "You removed {0}. Their history is still here."
 msgstr "You removed {0}. Their history is still here."
 
@@ -9280,7 +9294,7 @@ msgstr "You’re settled up in this group."
 msgid "You're settled up with everyone."
 msgstr "You're settled up with everyone."
 
-#: src/screens/AddFriend.tsx:690
+#: src/screens/AddFriend.tsx:735
 msgid "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 msgstr "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 
@@ -9296,7 +9310,7 @@ msgstr "you@example.com"
 msgid "Your balance"
 msgstr "Your balance"
 
-#: src/screens/AddFriend.tsx:744
+#: src/screens/AddFriend.tsx:789
 msgid "Your contact book is never uploaded."
 msgstr "Your contact book is never uploaded."
 
@@ -9371,15 +9385,15 @@ msgid "Your payment rules leave no way to settle up, so this plan goes outside t
 msgstr "Your payment rules leave no way to settle up, so this plan goes outside them."
 
 #. placeholder {0}: step.shownName
-#: src/screens/AddFriend.tsx:397
+#: src/screens/AddFriend.tsx:432
 msgid "Your personal invite is ready. When {0} joins with it, you’re friends straight away. It works once and is listed under Invites sent."
 msgstr "Your personal invite is ready. When {0} joins with it, you’re friends straight away. It works once and is listed under Invites sent."
 
-#: src/screens/AddFriend.tsx:735
+#: src/screens/AddFriend.tsx:780
 msgid "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 msgstr "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 
-#: src/features/disputes/RaiseSheet.tsx:154
+#: src/features/disputes/RaiseSheet.tsx:162
 msgid "Your portion of the bill"
 msgstr "Your portion of the bill"
 

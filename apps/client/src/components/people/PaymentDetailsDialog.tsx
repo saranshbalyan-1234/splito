@@ -29,7 +29,7 @@ import {TrashLid_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/
 import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
 import {DisputeBadge} from '#/components/disputes/DisputeBadge'
 import {DisputePanel} from '#/components/disputes/DisputePanel'
-import {HoldIcon, RaiseIcon} from '#/components/disputes/icons'
+import {RaiseIcon} from '#/components/disputes/icons'
 import {requestDispute} from '#/lib/disputes/bus'
 import {markOf, useOpenDisputes} from '#/state/disputes'
 import {useErrorText} from '#/components/split/shared'
@@ -251,30 +251,18 @@ function Details({
         </Button>
       )}
       {isDeleted ? null : (
-        <View style={[a.flex_row, a.gap_sm]}>
-          <Button
-            testID="payment-dispute"
-            label={isWriteOff ? l`Dispute this write-off` : l`Dispute this payment`}
-            size="small"
-            color="secondary"
-            onPress={() => control.close(() => requestDispute({kind: 'raise', targetType, targetId: repayment.id}))}>
-            <ButtonIcon icon={RaiseIcon} />
-            <ButtonText>
-              <Trans>Dispute</Trans>
-            </ButtonText>
-          </Button>
-          <Button
-            testID="payment-hold"
-            label={l`Put on hold`}
-            size="small"
-            color="secondary"
-            onPress={() => control.close(() => requestDispute({kind: 'hold', targetType, targetId: repayment.id}))}>
-            <ButtonIcon icon={HoldIcon} />
-            <ButtonText>
-              <Trans>Put on hold</Trans>
-            </ButtonText>
-          </Button>
-        </View>
+        <Button
+          testID="payment-report"
+          label={isWriteOff ? l`Report a problem with this write-off` : l`Report a problem with this payment`}
+          size="small"
+          color="secondary"
+          style={[a.self_start]}
+          onPress={() => control.close(() => requestDispute({kind: 'report', targetType, targetId: repayment.id}))}>
+          <ButtonIcon icon={RaiseIcon} />
+          <ButtonText>
+            <Trans>Report a problem</Trans>
+          </ButtonText>
+        </Button>
       )}
       {isDeleted ? (
         <View style={[a.gap_sm]}>
