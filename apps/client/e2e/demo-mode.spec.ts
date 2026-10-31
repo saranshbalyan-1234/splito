@@ -26,6 +26,9 @@ test('Settings > Data has the Demo mode switch, no Add / Remove demo data, and n
 test('turning it on seeds the demo database in under 10 s, shows "Demo" on the avatar, and a reload keeps the mode', async ({page}) => {
   await page.goto('/settings')
   await expect(page.getByTestId('settings-demo-mode')).toBeVisible()
+  // Profile's sections above the switch mount after the first frame (owner 168): click once the page has stopped growing.
+  await expect(page.getByTestId('profile-log-out')).toBeVisible()
+  await expect(page.getByTestId('profile-body-loading')).toHaveCount(0)
   const started = Date.now()
   await page.getByTestId('settings-demo-mode').click()
   await expect(page.getByTestId('header-avatar').last()).toHaveAttribute('aria-label', /Demo$/, {timeout: 30_000})
