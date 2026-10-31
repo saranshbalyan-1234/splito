@@ -1057,6 +1057,19 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **A gesture moves DOM nodes, not React state, never trusts a touchend to arrive, and costs nothing when idle.**
+  Phone-web pull to refresh (F-258) writes a transform and the spinner straight to the list's nodes; a pull renders
+  nothing, the header never moves (only the list's content is translated), and the transform is removed at rest so no
+  `position: fixed` child keeps a containing block. There is no wrapper element: `usePullToRefresh` hands the list a
+  ref and a memoised indicator, so a list that redraws does not redraw the pull (the first version wrapped the list
+  and added 14 updates per scroll round to the renders gate). The cancelling (non-passive) `touchmove` listener is on
+  only while the window is at the top (a passive scroll listener toggles it) and `overscroll-behavior-y: contain` is
+  set only for the touch that may pull. Every single-finger `touchstart` ends any gesture still on record, because a
+  touch whose element left the page before the finger lifted never delivers `touchend` to the window (a row deleted
+  under the finger, a menu that closed): one such touch had stopped pull to refresh everywhere until a reload. Measured
+  at 390 px in Chromium with real CDP touches: no long task over 50 ms; WebKit has no long task API, so the spec also
+  reports the worst frame gap.
+
 - **Specs and render baselines that depend on "now" run on a pinned clock (`e2e/pinClock.ts`), and the gate counts
   only what is deterministic.** The demo's change times and "recently active" are relative to now: homeTabs "Overview
   scope" passed on 30 Oct and failed from midnight (pinned to 28 or 29 Oct it fails the same way; pinned to noon on
@@ -1442,6 +1455,24 @@ Splito lessons (add newest last, dated, with PR):
   meanwhile. Also: a main screen that is pushed from a link must be told apart from its tab by a param
   (`from=<tab>`, owner 184, in the address so a refresh keeps Back), not by stack depth (a deep link puts People
   under every page).
+- 2026-10-31, F-258 (c-refresh): **pull to refresh on phone web is a window gesture, and Bluesky has none.** Bluesky's
+  `List` takes `refreshing`/`onRefresh` for the native `RefreshControl` only; Splito supplies the refresh in the shared
+  layer (`useRefreshControl` for `List` and `Layout.Content`, `usePullToRefresh` + `pullController` on web), so a screen
+  passes nothing. Web: the window scrolls, so a touch that starts at `scrollY` 0 and moves down is the pull; only that
+  case calls `preventDefault` (iOS rubber band, Android Chrome's own refresh), and the list content, not the header, is
+  translated. Traps: (1) **a stranded gesture killed pull to refresh everywhere.** The controller kept one `gesture`
+  and ignored a new touch while it was set; a touchend that never reached the window (the touched element was removed
+  mid-touch) left it set for good. Every single-finger touchstart now ends the previous gesture first, and
+  `pullRefresh.spec` removes the touched element mid-pull and pulls again. (2) **Refresh does not re-run projections**
+  (owners 212/213): they already re-read on every commit, re-running them redrew every parked tab for nothing, and a
+  `run(MORE)` meant for the Activity pager misused its contract (`'unknown'` would restart the tracker); refresh is
+  `syncNow()` plus a 400 ms minimum spinner, skipped offline, and FX and sync are an honest TODO until F-2103. (3)
+  `lib/` may not import `data/` (the handler lives in `state/refresh`). (4) The Loader's `rotate-500ms` class was never
+  defined in `index.html`, so it never spun on web (now added, under `prefers-reduced-motion: no-preference`). (5) Metro
+  tries `.ts` before `.web.tsx`, so a native twin named `x.ts` silently shadows `x.web.tsx` on web: give both twins the
+  same extension. (6) Playwright WebKit has no `Touch`/`TouchEvent` constructor and no long task API: its run
+  dispatches touch-shaped events and reads the frame gap, and says so. Real iOS Safari rubber band and Android Chrome
+  were not driven by a person.
 
 ---
 
@@ -2166,9 +2197,10 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   List's `RefreshControl` (Bluesky's `List` already supports it; iOS bounce, Android material spinner); phone web
   (iOS Safari, Android Chrome) gets the same gesture from a small shared pull handler on the window scroll that
   works with the safe-area patch (§ 23) and never fights browser overscroll (`overscroll-behavior-y: contain` on the
-  scroller while pulling). What it does: until sync exists it re-reads the local data (projections and the current
-  page) and ends in well under a second, honestly ("Saved on this device", no "Synced"); once the backend exists it
-  calls one `syncNow()` (drain, then pull, § 9.3); offline it ends at once with the status, never an error toast.
+  root while pulling). What it does (owners 212, 213): it calls one `syncNow()` (FX rates when online, drain, then
+  pull, § 9.3; a no-op until F-2103) and holds the spinner at least 400 ms so it never flashes. It does not re-run the
+  screen's queries: projections already re-read on every commit. Offline it ends at once, never an error toast, and
+  nothing reads "Synced" before an acknowledgement.
   Shell first (owner 152): the spinner appears in the same frame as the pull threshold; nothing else redraws unless
   data changed (owner 166). *Why:* "also add pull to refresh, header should stay while pulling down to refresh".
 - **Open first, render after, even the first time** (owner 168, sharpens 151/152): a tab switch, a drawer and a
