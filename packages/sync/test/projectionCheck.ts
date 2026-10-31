@@ -188,6 +188,13 @@ export async function expectedActivity(s: Store) {
       bump(h.entityType, rows[i - 1]?.data as Record<string, unknown> | undefined, h.at)
     })
   }
+  // A comment (or its edit or delete) makes the record it is about active at its last change (owner 199).
+  const records = new Map(entities.filter(e => MONEY.includes(e.type)).map(e => [`${e.type}:${e.id}`, e]))
+  for (const c of entities.filter(e => e.type === 'comment')) {
+    const d = c.data as {targetType?: string; targetId?: string}
+    const target = records.get(`${d.targetType}:${d.targetId}`)
+    if (target) bump(target.type, target.data as Record<string, unknown>, c.updatedAt)
+  }
   const groups = new Map(entities.filter(e => e.type === 'group').map(g => [g.id, Math.max(g.updatedAt, groupAt.get(g.id) ?? 0)]))
   const people = new Map(entities.filter(e => e.type === 'person' && (personAt.get(e.id) ?? 0) > 0).map(p => [p.id, personAt.get(p.id)!]))
   return {groups, people}

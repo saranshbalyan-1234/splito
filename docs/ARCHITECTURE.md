@@ -1752,6 +1752,13 @@ Splito lessons (add newest last, dated, with PR):
   bar slips below the fold, § 23 fix/tab-taps). The sliding screen clips sideways (`overflow-x: clip` on the screen
   root only, never on `html` or `body`). Also: a `transform` on a screen's root would carry its `position: fixed` FAB
   with it, so the slide moves the screen's children except `[data-fab]`.
+- 2026-10-31, merge of c-nohome: **a projection rule that grows must grow its test oracle in the same change.** F-272
+  made a comment (and its edit or delete) bump its record's group and friends for "Last active" (owner 199) in both the
+  incremental write and `rebuildActivity`, but `test/projectionCheck.ts` `expectedActivity` still counted money
+  records only, so the 10 large-demo migration tests failed on one group (`demo-large-g-b-paris`, a comment 4 minutes
+  after its expense) on the branch itself, and nobody saw it because the builder ran only its touched specs. The
+  oracle now counts comments the same way. Rule: `pnpm test` (all packages) runs before a branch is called done, not
+  only the specs a change touches.
 
 ## 24. Checklists
 
