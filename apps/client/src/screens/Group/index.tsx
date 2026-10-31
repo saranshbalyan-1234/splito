@@ -60,6 +60,7 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import * as Admonition from '#/components/Admonition'
 import {QrCode_Stroke2_Corner0_Rounded as QrIcon} from '#/components/icons/Invite'
 import * as Layout from '#/components/Layout'
+import {BelowHeader} from '#/components/Layout/MainScrollProvider'
 import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {useSuppressFab} from '#/components/RouteFAB'
 import * as Menu from '#/components/Menu'
@@ -526,7 +527,8 @@ export function GroupScreen() {
         </View>
 
         {/* Bluesky's pager tab bar, pinned under the header while the list scrolls (web). */}
-        <View style={[a.z_10, web([a.sticky, {top: STICKY_TOP}])]}>
+        {/* It moves up with the header when that scrolls away on phones, so no rows show above it. */}
+        <BelowHeader style={[a.z_10, web([a.sticky, {top: STICKY_TOP}])]}>
           <TabBar
             testID="group-tabs"
             selectedPage={TABS.indexOf(tab as (typeof TABS)[number])}
@@ -534,7 +536,7 @@ export function GroupScreen() {
             itemTestIDs={TABS.map(value => `group-tab-${value}`)}
             onSelect={i => setTab(TABS[i]!)}
           />
-        </View>
+        </BelowHeader>
         {bodyTab === 'expenses' ? (
           <SectionHeader
             title={l`Expenses`}

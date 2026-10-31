@@ -1853,6 +1853,13 @@ Splito lessons (add newest last, dated, with PR):
   every spec that counts friends, settled friends or members; the demo specs derive the count from the plan, so the
   formula names each addition. Unavoidable reds here: 5 `rowMenu` webkit cases (no WebKit in the container) and 10
   pull-to-refresh / touch-scroll cases (CDP `synthesizeScrollGesture` does not scroll this Chromium).
+- 2026-10-31, owner's iPhone screenshot (Goa group): **something pinned under the header must move with the header.**
+  The group tab bar was `sticky` at a fixed `top: 52`, and the header slides away on phones (owner 87), so once the
+  header hid, rows scrolled through a 52 px band above the tabs. `BelowHeader` (`components/Layout/MainScrollProvider.tsx`)
+  moves its children up with the header on phones (no fade). It is a component, not a hook the page calls: the header's
+  state lives in `Layout.Screen`, which the page itself renders, so a hook in `GroupScreen` read the default and did
+  nothing (the F-256 lesson again: a hook called above the scaffold cannot read the scaffold's context). Test:
+  `group.spec` "on a phone the pinned tabs move up with the header" (fails without the fix).
 
 ## 24. Checklists
 
