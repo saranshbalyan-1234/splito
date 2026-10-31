@@ -1,3 +1,4 @@
+import {startPage} from '#/lib/routes/startTab'
 import {isSignedIn} from '#/state/session'
 import {device} from '#/storage'
 import {publicPageFor} from './public'
@@ -23,7 +24,9 @@ export function holdSignedOutLink(input: string) {
   const {isKnown, target} = resolveLink(input)
   if (!isKnown || target.name === 'Welcome') return
   const path = buildPath(target)
-  if (path !== '/') holdLinkIntent(path)
+  // The bare address is rewritten to the start tab before the app reads it (owner 198): that is "open the app", nothing to resume.
+  const isBareStart = target.name === startPage() && Object.keys(target.params).length === 0 && target.sheets.length === 0
+  if (path !== '/' && !isBareStart) holdLinkIntent(path)
 }
 
 /** The held link, once: reading it clears it. */

@@ -1844,6 +1844,15 @@ Splito lessons (add newest last, dated, with PR):
   start tab): compare counts against a base run on the same machine, never against a stale baseline. (7) Chrome refuses
   to start when `TMPDIR` is long (`Socket path too long`); give Metro its own cache with a short `TMPDIR` (`/tmp/<name>`),
   which also avoids the shared Metro cache pointing at another worktree's `.worklets` files.
+- 2026-10-31, full e2e on the combined PR #1 (817 of 844 passed): **after sign-in the app landed on a pushed copy of
+  People "from" People** (`/people?from=people`, Back instead of the avatar). The bare `/` is rewritten to the start
+  tab before the app reads it (owner 198), so the signed-out app held `/people` as a link to resume, and opening it
+  pushed a tab copy over the same tab. Two rules: a link to the tab already showing opens that tab, never a pushed copy
+  of itself (`navigateToTarget`); a bare start-tab address is "open the app", never held for after sign-in
+  (`holdSignedOutLink`). Also: a change of the demo data (F-269 adds Sara, who joins Goa by an approved request) moves
+  every spec that counts friends, settled friends or members; the demo specs derive the count from the plan, so the
+  formula names each addition. Unavoidable reds here: 5 `rowMenu` webkit cases (no WebKit in the container) and 10
+  pull-to-refresh / touch-scroll cases (CDP `synthesizeScrollGesture` does not scroll this Chromium).
 
 ## 24. Checklists
 

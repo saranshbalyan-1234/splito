@@ -37,8 +37,11 @@ const STORY = {
   diego: 'Diego Alves',
 } as const
 const summaryOf = (key: string) => byId.get(`${DEMO_LARGE_PREFIX}p-${key}`)
-/** The generated friends plus the 3 private friends of the invites flow (`demoSeed.ts`), less the deleted and the removed friend of the Wave B story, who leave the count. */
-const FRIENDS = plan.counts.people + 3 - 2
+/**
+ * The generated friends plus the 3 private friends of the invites flow (`demoSeed.ts`), less the deleted and the removed
+ * friend of the Wave B story, who leave the count, plus Sara, whose request to join Goa was approved (F-269).
+ */
+const FRIENDS = plan.counts.people + 3 - 2 + 1
 
 /* Every compiled message id, so the UI can be checked for ids shown instead of words. */
 const MESSAGE_IDS = Object.keys(

@@ -260,7 +260,8 @@ test('a pull on the open drawer is not a pull to refresh', async ({page, browser
   const f = await finger(page, browserName === 'chromium' ? await context.newCDPSession(page) : null)
   await page.evaluate(() => performance.clearMarks())
   // The drawer sits outside every screen: a pull on it must not refresh the page behind.
-  await page.getByTestId('header-avatar').first().click()
+  // The avatar opens Profile (owner 201); the drawer opens by its address (or an edge swipe).
+  await page.goto('/people?drawer=menu')
   await expect(page.getByTestId('drawer-scrim')).toBeVisible()
   await pull(page, f, 220)
   await page.waitForTimeout(600)

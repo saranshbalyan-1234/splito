@@ -212,7 +212,7 @@ test('People filters: one currency, which way, and the order drive the list and 
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
 })
 
-test('People sorts by the biggest balance, recent activity or name (preference)', async ({
+test('People sorts by last active (the default, owner 199), the biggest balance or name (preference)', async ({
   page,
 }) => {
   await openApp(page)
@@ -253,9 +253,10 @@ test('People sorts by the biggest balance, recent activity or name (preference)'
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
   await page.goto('/people')
   await expect(page.getByTestId('person-Zoya Big')).toBeVisible()
-  expect(await order()).toEqual(['person-Zoya Big', 'person-Aarav Small'])
-  await setPref(page, 'peopleSort', 'recent')
+  // Last active is the default (owner 199): Tea, the newest change, puts Aarav first.
   await expect.poll(order).toEqual(['person-Aarav Small', 'person-Zoya Big'])
+  await setPref(page, 'peopleSort', 'amount')
+  await expect.poll(order).toEqual(['person-Zoya Big', 'person-Aarav Small'])
 })
 
 test('UPI pay link shows only when I owe them rupees, and asks before recording', async ({

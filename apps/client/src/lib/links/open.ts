@@ -30,7 +30,9 @@ export function navigateToTarget(target: LinkTarget, {plain = false}: {plain?: b
   const go = navigationRef.navigate as (name: string, params?: object) => void
   const isTab = (TAB_NAMES as readonly string[]).includes(target.name)
   const params = Object.keys(target.params).length > 0 ? target.params : undefined
-  const pushed = isTab && !plain && !(target.name === startPage() && isGlobalSheet(target.sheets)) ? tabLink(target.name, params, IS_WEB, originTab(navigationRef.getRootState())) : null
+  // A link to the tab already showing is that tab, never a pushed copy "from" itself (it showed Back after sign-in).
+  const isShowing = isTab && originTab(navigationRef.getRootState()) === target.name.toLowerCase() && TAB_NAMES.includes(navigationRef.getCurrentRoute()?.name as (typeof TAB_NAMES)[number])
+  const pushed = isTab && !plain && !isShowing && !(target.name === startPage() && isGlobalSheet(target.sheets)) ? tabLink(target.name, params, IS_WEB, originTab(navigationRef.getRootState())) : null
   const open = () => {
     if (pushed) navigationRef.dispatch(StackActions.push(pushed.name, pushed.params))
     else if (IS_WEB) go(target.name, params)

@@ -202,7 +202,7 @@ test.describe('header rule set', () => {
     await on(page, 'screen-groups', 'group-Goa trip').click()
     await expect(on(page, 'screen-group', 'group-name')).toHaveText(/^Goa trip( - Demo)?$/)
     await expect(on(page, 'screen-group', 'group-byline')).toHaveText(
-      'Trip · Goa · 5 members',
+      'Trip · Goa · 6 members', // Sara joined by an approved request (F-269)
     )
     await expect(on(page, 'screen-group', 'group-settle')).toBeVisible()
     await expect(on(page, 'screen-group', 'group-more')).toBeVisible()
