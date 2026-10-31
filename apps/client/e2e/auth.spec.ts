@@ -365,7 +365,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     await create(page, 'Erased Friend')
     // Demo mode is on: its own database goes with the account.
     test.setTimeout(90_000)
@@ -399,7 +399,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     await create(page, 'Stubborn Friend')
     await page.evaluate(() => {
       const w = window as unknown as {__realDelete?: typeof indexedDB.deleteDatabase}
@@ -458,7 +458,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     await create(page, 'Only Dev')
     await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Only Dev')).toBeVisible()
@@ -467,7 +467,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
 
     await createAccount(page, NEW)
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     expect(await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)).not.toBe(devMe)
     await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Only Dev')).toHaveCount(0)
@@ -564,7 +564,7 @@ test.describe('tabs, languages and codes', () => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('language', 'hi'))
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
     await logOutFromProfile(page)

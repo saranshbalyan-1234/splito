@@ -172,7 +172,7 @@ test('Hindi renders translated words with Indian grouping, never message ids', a
   await expectNoMessageIds(page)
 })
 
-test('Profile holds identity: name prompt, counts, then Settings and About; no dead sync row', async ({
+test('Profile holds identity: name prompt, counts, then the Settings rows; no dead sync row', async ({
   page,
 }) => {
   await openDemo(page)
@@ -190,9 +190,9 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
   await expect(page.getByTestId('profile-analytics')).toHaveCount(0)
   await expect(page.getByText('Coming with sync')).toHaveCount(0)
   await expect(page.getByTestId('profile-sync-note')).toBeVisible()
-  /* Profile holds only the person and Log out (owners 202, 203): no Settings or About rows. */
+  /* Profile holds the person, then the Settings rows (owner 220), then Log out; About lives in Settings > Support. */
   await expect(page.getByTestId('profile-log-out')).toBeVisible()
-  await expect(page.getByTestId('profile-settings')).toHaveCount(0)
+  await expect(page.getByTestId('profile-settings')).toBeVisible()
   await expect(page.getByTestId('profile-about')).toHaveCount(0)
 })
 
