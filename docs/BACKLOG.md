@@ -3217,7 +3217,7 @@ On Home/People and Groups, each currency card is its own box of equal size in a 
 
 Search & Ask understands people, places, amounts, category, type, group, dates, currency, payer and status, and combines them logically, with removable facet chips.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo, Wave C (after the first slot merges; search across every field, front end) · **Deps** F-117, F-222
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** built on c-search, unmerged (2026-10-31): every field below is a term kind and every query is resolved from the keys (ARCHITECTURE 9.8, 17.1, 26.19); chips, matched-field rows, a Payments section, English and Hindi, a 90-query table, per-field tests on both engines, an oracle test against the rows, speed at 5,000 and 10,000, e2e at 390 and 1440, Hindi 0 missing. Not built: invites and friend requests are not searched; the Claude-powered parser is F-247. · **Deps** F-117, F-222
 - **Prefs** -
 - **Acceptance**
   1. `search_terms` indexes every field: title, notes, item names, group name and trip location, people (paid by / with), category, type (expense, payment, write-off, comment, group, friend, invite), currency, date (day, month, year), status (settled, owed, deleted, hidden, inactive), amount keys per currency.

@@ -11,18 +11,28 @@ import {
   type Group,
   highlightRanges,
   isGroupInactive,
+  type MatchedField,
   type Person,
+  type Repayment,
+  removeChip,
   type RowSyncStatus,
+  type SearchChip,
+  type SearchStatus,
+  type WriteOff,
 } from '@splito/sync'
 
+import {HITSLOP_10} from '#/lib/constants'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, type TextStyleProp, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
+import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Sparkles_Stroke2_Corner0_Rounded as SparklesIcon} from '#/components/icons/Sparkles'
 import {EntryIcon} from '#/components/people/EntryIcon'
+import * as Pills from '#/components/Pills'
 import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
@@ -71,7 +81,6 @@ export function SectionHeader({
   count,
   isPartial = false,
   totals,
-  isCalculating = false,
   locale,
 }: {
   section: SearchSection
@@ -79,15 +88,11 @@ export function SectionHeader({
   /** Only what has been found so far: shown as "30+". */
   isPartial?: boolean
   totals?: Record<string, bigint>
-  /** The count and totals of a broad match are still being worked out. */
-  isCalculating?: boolean
   locale: string
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const title = {people: l`People`, groups: l`Groups`, expenses: l`Expenses`}[
-    section
-  ]
+  const title = {people: l`People`, groups: l`Groups`, expenses: l`Expenses`, payments: l`Payments`}[section]
   const totalLine = totals
     ? Object.keys(totals)
         .sort()
@@ -115,20 +120,7 @@ export function SectionHeader({
           {isPartial ? '+' : ''}
         </Text>
       </Text>
-      {isCalculating ? (
-        <Text
-          testID="search-totals-pending"
-          numberOfLines={1}
-          style={[
-            a.flex_shrink,
-            a.text_sm,
-            a.leading_snug,
-            a.text_right,
-            t.atoms.text_contrast_medium,
-          ]}>
-          <Trans>Calculating totals…</Trans>
-        </Text>
-      ) : totalLine ? (
+      {totalLine ? (
         <Text
           testID="search-totals"
           accessibilityLabel={l`Total ${totalLine}`}
@@ -209,12 +201,15 @@ export function ExpenseResult({
   groupNames,
   locale,
   date,
+  match,
   isActive,
   onPress,
 }: {
   nav: number
   expense: Entity<Expense>
   terms: string[]
+  /** Which fields matched besides the title (`matchedFields`): each is named and its words are marked. */
+  match: MatchedField[]
   me: string | undefined
   names: Map<string, string>
   groupNames: Map<string, string>
@@ -243,21 +238,17 @@ export function ExpenseResult({
   ]
     .filter(Boolean)
     .join(' · ')
-  /* Found by a note or an item rather than the title: show where. */
-  const snippet =
-    highlightRanges(e.title, terms).length === 0
-      ? [
-          e.notes,
-          ...(e.split.mode === 'items'
-            ? e.split.items.map(i => i.name ?? '')
-            : []),
-        ].find(text => text && highlightRanges(text, terms).length > 0)
-      : undefined
+  const fieldLabel = useFieldLabel()
+  const isInGroup = !!e.groupId
+  const title = e.title
+  const shown = match.slice(0, 2)
+  /* Screen readers hear why it is here too: "Notes: Farewell dinner", "Comment: Please send the receipt". */
+  const why = shown.map(m => ('text' in m ? `${fieldLabel(m, isInGroup)}: ${m.text}` : fieldLabel(m, isInGroup))).join(', ')
 
   return (
     <ResultRow
       nav={nav}
-      label={l`${e.title}, ${total}, ${date}`}
+      label={why ? l`${title}, ${total}, ${date}, ${why}` : l`${title}, ${total}, ${date}`}
       isActive={isActive}
       syncStatus={expense.syncStatus}
       onPress={onPress}>
@@ -274,13 +265,18 @@ export function ExpenseResult({
           terms={terms}
           style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}
         />
-        {snippet ? (
-          <Highlight
-            text={snippet}
-            terms={terms}
-            style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}
-          />
-        ) : null}
+        {/* Why it is here: the field that matched, named, with the matched words marked. */}
+        {shown.map(m => (
+          <View key={m.field} testID={`search-match-${expense.id}-${m.field}`} style={[a.flex_row, a.align_center, a.gap_xs]}>
+            <Pills.Tag>{fieldLabel(m, isInGroup)}</Pills.Tag>
+            {/* An amount, date, currency or status is already on the row (right column, tag): the tag alone says it matched. */}
+            {'text' in m ? (
+              <View style={[a.flex_1]}>
+                <Highlight text={m.text} terms={terms} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]} />
+              </View>
+            ) : null}
+          </View>
+        ))}
         {isDeleted ? <DeletedMeta testID={`search-deleted-${expense.id}`} at={expense.updatedAt} /> : null}
       </View>
       <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
@@ -296,6 +292,175 @@ export function ExpenseResult({
         </Text>
       </View>
     </ResultRow>
+  )
+}
+
+/** The name of a matched field, in the person's language; a balance status says where it applies. */
+function useFieldLabel() {
+  const {t: l} = useLingui()
+  const status = (s: SearchStatus, isInGroup: boolean): string => {
+    switch (s) {
+      case 'settled':
+        return isInGroup ? l`Settled in group` : l`Settled`
+      case 'owed':
+        return isInGroup ? l`Owed in group` : l`Owed`
+      case 'owe':
+        return isInGroup ? l`You owe in group` : l`You owe`
+      case 'disputed':
+        return l`Disputed`
+      case 'deleted':
+        return l`Deleted`
+      case 'hidden':
+        return l`Hidden`
+      case 'inactive':
+        return l`Inactive`
+    }
+  }
+  return (m: MatchedField, isInGroup: boolean): string => {
+    switch (m.field) {
+      case 'notes':
+        return l`Notes`
+      case 'item':
+        return l`Item`
+      case 'group':
+        return l`Group`
+      case 'place':
+        return l`Place`
+      case 'category':
+        return l`Category`
+      case 'person':
+        return l`With`
+      case 'payer':
+        return l`Paid by`
+      case 'comment':
+        return l`Comment`
+      case 'amount':
+        return l`Amount`
+      case 'date':
+        return l`Date`
+      case 'currency':
+        return l`Currency`
+      case 'status':
+        return status(m.status, isInGroup)
+    }
+  }
+}
+
+/** A payment or write-off result: who paid whom, the note, the amount and the date (a comment that matched shows too). */
+export function PaymentResult({
+  nav,
+  payment,
+  terms,
+  me,
+  names,
+  locale,
+  date,
+  comment,
+  isActive,
+  onPress,
+}: {
+  nav: number
+  payment: Entity<Repayment | WriteOff>
+  terms: string[]
+  me: string | undefined
+  names: Map<string, string>
+  locale: string
+  date: string
+  /** The text of the comment this payment was found through. */
+  comment: string | undefined
+  isActive: boolean
+  onPress: () => void
+}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  const struck = useStruck()
+  const p = payment.data
+  const isWriteOff = payment.type === 'writeoff'
+  const amount = formatAmount(p.amount, p.currency, locale)
+  const nameOf = (id: string) => (id === me ? l`You` : (names.get(id) ?? l`Someone`).split(' ')[0]!)
+  const from = nameOf(p.from)
+  const to = nameOf(p.to)
+  const who = isWriteOff ? l`${to} let ${from} off` : l`${from} paid ${to}`
+  return (
+    <ResultRow
+      nav={nav}
+      label={comment ? l`${who}, ${amount}, ${date}, comment: ${comment}` : l`${who}, ${amount}, ${date}`}
+      isActive={isActive}
+      syncStatus={payment.syncStatus}
+      onPress={onPress}>
+      <EntryIcon isPayment={!isWriteOff} isWriteOff={isWriteOff} />
+      <View style={[a.flex_1, a.gap_2xs]}>
+        <Highlight text={who} terms={terms} style={[a.text_md, a.font_semi_bold, a.leading_snug, payment.deleted && struck]} />
+        {p.note ? <Highlight text={p.note} terms={terms} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]} /> : null}
+        {comment ? (
+          <View testID={`search-match-${payment.id}-comment`} style={[a.flex_row, a.align_center, a.gap_xs]}>
+            <Pills.Tag>{l`Comment`}</Pills.Tag>
+            <View style={[a.flex_1]}>
+              <Highlight text={comment} terms={terms} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]} />
+            </View>
+          </View>
+        ) : null}
+        {payment.deleted ? <DeletedMeta testID={`search-deleted-${payment.id}`} at={payment.updatedAt} /> : null}
+      </View>
+      <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
+        <Text numberOfLines={1} style={[a.text_md, a.font_semi_bold, a.leading_snug, tabular, payment.deleted && struck]}>
+          {amount}
+        </Text>
+        <Text numberOfLines={1} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          {date}
+        </Text>
+      </View>
+    </ResultRow>
+  )
+}
+
+/**
+ * The facets the query was read as, one removable chip each, under the search box (F-246): "Paid by riya", "last
+ * month", "over 500". Removing one takes its words out of the query and the search runs again.
+ */
+export function SearchChips({chips, query, onQueryChange}: {chips: SearchChip[]; query: string; onQueryChange: (query: string) => void}) {
+  const {t: l} = useLingui()
+  const kind = (c: SearchChip): string => {
+    switch (c.facet) {
+      case 'amount':
+        return l`Amount`
+      case 'period':
+        return l`Date`
+      case 'person':
+        return c.role === 'payer' ? l`Paid by` : l`With`
+      case 'place':
+        return l`In`
+      case 'currency':
+        return l`Currency`
+      case 'status':
+        return l`Status`
+      case 'type':
+        return l`Type`
+      case 'any':
+        return l`Any of`
+    }
+  }
+  if (chips.length === 0) return null
+  return (
+    <View testID="search-chips" style={[a.flex_row, a.flex_wrap, a.gap_xs, a.px_lg, a.pt_sm]}>
+      {chips.map(c => {
+        const name = kind(c)
+        const typed = c.text
+        return (
+          <Button
+            key={`${c.span[0]}-${c.text}`}
+            testID={`search-chip-${c.facet}`}
+            label={l`Remove ${name}: ${typed}`}
+            size="small"
+            color="secondary"
+            hitSlop={HITSLOP_10}
+            onPress={() => onQueryChange(removeChip(query, c))}>
+            <ButtonText>{l`${name}: ${typed}`}</ButtonText>
+            <ButtonIcon icon={XIcon} />
+          </Button>
+        )
+      })}
+    </View>
   )
 }
 
@@ -397,6 +562,26 @@ export function GroupResult({
       </View>
       <ChevronIcon size="sm" style={t.atoms.text_contrast_low} />
     </ResultRow>
+  )
+}
+
+/** The search could not be answered: say so, with Try again (never an endless wait). */
+export function SearchFailed({onRetry}: {onRetry: () => void}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  return (
+    <View testID="search-failed" style={[a.p_xl]}>
+      <View style={[t.atoms.bg_contrast_25, a.rounded_sm, a.p_lg, a.gap_sm, a.align_start]}>
+        <Text style={[a.text_md]}>
+          <Trans>Search isn’t ready on this device.</Trans>
+        </Text>
+        <Button testID="search-retry" label={l`Try search again`} size="small" color="secondary" onPress={onRetry}>
+          <ButtonText>
+            <Trans>Try again</Trans>
+          </ButtonText>
+        </Button>
+      </View>
+    </View>
   )
 }
 

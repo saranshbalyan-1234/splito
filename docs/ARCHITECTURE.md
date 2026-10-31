@@ -653,11 +653,22 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   Analytics reads the selected period by `byDate` / `byGroupDate` range and reads history-long charts from an
   `aggregates` projection (`[currency, month, groupId|'', categoryId, personId|'', kind]` -> sum and count in minor units; `personId` '' is the whole record, a person id is that person's share, `kind` separates expenses from transfers), kept in
   the same transaction as `balances` and covered by `rebuildProjections()` and the property test. Search reads
-  a `search_terms` store (normalised prefix tokens of description, notes, merchant, person and group names,
-  plus an amount key per currency -> entity id), also maintained in the mutation transaction, and loads only
-  the matching rows, paged: the first page renders within the § 26.10 budget whatever the match count, and
-  per-currency totals of a broad match fill in after it. No in-memory ledger mirror. Person and group names
-  resolve at query time, so a rename rewrites no terms.
+  a `search_terms` store, also maintained in the mutation transaction, and resolves a whole query from its keys
+  (F-246). Kinds: `w` words of a record's title / note, notes and items, `p` words of a person's name, `k` words of a
+  person's contact and UPI id (they list the person, never the person's records), `g` words of a group's name and trip
+  place, `a` amount per currency, `m` month, `c` category, `b` / `h` who paid / who is on a record, `G` its group (`-`:
+  none), `d` `<date>:<createdAt>` (the list order), `s` `deleted`, `n` a comment's words on the record it hangs on;
+  expenses, payments and write-offs carry them, comments contribute `n` only. Each token is a set of record ids from
+  key ranges and the sets are intersected. A narrow answer (at most 500 records) is then read by id and ordered,
+  totalled and status-checked from its rows; a broad one is ordered from the `d` keys and totalled from the `a` keys;
+  only the rows shown are read (30 by id per page, payments and expenses paged apart). No in-memory ledger mirror.
+  Person and group names resolve at query time (to their live ids, then to their records by `h` / `G`; my own name
+  never expands, every record is mine), so a rename rewrites no terms. What `search_terms` holds is versioned in
+  `meta.searchIndex` (`SEARCH_INDEX_VERSION`, 3); `store.prepareSearch()` runs at idle after the store opens (and the
+  first term read waits for it): it rebuilds the terms from the rows when the version is older or the `d` key count
+  differs from the record count (a tab of an older build, a rollback), in chunks of 500 rows, one transaction each
+  with a yield between; a failure is forgotten so the next read retries, and the search box shows "Try again" (derived
+  data only, no schema version spent).
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
   run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty; v6: the `group_requests` store, v5 -> v6 adds it empty, and a group's `joinPolicy` lives in its data, absent reads as 'approve'); v1 -> v2 copies rows from `entities` into the per-type stores, builds
@@ -1094,6 +1105,30 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   a few more tasks", not as a budget pass. The same over-50 ms tasks occur with no links at all (row mounts dominate), so a
   lighter non-Pressable anchor was not built; revisit it when the Activity row mount itself is cut. The new mounts are the
   feature's cost, recorded once in the renders baseline; no wasted render was added.
+- **A query is answered from index keys, never by walking rows; and a narrow answer never reads the whole ledger's
+  keys either.** Search first ran broad queries (`> 1000`, a common prefix) by reading the ledger newest first in chunks
+  of 200 and checking every row (10,000 expenses: about 10 us per row of SQL, JSON decode and word checks, 0.1 s and
+  growing). Keys cost about 0.2-1 us a row, so each token became a set of ids from term ranges (`h` for who, `G` for a
+  group, `d` for the date order, `a` for amount ranges and totals) and the sets are intersected. But the first cut then
+  ordered and totalled every answer by reading all `d`, `a` and `s` keys, so one match still cost 21,201 keys at 10,000
+  expenses + 600 payments, a balance status 45,000 keys, and IndexedDB 50-130 ms of CPU per query (F-246 review I1).
+  Now: an answer of at most 500 records is read by id and ordered, totalled and status-checked from those rows (500
+  rows cost about what 3,500 keys do, whatever the ledger's size); only a broad answer reads the `d` and `a` ranges; a
+  balance status (settled, owed, owe, inactive, hidden) on a narrow answer is checked on the rows instead of listing
+  every record in it. Rules: a new searchable field is a term kind, a facet is a key range, a screen never checks rows
+  one by one to answer "how many" or "how much" over a broad set, and the cost of a query is bounded by its answer or,
+  for a broad answer, by its keys. Checked by `searchOracle.test.ts` (random changes on both engines; the keys equal
+  the rows' terms, every query equals a row-by-row reference, narrow and broad both exercised). Measure it as the
+  drawer waits for it (`openSearch`: people, groups, counts, totals and the first pages), not as the whole ledger
+  read out.
+- **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
+  10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
+  three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+- **Derived data that may be rebuilt is rebuilt at idle, in chunks, and a failure is forgotten.** The search index
+  rebuild first ran inside the first search (during the first keystrokes) as one transaction, and a rejected rebuild
+  was kept as a rejected promise, so search spun forever. Start such work at idle after open, run it in chunks of a
+  few hundred rows with a yield between (10,600 records on IndexedDB: the timer ran between chunks), drop the cached
+  promise on failure, and show an error state with Try again instead of a spinner.
 
 - **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
   Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
@@ -1128,11 +1163,6 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   incrementally, automatic searching is bounded (about 10 pages, then "Look further back").
 - **Membership checks use a Set.** `read.includes(id)` per event made Mark all read and every rebuild
   O(events x read); a persisted list of ids is read into a Set once.
-- **Search stays under 50 ms at 10,000 expenses** (`search.test.ts`); on the Mac the slowest query was `> 1000`
-  (amount range), so amount scans need an index or a bound before the data grows. On a 4-core cloud container the
-  same test reads 80-110 ms on `main` itself, and the slowest queries are one- or two-letter prefixes (`d`, `di`),
-  whose `search_terms` range matches thousands of rows: short prefixes need a bound (a minimum length or a capped
-  first page) as much as amount scans do. Judge this limit only on the target hardware it was set on, and say which.
 - **The renders baseline is a median, taken after the data has loaded.** Recording the highest of three noisy
   runs (tabs updates 1,916-3,440) let a doubling pass; the gate waits for an explicit "demo loaded" signal
   before a phase and records the median of three.
@@ -1541,6 +1571,31 @@ Splito lessons (add newest last, dated, with PR):
   invites flow" because that row was not reached. Every place that offers an answer to a friend or group request asks
   `requestState(r, now) === 'pending'` (with `now` from `useTickEveryMinute`), and the check lives in the action
   component (`OutgoingActions`, `GroupRequestActions`), so only rows with buttons follow the minute clock.
+- 2026-10-31, F-246 (c-search): **the "every query under 50 ms" test failed because broad queries read the ledger, not
+  because the amount scan was slow.** The amount range was already an index; the slow part was every broad query
+  (`f`, `> 1000`, `march`) walking `byDate` in chunks of 200 rows to check each one so the count and totals could
+  be shown (about 10 us a row, so 100 ms at 10,000 and more under load), and the old test read whole answers
+  through `searchStore`. The fix is structural: terms for every field (`b`, `h`, `G`, `d`, `s`, `n`), each token
+  resolved to a set of ids by key range, intersection, ordering and totals from the `d` and `a` keys, rows read only
+  for the page. Two things to remember: (1) reading 10,000 index rows costs 2-3 ms, reading 10,000 entity rows costs
+  70 ms, so put anything a count or a total needs into the keys; (2) a test that proves "the keys give the rows'
+  answer" (`searchOracle.test.ts`: 1,200 random expenses, 18 queries, order and totals compared with a row-by-row
+  reference) is what makes this safe, not the speed number. Also: the migration tests' `storedTerms` helper listed
+  the term kinds by hand, so a new kind failed dozens of migration tests until it read `TERM_KINDS`.
+
+- 2026-10-31, F-246 fix round (c-search, Opus): **"answered from the keys" was still a full-ledger read.** The first cut
+  intersected key sets well, then ordered every answer by reading all `d` keys and totalled it by reading all `a` and
+  `s` keys, and a balance status listed every record of every settled group plus every record outside groups: one
+  match cost 21,201 keys at 10,000 expenses + 600 payments, "owed" 44,916, and IndexedDB 50-130 ms of CPU per query
+  (load 45). Now an answer of at most 500 records is read by id and ordered, totalled and status-checked from its rows;
+  the rest is unchanged. Three more things to remember: (1) a word that finds a person must not expand to the person's
+  records when it is not a name: phone digits ("91", "98") and UPI words matched almost the whole ledger through the
+  `h` keys, and so did my own name; such words are their own term kind (`k`) that lists the person only; (2) a cached
+  promise of maintenance work must be dropped when it rejects, or one failure breaks the feature until reload; derived
+  data is rebuilt at idle, in chunks with yields, never inside the first keystroke; (3) a version marker cannot see a
+  writer of the same version that skipped rows (an older tab, a rollback): also compare a cheap count (`d` keys against
+  records). The oracle became a property test (random changes on both engines, the stored keys equal `termRows`, 30
+  queries equal a row-by-row reference, narrow and broad both exercised), which is what makes the two paths safe.
 
 ## 24. Checklists
 
@@ -3023,6 +3078,42 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   results stay grouped (People, Groups, Expenses...) with totals per currency and paged (§ 9.8 `search_terms`,
   extended with tokens for every field above). *Why:* "make sure the search works logically with most of the
   things like name, place, amount, category, type, group etc".
+  *How the query is read (assistant's ruling, F-246, replacing "words and simple amount filters"; fix round rulings
+  2026-10-31):* English and Hindi words for "over / under / between / around", "this / last week / month / year" (the
+  week starts on the `weekStart` preference), months and one day ("4 march", "march 4", "4 march 2026"; without a year,
+  the latest one not after today), today / yesterday, "paid by X / X ne", "with X / X ke saath", "in <place>",
+  statuses and types; amounts accept `1k`, `1.5 lakh`, `2 cr`, a currency sign or code, and `rs`, `Rs.`, `rupees`,
+  `रु` (all INR); joining words ("in", "on", "for", "spent", "at", "of", "the", "to", "from", "में", "पर", "लिए"...)
+  are dropped when they are not part of a facet and something else is left; `food or travel` (Hindi `या`) is OR
+  inside one facet, everything else AND (Hindi `और` is AND, as "and" is); a name that nobody has ("with friends") is
+  just words; a close spelling counts only for a person's name, keeps the first letter and is at most 20 letters; a
+  status or type word that finds nothing ("group dinner", "settled bill") is searched as text. A friend's contact
+  (email, phone, with or without the country code) or UPI id finds the friend, never their records; my own name finds
+  nothing (every record is mine). A category is found by its name in the person's language and by its stored name.
+  Status: *deleted* = tombstones (people and groups too), *disputed* = an open dispute or hold, *hidden* = the groups I
+  hid and the deleted items I hid, *inactive* = inactive groups; *settled / owed / owe* are a group's own nets (all
+  zero / I am owed / I owe), and for a record outside any group my direct balance with the others on it (a friend's
+  balance inside groups is not folded in). Results: People, Groups, Payments (payments and write-offs) and Expenses
+  (with count and per-currency totals), in that order, each paged with its own Show more, so loading more never moves a
+  section; a comment's text finds the expense, payment or write-off it is on; each row names the field that matched
+  (Notes, Item, Group, Place, Category, With, Paid by, Comment, Amount, Date, Currency, status) and marks the words; an
+  amount, date, currency or status match is the tag alone (the amount and date are already in the right column), and a
+  balance status says where it applies: "Settled in group", "Owed in group", "You owe in group" on a group's record,
+  "Settled", "Owed", "You owe" outside groups; the row's accessibility label names the matched fields and the comment;
+  each facet is a removable chip under the box. Types are expense, payment, write-off, comment, group and friend; not
+  searched: invites and friend requests (they are not ledger records and have their own list in People), so "invite"
+  is a plain word. If the search cannot be answered (its index cannot be built), the drawer says so with Try again,
+  never an endless spinner.
+  *Reads/writes:* reads term ranges (`store.terms`), `getMany` for a narrow answer (at most 500 records) and for the
+  30 rows of a page, the people / groups / balances projections for the statuses, `listOpenDisputes` for *disputed*;
+  `store.prepareSearch()` once per open at idle; writes up to 12 term rows per expense, payment or write-off, none
+  for a comment beyond its words. *Cost:* a narrow query touches its tokens' keys plus its rows; a broad one (over 500
+  records) also the `d` and `a` ranges (about 1 us a key); a stale index is rebuilt once, at idle, in 500-row chunks.
+  *Telemetry:* none added (a failed index build is a `StoreProvider.prepareSearch` error log). *Checks:*
+  `search.test.ts` (parser, per-field, paging, speed on both engines at 10,000, IndexedDB rebuild), `searchFields.test.ts`
+  (every field on SQLite and IndexedDB, contacts, weekStart, localised categories, >30 payments, mixed-version writer,
+  failed rebuild), `searchOracle.test.ts` (property test on both engines), `searchQuery.test.ts` (table of 107
+  queries), `searchMatch.test.ts`, `e2e/search.spec.ts` at 390 and 1440; web verified, native not run.
 - **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
   shows exactly what data is sent; nothing is sent for on-device answers.
 

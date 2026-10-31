@@ -3,6 +3,7 @@ import {useRef, useState} from 'react'
 import {type TextInput, type TextInputKeyPressEvent, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {decimalMark} from '@splito/domain'
+import {DEFAULT_CATEGORIES, matchedFields} from '@splito/sync'
 
 import {pathTo} from '#/lib/links/make'
 import {setSheetQuery} from '#/navigation/sheets'
@@ -10,10 +11,11 @@ import {useOpenLink} from '#/data/useOpenLink'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useHiddenGroups} from '#/data/groupVisibility'
-import {useMutationCtx, useSearch} from '#/data/hooks'
+import {useMutationCtx, usePref, useSearch} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
+import {useCategoryName} from '#/components/settings/CategoryIcon'
 import * as Dialog from '#/components/Dialog'
 import {SearchInput} from '#/components/forms/SearchInput'
 import {
@@ -26,7 +28,10 @@ import {
   ExpenseResult,
   GroupResult,
   NoResults,
+  PaymentResult,
+  SearchFailed,
   PersonResult,
+  SearchChips,
   SectionHeader,
 } from '#/components/SearchAsk/ResultRows'
 import {scrollRowIntoView} from '#/components/SearchAsk/scrollRowIntoView'
@@ -117,7 +122,14 @@ function SearchPanel({
   const textInput = useRef<React.ComponentRef<typeof TextInput>>(null)
   const [activeNav, setActiveNav] = useState(-1)
 
-  const {names, groupNames} = useSearchNames()
+  const {names, groupNames, groupData} = useSearchNames()
+  const [categories = DEFAULT_CATEGORIES] = usePref('categories')
+  const categoryName = useCategoryName()
+  /* A category is found by the name the person reads (a stock one in their language) and by the stored one. */
+  const searchCategories = categories.flatMap(c => {
+    const shown = categoryName(c)
+    return shown === c.name ? [c] : [{id: c.id, name: shown}, c]
+  })
   const {vocab} = useAskEngine()
   const askQuestions = useAskQuestions()
   const {actor: me} = useMutationCtx()
@@ -128,17 +140,16 @@ function SearchPanel({
 
   const [history = [], setHistory] = useStorage(device, HISTORY_KEY)
 
-  const results = useSearch(query, today, decimalMark(locale))
+  const results = useSearch(query, today, decimalMark(locale), searchCategories)
   const rows = results
     ? searchRows(
         results,
-        results.summary
-          ? {count: results.summary.count, isPartial: false}
-          : {count: results.expenses.length, isPartial: true},
+        {count: results.summary.count, isPartial: false},
         query.trim() || undefined,
+        results.paymentCount,
       )
     : []
-  const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header')
+  const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header' && r.type !== 'more')
   const isEmptyQuery = query.trim() === ''
 
   const rememberQuery = (q: string) => {
@@ -163,7 +174,13 @@ function SearchPanel({
     close(() => {
       if (row.type === 'person') openLink.go(pathTo('Person', {personId: row.person.id}))
       else if (row.type === 'group') openLink.go(pathTo('Group', {groupId: row.group.id}))
-      else openLink.go(pathTo('Expense', {expenseId: row.expense.id}))
+      else if (row.type === 'payment') {
+        // A payment has its page; a write-off is shown on its group's or friend's page.
+        const p = row.payment
+        if (p.type === 'repayment') openLink.go(pathTo('Repayment', {repaymentId: p.id}))
+        else if (p.data.groupId) openLink.go(pathTo('Group', {groupId: p.data.groupId}))
+        else openLink.go(pathTo('Person', {personId: p.data.from === me ? p.data.to : p.data.from}))
+      } else openLink.go(pathTo('Expense', {expenseId: row.expense.id}))
     })
   }
 
@@ -202,6 +219,11 @@ function SearchPanel({
     rememberQuery(item)
   }
 
+  const categoryNameOf = (id: string) => {
+    const category = categories.find(c => c.id === id)
+    return category ? categoryName(category) : undefined
+  }
+
   const renderItem = ({item: row}: {item: SearchRow}) => {
     switch (row.type) {
       case 'header':
@@ -211,11 +233,26 @@ function SearchPanel({
             count={row.count}
             isPartial={row.isPartial}
             totals={
-              row.section === 'expenses' ? results?.summary?.totals : undefined
+              row.section === 'expenses' ? results?.summary.totals : undefined
             }
-            isCalculating={row.section === 'expenses' && !results?.summary}
             locale={locale}
           />
+        )
+      case 'more':
+        return (
+          <View style={[a.align_center, a.pt_xs, a.pb_sm]}>
+            <Button
+              testID="search-show-more-payments"
+              label={l`Show more payments`}
+              size="small"
+              variant="ghost"
+              color="secondary"
+              onPress={() => results?.loadMorePayments()}>
+              <ButtonText>
+                <Trans>Show more</Trans>
+              </ButtonText>
+            </Button>
+          </View>
         )
       case 'ask':
         return <AskResult nav={row.nav} query={row.query} isActive={row.nav === activeNav} onPress={() => open(row)} />
@@ -240,12 +277,35 @@ function SearchPanel({
             onPress={() => open(row)}
           />
         )
+      case 'payment':
+        return (
+          <PaymentResult
+            nav={row.nav}
+            payment={row.payment}
+            terms={results?.terms ?? []}
+            me={me}
+            names={names}
+            locale={locale}
+            date={formatDay(row.payment.data.date)}
+            comment={results?.commentText(row.payment.id)}
+            isActive={row.nav === activeNav}
+            onPress={() => open(row)}
+          />
+        )
       case 'expense':
         return (
           <ExpenseResult
             nav={row.nav}
             expense={row.expense}
             terms={results?.terms ?? []}
+            match={matchedFields(row.expense, {
+              tokens: results?.tokens ?? [],
+              terms: results?.terms ?? [],
+              names,
+              group: row.expense.data.groupId ? groupData.get(row.expense.data.groupId) : undefined,
+              categoryName: categoryNameOf(row.expense.data.category),
+              comment: results?.commentText(row.expense.id),
+            })}
             me={me}
             names={names}
             groupNames={groupNames}
@@ -259,6 +319,7 @@ function SearchPanel({
   }
 
   const header = (
+    <View style={[a.border_b, t.atoms.bg, t.atoms.border_contrast_low]}>
     <View
       style={[
         a.flex_row,
@@ -268,9 +329,7 @@ function SearchPanel({
         /* Phones: clear of the sheet's drag handle. */
         gtMobile ? a.pt_md : a.pt_xl,
         a.pb_md,
-        a.border_b,
         t.atoms.bg,
-        t.atoms.border_contrast_low,
       ]}>
       <View style={[a.flex_1, a.relative]}>
         <SearchInput
@@ -335,6 +394,8 @@ function SearchPanel({
         </Button>
       )}
     </View>
+    {results && !isEmptyQuery ? <SearchChips chips={results.chips} query={query} onQueryChange={changeQuery} /> : null}
+    </View>
   )
 
   return (
@@ -359,6 +420,8 @@ function SearchPanel({
             questions={[askQuestions.spendFood(), askQuestions.owedMost(), askQuestions.split()]}
             onAsk={onAsk}
           />
+        ) : results?.isFailed ? (
+          <SearchFailed onRetry={results.retry} />
         ) : results?.isDone ? (
           <NoResults query={query.trim()} />
         ) : undefined
@@ -366,8 +429,10 @@ function SearchPanel({
       onEndReached={results?.hasMore ? results.loadMore : undefined}
       onEndReachedThreshold={2}
       ListFooterComponent={
-        /* Only the Ask row and nothing found: say so under it. */
-        rows.length === 1 && results?.isDone ? (
+        /* Only the Ask row and nothing found (or the search failed): say so under it. */
+        rows.length === 1 && results?.isFailed ? (
+          <SearchFailed onRetry={results.retry} />
+        ) : rows.length === 1 && results?.isDone ? (
           <NoResults query={query.trim()} />
         ) : results?.hasMore && rows.length > 0 ? (
           <View style={[a.align_center, a.pt_md, a.pb_sm]}>
