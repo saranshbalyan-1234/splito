@@ -16,8 +16,8 @@ async function controlled(page: Page) {
   await page.getByTestId('welcome-skip').click()
   await page.getByTestId('continue-dev-account').click()
   await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 20_000})
-  await page.goto('/settings')
-  await expect(page.getByTestId('screen-settings')).toBeVisible()
+  await page.goto('/profile')
+  await expect(page.getByTestId('screen-profile')).toBeVisible()
   // The worker installs, activates and claims this page.
   await page.waitForFunction(() => !!navigator.serviceWorker.controller)
 }
@@ -40,7 +40,7 @@ test('opens offline, refreshing a deep route included', async ({page, context}) 
   await controlled(page)
   await context.setOffline(true)
   await page.reload()
-  await expect(page.getByTestId('screen-settings')).toBeVisible()
+  await expect(page.getByTestId('screen-profile')).toBeVisible()
   await page.goto('/settings/about')
   await expect(page.getByTestId('screen-settings-section')).toBeVisible()
   await page.goto('/')
@@ -79,9 +79,9 @@ test('a new version shows the toast and Reload switches to it', async ({page}) =
     await expect(page.getByText('New version available')).toBeVisible()
     // Nothing reloaded on its own.
     await page.waitForTimeout(500)
-    await expect(page.getByTestId('screen-settings')).toBeVisible()
+    await expect(page.getByTestId('screen-profile')).toBeVisible()
     await Promise.all([page.waitForEvent('load'), reload.click()])
-    await expect(page.getByTestId('screen-settings')).toBeVisible()
+    await expect(page.getByTestId('screen-profile')).toBeVisible()
     await expect(page.getByTestId('update-reload')).toHaveCount(0)
     expect(await page.evaluate(() => navigator.serviceWorker.controller?.scriptURL)).toContain('/sw.js')
   } finally {

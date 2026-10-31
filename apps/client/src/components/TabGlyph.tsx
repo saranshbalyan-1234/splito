@@ -23,10 +23,6 @@ import {
   ContactRound_Filled_Corner0_Rounded as UsersFilled,
   ContactRound_Stroke2_Corner0_Rounded as Users,
 } from '#/components/icons/ContactRound'
-import {
-  SettingsGear2_Filled_Corner0_Rounded as SettingsFilled,
-  SettingsGear2_Stroke2_Corner0_Rounded as Settings,
-} from '#/components/icons/Settings'
 
 /**
  * Each shared nav item's label (ARCHITECTURE 26.3): the sidebar and drawer
@@ -37,7 +33,6 @@ export const NAV_LABELS = {
   groups: msg`Groups`,
   analytics: msg`Analytics`,
   activity: msg`Activity`,
-  settings: msg`Settings`,
 } satisfies Record<NavItemId, unknown>
 
 /* Glyphs per item, nudged as upstream nudges its bottom-bar glyphs. */
@@ -54,7 +49,6 @@ export const GLYPHS: Record<
   groups: {icon: Group, filled: GroupFilled, widthAdjust: 1},
   analytics: {icon: ChartPie, filled: ChartPieFilled, widthAdjust: 0},
   activity: {icon: Activity, filled: ActivityFilled, widthAdjust: 0},
-  settings: {icon: Settings, filled: SettingsFilled, widthAdjust: 0},
 }
 
 /** The bottom bar's visible label under a glyph, shown while the bar holds 5 items or fewer (ARCHITECTURE 26.3). */

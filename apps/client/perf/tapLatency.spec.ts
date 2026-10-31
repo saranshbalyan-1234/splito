@@ -55,7 +55,7 @@ async function groupsSheet(page: Page) {
 
 const CASES: Case[] = [
   {name: 'tab: People', prepare: onGroups, tap: p => p.getByTestId('tab-people'), done: {visible: 'screen-people'}},
-  {name: 'tab: Settings', prepare: home, tap: p => p.getByTestId('tab-settings'), done: {visible: 'screen-settings'}},
+  {name: 'avatar: Profile', prepare: home, tap: p => p.getByTestId('screen-people').getByTestId('header-avatar'), done: {visible: 'screen-profile'}},
   {name: 'tab: Groups', prepare: home, tap: p => p.getByTestId('tab-groups'), done: {visible: 'screen-groups'}},
   {name: 'tab: Analytics', prepare: home, tap: p => p.getByTestId('tab-analytics'), done: {visible: 'screen-analytics'}},
   {name: 'tab: Activity', prepare: home, tap: p => p.getByTestId('tab-activity'), done: {visible: 'screen-activity'}},

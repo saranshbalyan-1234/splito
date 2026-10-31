@@ -19,7 +19,7 @@ for (const [rate, cold] of [[1, true], [4, true], [1, false], [6, false]] as con
     test.setTimeout(600_000)
     await openDemo(page, '/people')
     await expect(page.getByTestId('screen-people').first()).toBeVisible({timeout: 60_000})
-    const tabs = ['people', 'groups', 'analytics', 'activity', 'settings']
+    const tabs = ['people', 'groups', 'analytics', 'activity']
     if (!cold) {
       for (const t of tabs) {
         await page.getByTestId(`tab-${t}`).tap()
@@ -57,7 +57,7 @@ for (const [rate, cold] of [[1, true], [4, true], [1, false], [6, false]] as con
         requestAnimationFrame(check)
       }, true)
     })
-    const seq = ['groups', 'analytics', 'activity', 'people', 'analytics', 'groups', 'settings', 'activity', 'people', 'groups', 'analytics', 'people']
+    const seq = ['groups', 'analytics', 'activity', 'people', 'analytics', 'groups', 'activity', 'people', 'groups', 'analytics', 'people']
     for (const gap of [300, 120, 50]) {
       for (const t of seq) {
         await page.getByTestId(`tab-${t}`).tap({noWaitAfter: true})

@@ -3,7 +3,7 @@ import {describe, expect, test} from 'bun:test'
 import {isPushedTabRoute, navigateArgs, tabLink} from './helpers'
 
 const params = {currency: 'GBP'}
-const TABS = ['People', 'Groups', 'Analytics', 'Activity', 'Settings']
+const TABS = ['People', 'Groups', 'Analytics', 'Activity']
 
 describe('tabLink: a main screen opened from a link is a pushed copy with Back (owners 179, 184)', () => {
   test('native pushes the Pushed<Tab> twin of the screen with its params', () => {
@@ -34,15 +34,15 @@ describe('tabLink: a main screen opened from a link is a pushed copy with Back (
   })
 })
 
-describe('navigateArgs: a tab from a root-stack screen (c-nohome review: Settings moved into the tabs)', () => {
+describe('navigateArgs: a tab from a root-stack screen (c-nohome review: a screen moved into the tabs)', () => {
   test('native goes through Tabs for every tab, with its params', () => {
-    for (const tab of ['People', 'Groups', 'Analytics', 'Activity', 'Settings'])
+    for (const tab of ['People', 'Groups', 'Analytics', 'Activity'])
       expect(navigateArgs(tab, params, false)).toEqual({name: 'Tabs', params: {screen: tab, params}})
-    expect(navigateArgs('Settings', undefined, false)).toEqual({name: 'Tabs', params: {screen: 'Settings', params: undefined}})
+    expect(navigateArgs('Activity', undefined, false)).toEqual({name: 'Tabs', params: {screen: 'Activity', params: undefined}})
   })
 
   test('web navigates by name, and any other route is as it is on both', () => {
-    expect(navigateArgs('Settings', params, true)).toEqual({name: 'Settings', params})
+    expect(navigateArgs('Activity', params, true)).toEqual({name: 'Activity', params})
     for (const isWeb of [true, false]) expect(navigateArgs('Profile', params, isWeb)).toEqual({name: 'Profile', params})
   })
 })

@@ -11,15 +11,13 @@ export function useNavigationTabState() {
       isAtGroups: getTabState(state, 'Groups') !== TabState.Outside,
       isAtAnalytics: getTabState(state, 'Analytics') !== TabState.Outside,
       isAtActivity: getTabState(state, 'Activity') !== TabState.Outside,
-      isAtSettings: getTabState(state, 'Settings') !== TabState.Outside,
     }
 
     if (
       !res.isAtPeople &&
       !res.isAtGroups &&
       !res.isAtAnalytics &&
-      !res.isAtActivity &&
-      !res.isAtSettings
+      !res.isAtActivity
     ) {
       // HACK for some reason useNavigationState will give us pre-hydration results
       //      and not update after, so we force the start tab if all came back false

@@ -12,7 +12,6 @@ export const ROUTE_PATHS = {
   Groups: '/groups',
   Analytics: '/analytics',
   Activity: '/activity',
-  Settings: '/settings',
   Profile: '/profile',
   Welcome: '/welcome/:step',
   FriendsAndInvites: '/settings/friends',
@@ -49,6 +48,8 @@ export function redirectOldPath(path: string) {
   return path
     .replace(/^\/?filters(?=[/?#]|$)/, '/people/filters')
     .replace(/^\/?notifications(?=[/?#]|$)/, '/activity')
+    /* Settings is part of Profile (owner 220): its address opens Profile; the section pages keep theirs. */
+    .replace(/^\/?settings\/?(?=[?#]|$)/, '/profile')
     .replace(/^\/?settings\/recently-deleted(?=[/?#]|$)/, '/settings/data?note=deleted-stay')
     /* Export and Import moved under Your data (owner 205). */
     .replace(/^\/?settings\/(export|import)(?=[/?#]|$)/, '/settings/data/$1')

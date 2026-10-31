@@ -197,8 +197,8 @@ function HomeTabPref() {
   const {t: l} = useLingui()
   const labels = useTabLabels()
   const [tabs = PREFS.tabs.default] = usePref('tabs')
-  /* Only a bar item that holds the user's data can be where Splito opens (Settings is a tab but not a start). */
-  const destinations = tabs.filter((tab): tab is TabId => tab !== 'settings')
+  /* Every bar item holds the user's data, so each can be where Splito opens. */
+  const destinations: TabId[] = tabs
   return (
     <RadioPref
       pref={usePrefControl('startTab')}

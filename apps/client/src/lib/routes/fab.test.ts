@@ -11,7 +11,7 @@ test('the FAB shows on the main screens, their pushed copies, a Person and a Gro
   expect(fabParams({name: 'Group', params: {groupId: 'g1'}})).toEqual({groupId: 'g1'})
 })
 
-test('it is hidden on Settings (a tab, but not where you add an expense, owner 206), its sections, profile, detail pages, forms and the composer', () => {
-  for (const name of ['Settings', 'PushedSettings', 'SettingsSection', 'Profile', 'Expense', 'Repayment', 'EditExpense', 'AddExpense', 'AddFriend', 'CreateGroup', 'Settle', 'FriendsAndInvites', 'SignIn', 'Invite', 'Search', 'Sheet', 'Unknown'])
+test('it is hidden on Profile (which holds Settings, owner 220), the Settings sections, detail pages, forms and the composer', () => {
+  for (const name of ['SettingsSection', 'Profile', 'Expense', 'Repayment', 'EditExpense', 'AddExpense', 'AddFriend', 'CreateGroup', 'Settle', 'FriendsAndInvites', 'SignIn', 'Invite', 'Search', 'Sheet', 'Unknown'])
     expect(fabParams({name})).toBeNull()
 })

@@ -2,9 +2,10 @@ import {expect, type Page, test} from '@playwright/test'
 
 
 /*
- * F-271 owners 201-206 (ARCHITECTURE 26.3, 26.4, 26.7, 26.15): the avatar opens Profile at every width and Back
- * returns where you were; Settings is a tab; Log out is the last row of Profile; Support and Your data are one row
- * each in Settings and open their own pages; a phone has no side drawer (owner 217).
+ * Owners 201-206, 217, 220 (ARCHITECTURE 26.3, 26.4, 26.7, 26.15): the avatar opens Profile at every width and Back
+ * returns where you were; Settings is no tab or nav item, it is the list inside Profile (`/settings` opens Profile);
+ * Log out is the last row of Profile; Support and Your data are one row each in that list and open their own pages,
+ * whose Back returns to Profile; a phone has no side drawer (owner 217).
  */
 
 const VIEWPORTS = [
@@ -22,7 +23,7 @@ for (const [label, viewport] of VIEWPORTS) {
       for (const [path, screen] of [
         ['/activity', 'screen-activity'],
         ['/analytics', 'screen-analytics'],
-        ['/settings', 'screen-settings'],
+        ['/groups', 'screen-groups'],
       ] as const) {
         await page.goto(path)
         await expect(page.getByTestId(screen)).toBeVisible()
@@ -41,29 +42,70 @@ for (const [label, viewport] of VIEWPORTS) {
       await expect(page.getByTestId('screen-people')).toBeVisible()
     })
 
-    test('Settings is a tab: in the bar on a phone, in the sidebar on a laptop, with the avatar in its header (owner 206)', async ({page}) => {
+    test('Settings is no item of the bar, the sidebar or Settings > Navigation (owner 220)', async ({page}) => {
       await page.goto('/activity')
       await expect(page.getByTestId('screen-activity')).toBeVisible()
       // The bar on a phone and the sidebar on a laptop are both the page's navigation landmark.
-      const tab = page.getByRole('navigation').getByTestId('tab-settings')
-      await expect(tab).toBeVisible()
-      await expect(tab).toContainText('Settings')
-      await tab.click()
-      await expect(page).toHaveURL(/\/settings$/)
-      await expect(page.getByTestId('tab-settings')).toHaveAttribute('aria-current', 'page')
-      await expect(page.getByTestId('screen-settings').getByTestId('header-avatar')).toBeVisible()
-      // No Profile row (owner 216: the avatar opens it), no Log out, Support items or Data items (owners 202, 204, 205).
-      for (const id of ['settings-profile', 'settings-log-out', 'settings-send-feedback', 'settings-help', 'settings-about', 'settings-export', 'settings-import', 'settings-reset-all'])
-        await expect(page.getByTestId(id)).toHaveCount(0)
-      await expect(page.getByTestId('settings-support')).toBeVisible()
-      await expect(page.getByTestId('settings-data')).toBeVisible()
+      const items = () =>
+        page
+          .getByRole('navigation')
+          .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
+          .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+      await expect.poll(items).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity'])
+      await expect(page.getByTestId('tab-settings')).toHaveCount(0)
+      // The editor lists the same four.
+      await page.goto('/settings/navigation')
+      await expect(page.getByTestId('screen-settings-section')).toBeVisible()
+      await expect(page.getByTestId('tabs-toggle-people')).toBeVisible()
+      await expect(page.getByTestId('tabs-toggle-settings')).toHaveCount(0)
+      await expect(page.getByTestId('tabs-up-settings')).toHaveCount(0)
     })
 
-    test('Profile ends in Log out, which asks first; it holds no Settings row (owners 202, 203)', async ({page}) => {
+    test('/settings opens Profile: the person first, then the Settings rows, then Log out (owner 220)', async ({page}) => {
+      await page.goto('/settings')
+      await expect(page.getByTestId('screen-profile')).toBeVisible()
+      await expect(page).toHaveURL(/\/profile$/)
+      // There is no screen of Settings's own any more.
+      await expect(page.getByTestId('screen-settings')).toHaveCount(0)
+      const list = page.getByTestId('profile-settings')
+      await expect(list).toBeVisible()
+      for (const id of ['settings-friends', 'settings-appearance', 'settings-navigation', 'settings-support', 'settings-data'])
+        await expect(list.getByTestId(id)).toBeVisible()
+      // No Profile or Log out row inside the list, and no Support or Data items spread out (owners 202, 204, 205, 216).
+      for (const id of ['settings-profile', 'settings-log-out', 'settings-send-feedback', 'settings-help', 'settings-about', 'settings-export', 'settings-import', 'settings-reset-all'])
+        await expect(page.getByTestId(id)).toHaveCount(0)
+      // Top to bottom: the person (header), the Settings list, Log out (document order, wherever the page is scrolled to).
+      const inOrder = await page.evaluate(ids => {
+        const els = ids.map(id => document.querySelector(`[data-testid="${id}"]`))
+        return els.every((el, i) => el !== null && (i === 0 || !!(els[i - 1]!.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)))
+      }, ['profile-avatar', 'settings-friends', 'profile-log-out'])
+      expect(inOrder).toBe(true)
+    })
+
+    test('a Settings section opens from Profile and Back returns to Profile (owner 220)', async ({page}) => {
       await page.goto('/activity')
       await page.getByTestId('screen-activity').getByTestId('header-avatar').click()
       await expect(page.getByTestId('screen-profile')).toBeVisible()
-      await expect(page.getByTestId('profile-settings')).toHaveCount(0)
+      await page.getByTestId('settings-regional').click()
+      await expect(page).toHaveURL(/\/settings\/regional$/)
+      await page.getByTestId('screen-settings-section').last().getByTestId('header-back').click()
+      await expect(page).toHaveURL(/\/profile$/)
+      await expect(page.getByTestId('screen-profile')).toBeVisible()
+      // And on to where Profile was opened from.
+      await page.getByTestId('screen-profile').getByTestId('header-back').click()
+      await expect(page.getByTestId('screen-activity')).toBeVisible()
+      // A section pasted cold climbs to Profile, then to the start tab.
+      await page.goto('/settings/regional')
+      await page.getByTestId('screen-settings-section').last().getByTestId('header-back').click()
+      await expect(page).toHaveURL(/\/profile$/)
+      await page.getByTestId('screen-profile').getByTestId('header-back').click()
+      await expect(page.getByTestId('screen-people')).toBeVisible()
+    })
+
+    test('Profile ends in Log out, which asks first (owners 202, 220)', async ({page}) => {
+      await page.goto('/activity')
+      await page.getByTestId('screen-activity').getByTestId('header-avatar').click()
+      await expect(page.getByTestId('screen-profile')).toBeVisible()
       const ids = await page
         .getByTestId('screen-profile')
         .locator('[data-testid^="profile-"]')
@@ -78,8 +120,8 @@ for (const [label, viewport] of VIEWPORTS) {
       await expect(page.getByTestId('screen-profile')).toBeVisible()
     })
 
-    test('Settings > Support: every row opens, Back returns to Support, then to Settings (owner 204)', async ({page}) => {
-      await page.goto('/settings')
+    test('Settings > Support: every row opens, Back returns to Support, then to Profile (owners 204, 220)', async ({page}) => {
+      await page.goto('/profile')
       await page.getByTestId('settings-support').click()
       await expect(page).toHaveURL(/\/settings\/support$/)
       await expect(page.getByTestId('support-version')).toContainText('Splito version')
@@ -100,21 +142,21 @@ for (const [label, viewport] of VIEWPORTS) {
       await page.getByTestId('sheet-cancel').click()
       await expect(page.getByTestId('feedback-sheet')).toHaveCount(0)
       await back()
-      await expect(page).toHaveURL(/\/settings$/)
-      await expect(page.getByTestId('screen-settings')).toBeVisible()
+      await expect(page).toHaveURL(/\/profile$/)
+      await expect(page.getByTestId('screen-profile')).toBeVisible()
     })
 
-    test('a refreshed help page climbs to Support, then Settings', async ({page}) => {
+    test('a refreshed help page climbs to Support, then Profile', async ({page}) => {
       await page.goto('/settings/about')
       const back = () => page.getByTestId('screen-settings-section').last().getByTestId('header-back').click()
       await back()
       await expect(page).toHaveURL(/\/settings\/support$/)
       await back()
-      await expect(page).toHaveURL(/\/settings$/)
+      await expect(page).toHaveURL(/\/profile$/)
     })
 
-    test('Settings > Your data: Export opens, Back returns to Your data, then to Settings (owner 205)', async ({page}) => {
-      await page.goto('/settings')
+    test('Settings > Your data: Export opens, Back returns to Your data, then to Profile (owners 205, 220)', async ({page}) => {
+      await page.goto('/profile')
       await page.getByTestId('settings-data').click()
       await expect(page).toHaveURL(/\/settings\/data$/)
       for (const id of ['settings-export', 'settings-import', 'settings-reset-all']) await expect(page.getByTestId(id)).toBeVisible()
@@ -125,7 +167,7 @@ for (const [label, viewport] of VIEWPORTS) {
       await expect(page.getByTestId('export-sheet')).toHaveCount(0)
       await expect(page).toHaveURL(/\/settings\/data$/)
       await page.getByTestId('screen-settings-section').last().getByTestId('header-back').click()
-      await expect(page).toHaveURL(/\/settings$/)
+      await expect(page).toHaveURL(/\/profile$/)
     })
 
     test('old Export and Recently deleted addresses land on Your data', async ({page}) => {
@@ -169,7 +211,7 @@ test.describe('phone 390: there is no side drawer, the bottom bar is the navigat
     await expect(page.getByTestId('screen-groups')).toBeVisible()
     await page.waitForTimeout(300)
     await expect(page.getByTestId('drawer')).toHaveCount(0)
-    await expect(page.getByRole('navigation').getByTestId('tab-settings')).toBeVisible()
+    await expect(page.getByRole('navigation').getByTestId('tab-activity')).toBeVisible()
   })
 
   test('the avatar no longer opens the drawer', async ({page}) => {
