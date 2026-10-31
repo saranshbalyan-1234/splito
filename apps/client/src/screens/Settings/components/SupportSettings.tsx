@@ -3,11 +3,14 @@ import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useEntities} from '#/data/hooks'
 import {useOpenFeedback} from '#/features/feedback/FeedbackProvider'
+import {replayTour} from '#/lib/tour/replay'
+import {useDemoMode} from '#/state/demo'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
 import {CircleQuestion_Stroke2_Corner2_Rounded as HelpIcon} from '#/components/icons/CircleQuestion'
 import {Inbox_Stroke2_Corner0_Rounded as InboxIcon} from '#/components/icons/Feedback'
+import {Route_Stroke2_Corner0_Rounded as RouteIcon} from '#/components/icons/Route'
 import {Message_Stroke2_Corner0_Rounded as MessageIcon, Shield_Stroke2_Corner0_Rounded as ShieldIcon} from '#/components/icons/Invite'
 import {Text} from '#/components/Typography'
 import {APP_VERSION} from '#/env'
@@ -20,6 +23,7 @@ export function SupportSettings() {
   const {t: l} = useLingui()
   const t = useTheme()
   const openFeedback = useOpenFeedback()
+  const {demo} = useDemoMode()
   const feedbackCount = useEntities<Feedback>('feedback')?.length ?? 0
   return (
     <>
@@ -42,6 +46,15 @@ export function SupportSettings() {
           <Trans>Help</Trans>
         </SettingsList.ItemText>
       </SettingsList.LinkItem>
+      {/* The guided tour over the real app (F-253); never in demo mode, whose data is sample data. */}
+      {!demo && (
+        <SettingsList.PressableItem testID="settings-take-tour" label={l`Take the tour`} onPress={replayTour}>
+          <SettingsList.ItemIcon icon={RouteIcon} />
+          <SettingsList.ItemText>
+            <Trans>Take the tour</Trans>
+          </SettingsList.ItemText>
+        </SettingsList.PressableItem>
+      )}
       <SettingsList.LinkItem testID="settings-support-privacy" to="/settings/privacy" label={l`Privacy`}>
         <SettingsList.ItemIcon icon={ShieldIcon} />
         <SettingsList.ItemText>

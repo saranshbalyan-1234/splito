@@ -10,6 +10,7 @@ import {useMinimalShellFooterTransform} from '#/lib/hooks/useMinimalShellTransfo
 import {currentSection} from '#/lib/routes/section'
 import {NAV_ITEM_HREF, NAV_ITEM_ROUTE} from '#/lib/routes/navigationItems'
 import {useTabs} from '#/lib/routes/tabs'
+import {useTourRef} from '#/lib/tour/registry'
 
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {Link} from '#/view/com/util/Link'
@@ -139,6 +140,8 @@ const NavItem: React.FC<{
 }) => {
   const t = useTheme()
   const ax = useAnalytics()
+  /* The guided tour points at the Groups tab (F-253). */
+  const groupsTourRef = useTourRef('tab-groups')
   /* Under a page that is not in the bar (Settings, unless added) the tab it was opened from stays lit, as Bluesky's does. */
   const section = useNavigationState(state => currentSection(state, sections))
   const isReducedMotion = useShouldReduceMotion()
@@ -154,6 +157,7 @@ const NavItem: React.FC<{
 
   return (
     <Link
+      ref={navItem === 'groups' ? groupsTourRef : undefined}
       testID={`tab-${navItem}`}
       href={href}
       style={[styles.ctrl, hasLabels && styles.ctrlLabelled, hasLabels ? a.pb_sm : a.pb_lg]}

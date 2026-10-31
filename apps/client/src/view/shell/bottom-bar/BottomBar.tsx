@@ -13,6 +13,7 @@ import {useNavigationTabState} from '#/lib/hooks/useNavigationTabState'
 import {clamp} from '#/lib/numbers'
 import {getTabState, TabState} from '#/lib/routes/helpers'
 import {TAB_ROUTE, useTabs} from '#/lib/routes/tabs'
+import {useTourRef} from '#/lib/tour/registry'
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {type SidebarTab} from '#/view/shell/desktop/LeftNav'
 import {atoms as a, useTheme} from '#/alf'
@@ -43,6 +44,8 @@ export function BottomBar({navigation}: BottomTabBarProps) {
   const iconWidth = 28
   const hasLabels = tabs.length <= MAX_LABELLED_TABS
   const activityBadge = useActivityBadge()
+  /* The guided tour points at the Groups tab (F-253). */
+  const groupsTourRef = useTourRef('tab-groups')
 
   const isAt: Record<SidebarTab, boolean> = {
     People: tabState.isAtPeople,
@@ -97,6 +100,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
         {tabs.map(tab => (
           <Btn
             key={tab}
+            ref={tab === 'groups' ? groupsTourRef : undefined}
             testID={`tab-${tab}`}
             icon={
               <TabGlyph
@@ -144,9 +148,12 @@ interface BtnProps extends Pick<
   hasNew?: boolean
   onPress?: (event: GestureResponderEvent) => void
   onLongPress?: (event: GestureResponderEvent) => void
+  /** The button's node, for code that points at it (the guided tour). */
+  ref?: React.Ref<React.ComponentRef<typeof View>>
 }
 
 function Btn({
+  ref,
   testID,
   icon,
   label,
@@ -162,6 +169,7 @@ function Btn({
 
   return (
     <PressableScale
+      ref={ref}
       testID={testID}
       style={[styles.ctrl, label && styles.ctrlLabelled, a.flex_1]}
       onPress={onPress}

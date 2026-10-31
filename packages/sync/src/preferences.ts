@@ -187,6 +187,12 @@ export const PREFS = {
   analyticsView: def('analyticsView', 'defaults', 'device', 'Analytics view', 'charts', oneOf('charts', 'table')),
   /** F-1901: the one-time "install Splito" hint on the web has been shown; set by the app, no Settings row. */
   'pwa.installHintDismissed': def('pwa.installHintDismissed', 'app', 'device', 'Install hint shown', false, isBool),
+  /**
+   * The guided tour after the first sign-in (F-253, owner 142) has been shown or skipped; set by the tour, replayed from
+   * Settings > Support > Help "Take the tour", no Settings row of its own. (The intro slides before sign-in keep theirs in
+   * device storage, because the database is closed while signed out.)
+   */
+  'onboarding.tourSeen': def('onboarding.tourSeen', 'app', 'account', 'Guided tour seen', false, isBool),
   /** The last scope chosen on Analytics' scope chip; set there, not in Settings. */
   analyticsScope: def<AnalyticsScope>('analyticsScope', 'defaults', 'device', 'Analytics scope', 'everything', isAnalyticsScope),
   categories: def<Category[]>(

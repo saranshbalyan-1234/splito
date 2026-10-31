@@ -9,6 +9,8 @@ import {
 } from '@splito/domain'
 import {type RowSyncStatus} from '@splito/sync'
 
+import {useTourRef} from '#/lib/tour/registry'
+
 import {HideRow} from '#/features/hidden/HideItem'
 import {Link} from '#/view/com/util/Link'
 import {PersonLink, personHref} from '#/components/PersonLink'
@@ -68,12 +70,17 @@ export function PersonRow({
   row,
   groupNames,
   locale,
+  isTourTarget = false,
 }: {
   row: PersonRowData
   groupNames: Map<string, string>
   locale: string
+  /** The first row of the list: the guided tour points at it and at its balance (F-253). */
+  isTourTarget?: boolean
 }) {
   const t = useTheme()
+  const rowTourRef = useTourRef('friend-row')
+  const balanceTourRef = useTourRef('friend-balance')
   const {t: l} = useLingui()
   const listAnimations = useListAnimations()
   const press = usePressScale()
@@ -132,6 +139,7 @@ export function PersonRow({
     <SettledPill testID="person-row-settled" />
   ) : (
     <View
+      ref={isTourTarget ? balanceTourRef : undefined}
       testID="person-row-nets"
       style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
       {shownCurrencies.flatMap(currency =>
@@ -239,7 +247,7 @@ export function PersonRow({
   )
 
   return (
-    <Animated.View {...listAnimations}>
+    <Animated.View ref={isTourTarget ? rowTourRef : undefined} {...listAnimations}>
       {isDeleted ? (
         /* The menu is a sibling of the link, never nested in it. */
         <HideRow

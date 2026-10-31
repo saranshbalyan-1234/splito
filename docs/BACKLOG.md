@@ -489,11 +489,11 @@ Opus audits every Settings row and registry key against decision 128 (keep only 
 
 After the first sign-in and setup, a short coach-mark walkthrough over the real app (FAB / Add expense, a friend row, Groups +, Settle up, Search & Ask, Activity), one spotlight at a time with Next / Skip; Expensify FeatureTraining and Bluesky ProgressGuide patterns, Bluesky look.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (after F-249, F-250) · **Deps** F-249, F-250, F-211
-- **Prefs** `onboarding.tourSeen` (account), `tips.enabled`
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** built on branch worktree-agent-a50f8ca7f9ae10c7d (unmerged, web checked, native and Android/iOS not run): exactly 3 steps (Add an expense: FAB or sidebar pill; See who owes whom: first friend row; Settle up: that row's balance, else the Groups tab), empty-state wording on Add friend when there are no friends, once per account (`onboarding.tourSeen`), replay from Settings > Support "Take the tour", never in demo mode; e2e `tour.spec.ts` at 390 and 1440; first-use tips (`tips.enabled`) dropped by owner 213 · **Deps** F-249, F-250, F-211
+- **Prefs** `onboarding.tourSeen` (account, `app` group, no Settings row); `tips.enabled` not built
 - **Acceptance**
-  1. Runs once per account right after setup lands on Home; Skip ends it; Settings > Help "Take the tour" replays it.
-  2. Each step keeps the real control sharp and blurs the rest of the screen (owner 143: blur + slight dim, rounded cut-out, caption beside it; web backdrop-filter, native expo-blur, plain dim under reduced transparency), focus moved to it, screen reader reads the step and "Step N of 6"), adapts to phone, rail and desktop (sidebar items on desktop).
+  1. Runs once per account right after sign-in lands on People (there is no Home tab, owner 198); Skip ends it; Settings > Support "Take the tour" replays it.
+  2. Each step keeps the real control sharp and blurs the rest of the screen (owner 143: blur + slight dim, rounded cut-out, caption beside it; web backdrop-filter, native expo-blur, plain dim under reduced transparency), focus moved to it, screen reader reads the step and "Step N of 3"), adapts to phone, rail and desktop (sidebar items on desktop).
   3. Steps that need data use empty-state wording when there is none; the tour never creates records.
   4. Never in demo mode or e2e unless its spec asks; reduced motion respected; no overlap with toasts or sheets.
   5. e2e at 390 and 1440 plus screenshots.

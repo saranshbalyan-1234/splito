@@ -3,6 +3,7 @@ import {
   Pressable,
   type PressableProps,
   type StyleProp,
+  type View,
   type ViewStyle,
 } from 'react-native'
 import Animated, {
@@ -60,6 +61,8 @@ export function PressableScale({
 }: {
   targetScale?: number
   style?: StyleProp<ViewStyle>
+  /** The node, for code that points at it (the guided tour). Absent: upstream behaviour. */
+  ref?: React.Ref<React.ComponentRef<typeof View>>
 } & Exclude<PressableProps, 'onPressIn' | 'onPressOut' | 'style'>) {
   const press = usePressScale(targetScale)
 

@@ -9,6 +9,7 @@ import {type Group, type Person} from '@splito/sync'
 import {type Params, readSort} from '#/lib/links/listState'
 import {perfMark} from '#/lib/perfMark'
 import {type NavigationProp} from '#/lib/routes/types'
+import {usePublishPeopleState, useTourRef} from '#/lib/tour/registry'
 import {useGroupChipNames} from '#/data/groupVisibility'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -134,6 +135,10 @@ export function PeopleScreen() {
   /* Settled up friends leave the list only (owner 90, 112): a search still finds them. */
   const {listed, count: listedCount, total: searchTotal} = searchFriends(filtered, query, filters, seenCurrencies)
 
+  /* The guided tour starts here once People has loaded (F-253). */
+  usePublishPeopleState(isLoading ? 'loading' : friends.length === 0 ? 'empty' : 'friends')
+  const addFriendRef = useTourRef('add-friend')
+
   return (
     <TabScreen testID="screen-people">
       <Layout.Header.Outer>
@@ -148,6 +153,7 @@ export function PeopleScreen() {
         <SearchAskButton />
         <Layout.Header.ActionButton
           testID="people-add-friend"
+          ref={addFriendRef}
           label={l`Invite people`}
           icon={PersonPlusIcon}
           edge
@@ -171,8 +177,8 @@ export function PeopleScreen() {
           <List
             data={listed}
             keyExtractor={(row: PersonRowData) => row.id}
-            renderItem={({item}: {item: PersonRowData}) => (
-              <PersonRow row={item} groupNames={groupNames} locale={locale} />
+            renderItem={({item, index}: {item: PersonRowData; index: number}) => (
+              <PersonRow row={item} groupNames={groupNames} locale={locale} isTourTarget={index === 0} />
             )}
             ListHeaderComponent={
               friends.length > 0 ? (

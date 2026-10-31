@@ -323,3 +323,16 @@ Activity scroll at 6x CPU (large demo, 60 wheel steps), long tasks over 50 ms, w
   round) and its `Animated.View` (+7 mounts, +8 updates), the Activity tick glyph (`AnimatedIcon`, `Layer`, `Nodes`, `AnimatedPath`: 3 mounts), and two `View`/`Circle` mounts
   from the ContactRound and Users glyphs. No new wasted-render report. A first version that kept both the outline and filled glyph mounted cost 624 tab updates and one new
   wasted `Rect` report, so only the glyph in use is mounted.
+
+## Guided tour after the first sign-in (F-253; web only, measured 2026-10-31, machine load 20 from other builders)
+
+| Check | Result |
+|---|---|
+| Lint, typecheck | green |
+| Client unit tests | new: `lib/tour/steps.test.ts` (6, which steps show for phone, desktop, settled friend, new account, nothing on screen), `lib/tour/layout.test.ts` (7, cut-out, card placement, 320 px width, hole path); architecture rules pass for the new files (the one red, `personAvatarOutsideLink` on `screens/Profile`, is on the integration branch before this change) |
+| Lingui | en 2041 / hi 2041, 0 missing (10 new strings, Hindi written for each) |
+| `e2e/tour.spec.ts` at 390 and 1440 | 12 tests: a new account is toured once (3 steps, Done ends it, no tour after a reload), Skip ends it, with a friend the steps sit on the FAB or pill / first row / balance, Escape skips and the dim blocks the control under it, Settings > Support "Take the tour" replays it on People, never in demo mode (no row either) |
+| Neighbouring specs (load 20, so timings are upper bounds) | `shell` "sidebar holds the mark, the nav, Add expense" and "the FAB is on every top-level page" pass (they cover the controls the tour registers). Not green here, and not from this change (the tour never runs unarmed): `shell` "detail pages" (the demo group has 6 members, the spec says 5, from the F-269 demo data), `shell` "badge counts unread" (Activity rows not found), `shell` "on desktop the header stays put", `sidebar` 1440 (demo switch over the 30 s test limit at load 20); not bisected against a build of the integration branch alone |
+| Cost | an account that has seen the tour: one `getPref` at launch, `TourHost` renders null; a tour that runs: one overlay in the portal, a measure per step (and one 350 ms settle look), no timers after it ends; no store subscription, no re-render of the controls it points at (ref callbacks register in a module map) |
+
+Not run: iOS and Android (the native dim has no blur because `expo-blur` is not a dependency; `measureInWindow` coordinates on Android edge-to-edge and the announcement on VoiceOver / TalkBack are unchecked), the renders gate (its Metro port 8191 is outside this builder's range).
