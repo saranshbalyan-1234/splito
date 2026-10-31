@@ -161,6 +161,7 @@ function NativeTabBar(props: BottomTabBarProps) {
 
 function Tabs() {
   const {gtMobile} = useBreakpoints()
+  const isReducedMotion = useShouldReduceMotion()
   return (
     <Tab.Navigator
       // The start tab preference (Settings > Navigation), mirrored for a synchronous read at launch.
@@ -169,6 +170,8 @@ function Tabs() {
       screenOptions={{
         headerShown: false,
         lazy: true,
+        // The main-tab switch shifts toward the side of the tab tapped (owner 174), instant under reduced motion.
+        animation: isReducedMotion ? 'none' : 'shift',
         // Tablets: the sidebar sits beside full-width content, as on web.
         tabBarPosition: gtMobile ? 'left' : 'bottom',
       }}

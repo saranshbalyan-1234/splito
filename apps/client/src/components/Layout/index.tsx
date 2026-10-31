@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Layout/index.tsx
-import {memo, useContext, useMemo} from 'react'
+import {memo, useCallback, useContext, useMemo, useRef} from 'react'
 import {
   type StyleProp,
   View,
@@ -19,6 +19,7 @@ import {RouteFAB} from '#/components/RouteFAB'
 import {useEnableMinimalShellModeForScreen} from '#/state/shell'
 import {useShowShell} from '#/state/shell/minimal-mode'
 import {useShellLayout} from '#/state/shell/shell-layout'
+import {takeTabSlide} from '#/lib/routes/tabSlide'
 import {OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {useScreenOpened} from '#/lib/hooks/useScreenOpened'
 import {usePullToRefresh} from '#/lib/refresh/usePullToRefresh'
@@ -73,7 +74,22 @@ export const Screen = memo(function Screen({
   const opened = useScreenOpened()
   /* A tab switch or a page opening shows the header, bottom bar and FAB again (ARCHITECTURE 26.4). */
   const showShell = useShowShell()
-  useFocusEffect(showShell)
+  /* Web: a bar tap's slide plays on the screen it opens (owner 174; CSS on `data-tab-in`, no render, tabSlide.ts). */
+  const rootRef = useRef<HTMLDivElement>(null)
+  useFocusEffect(
+    useCallback(() => {
+      showShell()
+      if (!IS_WEB) return
+      const direction = takeTabSlide()
+      const el = rootRef.current
+      if (!direction || !el) return
+      el.dataset.tabIn = direction
+      const clear = () => delete el.dataset.tabIn
+      el.addEventListener('animationend', clear, {once: true})
+      const net = setTimeout(clear, 400)
+      return () => clearTimeout(net)
+    }, [showShell]),
+  )
 
   /*
    * Bluesky draws the centre column's side borders here. Splito's content
@@ -82,8 +98,9 @@ export const Screen = memo(function Screen({
    */
   return (
     <View
+      // @ts-expect-error web only: the DOM node (the tab slide sets `data-tab-in` on it)
+      ref={rootRef}
       // The pull to refresh handler (web) takes a touch only inside a screen.
-      // @ts-expect-error web only
       dataSet={{screen: ''}}
       style={[
         a.util_screen_outer,

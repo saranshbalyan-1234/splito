@@ -1131,6 +1131,16 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
 - **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
   10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
   three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+- **A tab switch reads no data and draws only the bar and the navigator; what is left is the browser's and
+  react-navigation's.** Counted 2026-10-31 (Chromium, 390 px, touch, large demo, load under 2): 0 IndexedDB
+  transactions per switch between visited tabs (90 during load); renders: the bar and the navigator shell only.
+  At CPU x1 a switch shows its screen in 31-52 ms (first visits 27-56 ms, Activity's once 142 ms) and lights the tab
+  in 11-24 ms; at x4 first visits take 63-217 ms. `propagateParentContextChanges` walks the kept screens on each
+  switch; one cause was react-navigation's web `SceneView` handing a new `headerBack` object to `HeaderBackContext`
+  on every focus change (patched, `patches/@react-navigation__native-stack@7.21.0.patch`, test
+  `navigation/nativeStackPatch.test.ts`), but most of the walk is the navigation state context itself (182 -> 162 ms
+  over 6 switches at x6). So a delay felt on iPhone Safari that Chromium does not show is to be measured in WebKit
+  (the iOS simulator's Safari) before anything more is changed on this path.
 - **A kept tab's size is paid on every switch to it, so a tab draws only what is on screen.** Showing a parked tab
   again re-lays out and restyles its whole tree: Analytics drew all 200 report rows the data layer read (about 4,700
   layout objects), so a switch to it cost 540-930 ms at CPU x6 (one 187 ms layout of 5,878 objects, 428 ms of style).
@@ -1737,6 +1747,11 @@ Splito lessons (add newest last, dated, with PR):
   each switch takes 165-930 ms, and Analytics was the worst because it drew every report row. Rule in 17.1. Not yet
   verified on a real iPhone: this container has no WebKit or simulator, so iPhone numbers still need the owner's
   phone or Mac.
+- 2026-10-31, F-257 (tab slide): **an animation that shifts content right widens the page.** The first cut moved the
+  incoming screen 32 px right and `tabTaps.spec` "no tab widens the page" read 422 px on a 390 px phone (the fixed
+  bar slips below the fold, § 23 fix/tab-taps). The sliding screen clips sideways (`overflow-x: clip` on the screen
+  root only, never on `html` or `body`). Also: a `transform` on a screen's root would carry its `position: fixed` FAB
+  with it, so the slide moves the screen's children except `[data-fab]`.
 
 ## 24. Checklists
 
@@ -2455,11 +2470,15 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   another, app-wide on native and per tab on web; `useNavigationDeduped().navigate` no longer dedupes, it is
   idempotent); e2e `tabTaps.spec.ts`.
 - **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch; reaffirmed by
-  owner 174 on 2026-10-30, "in tab switch, it should switch with sliding animation": F-257, next in Wave C, not built
-  yet; it must stay interruptible per owner 150 and must not redraw per owner 166): a
-  direction-aware horizontal slide (from the right when moving to a tab on the right, else from the left;
-  native ~220 ms via a bottom-tabs `sceneStyleInterpolator` + `transitionSpec`, web ~200 ms transform of the
-  content area). A small indicator under the active bottom-bar icon / beside the active sidebar item springs
+  owner 174 on 2026-10-30, "in tab switch, it should switch with sliding animation"; it must stay interruptible per
+  owner 150 and must not redraw per owner 166): a direction-aware horizontal slide (from the right when moving to a
+  tab on the right in the bar's own order, else from the left). [Built, F-257 slide part, 2026-10-31, web checked in
+  Chromium, native not yet run] Web: a bar tap notes the direction (`lib/routes/tabSlide.ts`) and the screen that
+  gains focus sets `data-tab-in` on its root; a CSS keyframe in `public/index.html` shifts the screen's content 32 px
+  with a fade in 200 ms on the compositor (no JS per frame, no React render; the fixed FAB is excluded, the screen
+  clips sideways so the page never widens), and a newer tap simply shows its screen with its own slide. Native: the
+  bottom tabs' `animation: 'shift'`. Reduced motion or motion off: instant (the bar notes no direction; CSS
+  `prefers-reduced-motion`; native `'none'`). Sidebar switches (rail and desktop) stay instant for now. A small indicator under the active bottom-bar icon / beside the active sidebar item springs
   to the new tab like the Activity underline; the tapped icon does a small spring scale pop while filled and
   stroke states cross-fade, with a Bluesky haptic tap; the unread badge springs in on count change; re-tap
   scrolls to top. No swipe between main tabs (it would fight the drawer edge-swipe and row swipe actions).
