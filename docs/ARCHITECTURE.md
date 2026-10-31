@@ -874,7 +874,8 @@ call it; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab 
   script); AASA and assetlinks list only app paths (join, group, person), excluding auth callbacks and
   downloads; the web deploy keeps dot-paths.
 - **Share:** one share helper takes the entity id plus the screen's summary; screens never call Share APIs
-  directly; capability fallback per § 2.
+  directly; capability fallback per § 2. [Built] `lib/sharing.ts` is it: `copyText(text, {toast})`, `shareText`, `shareUrl`
+  (the Remind sheet, the invite field and comment rows all call these; no other file touches the clipboard).
 - **Secrets are scrubbed:** invite tokens and join codes are removed from URLs, breadcrumbs and nav spans in
   `#/logger`, with a bun test.
 
@@ -1621,6 +1622,16 @@ Splito lessons (add newest last, dated, with PR):
   queries equal a row-by-row reference, narrow and broad both exercised), which is what makes the two paths safe.
 
 - 2026-10-31, c-p0bf (consolidation P0-b, P0-f): **a row menu is one component, because the same gesture kept working on some rows only.** Four hand-built menus (Hide, Dispute, Activity, comments) differed on phone-width web: iOS Safari fires no `contextmenu` on a long-press, so a deleted history row and an Activity row had no way in there (`IS_NATIVE`-only `onLongPress`). `components/RowMenu.tsx` owns it (`useRowMenuTrigger`: long-press where there is no mouse, right-click, Menu key / Shift+F10; `RowMenu`: row + menu + the "..." button), and the architecture rule `rowMenuGesture` counts hand-built `onContextMenu`s (baselined: CommentRow until P1-d, two charge pickers). Test-method lesson: **Chromium's emulated touch (`Input.dispatchTouchEvent`) sends a click at the lift point, which lands on the menu's scrim and closes it about 0.3 s after release**; a real long-press does not, so `e2e/rowMenu.spec.ts` checks the menu while the finger is still down, and desktop WebKit cannot construct a `Touch` (it is sent plain touch objects). Reanimated's `useReducedMotion` is the OS setting read once at start, so a swipe or animation using it ignores the Animations preference: use `useShouldReduceMotion`. Category names translated only in Settings, so a Hindi user saw "Food" everywhere else: one `useCategoryLookup` now names them. Renders: the lookup hands back the same object for the same category, id and name (`nameCategory`), because a fresh `{...category}` per render re-rendered every memoised tile and composer button (type phase: `CategoryTile` 10x, `Pressable` +20, `Button` +10); the one recorded increase is `mount:CategoryTile` 2 to 5 in the launch phase of `e2e-renders/baseline.json`, the five Home rows whose `EntryIcon` now draws the shared tile (edited by hand for that one line, not re-recorded under load 60 to 150).
+- 2026-10-31, F-274 P0-a/d/g (c-p0adg): **three more copies became one.** (1) Avatars: `initials(name, mode)` and `nameHash` live in
+  `lib/avatarName.ts` (pure, so bun can test it; `UserAvatar` re-exports them) and the Create group preview draws the same
+  `GroupAvatar` tile the created group wears ("Goa" is "GO" in both). (2) Days: `useDayLabel()` / `useFormatTime()` in
+  `locale/useDates.ts` over the pure `locale/dayLabel.ts` (`dayOfInstant`, `dayBucket`) word every day header and divider
+  (Activity sections, the Comments `DateDivider` now in `components/`, dispute lines) in the Timezone and Date format
+  preferences; one `MonthCalendar` (`components/forms`) serves the date field and the custom range. A Date format
+  change now reaches the Comments divider and statements. (3) Sharing: see § 14. Rule: a helper that a bun test must
+  reach cannot sit in a file that imports `react-native` (bun cannot parse its Flow source); put the pure part in
+  its own file and re-export.
+
 
 ## 24. Checklists
 

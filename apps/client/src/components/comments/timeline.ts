@@ -1,5 +1,7 @@
 import {type Comment, type Entity} from '@splito/sync'
 
+import {dayOfInstant} from '#/locale/dayLabel'
+
 /** A history line on an expense, as the timeline needs it: when, and a stable key. */
 export interface TimelineLine {
   key: string
@@ -47,16 +49,6 @@ export function mergeTimeline<H extends TimelineLine>(
   )
 }
 
-/** The local calendar day of an instant in a time zone, e.g. `2026-10-27`. */
-export function dayKey(at: number, timeZone: string): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(at)
-}
-
 /** Puts a Bluesky DM date divider before the first item of each local day. */
 export function withDividers<H extends TimelineLine>(
   items: ReadonlyArray<Exclude<TimelineItem<H>, {kind: 'divider'}>>,
@@ -65,7 +57,7 @@ export function withDividers<H extends TimelineLine>(
   const out: TimelineItem<H>[] = []
   let day = ''
   for (const item of items) {
-    const d = dayKey(item.at, timeZone)
+    const d = dayOfInstant(item.at, timeZone)
     if (d !== day) out.push({kind: 'divider', key: `divider:${d}`, at: item.at})
     day = d
     out.push(item)

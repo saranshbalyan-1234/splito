@@ -301,7 +301,7 @@ msgstr "{0} left to pay"
 
 #. placeholder {0}: person(r.to)
 #. placeholder {1}: person(r.from)
-#: src/features/export/statementText.ts:30
+#: src/features/export/statementText.ts:33
 msgid "{0} let {1}’s debt go"
 msgstr "{0} let {1}’s debt go"
 
@@ -361,7 +361,7 @@ msgstr "{0} paid"
 #: src/components/people/HistoryRow.tsx:145
 #: src/components/people/PaymentDetailsDialog.tsx:123
 #: src/components/people/RecordPaymentDialog.tsx:178
-#: src/features/export/statementText.ts:30
+#: src/features/export/statementText.ts:33
 #: src/screens/Repayment/index.tsx:164
 msgid "{0} paid {1}"
 msgstr "{0} paid {1}"
@@ -432,7 +432,7 @@ msgstr "{0} split {ways} ways: {1, plural, one {# person pays} other {# people p
 
 #. placeholder {0}: opts.from ? day(opts.from) : '…'
 #. placeholder {1}: opts.to ? day(opts.to) : '…'
-#: src/features/export/statementText.ts:63
+#: src/features/export/statementText.ts:65
 msgid "{0} to {1}"
 msgstr "{0} to {1}"
 
@@ -726,7 +726,7 @@ msgstr "{creditor} let {debtor} off"
 msgid "{creditor} let you off"
 msgstr "{creditor} let you off"
 
-#: src/components/comments/DateDivider.tsx:50
+#: src/components/DateDivider.tsx:30
 msgid "{date} at {time}"
 msgstr "{date} at {time}"
 
@@ -852,7 +852,7 @@ msgstr "{name} is back in your friends"
 msgid "{name} leaves your friends list and the pickers. Every expense and payment you shared stays, and you can add them back any time."
 msgstr "{name} leaves your friends list and the pickers. Every expense and payment you shared stays, and you can add them back any time."
 
-#: src/features/remind/RemindSheet.tsx:153
+#: src/features/remind/RemindSheet.tsx:154
 msgid "{name} owes you"
 msgstr "{name} owes you"
 
@@ -1604,7 +1604,7 @@ msgstr "Add your phone number"
 msgid "Added you to {group} · {when}"
 msgstr "Added you to {group} · {when}"
 
-#: src/features/remind/RemindSheet.tsx:200
+#: src/features/remind/RemindSheet.tsx:201
 msgid "Adds a link {name} can tap to pay you in a UPI app."
 msgstr "Adds a link {name} can tap to pay you in a UPI app."
 
@@ -1669,7 +1669,7 @@ msgstr "All activity"
 msgid "All currencies"
 msgstr "All currencies"
 
-#: src/features/export/statementText.ts:63
+#: src/features/export/statementText.ts:65
 msgid "All dates"
 msgstr "All dates"
 
@@ -1693,7 +1693,7 @@ msgstr "all items"
 msgid "All items"
 msgstr "All items"
 
-#: src/features/export/statementText.ts:69
+#: src/features/export/statementText.ts:71
 msgid "All settled"
 msgstr "All settled"
 
@@ -1751,8 +1751,8 @@ msgstr "Always in the group"
 #: src/components/split/fields.tsx:155
 #: src/components/split/fields.tsx:248
 #: src/components/split/fields.tsx:409
-#: src/features/export/statementText.ts:45
-#: src/features/export/statementText.ts:70
+#: src/features/export/statementText.ts:48
+#: src/features/export/statementText.ts:72
 #: src/screens/Analytics/components/Charts.tsx:247
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:123
 #: src/screens/People/components/FriendsFilterDialog.tsx:133
@@ -1873,7 +1873,7 @@ msgstr "Applies to"
 #: src/components/activity/ActivityFilterDialog.tsx:60
 #: src/components/settings/AccentPicker.tsx:125
 #: src/features/hidden/ShowHidden.tsx:52
-#: src/screens/Analytics/components/RangeDialog.tsx:112
+#: src/screens/Analytics/components/RangeDialog.tsx:83
 #: src/screens/Analytics/components/ScopeDialog.tsx:108
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:63
 #: src/screens/People/components/FriendsFilterDialog.tsx:76
@@ -1984,8 +1984,8 @@ msgstr "Backup downloaded ({count} records)"
 msgid "Backup ready to save ({count} records)"
 msgstr "Backup ready to save ({count} records)"
 
-#: src/features/export/statementText.ts:50
-#: src/features/export/statementText.ts:70
+#: src/features/export/statementText.ts:53
+#: src/features/export/statementText.ts:72
 #: src/screens/Analytics/components/Charts.tsx:372
 msgid "Balance"
 msgstr "Balance"
@@ -2075,7 +2075,7 @@ msgid "Calculator"
 msgstr "Calculator"
 
 #: src/features/export/ImportSheet.tsx:174
-#: src/features/export/statementText.ts:38
+#: src/features/export/statementText.ts:41
 #: src/features/friends/RemoveFriendDialog.tsx:106
 #: src/features/settlement/CallItEvenDialog.tsx:219
 #: src/features/settlement/CallItEvenDialog.tsx:279
@@ -2230,7 +2230,7 @@ msgstr "Checking the amount"
 msgid "Choose a password"
 msgstr "Choose a password"
 
-#: src/components/split/DateDialog.tsx:111
+#: src/components/forms/MonthCalendar.tsx:83
 msgid "Choose a year"
 msgstr "Choose a year"
 
@@ -2403,7 +2403,7 @@ msgstr "Closes without saving"
 msgid "Closes without saving your changes"
 msgstr "Closes without saving your changes"
 
-#: src/features/export/statementText.ts:55
+#: src/features/export/statementText.ts:58
 msgid "Closing balance"
 msgstr "Closing balance"
 
@@ -2497,7 +2497,7 @@ msgstr "Copied to clipboard"
 msgid "Copied!"
 msgstr "Copied!"
 
-#: src/features/remind/RemindSheet.tsx:218
+#: src/features/remind/RemindSheet.tsx:219
 #: src/screens/Invites/InviteLinks.tsx:152
 msgid "Copy"
 msgstr "Copy"
@@ -2523,7 +2523,7 @@ msgstr "Copy saved"
 msgid "Copy text"
 msgstr "Copy text"
 
-#: src/features/remind/RemindSheet.tsx:215
+#: src/features/remind/RemindSheet.tsx:216
 msgid "Copy the message"
 msgstr "Copy the message"
 
@@ -2586,7 +2586,7 @@ msgstr "Couldn’t export. Try again."
 msgid "Couldn’t leave the group. Please try again."
 msgstr "Couldn’t leave the group. Please try again."
 
-#: src/features/remind/RemindSheet.tsx:96
+#: src/features/remind/RemindSheet.tsx:97
 msgid "Couldn’t log this reminder. Please try again."
 msgstr "Couldn’t log this reminder. Please try again."
 
@@ -2594,7 +2594,7 @@ msgstr "Couldn’t log this reminder. Please try again."
 msgid "Couldn’t move your data. It is still on this device."
 msgstr "Couldn’t move your data. It is still on this device."
 
-#: src/lib/sharing.ts:84
+#: src/lib/sharing.ts:106
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "Couldn’t open an app for that. Copy the link instead."
 
@@ -2602,7 +2602,7 @@ msgstr "Couldn’t open an app for that. Copy the link instead."
 msgid "Couldn’t open the demo. Showing your own data."
 msgstr "Couldn’t open the demo. Showing your own data."
 
-#: src/features/remind/RemindSheet.tsx:117
+#: src/features/remind/RemindSheet.tsx:118
 msgid "Couldn’t open the share sheet. Try Copy instead."
 msgstr "Couldn’t open the share sheet. Try Copy instead."
 
@@ -2785,7 +2785,7 @@ msgstr "CSV"
 #: src/components/SearchAsk/ResultRows.tsx:434
 #: src/features/export/ExportSheet.tsx:213
 #: src/features/export/ExportSheet.tsx:262
-#: src/features/export/statementText.ts:44
+#: src/features/export/statementText.ts:47
 #: src/features/settlement/CallItEvenDialog.tsx:326
 #: src/screens/Analytics/index.tsx:231
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:96
@@ -2822,7 +2822,7 @@ msgstr "Custom color {applied}"
 
 #: src/features/export/ExportSheet.tsx:108
 #: src/features/export/ExportSheet.tsx:233
-#: src/screens/Analytics/components/RangeDialog.tsx:109
+#: src/screens/Analytics/components/RangeDialog.tsx:80
 #: src/screens/Analytics/components/Summary.tsx:202
 msgid "Custom range"
 msgstr "Custom range"
@@ -2854,8 +2854,8 @@ msgstr "Data"
 #: src/components/SearchAsk/ResultRows.tsx:428
 #: src/components/split/ExpenseComposer.tsx:383
 #: src/components/split/ExpenseComposer.tsx:539
-#: src/features/export/statementText.ts:40
-#: src/features/export/statementText.ts:70
+#: src/features/export/statementText.ts:43
+#: src/features/export/statementText.ts:72
 #: src/features/remind/RemindMeSheet.tsx:183
 #: src/features/remind/RemindMeSheet.tsx:185
 #: src/screens/Analytics/index.tsx:227
@@ -3027,8 +3027,8 @@ msgstr "Demo"
 msgid "Demo mode"
 msgstr "Demo mode"
 
-#: src/features/export/statementText.ts:42
-#: src/features/export/statementText.ts:70
+#: src/features/export/statementText.ts:45
+#: src/features/export/statementText.ts:72
 #: src/screens/Analytics/index.tsx:228
 msgid "Description"
 msgstr "Description"
@@ -3119,7 +3119,7 @@ msgstr "Dismiss"
 #: src/components/disputes/RecordMenuItems.tsx:19
 #: src/components/people/PaymentDetailsDialog.tsx:263
 #: src/features/disputes/RaiseSheet.tsx:123
-#: src/features/export/statementText.ts:52
+#: src/features/export/statementText.ts:55
 msgid "Dispute"
 msgstr "Dispute"
 
@@ -3218,7 +3218,7 @@ msgstr "Each charge is shared only by the people who had the items it applies to
 msgid "Each person’s share"
 msgstr "Each person’s share"
 
-#: src/components/split/DateDialog.tsx:127
+#: src/components/forms/MonthCalendar.tsx:106
 msgid "Earlier years"
 msgstr "Earlier years"
 
@@ -3304,11 +3304,11 @@ msgstr "Edited the notes"
 msgid "Editing comment"
 msgstr "Editing comment"
 
-#: src/features/export/statementText.ts:70
+#: src/features/export/statementText.ts:72
 msgid "Effect"
 msgstr "Effect"
 
-#: src/features/export/statementText.ts:49
+#: src/features/export/statementText.ts:52
 msgid "Effect on your balance"
 msgstr "Effect on your balance"
 
@@ -3561,7 +3561,7 @@ msgstr "Exact"
 msgid "Excluded"
 msgstr "Excluded"
 
-#: src/features/export/statementText.ts:38
+#: src/features/export/statementText.ts:41
 #: src/navigation/Navigation.tsx:84
 #: src/screens/Analytics/components/ExpenseRow.tsx:47
 #: src/screens/Expense/index.tsx:122
@@ -3816,7 +3816,7 @@ msgstr "From 1 person"
 msgid "Full"
 msgstr "Full"
 
-#: src/components/split/DateDialog.tsx:271
+#: src/components/split/DateDialog.tsx:96
 msgid "Future dates are fine – they show as upcoming until the day arrives."
 msgstr "Future dates are fine – they show as upcoming until the day arrives."
 
@@ -3893,8 +3893,8 @@ msgstr "Groceries"
 #: src/components/split/pickers.tsx:172
 #: src/features/export/ExportSheet.tsx:207
 #: src/features/export/ExportSheet.tsx:244
-#: src/features/export/statementText.ts:43
-#: src/features/export/statementText.ts:70
+#: src/features/export/statementText.ts:46
+#: src/features/export/statementText.ts:72
 #: src/features/searchAsk/AskAnswer.tsx:136
 #: src/features/settlement/CallItEvenDialog.tsx:158
 #: src/navigation/Navigation.tsx:81
@@ -3930,7 +3930,7 @@ msgstr "Group name"
 msgid "Group requests"
 msgstr "Group requests"
 
-#: src/features/export/statementText.ts:56
+#: src/features/export/statementText.ts:59
 msgid "Group settle-up routing"
 msgstr "Group settle-up routing"
 
@@ -4600,7 +4600,7 @@ msgstr "last week"
 msgid "last year"
 msgstr "last year"
 
-#: src/components/split/DateDialog.tsx:140
+#: src/components/forms/MonthCalendar.tsx:119
 msgid "Later years"
 msgstr "Later years"
 
@@ -4687,7 +4687,7 @@ msgstr "Links that still work. Revoke one and it stops working straight away; fr
 msgid "Liquor VAT"
 msgstr "Liquor VAT"
 
-#: src/features/export/statementText.ts:51
+#: src/features/export/statementText.ts:54
 #: src/screens/Analytics/index.tsx:235
 msgid "Location"
 msgstr "Location"
@@ -4723,8 +4723,8 @@ msgstr "Look further back"
 msgid "Made on another device: your side of every expense is matched to you here."
 msgstr "Made on another device: your side of every expense is matched to you here."
 
-#. placeholder {0}: i18n.date(new Date(), {dateStyle: 'medium'})
-#: src/features/export/statementText.ts:64
+#. placeholder {0}: day(today)
+#: src/features/export/statementText.ts:66
 msgid "Made on this device on {0}"
 msgstr "Made on this device on {0}"
 
@@ -4842,7 +4842,7 @@ msgstr "Menu"
 msgid "Merge"
 msgstr "Merge"
 
-#: src/features/remind/RemindSheet.tsx:173
+#: src/features/remind/RemindSheet.tsx:174
 msgid "Message"
 msgstr "Message"
 
@@ -5082,9 +5082,8 @@ msgstr "Next"
 msgid "Next Monday"
 msgstr "Next Monday"
 
-#: src/components/split/DateDialog.tsx:140
+#: src/components/forms/MonthCalendar.tsx:119
 #: src/features/remind/RemindMeSheet.tsx:176
-#: src/screens/Analytics/components/RangeDialog.tsx:148
 msgid "Next month"
 msgstr "Next month"
 
@@ -5284,7 +5283,7 @@ msgstr "Non-group expenses"
 msgid "Non-group only"
 msgstr "Non-group only"
 
-#: src/features/export/statementText.ts:22
+#: src/features/export/statementText.ts:25
 msgid "Not in a group"
 msgstr "Not in a group"
 
@@ -5376,7 +5375,7 @@ msgstr "Nothing matches these filters yet."
 msgid "Nothing owed"
 msgstr "Nothing owed"
 
-#: src/features/export/statementText.ts:67
+#: src/features/export/statementText.ts:69
 msgid "Nothing recorded in this range."
 msgstr "Nothing recorded in this range."
 
@@ -5668,7 +5667,7 @@ msgstr "Open your profile"
 msgid "Opening an invite needs a connection to Splito. Try again once you’re online."
 msgstr "Opening an invite needs a connection to Splito. Try again once you’re online."
 
-#: src/features/export/statementText.ts:54
+#: src/features/export/statementText.ts:57
 msgid "Opening balance"
 msgstr "Opening balance"
 
@@ -5800,7 +5799,7 @@ msgstr "Paid · change who paid to remove"
 #: src/components/SearchAsk/ResultRows.tsx:334
 #: src/components/SearchAsk/ResultRows.tsx:430
 #: src/components/split/ExpenseComposer.tsx:561
-#: src/features/export/statementText.ts:46
+#: src/features/export/statementText.ts:49
 #: src/screens/Expense/index.tsx:454
 msgid "Paid by"
 msgstr "Paid by"
@@ -5862,7 +5861,7 @@ msgid "Pay with UPI"
 msgstr "Pay with UPI"
 
 #: src/components/people/HistoryRow.tsx:146
-#: src/features/export/statementText.ts:38
+#: src/features/export/statementText.ts:41
 #: src/navigation/Navigation.tsx:85
 #: src/screens/Repayment/index.tsx:86
 msgid "Payment"
@@ -6003,7 +6002,7 @@ msgstr "Pick at least one tax class"
 msgid "Pick categories when you add an expense. Hidden ones stay on past expenses."
 msgstr "Pick categories when you add an expense. Hidden ones stay on past expenses."
 
-#: src/screens/Analytics/components/RangeDialog.tsx:105
+#: src/screens/Analytics/components/RangeDialog.tsx:76
 msgid "Pick the first day"
 msgstr "Pick the first day"
 
@@ -6039,7 +6038,7 @@ msgstr "Please enter your password"
 msgid "Plus"
 msgstr "Plus"
 
-#: src/features/export/statementText.ts:66
+#: src/features/export/statementText.ts:68
 msgid "Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it."
 msgstr "Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it."
 
@@ -6060,8 +6059,7 @@ msgstr "Preview"
 msgid "Preview build: local dev account, data stays in this browser, don't use a real password."
 msgstr "Preview build: local dev account, data stays in this browser, don't use a real password."
 
-#: src/components/split/DateDialog.tsx:127
-#: src/screens/Analytics/components/RangeDialog.tsx:135
+#: src/components/forms/MonthCalendar.tsx:106
 msgid "Previous month"
 msgstr "Previous month"
 
@@ -6262,7 +6260,7 @@ msgstr "Reload and lose your changes?"
 msgid "Remind"
 msgstr "Remind"
 
-#: src/features/remind/RemindSheet.tsx:141
+#: src/features/remind/RemindSheet.tsx:142
 msgid "Remind {name}"
 msgstr "Remind {name}"
 
@@ -6281,11 +6279,11 @@ msgstr "Remind me"
 msgid "Reminder cancelled"
 msgstr "Reminder cancelled"
 
-#: src/features/remind/RemindSheet.tsx:103
+#: src/features/remind/RemindSheet.tsx:104
 msgid "Reminder copied. Paste it in a chat with {name}."
 msgstr "Reminder copied. Paste it in a chat with {name}."
 
-#: src/features/remind/RemindSheet.tsx:104
+#: src/features/remind/RemindSheet.tsx:105
 msgid "Reminder opened for {name}. Splito can’t see whether it was sent."
 msgstr "Reminder opened for {name}. Splito can’t see whether it was sent."
 
@@ -6771,7 +6769,7 @@ msgstr "saved on this device"
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
-#: src/features/remind/RemindSheet.tsx:201
+#: src/features/remind/RemindSheet.tsx:202
 #: src/screens/Expense/components/History.tsx:177
 msgid "Saved on this device. It syncs to your other devices when you are online."
 msgstr "Saved on this device. It syncs to your other devices when you are online."
@@ -7011,7 +7009,7 @@ msgstr "Send invite"
 msgid "Send message"
 msgstr "Send message"
 
-#: src/features/remind/RemindSheet.tsx:208
+#: src/features/remind/RemindSheet.tsx:209
 msgid "Send on WhatsApp"
 msgstr "Send on WhatsApp"
 
@@ -7163,7 +7161,7 @@ msgid "Settled up first"
 msgstr "Settled up first"
 
 #: src/components/invites/InviteShare.tsx:110
-#: src/features/remind/RemindSheet.tsx:144
+#: src/features/remind/RemindSheet.tsx:145
 #: src/screens/Analytics/components/Charts.tsx:280
 msgid "Share"
 msgstr "Share"
@@ -7221,7 +7219,7 @@ msgstr "Show as tables"
 msgid "Show charts"
 msgstr "Show charts"
 
-#: src/components/split/DateDialog.tsx:111
+#: src/components/forms/MonthCalendar.tsx:83
 msgid "Show days"
 msgstr "Show days"
 
@@ -7400,8 +7398,8 @@ msgstr "Some"
 #: src/components/SearchAsk/ResultRows.tsx:230
 #: src/components/SearchAsk/ResultRows.tsx:380
 #: src/components/split/shared.tsx:23
-#: src/features/export/statementText.ts:21
-#: src/features/remind/RemindSheet.tsx:67
+#: src/features/export/statementText.ts:24
+#: src/features/remind/RemindSheet.tsx:68
 #: src/features/searchAsk/AskAnswer.tsx:60
 #: src/features/settlement/CallItEvenDialog.tsx:130
 #: src/screens/Analytics/useReport.ts:331
@@ -7530,7 +7528,7 @@ msgstr "Splito can’t see your UPI app. Record the payment only once your app s
 msgid "Splito collects no analytics and shows no ads."
 msgstr "Splito collects no analytics and shows no ads."
 
-#: src/features/remind/RemindSheet.tsx:226
+#: src/features/remind/RemindSheet.tsx:227
 msgid "Splito hands this to the app you pick. It can’t see whether the message is sent."
 msgstr "Splito hands this to the app you pick. It can’t see whether the message is sent."
 
@@ -7550,7 +7548,7 @@ msgstr "Splito never moves money. Record each payment once it has happened – p
 msgid "Splito reminder"
 msgstr "Splito reminder"
 
-#: src/features/export/statementText.ts:61
+#: src/features/export/statementText.ts:63
 msgid "Splito statement"
 msgstr "Splito statement"
 
@@ -8204,21 +8202,15 @@ msgstr "To 1 person"
 msgid "today"
 msgstr "today"
 
-#: src/components/comments/DateDivider.tsx:25
-#: src/components/split/DateDialog.tsx:245
-#: src/components/split/DateDialog.tsx:250
+#: src/components/split/DateDialog.tsx:70
+#: src/components/split/DateDialog.tsx:75
 #: src/features/searchAsk/AskChat.tsx:291
-#: src/locale/useDates.ts:83
-msgid "Today"
-msgstr "Today"
-
-#: src/components/activity/SectionHeader.tsx:56
-msgctxt "Activity section header"
+#: src/locale/useDates.ts:84
 msgid "Today"
 msgstr "Today"
 
 #: src/features/remind/RemindMeSheet.tsx:173
-#: src/locale/useDates.ts:85
+#: src/locale/useDates.ts:86
 msgid "Tomorrow"
 msgstr "Tomorrow"
 
@@ -8297,7 +8289,7 @@ msgstr "Try searching for"
 #: src/components/activity/ActivityFilterDialog.tsx:79
 #: src/components/groups/GroupFields.tsx:77
 #: src/components/SearchAsk/ResultRows.tsx:438
-#: src/features/export/statementText.ts:41
+#: src/features/export/statementText.ts:44
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:71
 msgid "Type"
 msgstr "Type"
@@ -8652,7 +8644,7 @@ msgstr "What you typed won’t be kept."
 msgid "What’s your name?"
 msgstr "What’s your name?"
 
-#: src/features/remind/RemindSheet.tsx:211
+#: src/features/remind/RemindSheet.tsx:212
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -8868,16 +8860,10 @@ msgstr "Yes, record {0}"
 msgid "yesterday"
 msgstr "yesterday"
 
-#: src/components/comments/DateDivider.tsx:27
-#: src/components/split/DateDialog.tsx:255
-#: src/components/split/DateDialog.tsx:260
+#: src/components/split/DateDialog.tsx:80
+#: src/components/split/DateDialog.tsx:85
 #: src/features/searchAsk/AskChat.tsx:293
-#: src/locale/useDates.ts:84
-msgid "Yesterday"
-msgstr "Yesterday"
-
-#: src/components/activity/SectionHeader.tsx:58
-msgctxt "Activity section header"
+#: src/locale/useDates.ts:85
 msgid "Yesterday"
 msgstr "Yesterday"
 
@@ -8891,7 +8877,7 @@ msgstr "you"
 #: src/components/groups/RulesEditor.tsx:206
 #: src/components/SearchAsk/ResultRows.tsx:380
 #: src/components/split/shared.tsx:23
-#: src/features/export/statementText.ts:21
+#: src/features/export/statementText.ts:24
 #: src/features/searchAsk/AskAnswer.tsx:60
 #: src/screens/Analytics/useReport.ts:331
 #: src/screens/CreateGroup.tsx:203
@@ -8942,7 +8928,7 @@ msgstr "You approve each join"
 msgid "you are owed"
 msgstr "you are owed"
 
-#: src/features/export/statementText.ts:69
+#: src/features/export/statementText.ts:71
 #: src/screens/Group/components/GroupBalanceCards.tsx:78
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:111
 #: src/screens/Home/components/Overview.tsx:243
@@ -9044,7 +9030,7 @@ msgstr "You joined {0}"
 msgid "You joined {group}"
 msgstr "You joined {group}"
 
-#: src/features/remind/RemindSheet.tsx:224
+#: src/features/remind/RemindSheet.tsx:225
 msgid "You last reminded {name} {lastAgo} ago."
 msgstr "You last reminded {name} {lastAgo} ago."
 
@@ -9087,7 +9073,7 @@ msgid "you owe"
 msgstr "you owe"
 
 #: src/components/SearchAsk/ResultRows.tsx:308
-#: src/features/export/statementText.ts:69
+#: src/features/export/statementText.ts:71
 #: src/features/searchAsk/AskAnswer.tsx:222
 #: src/screens/Group/components/GroupBalanceCards.tsx:80
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:112
@@ -9145,7 +9131,7 @@ msgstr "You owe in group"
 
 #: src/components/SearchAsk/ResultRows.tsx:235
 #: src/data/recentTransactionRows.ts:36
-#: src/features/export/statementText.ts:47
+#: src/features/export/statementText.ts:50
 #: src/features/searchAsk/AskAnswer.tsx:292
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:249
@@ -9350,7 +9336,7 @@ msgstr "Your profile"
 msgid "Your reminders"
 msgstr "Your reminders"
 
-#: src/features/export/statementText.ts:48
+#: src/features/export/statementText.ts:51
 #: src/features/searchAsk/AskAnswer.tsx:295
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:188
@@ -9404,11 +9390,11 @@ msgstr "Your spending"
 msgid "Your spending shows up here – by month, category, person and group – once you add an expense."
 msgstr "Your spending shows up here – by month, category, person and group – once you add an expense."
 
-#: src/features/remind/RemindSheet.tsx:190
+#: src/features/remind/RemindSheet.tsx:191
 msgid "Your UPI ID"
 msgstr "Your UPI ID"
 
-#: src/features/remind/RemindSheet.tsx:185
+#: src/features/remind/RemindSheet.tsx:186
 msgid "Your UPI ID (optional)"
 msgstr "Your UPI ID (optional)"
 

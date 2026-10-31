@@ -6,6 +6,7 @@ import {type StatementPage, type StatementText} from '#/lib/export/statementForm
 import {useEntities, useMutationCtx} from '#/data/hooks'
 import {joinList} from '#/locale/joinList'
 import {useNumberLocale} from '#/locale/numberLocale'
+import {useFormatDay, useToday} from '#/locale/useDates'
 
 /**
  * The words a statement uses, in the person's language: who paid, what each
@@ -13,11 +14,13 @@ import {useNumberLocale} from '#/locale/numberLocale'
  * people and groups; "You" is the local user.
  */
 export function useStatementText() {
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
   const {actor} = useMutationCtx()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const locale = useNumberLocale()
+  const day = useFormatDay()
+  const today = useToday()
   const person = (id: string) => (id === actor ? l`You` : (people?.find(p => p.id === id)?.data.name ?? l`Someone`))
   const group = (id: string | null) => (id === null ? l`Not in a group` : (groups?.find(g => g.id === id)?.data.name ?? ''))
 
@@ -56,12 +59,11 @@ export function useStatementText() {
     adjustment: l`Group settle-up routing`,
   }
 
-  const day = (d: string) => i18n.date(new Date(`${d}T00:00:00Z`), {dateStyle: 'medium', timeZone: 'UTC'})
   const page = (opts: {subject: string; from?: string | null; to?: string | null; owner: string}): StatementPage => ({
     title: l`Splito statement`,
     subject: opts.subject,
     range: opts.from || opts.to ? l`${opts.from ? day(opts.from) : '…'} to ${opts.to ? day(opts.to) : '…'}` : l`All dates`,
-    generated: l`Made on this device on ${i18n.date(new Date(), {dateStyle: 'medium'})}`,
+    generated: l`Made on this device on ${day(today)}`,
     owner: opts.owner,
     footnote: l`Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it.`,
     empty: l`Nothing recorded in this range.`,

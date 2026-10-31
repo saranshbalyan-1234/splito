@@ -2,7 +2,7 @@ import {View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import {type DisputeEvent, type DisputeEventKind} from '@splito/sync'
 
-import {useTimeZone} from '#/locale/useDates'
+import {useFormatTime} from '#/locale/useDates'
 import {atoms as a, useTheme} from '#/alf'
 import {AcceptedIcon, DisputedIcon, GoneIcon, HoldIcon, RejectedIcon, ReleaseIcon, ReopenIcon, WithdrawnIcon} from './icons'
 import {useDisputeWords} from './words'
@@ -31,8 +31,8 @@ export const isDisputeLine = (line: {key: string; at: number}): line is DisputeE
  */
 export function DisputeLine({event}: {event: DisputeEvent}) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
-  const tz = useTimeZone()
+  const {t: l} = useLingui()
+  const formatTime = useFormatTime()
   const name = useDisplayName()
   const words = useDisputeWords()
   const d = event.data
@@ -60,7 +60,7 @@ export function DisputeLine({event}: {event: DisputeEvent}) {
           {title}
           <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
             {' · '}
-            {i18n.date(new Date(event.at), {timeStyle: 'short', timeZone: tz})}
+            {formatTime(event.at)}
           </Text>
         </Text>
       </View>

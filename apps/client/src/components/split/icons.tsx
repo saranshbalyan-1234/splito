@@ -60,9 +60,6 @@ export const DeleteIcon = createIcon(Delete)
 /** Cash rounding (F-402). */
 export const CoinsIcon = createIcon(Coins)
 export const ReceiptIcon = createIcon(ReceiptText)
-export const TripIcon = createIcon(Plane)
-export const HomeIcon = createIcon(House)
-export const CoupleIcon = createIcon(Heart)
 
 /**
  * Category glyphs by the `icon` name stored in the categories preference.

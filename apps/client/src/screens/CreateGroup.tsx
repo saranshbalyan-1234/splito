@@ -158,7 +158,7 @@ export function CreateGroupScreen() {
       }>
       <View style={[a.px_lg, a.pt_md, a.gap_xl]}>
         <View style={[a.flex_row, a.align_center, a.gap_md]}>
-          <AvatarPreview name={name} type="list" />
+          <AvatarPreview name={name} type="list" kind={kind} />
           <View style={[a.flex_1, a.gap_2xs]}>
             <Text style={[a.text_xl, a.font_bold, a.leading_tight]}>
               <Trans>One place for shared costs</Trans>
