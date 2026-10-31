@@ -822,3 +822,21 @@ test('dev tools seed data in e2e builds', async ({page}) => {
   )
   expect(typeof id).toBe('string')
 })
+
+test('bottom-bar icons are drawn in the text colour, never the accent (owner 215)', async ({page}) => {
+  await page.setViewportSize({width: 390, height: 844})
+  await page.goto('/people')
+  await expect(page.getByTestId('screen-people').first()).toBeVisible()
+  const colours = await page.evaluate(() => {
+    const nav = document.querySelector('[role="navigation"]')!
+    const label = [...nav.querySelectorAll('[aria-current="page"] [data-testid="tab-label"]')][0] as HTMLElement
+    const icons = [...nav.querySelectorAll('[data-testid^="tab-"] svg')].map(svg => {
+      const painted = svg.querySelector('path, circle, rect') ?? svg
+      const style = getComputedStyle(painted)
+      return style.fill !== 'none' && style.fill !== 'rgba(0, 0, 0, 0)' ? style.fill : style.stroke
+    })
+    return {text: getComputedStyle(label).color, icons}
+  })
+  expect(colours.icons.length).toBeGreaterThan(3)
+  for (const c of colours.icons) expect(c).toBe(colours.text)
+})

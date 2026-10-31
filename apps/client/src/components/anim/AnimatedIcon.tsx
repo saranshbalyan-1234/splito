@@ -240,8 +240,10 @@ export function MorphIcon({
   }))
   const Glyph = isActive ? Filled : Outline
   return (
-    <Animated.View style={[popStyle, props.style as object]}>
-      <Glyph {...props} style={undefined} {...(playKey === undefined ? {} : {playKey})} />
+    // The pop on the wrapper, the caller's style (colour, margins) on the glyph only: dropping it there made every
+    // icon fall back to the accent colour (owner 215), applying it to both doubled the margins.
+    <Animated.View style={popStyle}>
+      <Glyph {...props} {...(playKey === undefined ? {} : {playKey})} />
     </Animated.View>
   )
 }
