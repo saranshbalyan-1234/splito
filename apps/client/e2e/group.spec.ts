@@ -1,6 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
 import {openApp} from './app'
+import {openDemo} from './openDemo'
 import {seedGroup} from './seed'
 import {PHONE} from './viewports'
 
@@ -231,4 +232,18 @@ test('create a group with a new member, then land on it', async ({page}) => {
   await expect(page.getByTestId('group-byline')).toHaveText('Trip · 3 members')
   await expect(page.getByTestId('group-expenses-empty')).toBeVisible()
   await expect(page.getByTestId('group-settle')).toBeDisabled()
+})
+
+test('on a phone the pinned tabs move up with the header, so no rows show above them', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page, '/groups')
+  const href = await page.getByTestId('screen-groups').locator('a[href^="/groups/"]').filter({hasText: 'Goa'}).first().getAttribute('href')
+  await page.goto(href!)
+  await expect(page.getByTestId('group-tabs').locator('visible=true').first()).toBeVisible()
+  const tabsTop = () => page.evaluate(() => [...document.querySelectorAll('[data-testid="group-tabs"]')].filter(e => (e as HTMLElement).offsetParent !== null).map(e => Math.round(e.getBoundingClientRect().top))[0])
+  // Scrolled down far enough for the header to slide away: the tabs take its place at the top.
+  for (let i = 0; i < 4; i++) await page.mouse.wheel(0, 1500)
+  await page.mouse.wheel(0, -600)
+  await page.mouse.wheel(0, 600)
+  await expect.poll(tabsTop).toBeLessThan(5)
 })

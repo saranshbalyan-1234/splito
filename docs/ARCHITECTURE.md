@@ -1853,6 +1853,18 @@ Splito lessons (add newest last, dated, with PR):
   every spec that counts friends, settled friends or members; the demo specs derive the count from the plan, so the
   formula names each addition. Unavoidable reds here: 5 `rowMenu` webkit cases (no WebKit in the container) and 10
   pull-to-refresh / touch-scroll cases (CDP `synthesizeScrollGesture` does not scroll this Chromium).
+- 2026-10-31, owner's iPhone screenshot (Goa group): **something pinned under the header must move with the header.**
+  The group tab bar was `sticky` at a fixed `top: 52`, and the header slides away on phones (owner 87), so once the
+  header hid, rows scrolled through a 52 px band above the tabs. `BelowHeader` (`components/Layout/MainScrollProvider.tsx`)
+  moves its children up with the header on phones (no fade). It is a component, not a hook the page calls: the header's
+  state lives in `Layout.Screen`, which the page itself renders, so a hook in `GroupScreen` read the default and did
+  nothing (the F-256 lesson again: a hook called above the scaffold cannot read the scaffold's context). Test:
+  `group.spec` "on a phone the pinned tabs move up with the header" (fails without the fix).
+- 2026-10-31, owner 215: **an icon's colour travels in its style, so a wrapper that takes the style must hand it on.**
+  The c-anim review fix stopped `MorphIcon` passing the caller's style to the glyph (to stop margins applying twice),
+  and every bottom-bar, sidebar and drawer icon fell back to the accent colour. The pop now sits alone on the
+  wrapper and the whole style goes to the glyph; `shell.spec` checks the bar's icons are drawn in the label's text
+  colour.
 
 ## 24. Checklists
 
@@ -2419,6 +2431,10 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
 - **Nav items:** Bluesky `NavItem` exactly (24 px icon, `text_xl`, active = bold + filled icon,
   `rounded_full` hover background, Bluesky badge/dot): the shared list of § 26.3. The
   sliding active indicator (§ 26.9) sits beside the active item.
+- **Navigation icons are drawn in the text colour, never the accent** (owner 215): the bottom bar, the sidebar and
+  the drawer draw every tab icon in the theme's text colour (white in Dim and Black, near-black in light), active and
+  inactive alike; the selected tab is shown by its filled glyph and bold label, as in Bluesky. The accent colours
+  buttons, links and the FAB, not the nav. *Why:* "make the navigation selector white again like it was previously".
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
 - **Compact, no space it does not need** (owner 188): the sidebar is as wide as its content needs (icon,
@@ -3782,6 +3798,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 212 | "think from users perspective as well, app should be simple to use, nothing complex, make sure of UX"; "code should be simple"; "it should be lightning fast when i click somewhere" | Design from the user's side (one main action, plain words, fewest taps, same pattern everywhere); specs state the flow tap by tap; reviews check as a new user; simplest code; every tap instant | § 26.1 | Simplicity stated for settings only (128, 129) |
 | 213 | "make sure to use proper skeletons, proper animations, proper icons, proper empty screen and proper cta"; "loading wheverever required"; "guided tour for required part only"; "dont overdo anything" | Skeletons where content loads, small loaders only for non-content waits, motion only where it explains, consistent Lucide icons, an empty state with art + one sentence + one CTA on every list, one primary CTA per screen; guided tour only for the essentials; nothing decorative | § 26.1, F-253 | - |
 | 214 | "for some reason, by desktop full width sidebar looks really bad"; "Feedback · Help · Privacy · About moves to bottom" | The sidebar footer links are pinned to the bottom again; items and Add expense stay a block at the top; width stays 216 px | § 26.5 | Footer links directly under Add expense (188) |
+| 215 | "Tab ui issue"; "make the navigation selector white again like it was previously" | Bottom bar, sidebar and drawer icons in the text colour (white in dark), active shown by the filled glyph and bold label; never the accent | § 26.5 | Accent-coloured icons (a regression of the c-anim review fix) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

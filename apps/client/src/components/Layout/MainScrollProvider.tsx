@@ -1,7 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/util/MainScrollProvider.tsx
 import {createContext, useCallback, useContext, useEffect} from 'react'
-import {type NativeScrollEvent} from 'react-native'
-import {
+import {type NativeScrollEvent, type StyleProp, type ViewStyle} from 'react-native'
+import Animated, {
   clamp,
   interpolate,
   useAnimatedReaction,
@@ -16,6 +16,7 @@ import {ScrollProvider} from '#/lib/ScrollContext'
 import {useMinimalShellMode} from '#/state/shell/minimal-mode'
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {IS_NATIVE, IS_WEB} from '#/env'
+import {useBreakpoints} from '#/alf'
 
 const WEB_HIDE_SHELL_THRESHOLD = 200
 
@@ -57,6 +58,22 @@ export function useHeaderHideTransform(height: SharedValue<number>) {
       ...(IS_WEB ? {transform: [{translateY: offset}]} : {marginTop: offset}),
     }
   })
+}
+
+/**
+ * Something pinned under the header (a page's tab bar): on phones it moves up with the header as the header scrolls
+ * away, so no rows show through a gap where the header was. No fade, so it stays readable. A component, not a hook the
+ * page calls: the header's state lives in `Layout.Screen`, which the page renders, so only its children can read it.
+ */
+export function BelowHeader({style, children}: {style?: StyleProp<ViewStyle>; children: React.ReactNode}) {
+  const headerMode = useContext(HeaderModeContext)
+  const {headerHeight} = useShellLayout()
+  const {gtMobile} = useBreakpoints()
+  const follow = useAnimatedStyle(() => {
+    const offset = interpolate(headerMode?.get() ?? 0, [0, 1], [0, -headerHeight.get()])
+    return IS_WEB ? {transform: [{translateY: offset}]} : {}
+  })
+  return <Animated.View style={[style, !gtMobile && follow]}>{children}</Animated.View>
 }
 
 export function MainScrollProvider({children}: {children: React.ReactNode}) {
