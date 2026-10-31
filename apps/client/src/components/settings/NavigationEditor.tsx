@@ -63,7 +63,7 @@ function rowsFor(stored: readonly NavItemId[]): Row[] {
  * shared list can go in the bottom bar and the sidebar, each with a
  * switch and a drag handle (Bluesky's pinned-feeds list), or arrow buttons on
  * wide web and for screen readers. The bar takes any number of tabs, from
- * one to every item (decision 84); the start tab stays on. Items that are off stay in the phone drawer; the sidebar and rail always list every item in this order (owner 155, no "More"). Reset (the section's) restores People, Groups, Analytics,
+ * one to every item (decision 84); the start tab and Settings stay on (owner 217: a phone has no drawer). Items that are off are not on a phone; the sidebar and rail always list every item in this order (owner 155, no "More"). Reset (the section's) restores People, Groups, Analytics,
  * Activity, Settings.
  */
 export function NavigationEditor() {
@@ -111,7 +111,7 @@ export function NavigationEditor() {
       pref={pref}
       icon={TabsIcon}
       title={l`Items`}
-      description={l`On items make the phone bottom bar; the rest stay in the side menu (swipe in from the left edge). The sidebar on wide screens always lists every item, in this order.`}>
+      description={l`On items make the phone bottom bar, the only navigation on a phone. The sidebar on wide screens always lists every item, in this order.`}>
       <View
         style={[
           a.w_full,
@@ -127,8 +127,9 @@ export function NavigationEditor() {
           onReorder={next => save(next)}
           renderItem={(row, dragHandle) => {
             const index = rows.indexOf(row)
-            /* The start tab stays on, so the bar always holds the place the app opens on. */
-            const isStart = row.tab === startTab
+            /* The start tab stays on, so the bar always holds the place the app opens on; Settings stays on, as a phone
+               has no other way to it (owner 217: no side drawer). */
+            const isStart = row.tab === startTab || row.tab === 'settings'
             return (
               <TabRow
                 row={row}

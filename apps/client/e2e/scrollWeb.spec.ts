@@ -92,3 +92,39 @@ test.describe('mobile web scroll', () => {
     expect(Math.max(0, ...long), `long tasks: ${long.join(', ')}`).toBeLessThan(50)
   })
 })
+
+test('Back (as Safari\'s swipe does) shows the list at its own scroll from the first frame (owner 216)', async ({page}) => {
+  await openPeople(page)
+  await page.evaluate(() => window.scrollTo(0, 900))
+  await page.waitForTimeout(300)
+  const saved = await page.evaluate(() => window.scrollY)
+  expect(saved).toBeGreaterThan(800)
+  // Open a friend from the rows on screen, then come back by history, as a Back swipe does.
+  await page.evaluate(() => {
+    const row = [...document.querySelectorAll<HTMLElement>('[data-testid="screen-people"] [data-testid^="person-"]')].find(el => {
+      const r = el.getBoundingClientRect()
+      return r.top > 150 && r.bottom < 650
+    })!
+    row.click()
+  })
+  await expect(page.getByTestId('screen-person')).toBeVisible()
+  await page.waitForTimeout(300)
+  const frames = await page.evaluate(
+    () =>
+      new Promise<{shown: boolean; y: number}[]>(resolve => {
+        const out: {shown: boolean; y: number}[] = []
+        const people = document.querySelector<HTMLElement>('[data-testid="screen-people"]')!
+        const tick = () => {
+          out.push({shown: people.checkVisibility(), y: Math.round(window.scrollY)})
+          if (out.length < 20) requestAnimationFrame(tick)
+          else resolve(out)
+        }
+        history.back()
+        requestAnimationFrame(tick)
+      }),
+  )
+  const shown = frames.filter(f => f.shown)
+  expect(shown.length).toBeGreaterThan(5)
+  // Every painted frame of the list is at its own offset: no frame at the friend page's scroll, then a jump.
+  for (const f of shown) expect(Math.abs(f.y - saved)).toBeLessThan(3)
+})

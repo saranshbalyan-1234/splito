@@ -25,15 +25,14 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
  * end state at once. Variants:
  *
  *   draw    the stroke draws in on mount, again on press (check on Save / Settle / Accept)
- *   tick    the stroke redraws each time `playKey` goes up (Activity when an item lands)
  *   lid     the `moving` parts lift while `active` or while the enclosing Button is hovered, pressed or focused (trash)
  *   rotate  the glyph turns `turn` degrees while `active` (chevron on expand)
  */
-export type AnimatedIconVariant = 'draw' | 'tick' | 'lid' | 'rotate'
+export type AnimatedIconVariant = 'draw' | 'lid' | 'rotate'
 
 export type AnimatedIconOptions = {
   variant: AnimatedIconVariant
-  /** Outline length for draw and tick: the dash length that hides the whole stroke. */
+  /** Outline length for draw: the dash length that hides the whole stroke. */
   length?: number
   /** Indexes into the glyph's nodes that move apart from the rest (the trash lid). */
   moving?: number[]
@@ -45,8 +44,6 @@ export type AnimatedIconOptions = {
 export type AnimatedIconProps = Omit<Props, 'strokeWidth'> & {
   /** Drives lid and rotate; lid also follows its enclosing Button's hover and press. */
   active?: boolean
-  /** Tick redraws whenever this goes up. */
-  playKey?: number
 }
 
 const AnimatedPath = Animated.createAnimatedComponent(Path)
@@ -108,7 +105,6 @@ export function AnimatedIcon({
   turn = 0,
   strokeWidth = 2,
   active,
-  playKey = 0,
   ...props
 }: AnimatedIconProps & AnimatedIconOptions & {data: LucideIconData}) {
   const {fill, size, style} = useCommonSVGProps(props)
@@ -122,8 +118,7 @@ export function AnimatedIcon({
   const target = variant === 'rotate' || variant === 'lid' ? Number(isOn) : 1
   /* A press redraws the check: the enclosing Button's pressed state is part of the effect's inputs. */
   const isRedrawn = variant === 'draw' && pressed
-  const progress = useSharedValue(isReduced || variant === 'tick' ? target : 0)
-  const prevKey = useRef(playKey)
+  const progress = useSharedValue(isReduced ? target : 0)
   const hasDrawn = useRef(false)
 
   useEffect(() => {
@@ -142,16 +137,6 @@ export function AnimatedIcon({
       progress.set(withTiming(target, {duration: MS, easing: Easing.out(Easing.cubic)}))
     }
   }, [isReduced, variant, target, progress, isRedrawn])
-
-  useEffect(() => {
-    const isUp = playKey > prevKey.current
-    prevKey.current = playKey
-    if (isReduced) return
-    if (variant === 'tick' && isUp) {
-      progress.set(0)
-      progress.set(withTiming(1, {duration: 380, easing: Easing.out(Easing.cubic)}))
-    }
-  }, [playKey, isReduced, variant, progress])
 
   const dashProps = useAnimatedProps(() => ({
     strokeDashoffset: length * (1 - progress.get()),
@@ -177,7 +162,6 @@ export function AnimatedIcon({
 
   switch (variant) {
     case 'draw':
-    case 'tick':
       return <View style={box}>{layer(nodes, length)}</View>
     case 'rotate':
       return (
@@ -207,19 +191,17 @@ export function createAnimatedIcon(data: LucideIconData, options: AnimatedIconOp
 /**
  * Swaps an outline glyph for its filled one when `isActive` turns on (tab, drawer and sidebar icons) and the new
  * glyph pops in (scale and opacity, 180 ms, UI thread). Only one glyph is mounted at a time, as before, so a tab
- * switch costs no extra render; `playKey` reaches the glyphs (the Activity tick).
+ * switch costs no extra render.
  */
 export function MorphIcon({
   outline: Outline,
   filled: Filled,
   isActive,
-  playKey,
   ...props
 }: Props & {
-  outline: React.ComponentType<Props & {playKey?: number}>
-  filled: React.ComponentType<Props & {playKey?: number}>
+  outline: React.ComponentType<Props>
+  filled: React.ComponentType<Props>
   isActive: boolean
-  playKey?: number
 }) {
   const isReduced = useShouldReduceMotion()
   const progress = useSharedValue(1)
@@ -243,7 +225,7 @@ export function MorphIcon({
     // The pop on the wrapper, the caller's style (colour, margins) on the glyph only: dropping it there made every
     // icon fall back to the accent colour (owner 215), applying it to both doubled the margins.
     <Animated.View style={popStyle}>
-      <Glyph {...props} {...(playKey === undefined ? {} : {playKey})} />
+      <Glyph {...props} />
     </Animated.View>
   )
 }

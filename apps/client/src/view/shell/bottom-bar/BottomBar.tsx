@@ -107,7 +107,6 @@ export function BottomBar({navigation}: BottomTabBarProps) {
                 tab={tab}
                 isActive={isAt[TAB_ROUTE[tab]]}
                 size={iconWidth}
-                badge={tab === 'activity' ? activityBadge : undefined}
               />
             }
             label={

@@ -254,9 +254,9 @@ test.describe('a new account', () => {
     await page.getByTestId('newPasswordInput').fill(NEW.password)
     await page.getByTestId('setNewPassword-next').click()
     await signedInShown(page)
-    // Account row in Settings shows the new account.
-    await page.goto('/settings')
-    await expect(page.getByTestId('settings-profile')).toContainText(NEW.email)
+    // Profile shows the new account (owner 216: it is not a Settings row).
+    await page.goto('/profile')
+    await expect(page.getByTestId('profile-email')).toContainText(NEW.email)
   })
 
   test('starting with a phone asks for the email next; the account can then sign in with either', async ({page}) => {
@@ -439,13 +439,10 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     expect((await databases(page)).filter(n => n!.startsWith('splito-'))).toEqual([])
   })
 
-  test('Log out is the last row of Profile and is in neither the drawer footer nor the Settings list (owner 202)', async ({page}) => {
+  test('Log out is the last row of Profile and is not in the Settings list (owners 202, 217: no drawer)', async ({page}) => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.goto('/?drawer=menu')
-    await expect(page.getByTestId('drawer')).toBeVisible()
-    await expect(page.getByTestId('drawer-log-out')).toHaveCount(0)
     await page.goto('/settings')
     await expect(page.getByTestId('settings-log-out')).toHaveCount(0)
     await page.goto('/profile')

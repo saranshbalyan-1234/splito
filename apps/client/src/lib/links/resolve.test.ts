@@ -66,11 +66,11 @@ describe('every tab, sheet and picker', () => {
     }
   })
   test('global sheets', () => {
-    expect(GLOBAL_SHEETS).toEqual(['search', 'drawer', 'feedback', 'install'])
-    const drawer = resolveLink('/groups?drawer=menu')
-    expect(drawer.target).toMatchObject({name: 'Groups', sheets: ['drawer']})
-    expect(buildPath(drawer.target)).toBe('/groups?drawer=menu')
-    expect(resolveLink('/?drawer=menu').target).toMatchObject({name: 'People', sheets: ['drawer']})
+    expect(GLOBAL_SHEETS).toEqual(['search', 'feedback', 'install'])
+    // There is no side drawer (owner 217): an old `?drawer=menu` opens the page alone.
+    const old = resolveLink('/groups?drawer=menu')
+    expect(old.target).toMatchObject({name: 'Groups', sheets: []})
+    expect(buildPath(old.target)).toBe('/groups')
     const search = resolveLink('splito://search?q=dinner%20out&mode=ask')
     expect(search.target).toMatchObject({name: 'People', sheets: ['search'], query: {q: 'dinner out', mode: 'ask'}})
     expect(buildPath(search.target)).toBe('/search?mode=ask&q=dinner+out')
