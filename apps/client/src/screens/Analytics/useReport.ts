@@ -19,7 +19,7 @@ import {type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useCategoryLookup} from '#/components/split/shared'
-import {type ListedExpense, readRows} from '#/data/analyticsQueries'
+import {type ListedExpense} from '#/data/analyticsQueries'
 import {
   useAnalyticsBounds,
   useAnalyticsCells,
@@ -28,7 +28,6 @@ import {
   useEntities,
   useMutationCtx,
   usePref,
-  useStore,
 } from '#/data/hooks'
 import {
   inScope,
@@ -98,7 +97,6 @@ type View = {
 export function useReport() {
   const {t: l, i18n} = useLingui()
   const {actor: me} = useMutationCtx()
-  const store = useStore()
   const overview = useAnalyticsOverview()
   const groups = useEntities<Group>('group')
   const people = useEntities<Person>('person')
@@ -367,26 +365,6 @@ export function useReport() {
     rowCount,
     isRowsDone: listed?.isDone ?? true,
     loadMoreRows: listed?.loadMore ?? (() => {}),
-    /** Every row of the list, for the CSV export (a full read of the period by cursor, on request). */
-    exportRows: async () =>
-      (
-        await readRows(
-          store,
-          {
-            currency: data.currency,
-            from: selection?.kind === 'time' ? selection.from : data.range.from,
-            to: selection?.kind === 'time' ? selection.to : data.range.to,
-            scopeKey,
-            isIn,
-            selection:
-              selection?.kind === 'category' || selection?.kind === 'person'
-                ? {kind: selection.kind, key: selection.key}
-                : undefined,
-            me,
-          },
-          Infinity,
-        )
-      ).rows,
     rowsTotal,
     shareOf,
     nameOfPerson,

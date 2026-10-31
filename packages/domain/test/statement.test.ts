@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import {buildStatement, type LedgerRecord, reconcileStatement, type StatementInput} from '../src'
+import {buildStatement, type LedgerRecord, reconcileStatement, type StatementInput, type StatementScope} from '../src'
 
 const me = 'me'
 const ex = (id: string, date: string, over: Partial<Extract<LedgerRecord, {kind: 'expense'}>> = {}): StatementInput => ({
@@ -110,4 +110,23 @@ test('reconcile: when the app routes a group balance differently, one labelled a
   expect(r.adjustments).toEqual({INR: -300n, AED: -50n})
   expect(r.closing).toEqual({INR: 200n, AED: -50n})
   expect(r.currencies).toEqual(['AED', 'INR'])
+})
+
+test('a scope keeps the records it counts that I am in: non-group on or off, every group or a list', () => {
+  const all = [
+    ex('n', '2026-10-01'),
+    ex('g1', '2026-10-02', {groupId: 'goa'}),
+    ex('g2', '2026-10-03', {groupId: 'flat'}),
+    ex('x', '2026-10-04', {groupId: 'goa', payers: {asha: 600n}, shares: {asha: 600n}, total: 600n}), // I am not in it
+  ]
+  const ids = (scope: StatementScope) => buildStatement(all, me, {scope}).rows.map(r => r.id)
+  expect(ids({nonGroup: true, groups: 'all'})).toEqual(['n', 'g1', 'g2'])
+  expect(ids({nonGroup: true, groups: []})).toEqual(['n'])
+  expect(ids({nonGroup: false, groups: ['goa', 'flat']})).toEqual(['g1', 'g2'])
+  expect(ids({nonGroup: true, groups: ['flat']})).toEqual(['n', 'g2'])
+  // The opening balance is inside the scope too.
+  expect(buildStatement(all, me, {scope: {nonGroup: false, groups: ['flat']}, from: '2026-10-03'}).opening).toEqual({INR: 0n})
+  expect(buildStatement(all, me, {scope: {nonGroup: true, groups: ['flat']}, from: '2026-10-03'}).opening).toEqual({INR: 500n})
+  // A group id wins over a scope.
+  expect(buildStatement(all, me, {groupId: 'goa', scope: {nonGroup: true, groups: []}}).rows.map(r => r.id)).toEqual(['g1', 'x'])
 })
