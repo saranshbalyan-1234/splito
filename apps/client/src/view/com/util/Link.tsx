@@ -51,12 +51,15 @@ interface Props extends React.ComponentProps<typeof TouchableOpacity> {
   activateOnPressIn?: boolean
   /** With `activateOnPressIn`: called when a press-in is about to navigate (not for a modified press). */
   onActivated?: () => void
+  /** The link's node, for code that points at it (the guided tour). Absent: upstream behaviour. */
+  ref?: React.Ref<React.ComponentRef<typeof View>>
 }
 
 /**
  * @deprecated use Link from `#/components/Link.tsx` instead
  */
 export const Link = memo(function Link({
+  ref,
   testID,
   style,
   href,
@@ -159,6 +162,7 @@ export const Link = memo(function Link({
   const Com = props.hoverStyle ? PressableWithHover : Pressable
   return (
     <Com
+      ref={ref}
       testID={testID}
       style={style}
       onPress={activateOnPressIn ? onPressOnce : onPress}

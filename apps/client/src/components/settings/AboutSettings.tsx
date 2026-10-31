@@ -2,6 +2,8 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 
+import {replayTour} from '#/lib/tour/replay'
+import {useDemoMode} from '#/state/demo'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {LogoMark} from '#/components/brand/Logo'
@@ -11,6 +13,7 @@ import {CirclePlus_Stroke2_Corner0_Rounded as CirclePlusIcon} from '#/components
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
+import {Route_Stroke2_Corner0_Rounded as RouteIcon} from '#/components/icons/Route'
 import {Shapes_Stroke2_Corner0_Rounded as ShapesIcon} from '#/components/icons/Shapes'
 import {Text} from '#/components/Typography'
 import {APP_VERSION} from '#/env'
@@ -87,6 +90,7 @@ function Topic({
 /** The sidebar footer's and drawer's Help page. */
 export function HelpSettings({isIntroLinked = true}: {isIntroLinked?: boolean}) {
   const {t: l} = useLingui()
+  const {demo} = useDemoMode()
   return (
     <>
       {/* The intro slides again (F-249); the address is /welcome/1. Signed out there is no navigator to link inside, and the intro is already the way in. */}
@@ -99,6 +103,18 @@ export function HelpSettings({isIntroLinked = true}: {isIntroLinked?: boolean}) 
             </SettingsList.ItemText>
           </SettingsList.LinkItem>
           <SettingsList.Divider />
+          {/* The guided tour over the real app (F-253); never in demo mode, whose data is sample data. */}
+          {!demo && (
+            <>
+              <SettingsList.PressableItem testID="help-take-tour" label={l`Take the tour`} onPress={replayTour}>
+                <SettingsList.ItemIcon icon={RouteIcon} />
+                <SettingsList.ItemText>
+                  <Trans>Take the tour</Trans>
+                </SettingsList.ItemText>
+              </SettingsList.PressableItem>
+              <SettingsList.Divider />
+            </>
+          )}
         </>
       )}
       <Topic icon={CirclePlusIcon} title={<Trans>Add an expense</Trans>}>

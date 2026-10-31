@@ -185,11 +185,14 @@ export function ActionButton({
   disabled = false,
   hint,
   children,
+  ref,
 }: {
   testID: string
   label: string
   icon: React.ComponentType<SVGIconProps>
   onPress: () => void
+  /** The button's node, for code that points at it (the guided tour). Absent: upstream behaviour. */
+  ref?: React.Ref<React.ComponentRef<typeof View>>
   edge?: boolean
   disabled?: boolean
   /** Read after the label, e.g. why the action is disabled. */
@@ -200,6 +203,7 @@ export function ActionButton({
   return (
     <Slot>
       <Button
+        ref={ref}
         testID={testID}
         label={label}
         size="small"

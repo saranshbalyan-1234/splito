@@ -1450,6 +1450,18 @@ Splito lessons (add newest last, dated, with PR):
   updates on the same build: the first visit of a tab lets background history loading and the Analytics report land
   inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
   frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
+- 2026-10-31, F-253 (guided tour): four things a coach-mark feature needs. (1) **A host above the navigator cannot read
+  navigation state**, so the screen that matters (People) publishes what it holds to a module store while it is focused
+  (`usePublishPeopleState`), and the host reads that; no timer guesses at the route. (2) **Parked tabs keep their own copy of
+  a control** (each tab has a FAB), so a registry keyed by id holds all mounted copies and the tour measures them newest
+  first and takes the one that is showing (a hidden tab measures 0 x 0); a registry that keeps only the last one points at a
+  hidden FAB. (3) **A premise in a task brief can be ahead of the code**: the brief said the app opens on People (owner 198),
+  but F-271 (remove Home) is not built, so the tour stopped at Home and every spec timed out; the tour now moves from Home to
+  People once (`openPeopleFromHome`, a `ponytail:` to delete with F-271). Check the start tab in the code before relying on it.
+  (4) **E2E builds sign every spec in as a fresh account, which is exactly who the tour is for**, so an e2e build never starts it
+  by itself; a spec arms it with `window.__splitoTest = {tourAuto: true}` in an init script (hooks installed later spread the
+  object, so the flag survives). `expo export` can fail with a missing `react-native-worklets/.worklets/<id>.js`: create the
+  empty directory and rebuild with `-c`.
 
 
 ## 24. Checklists
@@ -1745,14 +1757,28 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     owner 100).
   - **Two different things** (owner 142): these swipeable **intro slides come BEFORE sign-in** (what Splito is,
     like many apps' first-open screens; "Get started" leads to the Continue screen, owner 140), and the **tour
-    comes AFTER the first sign-in and setup**: a guided walkthrough over the real app (F-253), a few coach marks
-    one at a time with Next / Skip: the FAB or "Add expense" ("Add your first expense"), a friend row ("Tap a
-    friend to see what you owe each other"), Groups "+", Settle up, the Search & Ask icon, and Activity; each
-    mark spotlights the real control and **blurs everything else** (owner 143: a blur plus slight dim over the rest of
-    the screen, the focused control sharp with a rounded cut-out and a short caption beside it; web `backdrop-filter`,
-    native `expo-blur`; reduced transparency falls back to a plain dim), works at every
-    width (sidebar items on desktop), shown once per account, replayable from Settings > Help "Take the tour".
-    After the tour, small first-use tips may still appear once per screen (`tips.enabled`, "Reset tips").
+    comes AFTER the first sign-in** [Built, F-253, web; native not run on a device]: a guided walkthrough over the real
+    app, **exactly three steps** (owner 213: only what a new user must know to start), one at a time with Next / Skip
+    (the last step's primary is Done): (1) **Add an expense**, on the FAB (phones) or the sidebar "Add expense" pill
+    (rail, desktop); (2) **See who owes whom**, on the first friend row of People; (3) **Settle up**, on that row's balance,
+    else on the Groups tab. With no friends yet the FAB is held back and there is no row, so steps 1 and 2 stand on People's
+    Add friend button with empty-state wording ("Add a friend here first, then split your first bill with them."); a step
+    with nothing to point at is left out and "Step N of M" counts what is shown (`planTour`, `lib/tour/steps.ts`, pure and
+    tested). Each step spotlights the real control and **blurs everything else** (owner 143: a blur plus slight dim, the
+    control sharp inside a rounded cut-out, a caption card beside it: below, above or beside by the room there is); web
+    `backdrop-filter` masked by the same hole path the dim uses, native a plain dim (`expo-blur` is not a dependency),
+    reduced motion or reduced transparency a plain darker dim. The overlay blocks the app underneath, moves focus to the
+    caption, Escape is Skip, buttons are 44 px+, the card is at most 340 px and never wider than the screen less 16 px
+    gutters (320 px, Hindi). It runs **once per account**, right after sign-in when People is the page showing and loaded
+    (`onboarding.tourSeen`, an account preference in the `app` group with no Settings row of its own; Skip and Done both
+    set it), never in demo mode, never while a sheet is open (it waits), and replays from **Settings > Support > Help
+    "Take the tour"** (hidden in demo mode; it takes the app to the plain People tab first). One `TourHost` is mounted
+    at the app root like `LogOutHost`: an account that has seen the tour pays one preference read at launch and renders
+    nothing; the overlay, its measuring and its timers exist only while a tour runs. Controls register themselves with
+    `useTourRef(id)` (`lib/tour/registry.ts`, a ref callback in a module store, no re-render): the FAB, the sidebar pill,
+    People's Add friend, the first row and its balance, and the Groups item of the bottom bar and the sidebar. E2E
+    builds never start it by themselves; a spec arms it with `window.__splitoTest = {tourAuto: true}` before the page
+    loads. First-use tips after the tour (`tips.enabled`) are not built (owner 213: nothing more than the essentials).
   - Screen readers hear "Step 2 of 5" and each title as a heading; tap targets 44 px; works at 320 px in Hindi.
   *Why:* "like what you get when you install one app and you get one overview, where you have to click next or
   skip which explains you what this app is and how to use".

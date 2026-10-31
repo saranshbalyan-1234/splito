@@ -564,6 +564,8 @@ export const PREF_CONTROLS = {
   // Chosen on Analytics' own scope chip, where its effect shows; Reset all resets it.
   analyticsScope: null,
   'pwa.installHintDismissed': null,
+  // Set by the guided tour when it ends; "Take the tour" in Settings > Support > Help replays it.
+  'onboarding.tourSeen': null,
   categories: CategoriesEditor,
   'bill.taxClasses': TaxClassesEditor,
   // Chosen with the setup chips on a bill; the shipped ones are not edited in Settings.

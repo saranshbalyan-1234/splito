@@ -36,6 +36,7 @@ import {
 import {currentSection} from '#/lib/routes/section'
 import {NAV_ITEM_HREF, splitNavigationItems} from '#/lib/routes/navigationItems'
 import {TAB_ROUTE, useTabs} from '#/lib/routes/tabs'
+import {useTourRef} from '#/lib/tour/registry'
 import {
   type NavigationProp,
   type State,
@@ -236,9 +237,12 @@ function NavItem({
   )
 
   const Icon = isSelected ? icons.active : icons.inactive
+  /* The guided tour points at the Groups item (F-253). */
+  const groupsTourRef = useTourRef('tab-groups')
 
   return (
     <PressableWithHover
+      ref={navItem === 'groups' ? groupsTourRef : undefined}
       testID={`tab-${navItem}`}
       onLayout={onLayout}
       style={[
@@ -413,10 +417,12 @@ function ComposeBtn({minimal}: {minimal: boolean}) {
   }
 
   const layout = getComposeButtonLayout({minimal, isNative: IS_NATIVE})
+  const tourRef = useTourRef('sidebar-add')
 
   return (
     <View style={layout.container}>
       <Button
+        ref={tourRef}
         testID="sidebar-add"
         label={l`Add expense`}
         onPress={onPressCompose}

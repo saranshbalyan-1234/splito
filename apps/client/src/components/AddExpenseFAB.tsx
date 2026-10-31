@@ -3,6 +3,7 @@ import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
+import {useTourRef} from '#/lib/tour/registry'
 import {FAB} from '#/view/com/util/fab/FAB'
 import {useFabInset} from '#/view/com/util/fab/FABInner'
 import {useTheme} from '#/alf'
@@ -23,8 +24,10 @@ export function AddExpenseFAB({
   const t = useTheme()
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
+  const tourRef = useTourRef('fab')
   return (
     <FAB
+      ref={tourRef}
       testID="fab-add"
       onPress={() => navigation.navigate('AddExpense', {personId, groupId})}
       icon={<PlusIcon size="lg" fill={t.palette.white} />}
