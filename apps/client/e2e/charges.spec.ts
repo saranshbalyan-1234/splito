@@ -1,6 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {composeButton, openAddExpense, pickPeople} from './composer'
+import {chooseSplitMode, composeButton, openAddExpense, openCharges, pickPeople} from './composer'
 import {openDemo} from './openDemo'
 import {DESKTOP, PHONE} from './viewports'
 
@@ -42,7 +42,7 @@ async function enterBill(page: Page) {
   await page.getByTestId('expense-title').fill('The Supper Factory')
   await page.getByTestId('amount-input').fill('2522')
   await pickPeople(page, ['Riya Sharma'])
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   let n = 0
   for (const [name, amount] of [...FOOD, ...ALCOHOL]) {
     await page.getByTestId('item-add').click()
@@ -55,6 +55,7 @@ async function enterBill(page: Page) {
     await page.getByTestId(`item-${i}-person-Riya Sharma`).click({button: 'right'})
 
   // A custom list of charges: classes appear on every item.
+  await openCharges(page)
   await page.getByTestId('charge-preset-custom').click()
   await page.getByTestId('item-0-class').click({button: 'right'})
   await expect(page.getByTestId('class-selection-bar')).toBeVisible()
@@ -131,10 +132,11 @@ test('presets in one tap; save a merchant setup and get it back as a dashed sugg
 }) => {
   await openAddExpense(page, DESKTOP)
   await page.getByTestId('expense-title').fill('Toit Brewpub')
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   await page.getByTestId('item-add').click()
   await page.getByTestId('item-0-name').fill('Pizza')
   await page.getByTestId('item-0-amount').fill('1000')
+  await openCharges(page)
   await page.getByTestId('charge-preset-restaurant-india').click()
   await expect(page.getByTestId('charge-0-amount')).toHaveText('₹100.00')
   await expect(page.getByTestId('charge-1-amount')).toHaveText('₹55.00')
@@ -145,7 +147,8 @@ test('presets in one tap; save a merchant setup and get it back as a dashed sugg
   // The same merchant on a new bill: the setup is offered, not forced.
   await openAddExpense(page, DESKTOP)
   await page.getByTestId('expense-title').fill('toit  brewpub')
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
+  await openCharges(page)
   await expect(page.getByTestId('charges-suggestion')).toContainText('Service charge 10%')
   await page.getByTestId('charges-suggestion').click()
   await expect(page.getByTestId('charge-0')).toBeVisible()
@@ -155,8 +158,9 @@ test('presets in one tap; save a merchant setup and get it back as a dashed sugg
 
 test('Simple stays the default: the four plain rows, no classes', async ({page}) => {
   await openAddExpense(page, PHONE)
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   await page.getByTestId('item-add').click()
+  await openCharges(page)
   await expect(page.getByTestId('item-tax')).toBeVisible()
   await expect(page.getByTestId('item-0-class')).toHaveCount(0)
   await expect(page.getByTestId('charge-preset-simple')).toHaveAttribute('aria-checked', 'true')
@@ -179,8 +183,9 @@ test('Settings: tax classes can be added, renamed, hidden and used', async ({pag
   await page.goto('/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await composeButton(page).click()
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   await page.getByTestId('item-add').click()
+  await openCharges(page)
   await page.getByTestId('charge-preset-custom').click()
   await page.getByTestId('item-0-class').click()
   await expect(page.getByTestId('class-option-soft')).toHaveCount(0)
@@ -189,13 +194,15 @@ test('Settings: tax classes can be added, renamed, hidden and used', async ({pag
 
 test('Simple to Custom keeps the tax and tip typed in the Simple rows', async ({page}) => {
   await openAddExpense(page, DESKTOP)
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   await page.getByTestId('item-add').click()
   await page.getByTestId('item-0-amount').fill('1000')
+  await openCharges(page)
   await page.getByTestId('item-tax-mode-percent').click()
   await page.getByTestId('item-tax').fill('18')
   await page.getByTestId('item-tip-mode-amount').click()
   await page.getByTestId('item-tip').fill('50')
+  await openCharges(page)
   await page.getByTestId('charge-preset-custom').click()
   await expect(page.getByTestId('charge-0-amount')).toHaveText('₹180.00')
   await expect(page.getByTestId('charge-1-amount')).toHaveText('₹50.00')
@@ -208,12 +215,13 @@ async function unnamedItemsBill(page: Page) {
   await page.getByTestId('expense-title').fill('Mixed bill')
   await page.getByTestId('amount-input').fill('1041')
   await pickPeople(page, ['Riya Sharma'])
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   for (const [n, amount] of [['0', '600'], ['1', '400']] as const) {
     await page.getByTestId('item-add').click()
     await page.getByTestId(`item-${n}-amount`).fill(amount)
     await page.getByTestId(`item-${n}-person-Riya Sharma`).click({button: 'right'})
   }
+  await openCharges(page)
   await page.getByTestId('charge-preset-custom').click()
   await page.getByTestId('charge-add').click()
   const sheet = page.getByTestId('charge-sheet')
@@ -241,7 +249,8 @@ test('a round-off is shared by everyone by share (F-251: no setting), and an unn
 
 test('desktop: Escape closes the charge sheet and focus returns to Add charge', async ({page}) => {
   await openAddExpense(page, DESKTOP)
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
+  await openCharges(page)
   await page.getByTestId('charge-preset-custom').click()
   const opener = page.getByTestId('charge-add')
   await opener.click()

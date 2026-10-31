@@ -1,13 +1,12 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/dms/MessageItem.tsx
 import {memo} from 'react'
 import {Pressable, View, type ViewStyle} from 'react-native'
-import {setStringAsync} from 'expo-clipboard'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type Comment, type Entity, mentionRanges} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {copyText} from '#/lib/sharing'
-import {useTimeZone} from '#/locale/useDates'
+import {useFormatTime} from '#/locale/useDates'
 import {PersonLink} from '#/components/PersonLink'
 import {isOnlyEmoji} from '#/alf/typography'
 import {atoms as a, platform, useBreakpoints, useTheme} from '#/alf'
@@ -68,9 +67,9 @@ let CommentRow = ({
   link,
 }: CommentRowProps): React.ReactNode => {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
   const haptics = useHaptics()
-  const timeZone = useTimeZone()
+  const formatTime = useFormatTime()
   const {gtMobile} = useBreakpoints()
   const control = Menu.useMenuControl()
   const {body, mentions, editedAt} = comment.data
@@ -109,7 +108,7 @@ let CommentRow = ({
   }
   if (at < body.length) parts.push(body.slice(at))
 
-  const time = i18n.date(comment.createdAt, {timeStyle: 'short', timeZone})
+  const time = formatTime(comment.createdAt)
   const label = isDeleted
     ? l`${authorName}: deleted comment`
     : l`${authorName}: ${body}`
@@ -118,7 +117,7 @@ let CommentRow = ({
   const actions = {
     copy: () => void copyText(body),
     link: () =>
-      void setStringAsync(link).then(() =>
+      void copyText(link, {toast: false}).then(() =>
         Toast.show(
           l`Link copied. It opens this expense on a device that has it.`,
           {type: 'success'},

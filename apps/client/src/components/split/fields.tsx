@@ -22,7 +22,10 @@ import {
 } from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as TextField from '#/components/forms/TextField'
-import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
+import {
+  ChevronExpand_Stroke2_Corner0_Rounded as ChevronExpandIcon,
+  ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon,
+} from '#/components/icons/Chevron'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
 import {Text} from '#/components/Typography'
@@ -119,6 +122,8 @@ export function AmountField({
   onReadingPicked,
   hasKeypad = false,
   onPressCurrency,
+  autoFocus = false,
+  itemsTotalText,
 }: {
   value: string
   /** `reading` is set when the field wrote the text itself (a computed result), so it never asks about it. */
@@ -136,6 +141,10 @@ export function AmountField({
   onReadingPicked?: (reading: 'grouped' | 'decimal') => void
   hasKeypad?: boolean
   onPressCurrency: () => void
+  /** Focus the amount when the form opens (Add expense: the first thing to type). */
+  autoFocus?: boolean
+  /** Itemize with no total typed: the total the items come to, shown instead of an empty result (F-275). */
+  itemsTotalText?: string
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -245,6 +254,7 @@ export function AmountField({
               }, 200)
             }}
             placeholder={placeholder}
+            autoFocus={autoFocus}
             accessibilityLabel={l`Amount`}
             accessibilityHint={l`You can type a sum, like 1200 + 300, or 2k or 1.5L`}
             /* The keypad stands in for the system keyboard (Expensify: showSoftInputOnFocus off, inputMode none). */
@@ -296,6 +306,17 @@ export function AmountField({
           value.trim() === '' ||
           !/[+\-−xX×*/÷]\s*$/.test(value)) ? (
         <FieldError testID="amount-error">{errorText}</FieldError>
+      ) : itemsTotalText ? (
+        <Text
+          testID="amount-from-items"
+          style={[
+            a.text_md,
+            a.pt_xs,
+            t.atoms.text_contrast_medium,
+            {fontVariant: ['tabular-nums']},
+          ]}>
+          <Trans>Total from the items: {itemsTotalText}</Trans>
+        </Text>
       ) : shouldShowResult ? (
         <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_xs]}>
           <Text
@@ -509,6 +530,73 @@ export function DetailRow({
         </Text>
       </View>
       <ChevronRightIcon size="sm" fill={t.atoms.text_contrast_low.color} />
+    </Button>
+  )
+}
+
+/**
+ * A row that opens and closes a part of the form below it ("More options",
+ * "Tax, tip and discounts"; F-275): label on the left, a one-line summary of
+ * what is inside on the right when it is set, and a chevron that turns while
+ * open. The caller renders the body under it; this only draws the row.
+ */
+export function DisclosureRow({
+  label,
+  summary,
+  isOpen,
+  onPress,
+  testID,
+  icon: Icon,
+}: {
+  label: string
+  /** What is set inside, as one line; shown while the section is closed. */
+  summary?: string
+  isOpen: boolean
+  onPress: () => void
+  testID?: string
+  icon?: React.ComponentType<SVGIconProps>
+}) {
+  const t = useTheme()
+  return (
+    <Button
+      testID={testID}
+      label={summary ? `${label}: ${summary}` : label}
+      accessibilityState={{expanded: isOpen}}
+      aria-expanded={isOpen}
+      onPress={onPress}
+      hoverStyle={t.atoms.bg_contrast_25}
+      style={[
+        a.w_full,
+        a.flex_row,
+        a.align_center,
+        a.gap_md,
+        a.px_lg,
+        a.rounded_0,
+        a.justify_start,
+        {minHeight: 52},
+      ]}>
+      {Icon ? <Icon size="md" fill={t.atoms.text_contrast_medium.color} /> : null}
+      <Text style={[a.text_md, a.font_medium]}>{label}</Text>
+      <View style={[a.flex_1, a.flex_row, a.align_center, a.justify_end]}>
+        {summary && !isOpen ? (
+          <Text
+            testID={testID ? `${testID}-summary` : undefined}
+            style={[
+              a.text_md,
+              a.text_right,
+              a.flex_shrink,
+              t.atoms.text_contrast_medium,
+            ]}
+            numberOfLines={1}>
+            {summary}
+          </Text>
+        ) : null}
+      </View>
+      <ChevronExpandIcon
+        size="sm"
+        active={isOpen}
+        fill={t.atoms.text_contrast_low.color}
+      />
     </Button>
   )
 }

@@ -21,6 +21,7 @@ import {
 import {PeriodControl} from '#/screens/Analytics/components/Summary'
 import {isEverything, scopeSummary} from '#/screens/Analytics/scope'
 import {type Report} from '#/screens/Analytics/useReport'
+import {useScopeLabel} from '#/screens/Analytics/useScopeLabel'
 
 /**
  * The one row of filters above everything they scope: currency, the scope
@@ -135,40 +136,22 @@ function ScopeChip({report}: {report: Report}) {
   const summary = scopeSummary(scope, groupIds)
   const name = (id: string) => report.nameOfGroup(id)
 
-  let label: string
+  const label = useScopeLabel(scope, groupIds, name)
   let icon: React.ReactNode = <ButtonIcon icon={GroupIcon} />
   switch (summary.kind) {
     case 'everything':
-      label = l`Everything`
       icon = <ButtonIcon icon={LayersIcon} />
       break
     case 'nonGroup':
-      label = l`Non-group only`
       icon = <ButtonIcon icon={PersonIcon} />
-      break
-    case 'allGroups':
-      label = l`All groups`
       break
     case 'group': {
       const g = groupOptions.find(x => x.id === summary.groupId)
-      label =
-        summary.more === 0
-          ? name(summary.groupId)
-          : l`${name(summary.groupId)} + ${summary.more}`
       /* One group wears its own tile. */
       if (summary.more === 0 && g)
         icon = <GroupAvatar kind={g.kind} name={g.name} size={18} />
       break
     }
-    case 'groups':
-      label = l`${summary.count} groups`
-      break
-    case 'nonGroupPlus':
-      label =
-        summary.count === 1
-          ? l`Non-group + ${name(summary.groupId)}`
-          : l`Non-group + ${summary.count} groups`
-      break
   }
 
   return (

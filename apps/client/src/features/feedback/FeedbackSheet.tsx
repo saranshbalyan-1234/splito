@@ -8,9 +8,9 @@ import {
   type Feedback,
   type FeedbackAttachment,
   type FeedbackType,
-  isValidEmail,
   saveFeedback,
 } from '@splito/sync'
+import {isContactEmail} from '@splito/domain'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
@@ -76,7 +76,7 @@ function Inner({screen}: {screen: string}) {
 
   const trimmed = message.trim()
   const isMessageValid = trimmed.length >= FEEDBACK_MIN_LENGTH
-  const isEmailValid = !email.trim() || isValidEmail(email.trim())
+  const isEmailValid = !email.trim() || isContactEmail(email.trim())
   const info = collectAppInfo(screen, i18n.locale)
 
   const pick = async () => {

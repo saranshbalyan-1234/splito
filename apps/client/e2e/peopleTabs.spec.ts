@@ -37,8 +37,8 @@ test('the app opens on People: / is the start tab, there is no Home anywhere, th
   await expect(page).toHaveURL(/\/people$/)
   await page.goto('/?overview=groups')
   await expect(page).toHaveURL(/\/analytics\?overview=groups$/)
-  await expect(page.getByTestId('screen-analytics').getByTestId('analytics-overview')).toBeVisible()
-  await expect(page.getByTestId('overview-scope-groups')).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByTestId('screen-analytics').getByTestId('analytics-currency')).toBeVisible()
+  await expect(page.getByTestId('screen-analytics').getByTestId('overview')).toHaveCount(0)
   // The logo goes to the start tab.
   await page.setViewportSize(DESKTOP)
   await page.getByTestId('tab-activity').click()
@@ -67,7 +67,8 @@ test('People tab: requests, invites row, Friends with search, Filters, Sort and 
   expect(Math.abs(search!.width - gear!.width)).toBeLessThan(2)
   await expect(people.getByTestId('people-manage-friends')).toHaveAttribute('aria-label', 'Manage friends and invites')
   await expect(people.getByTestId('people-manage-friends')).toHaveText('')
-  await expect(people.getByTestId('analytics-overview')).toHaveCount(0)
+  // People has its own Overview of balances with friends (owner 219).
+  await expect(people.getByTestId('people-overview')).toBeVisible()
   await expect(people.getByTestId('people-add-friend')).toBeVisible()
   await expect(people.getByTestId('header-search-ask')).toBeVisible()
   await expect(people.getByTestId('fab-add')).toBeVisible()
@@ -85,13 +86,14 @@ test('People tab: requests, invites row, Friends with search, Filters, Sort and 
   await expect(page.getByTestId('screen-person')).toBeVisible()
 })
 
-test('Groups has no Overview', async ({page}) => {
+test('Groups has its own Overview of balances in groups, above the list (owner 219)', async ({page}) => {
   await page.setViewportSize(PHONE)
   await openDemo(page, '/groups')
   const groups = page.getByTestId('screen-groups')
   await expect(groups.getByTestId('groups-list-title')).toBeVisible()
   await expect(groups.getByTestId('groups-balances')).toHaveCount(0)
-  await expect(groups.getByTestId('analytics-overview')).toHaveCount(0)
+  await expect(groups.getByTestId('groups-overview')).toBeVisible()
+  expect((await groups.getByTestId('groups-overview').boundingBox())!.y).toBeLessThan((await groups.getByTestId('groups-list-title').boundingBox())!.y)
   // Groups has the same header as People: search, Filters, Sort.
   await expect(groups.getByTestId('list-filters')).toBeVisible()
   await expect(groups.getByTestId('list-sort')).toBeVisible()
@@ -191,9 +193,9 @@ test('a main screen opened from a link is its tab with Back in place of the avat
   const groups = page.getByTestId('screen-groups').last()
   await expect(groups.getByTestId('header-back')).toBeVisible()
   await expect(groups.getByTestId('header-avatar')).toHaveCount(0)
-  // Same as the tab: the FAB and every header action (Search & Ask, Create group), the list's Filters.
+  // Same as the tab: the FAB and every header action (Create group; Search & Ask is the start tab's only, owner 218), the list's Filters.
   await expect(groups.getByTestId('fab-add')).toBeVisible()
-  await expect(groups.getByTestId('header-search-ask')).toBeVisible()
+  await expect(groups.getByTestId('header-search-ask')).toHaveCount(0)
   await expect(groups.getByTestId('groups-new')).toBeVisible()
   await expect(groups.getByTestId('list-filters')).toBeVisible()
   // Back returns to where the link was pressed.
@@ -208,7 +210,7 @@ test('a main screen opened from a link is its tab with Back in place of the avat
   await expect(tab.getByTestId('header-back')).toHaveCount(0)
   await expect(tab.getByTestId('fab-add')).toBeVisible()
   // Differs only by Back: the tab has the same actions.
-  await expect(tab.getByTestId('header-search-ask')).toBeVisible()
+  await expect(tab.getByTestId('header-search-ask')).toHaveCount(0)
   await expect(tab.getByTestId('groups-new')).toBeVisible()
   await expect(tab.getByTestId('list-filters')).toBeVisible()
   // The other links: Analytics, then People opened from Groups.

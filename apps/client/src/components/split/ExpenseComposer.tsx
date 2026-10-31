@@ -48,7 +48,13 @@ import {Text} from '#/components/Typography'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {DateDialog} from './DateDialog'
 import {clearDraft, type DraftContext, writeDraft} from './drafts'
-import {AmountField, DetailRow, FieldError, PlainInput} from './fields'
+import {
+  AmountField,
+  DetailRow,
+  DisclosureRow,
+  FieldError,
+  PlainInput,
+} from './fields'
 import {
   evaluateForm,
   type ExpenseForm,
@@ -79,7 +85,13 @@ import {
   useDisplayName,
   useErrorText,
 } from './shared'
-import {SplitEditor} from './SplitEditor'
+import {
+  CashRounding,
+  ROUNDABLE,
+  SplitModeChips,
+  SplitRows,
+  useSplitModeLabels,
+} from './SplitEditor'
 import {suggestCategory} from './suggestCategory'
 
 /**
@@ -164,6 +176,9 @@ export function ExpenseComposer({
   const haptics = useHaptics()
   const [savedId, setSavedId] = useState<string>()
   const [isTitleFocused, setIsTitleFocused] = useState(false)
+  /* The advanced options stay behind one row; a form that already uses one (an edit, a draft) opens showing it. */
+  const [isMoreOpen, setIsMoreOpen] = useState(() => usesMoreOptions(initialForm))
+  const modeLabels = useSplitModeLabels()
   const evaluation = evaluateForm(form, tz, decimalMark(locale))
   const category = useCategory(form.category)
   const isEdit = !!expenseId
@@ -282,6 +297,16 @@ export function ExpenseComposer({
       : form.people.length <= 2
         ? form.people.map(name).join(', ')
         : l`${first}, ${second} +${rest}`
+
+  /* What is set behind "More options", so a closed row still says it. */
+  const moreSummary =
+    [
+      form.mode !== 'equal' ? modeLabels[form.mode] : '',
+      form.roundTo ? l`Rounded` : '',
+      form.notes.trim() ? l`Note` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ') || undefined
 
   const today = useToday()
   const isUpcoming = form.date > today
@@ -474,7 +499,6 @@ export function ExpenseComposer({
               onBlur={() => setIsTitleFocused(false)}
               placeholder={l`What was it for?`}
               accessibilityLabel={l`Title`}
-              autoFocus={!isEdit && gtMobile}
               maxLength={120}
               spellCheck={false}
               returnKeyType="next"
@@ -502,7 +526,13 @@ export function ExpenseComposer({
         }
         currency={form.currency}
         locale={locale}
-        result={evaluation.total}
+        result={evaluation.isTotalFromItems ? undefined : evaluation.total}
+        itemsTotalText={
+          evaluation.isTotalFromItems && evaluation.total !== undefined
+            ? formatAmount(evaluation.total, form.currency, locale)
+            : undefined
+        }
+        autoFocus={!isEdit}
         errorText={
           evaluation.amountError ? errorText(evaluation.amountError) : undefined
         }
@@ -514,21 +544,6 @@ export function ExpenseComposer({
       />
 
       <Divider />
-      <DetailRow
-        testID="expense-date"
-        icon={CalendarIcon}
-        label={l`Date`}
-        value={formatDay(form.date, {relative: true})}
-        onPress={() => dateControl.open()}
-        accessory={isUpcoming ? <UpcomingTag /> : null}
-      />
-      <DetailRow
-        testID="expense-group"
-        icon={FolderIcon}
-        label={l`Group`}
-        value={group ? group.data.name : l`No group`}
-        onPress={() => groupControl.open()}
-      />
       <DetailRow
         testID="expense-people"
         icon={GroupIcon}
@@ -544,44 +559,93 @@ export function ExpenseComposer({
         valueColor={isPayersOff ? t.palette.negative_500 : undefined}
         onPress={() => payersControl.open()}
       />
+      <DetailRow
+        testID="expense-group"
+        icon={FolderIcon}
+        label={l`Group`}
+        value={group ? group.data.name : l`No group`}
+        onPress={() => groupControl.open()}
+      />
+      <DetailRow
+        testID="expense-date"
+        icon={CalendarIcon}
+        label={l`Date`}
+        value={formatDay(form.date, {relative: true})}
+        onPress={() => dateControl.open()}
+        accessory={isUpcoming ? <UpcomingTag /> : null}
+      />
       <Divider />
 
-      <SectionLabel>
-        <Trans>Split</Trans>
-      </SectionLabel>
-      <SplitEditor
-        form={form}
-        update={update}
-        evaluation={evaluation}
-        locale={locale}
-        onAddPeople={() => peopleControl.open()}
-        adjustModes={adjustModes}
-        onAdjustModesChanged={saveAdjustModes}
-        defaultRoundTo={unitOf(form.currency)}
-        onRoundingChanged={rememberRounding}
-        me={ctx.actor}
-      />
+      {/* An equal split between two or more people: who is in it. Every other split is under More options. */}
+      {form.mode === 'equal' && form.people.length > 1 ? (
+        <>
+          <SectionLabel>
+            <Trans>Split</Trans>
+          </SectionLabel>
+          <SplitRows
+            form={form}
+            update={update}
+            evaluation={evaluation}
+            locale={locale}
+            adjustModes={adjustModes}
+            onAdjustModesChanged={saveAdjustModes}
+          />
+        </>
+      ) : null}
 
-      <SectionLabel>
-        <Trans>Notes</Trans>
-      </SectionLabel>
-      <View style={[a.flex_row, a.align_start, a.gap_md, a.px_lg]}>
-        <NotesIcon
-          size="md"
-          fill={t.atoms.text_contrast_medium.color}
-          style={[{marginTop: 2}]}
-        />
-        <PlainInput
-          testID="expense-notes"
-          value={form.notes}
-          onChangeText={notes => update(f => ({...f, notes}))}
-          placeholder={l`Add a note (optional)`}
-          accessibilityLabel={l`Notes`}
-          multiline
-          maxLength={1000}
-          style={[a.flex_1, {lineHeight: 20, minHeight: 44, paddingTop: 0}]}
-        />
-      </View>
+      <DisclosureRow
+        testID="expense-more"
+        label={l`More options`}
+        summary={moreSummary}
+        isOpen={isMoreOpen}
+        onPress={() => setIsMoreOpen(open => !open)}
+      />
+      {isMoreOpen ? (
+        <View testID="expense-more-options">
+          <SplitModeChips form={form} update={update} locale={locale} />
+          {form.mode !== 'equal' ? (
+            <SplitRows
+              form={form}
+              update={update}
+              evaluation={evaluation}
+              locale={locale}
+              adjustModes={adjustModes}
+              onAdjustModesChanged={saveAdjustModes}
+            />
+          ) : null}
+          {ROUNDABLE.includes(form.mode) ? (
+            <CashRounding
+              form={form}
+              update={update}
+              evaluation={evaluation}
+              locale={locale}
+              defaultUnit={unitOf(form.currency)}
+              onChanged={rememberRounding}
+              actor={ctx.actor}
+            />
+          ) : null}
+          <SectionLabel>
+            <Trans>Notes</Trans>
+          </SectionLabel>
+          <View style={[a.flex_row, a.align_start, a.gap_md, a.px_lg]}>
+            <NotesIcon
+              size="md"
+              fill={t.atoms.text_contrast_medium.color}
+              style={[{marginTop: 2}]}
+            />
+            <PlainInput
+              testID="expense-notes"
+              value={form.notes}
+              onChangeText={notes => update(f => ({...f, notes}))}
+              placeholder={l`Add a note (optional)`}
+              accessibilityLabel={l`Notes`}
+              multiline
+              maxLength={1000}
+              style={[a.flex_1, {lineHeight: 20, minHeight: 44, paddingTop: 0}]}
+            />
+          </View>
+        </View>
+      ) : null}
       {/* Only an expense someone disputed mounts the question: Add expense and a plain edit carry no extra dialog. */}
       {resolvable.length > 0 ? (
         <ResolvePrompt
@@ -593,6 +657,11 @@ export function ExpenseComposer({
       ) : null}
     </FormSheet.Screen>
   )
+}
+
+/** Whether the form already uses something that lives under "More options". */
+function usesMoreOptions(f: ExpenseForm) {
+  return f.mode !== 'equal' || !!f.roundTo || !!f.notes.trim()
 }
 
 /**

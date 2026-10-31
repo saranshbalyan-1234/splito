@@ -787,3 +787,29 @@ test('Activity is a bell that turns solid when selected, so the selected tab sho
   // Selected: the bell is filled in the text colour.
   await expect.poll(fill).not.toBe('none')
 })
+
+test('Search & Ask sits only on the start tab, and follows it when the start tab changes (owner 218)', async ({page}) => {
+  await page.setViewportSize(DESKTOP)
+  await open(page, '/people', 'screen-people')
+  await expect(on(page, 'screen-people', 'header-search-ask')).toBeVisible()
+  for (const [path, screen] of [
+    ['/groups', 'screen-groups'],
+    ['/analytics', 'screen-analytics'],
+    ['/activity', 'screen-activity'],
+    ['/profile', 'screen-profile'],
+  ] as const) {
+    await open(page, path, screen)
+    await expect(on(page, screen, 'header-search-ask')).toHaveCount(0)
+  }
+  // Cmd/Ctrl+K still opens the drawer from any page.
+  await page.keyboard.press('Control+k')
+  await expect(page.getByTestId('search-ask')).toBeVisible()
+  await page.keyboard.press('Escape')
+  // Open on Groups: the button moves there.
+  await page.waitForFunction(() => 'splito' in window)
+  await page.evaluate(() => (window as any).splito.setPref('startTab', 'groups'))
+  await open(page, '/groups', 'screen-groups')
+  await expect(on(page, 'screen-groups', 'header-search-ask')).toBeVisible()
+  await open(page, '/people', 'screen-people')
+  await expect(on(page, 'screen-people', 'header-search-ask')).toHaveCount(0)
+})

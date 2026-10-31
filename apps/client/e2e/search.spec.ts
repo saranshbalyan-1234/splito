@@ -216,14 +216,17 @@ test('recent searches: kept on submit, reopened with a tap, cleared behind a pro
 test('Ctrl+K toggles the drawer from anywhere and "/" opens it; the button tooltip and input show the hint', async ({
   page,
 }) => {
-  await openDemo(page, '/groups')
-  await expect(page.getByTestId('screen-groups')).toBeVisible()
-  const button = page.getByTestId('screen-groups').getByTestId('header-search-ask')
+  // The button is on the start tab (People) only (owner 218); the shortcut works from any page.
+  await openDemo(page, '/people')
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+  const button = page.getByTestId('screen-people').getByTestId('header-search-ask')
   await expect(button).toBeVisible()
   await expect(button.locator('xpath=ancestor::*[@title][1]')).toHaveAttribute(
     'title',
     /Search or ask Splito \((⌘K|Ctrl K)\)/,
   )
+  await openDemo(page, '/groups')
+  await expect(page.getByTestId('screen-groups')).toBeVisible()
   await page.keyboard.press('Control+k')
   await expect(page.getByTestId('search-ask')).toBeVisible()
   await expect(page.getByTestId('search-ask-shortcut')).toHaveText(/⌘K|Ctrl K/)
@@ -248,17 +251,21 @@ test('/search opens the drawer with the query; tapping a result opens it and clo
 test.describe('phone', () => {
   test.use({viewport: PHONE})
 
-  test('every top-level header has the button left of its action; it opens the full-height drawer', async ({
+  test('the start tab\'s header has the button left of its action, no other tab has it; it opens the full-height drawer', async ({
     page,
   }) => {
     await openDemo(page)
     await expect(page.getByTestId('screen-people')).toBeVisible()
-    for (const [path, screen, action] of [
-      ['/people', 'screen-people', 'people-add-friend'],
-      ['/groups', 'screen-groups', 'groups-new'],
-      ['/analytics', 'screen-analytics', 'analytics-export'],
-      ['/activity', 'screen-activity', 'activity-mark-all-read'],
+    for (const [path, screen] of [
+      ['/groups', 'screen-groups'],
+      ['/analytics', 'screen-analytics'],
+      ['/activity', 'screen-activity'],
     ] as const) {
+      await openDemo(page, path)
+      await expect(page.getByTestId(screen)).toBeVisible()
+      await expect(page.getByTestId(screen).getByTestId('header-search-ask')).toHaveCount(0)
+    }
+    for (const [path, screen, action] of [['/people', 'screen-people', 'people-add-friend']] as const) {
       await openDemo(page, path)
       const button = page.getByTestId(screen).getByTestId('header-search-ask')
       await expect(button).toBeVisible()
