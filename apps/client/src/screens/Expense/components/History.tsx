@@ -5,13 +5,11 @@ import {
   encode,
   type Expense,
   type HistoryRow,
-  PREFS,
   type RowSync,
 } from '@splito/sync'
 
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useTimeZone} from '#/locale/useDates'
-import {usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
 import {CirclePlus_Stroke2_Corner0_Rounded as CreatedIcon} from '#/components/icons/CirclePlus'
@@ -19,17 +17,16 @@ import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Clo
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
-import {useDisplayName} from '#/components/split/shared'
+import {useCategoryLookup, useDisplayName} from '#/components/split/shared'
 import {useRowStatus} from '#/components/SyncStatus'
 import {Text} from '#/components/Typography'
-
-type Kind = 'created' | 'edited' | 'deleted' | 'restored'
+import {type HistoryKind, historyKind} from './historyKind'
 
 /** One stored version of the expense as a timeline line (F-1204): who did what, when, and what changed. */
 export interface HistoryLineData {
   key: string
   at: number
-  kind: Kind
+  kind: HistoryKind
   actor: string
   changes: string[]
 }
@@ -43,19 +40,12 @@ export function useHistoryLines(history: HistoryRow[]): HistoryLineData[] {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const formatDay = useFormatDay()
-  const [categories = PREFS.categories.default] = usePref('categories')
-  const categoryName = (id: string) =>
-    categories.find(c => c.id === id)?.name ?? id
+  const category = useCategoryLookup()
+  const categoryName = (id: string) => category(id).name
 
   return history.map((row, i) => {
     const prev = history[i - 1]
-    const kind: Kind = !prev
-      ? 'created'
-      : row.deleted && !prev.deleted
-        ? 'deleted'
-        : !row.deleted && prev.deleted
-          ? 'restored'
-          : 'edited'
+    const kind = historyKind(row, prev)
     const now = row.data as Expense
     const was = prev?.data as Expense | undefined
     const changes: string[] = []
@@ -96,21 +86,29 @@ export function useHistoryLines(history: HistoryRow[]): HistoryLineData[] {
 
 /**
  * A history line inside the timeline, drawn like Bluesky's system messages in a
- * chat: centred, quiet, with a small glyph for what happened.
+ * chat: centred, quiet, with a small glyph for what happened. `titles` words
+ * each kind for what the record is (an expense by default; the payment page
+ * passes its own).
  */
-export function HistoryLine({line}: {line: HistoryLineData}) {
+export function HistoryLine({
+  line,
+  titles,
+}: {
+  line: HistoryLineData
+  titles?: (who: string) => Record<HistoryKind, string>
+}) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const tz = useTimeZone()
   const name = useDisplayName()
   const who = name(line.actor)
-  const title = {
+  const title = (titles?.(who) ?? {
     created: l`${who} added this expense`,
     edited: l`${who} edited this expense`,
     deleted: l`${who} deleted this expense`,
     restored: l`${who} restored this expense`,
-  }[line.kind]
-  const icons: Record<Kind, React.ComponentType<SVGIconProps>> = {
+  })[line.kind]
+  const icons: Record<HistoryKind, React.ComponentType<SVGIconProps>> = {
     created: CreatedIcon,
     edited: PencilIcon,
     deleted: TrashIcon,

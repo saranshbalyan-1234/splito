@@ -81,7 +81,13 @@ function sumBy(rows: Array<{currency: CurrencyCode; amount: bigint}>): Money[] {
 /** "You" is drawn from the id, so a stored chat reads in the language it is opened in. */
 const refOf = (env: AskEnv, id: string): Ref => (id === env.me ? {id, name: ''} : (env.people.find(p => p.id === id) ?? {id, name: ''}))
 const groupRef = (env: AskEnv, id: string): Ref => env.groups.find(g => g.id === id) ?? {id, name: ''}
-const categoryRef = (env: AskEnv, id: string): CategoryRef => env.categories.find(c => c.id === id) ?? {id, name: '', color: env.categories.find(c => c.id === 'other')?.color ?? ''}
+/** A category that is gone answers as the real Other (the same fallback every other screen uses), keeping the asked id. */
+const categoryRef = (env: AskEnv, id: string): CategoryRef => {
+  const found = env.categories.find(c => c.id === id)
+  if (found) return found
+  const other = env.categories.find(c => c.id === 'other')
+  return {id, name: other?.name ?? '', color: other?.color ?? ''}
+}
 
 /* -------------------------------------------------------------------------- */
 /* Balances                                                                   */

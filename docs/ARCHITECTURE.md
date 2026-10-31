@@ -130,6 +130,8 @@ Rules:
   | Dialog, sheet, form sheet | `#/components/Dialog` + `#/components/FormSheet` |
   | Confirm / discard | `#/components/Prompt` |
   | Menu, overflow | `#/components/Menu` |
+  | A row's "more actions" menu | `#/components/RowMenu` (`RowMenu`, `useRowMenuTrigger`): right-click, Menu key / Shift+F10, long-press (native and phone-width web); the "..." button on every width or wide only |
+  | Category name, tile | `useCategoryLookup` / `useCategory` (translated, gone id = Other) and `CategoryTile`, all in `#/components/split/shared` |
   | Toast, undo | `#/components/Toast` |
   | Long list | `#/view/com/util/List` |
   | In-page tabs | Bluesky Pager + `TabBar` (§ 26.9) [Partial: `components/TabBar.tsx`, no Pager yet] |
@@ -1617,6 +1619,8 @@ Splito lessons (add newest last, dated, with PR):
   writer of the same version that skipped rows (an older tab, a rollback): also compare a cheap count (`d` keys against
   records). The oracle became a property test (random changes on both engines, the stored keys equal `termRows`, 30
   queries equal a row-by-row reference, narrow and broad both exercised), which is what makes the two paths safe.
+
+- 2026-10-31, c-p0bf (consolidation P0-b, P0-f): **a row menu is one component, because the same gesture kept working on some rows only.** Four hand-built menus (Hide, Dispute, Activity, comments) differed on phone-width web: iOS Safari fires no `contextmenu` on a long-press, so a deleted history row and an Activity row had no way in there (`IS_NATIVE`-only `onLongPress`). `components/RowMenu.tsx` owns it (`useRowMenuTrigger`: long-press where there is no mouse, right-click, Menu key / Shift+F10; `RowMenu`: row + menu + the "..." button), and the architecture rule `rowMenuGesture` counts hand-built `onContextMenu`s (baselined: CommentRow until P1-d, two charge pickers). Test-method lesson: **Chromium's emulated touch (`Input.dispatchTouchEvent`) sends a click at the lift point, which lands on the menu's scrim and closes it about 0.3 s after release**; a real long-press does not, so `e2e/rowMenu.spec.ts` checks the menu while the finger is still down, and desktop WebKit cannot construct a `Touch` (it is sent plain touch objects). Reanimated's `useReducedMotion` is the OS setting read once at start, so a swipe or animation using it ignores the Animations preference: use `useShouldReduceMotion`. Category names translated only in Settings, so a Hindi user saw "Food" everywhere else: one `useCategoryLookup` now names them. Renders: the lookup hands back the same object for the same category, id and name (`nameCategory`), because a fresh `{...category}` per render re-rendered every memoised tile and composer button (type phase: `CategoryTile` 10x, `Pressable` +20, `Button` +10); the one recorded increase is `mount:CategoryTile` 2 to 5 in the launch phase of `e2e-renders/baseline.json`, the five Home rows whose `EntryIcon` now draws the shared tile (edited by hand for that one line, not re-recorded under load 60 to 150).
 
 ## 24. Checklists
 

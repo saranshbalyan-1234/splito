@@ -23,6 +23,11 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
   },
   rnModal: {},
   expoHaptics: {},
+  rowMenuGesture: {
+    'apps/client/src/components/comments/CommentRow.tsx': 1,
+    'apps/client/src/components/split/SplitEditor.tsx': 1,
+    'apps/client/src/components/split/charges/ItemClass.tsx': 1,
+  },
   viewFiles: {},
   credentialAccess: {
     'apps/client/src/alf/util/useColorModeTheme.ts': 1,
@@ -42,7 +47,6 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/components/groups/EditGroupDialog.tsx': 1,
     'apps/client/src/components/groups/RulesEditor.tsx': 1,
     'apps/client/src/components/people/EditFriendDialog.tsx': 1,
-    'apps/client/src/components/people/EntryIcon.tsx': 1,
     'apps/client/src/components/people/PaymentDetailsDialog.tsx': 1,
     'apps/client/src/components/people/RecordPaymentDialog.tsx': 1,
     'apps/client/src/components/people/UpiPayDialog.tsx': 1,
