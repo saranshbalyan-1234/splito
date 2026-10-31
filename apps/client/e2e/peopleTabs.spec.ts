@@ -137,14 +137,15 @@ test('navigation: phone bar, rail and desktop lists, in order', async ({page}) =
   expect(rows.filter(id => id !== 'drawer-profile').slice(0, 5)).toEqual(['drawer-people', 'drawer-groups', 'drawer-analytics', 'drawer-activity', 'drawer-settings'])
 })
 
-test('a saved bar naming home or ask loses them and keeps its order; the old default bar gains Settings (owners 198, 200, 206)', async ({page}) => {
+test('a saved bar naming home or ask loses them and keeps its order, with People and Settings; the old default bar becomes the new one (owners 198, 200, 206)', async ({page}) => {
   await page.setViewportSize(PHONE)
   await page.goto('/')
   await page.waitForFunction(() => 'splito' in window)
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.putRawPref('tabs', ['home', 'people', 'activity', 'ask', 'groups']))
-  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-activity', 'tab-groups'])
+  // A bar that held Home keeps People and gains Settings, reachable from no other row on phones (owner 206).
+  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-activity', 'tab-groups', 'tab-settings'])
   await page.reload()
-  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-activity', 'tab-groups'])
+  await expect.poll(() => ids(page)).toEqual(['tab-people', 'tab-activity', 'tab-groups', 'tab-settings'])
   await expect(page.getByTestId('screen-people')).toBeVisible()
   // A bar that is exactly the old default was never customised: it gains Settings.
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.putRawPref('tabs', ['home', 'people', 'groups', 'analytics', 'activity']))
