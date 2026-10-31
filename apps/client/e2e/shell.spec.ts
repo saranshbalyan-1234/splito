@@ -315,7 +315,7 @@ test.describe('header rule set', () => {
   })
 })
 
-test.describe('drawer: Bluesky drawer, opened by a swipe from the left edge (owner 201)', () => {
+test.describe('drawer: Bluesky drawer, opened by its address (owner 216)', () => {
   test('slides in from the left with the account card, the rows and the footer', async ({
     page,
   }) => {
@@ -831,7 +831,8 @@ test('bottom-bar icons are drawn in the text colour, never the accent (owner 215
     const nav = document.querySelector('[role="navigation"]')!
     const label = [...nav.querySelectorAll('[aria-current="page"] [data-testid="tab-label"]')][0] as HTMLElement
     const icons = [...nav.querySelectorAll('[data-testid^="tab-"] svg')].map(svg => {
-      const painted = svg.querySelector('path, circle, rect') ?? svg
+      // The first shape outside a mask: a filled glyph's cut-outs live in its mask (owner 216).
+      const painted = [...svg.querySelectorAll('path, circle, rect')].find(el => !el.closest('mask, defs')) ?? svg
       const style = getComputedStyle(painted)
       return style.fill !== 'none' && style.fill !== 'rgba(0, 0, 0, 0)' ? style.fill : style.stroke
     })
@@ -839,4 +840,17 @@ test('bottom-bar icons are drawn in the text colour, never the accent (owner 215
   })
   expect(colours.icons.length).toBeGreaterThan(3)
   for (const c of colours.icons) expect(c).toBe(colours.text)
+})
+
+test('the selected People icon is a solid card with the person cut out, not a plain square (owner 216)', async ({page}) => {
+  await page.setViewportSize({width: 390, height: 844})
+  await page.goto('/people')
+  await expect(page.getByTestId('screen-people').first()).toBeVisible()
+  const icon = await page.evaluate(() => {
+    const svg = document.querySelector('[role="navigation"] [aria-current="page"] svg')!
+    const holes = [...svg.querySelectorAll('mask circle, mask path')]
+    return {masked: !!svg.querySelector('g[mask]'), holes: holes.length}
+  })
+  // The head and the shoulders are holes in the card, so the person shows through in the background colour.
+  expect(icon).toEqual({masked: true, holes: 2})
 })

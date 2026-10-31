@@ -1865,6 +1865,15 @@ Splito lessons (add newest last, dated, with PR):
   and every bottom-bar, sidebar and drawer icon fell back to the accent colour. The pop now sits alone on the
   wrapper and the whole style goes to the glyph; `shell.spec` checks the bar's icons are drawn in the label's text
   colour.
+- 2026-10-31, owner 216 (iPhone Safari): **a left-edge swipe belongs to the browser.** The phone-web drawer opened on a
+  touch that started within 24 px of the left edge and moved right, which is exactly iOS Safari's Back swipe (and it
+  ran on pushed pages too), so a Back swipe also opened the drawer over the page it went back to. No app gesture starts
+  at the screen's left edge; the drawer opens only by its address. Also: React Navigation's web scroll restoration
+  scrolled only in the frame after focus, so the page Back returned to was painted once at the old page's offset and
+  then jumped; it now scrolls at once as well (`scrollWeb.spec` "Back ... from the first frame"). And a filled icon made
+  by filling every shape of a Lucide outline can lose its drawing (People became a plain square): filled glyphs cut
+  their detail out with a mask (`createFilledIcon`), and `shell.spec` checks the selected People icon has its holes.
+  Real Safari's swipe was not driven here (no WebKit in this container); Chromium's `history.back()` stands in for it.
 
 ## 24. Checklists
 
@@ -2435,6 +2444,10 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   the drawer draw every tab icon in the theme's text colour (white in Dim and Black, near-black in light), active and
   inactive alike; the selected tab is shown by its filled glyph and bold label, as in Bluesky. The accent colours
   buttons, links and the FAB, not the nav. *Why:* "make the navigation selector white again like it was previously".
+- **A filled tab glyph keeps its drawing** (owner 216): a selected icon is a solid shape with its inner detail cut out
+  (`createFilledIcon`, a mask), never Lucide's outline with every shape filled in, which can merge into a blob. People is
+  a solid card with the head and shoulders cut out (filling the outline drew a plain square that read as a calendar).
+  *Why:* "People tab when selected is not correct".
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
 - **Compact, no space it does not need** (owner 188): the sidebar is as wide as its content needs (icon,
@@ -2468,9 +2481,15 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   header block and footer; closes on scrim tap and swipe (native, Gesture Handler); focus trap and Escape on
   web. testID `drawer`. *Why:* "it should open the drawer like Bluesky where all menu appears like the
   hamburger".
-- **Opened by** a swipe from the left edge on phones (native and phone web); the header avatar opens Profile
-  instead (owner 201, § 26.4). Everything the drawer offers is also reachable without it (tabs, Settings from
-  Profile's Back, Feedback, Help, Privacy and About in Settings > Support, owner 204).
+- **No swipe opens it, anywhere** (owner 216, replaces 201's edge swipe): the left-edge swipe is iOS Safari's Back
+  (and the native stack's swipe-back), and the drawer opening under it fought the browser. Nothing in the UI opens the
+  drawer; it opens only by its address (`?drawer=menu`, F-241), and a swipe or the scrim closes it once open. The header
+  avatar opens Profile (owner 201, § 26.4). Everything the drawer offers is reachable without it (the tabs, Feedback,
+  Help, Privacy and About in Settings > Support, owner 204). *Why:* "Sidebar opens up when swiping".
+- **The browser's Back gesture is the browser's** (owner 216): the app puts no gesture at the left edge of a phone
+  screen, and the page Back returns to is drawn at its own saved scroll from the first frame
+  (`useWebScrollRestoration` scrolls at once on focus, then again a frame later for a re-mounted screen), so Safari's
+  swipe lands on its snapshot without a jump. *Why:* "Swipe doesn't look good to go to last screen".
 - **Contents, the same as the desktop sidebar (§ 26.3):** a profile header (avatar with the sync-status dot,
   the person's real name; tapping it opens Profile; no "Me" label and no "Saved on this device" text); the
   shared nav items (§ 26.3); the shared footer links Feedback ·
@@ -3073,8 +3092,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 - **Not in this task:** setup after sign-in (F-211) and the guided tour (F-253); Google and Apple (buttons only, a
   tap says "arrives with sync"); the real HTTP client (F-2101/F-2102).
 
-- **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
-  Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
+- **Settings has no Profile or account row** (owner 216, replaces "Settings starts with an Account section"): Profile is
+  reached only from the header avatar (owners 201, 206); the Settings list starts with Friends and invites, then the
+  preference sections, Support and Your data. *Why:* "Remove profile from settings".
 - **The review site is a "preview" build** (assistant's ruling 2026-10-30, after the F-250 review; the owner
   reviews the front end on https://splito-web.onrender.com before any backend, owners 164/165): Render builds with
   `EXPO_PUBLIC_ENV=preview`, which allows the labelled dev account ("Preview build: local dev account, data stays in
@@ -3799,6 +3819,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 213 | "make sure to use proper skeletons, proper animations, proper icons, proper empty screen and proper cta"; "loading wheverever required"; "guided tour for required part only"; "dont overdo anything" | Skeletons where content loads, small loaders only for non-content waits, motion only where it explains, consistent Lucide icons, an empty state with art + one sentence + one CTA on every list, one primary CTA per screen; guided tour only for the essentials; nothing decorative | § 26.1, F-253 | - |
 | 214 | "for some reason, by desktop full width sidebar looks really bad"; "Feedback · Help · Privacy · About moves to bottom" | The sidebar footer links are pinned to the bottom again; items and Add expense stay a block at the top; width stays 216 px | § 26.5 | Footer links directly under Add expense (188) |
 | 215 | "Tab ui issue"; "make the navigation selector white again like it was previously" | Bottom bar, sidebar and drawer icons in the text colour (white in dark), active shown by the filled glyph and bold label; never the accent | § 26.5 | Accent-coloured icons (a regression of the c-anim review fix) |
+| 216 | "People tab when selected is not correct"; "Sidebar opens up when swiping"; "Remove profile from settings"; "Swipe doesn't look good to go to last screen" (iPhone screenshots, 2026-10-31) | Selected People glyph is a solid card with the person cut out; no swipe opens the drawer (address only); no Profile row in Settings; Back (Safari's swipe) shows the page at its saved scroll from the first frame, no app gesture at the left edge | § 26.5, § 26.7, § 26.15 | Filled outline (a plain square); edge swipe opened the drawer (201); Settings Account row with Profile |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

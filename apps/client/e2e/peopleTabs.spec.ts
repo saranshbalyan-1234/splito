@@ -124,7 +124,7 @@ test('navigation: phone bar, rail and desktop lists, in order', async ({page}) =
   await expect(page.getByTestId('tab-groups')).toHaveAttribute('aria-current', 'page')
   // The drawer lists the same.
   await page.setViewportSize(PHONE)
-  // The bar is at the bottom again (the swipe handler follows the width).
+  // The bar is at the bottom again.
   await expect.poll(async () => (await page.getByRole('navigation').boundingBox())?.y ?? 0).toBeGreaterThan(600)
   await openDrawer(page)
   // The menu mounts when the drawer has stopped sliding (owner 168), so wait for it before reading the list.

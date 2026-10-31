@@ -43,8 +43,10 @@ export function useWebScrollRestoration() {
     () => ({
       focus(e: EventArg<'focus', boolean | undefined, unknown>) {
         const scrollY = state.scrollYs.get(e.target) ?? 0
-        // Deferred so that screens re-mounted by LRU eviction have
-        // time to render their content before we scroll.
+        // Splito: scroll at once as well (owner 216). A kept screen already has its content, and with only the
+        // deferred scroll iOS Safari's Back swipe landed on its snapshot, then drew one frame at the page-left's
+        // offset before jumping. The deferred one stays for screens re-mounted by LRU eviction, which render first.
+        window.scrollTo(0, scrollY)
         requestAnimationFrame(() => {
           window.scrollTo(0, scrollY)
         })

@@ -6,9 +6,7 @@ import {SystemBars} from 'react-native-edge-to-edge'
 import * as SystemUI from 'expo-system-ui'
 import {BottomSheetOutlet, BottomSheetProvider} from '@bsky.app/bottom-sheet'
 import {useLingui} from '@lingui/react/macro'
-import {useNavigationState} from '@react-navigation/native'
 
-import {isStateAtTabRoot} from '#/lib/routes/helpers'
 import {useDialogFullyExpandedCountContext} from '#/state/dialogs'
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
 import {SearchAskProvider} from '#/features/searchAsk/SearchAskProvider'
@@ -16,7 +14,7 @@ import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {DrawerContent} from '#/navigation/Drawer'
 import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {RoutesContainer, TabsNavigator} from '#/navigation/Navigation'
-import {atoms as a, select, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, select, useTheme} from '#/alf'
 import {DemoBusy} from '#/components/DemoBusy'
 import {Outlet as PortalOutlet} from '#/components/Portal'
 import {IS_ANDROID, IS_IOS, IS_LIQUID_GLASS} from '#/env'
@@ -54,7 +52,8 @@ function ShellInner() {
 
 /*
  * Bluesky's drawer layout. Upstream closes the drawer at tablet widths,
- * where its sidebar takes over; Splito opens it by a swipe on phones only (owner 201: the avatar opens Profile).
+ * where its sidebar takes over. Splito never opens it by a swipe (owner 216: the left-edge swipe is Back on iOS); a swipe
+ * only closes it once open, and its address (`?drawer=menu`) opens it.
  */
 function DrawerLayout({children}: {children: React.ReactNode}) {
   const t = useTheme()
@@ -62,10 +61,7 @@ function DrawerLayout({children}: {children: React.ReactNode}) {
   const isDrawerOpen = useIsDrawerOpen()
   const setIsDrawerOpen = useSetDrawerOpen()
   const winDim = useWindowDimensions()
-  const {gtMobile} = useBreakpoints()
 
-  const canGoBack = useNavigationState(state => !isStateAtTabRoot(state))
-  const swipeEnabled = !gtMobile && !canGoBack
   /* The drawer's own slide decides when its menu mounts (owner 168): it opens first, the items follow. */
   const [drawerSettled, setDrawerSettled] = useState(false)
   // A timer covers a missed `onTransitionEnd`; a closed drawer is not settled.
@@ -86,26 +82,8 @@ function DrawerLayout({children}: {children: React.ReactNode}) {
       )}
       drawerStyle={{width: Math.min(400, winDim.width * 0.8)}}
       configureGestureHandler={handler => {
-        if (swipeEnabled || isDrawerOpen) {
-          if (isDrawerOpen) {
-            return {...handler, activeOffsetX: [-1, 1]}
-          } else {
-            return {
-              ...handler,
-              /*
-               * Any movement to the left is a pager swipe, so fail the drawer
-               * gesture immediately.
-               */
-              failOffsetX: -1,
-              /*
-               * Don't rush declaring that a movement to the right is a drawer
-               * swipe. It could be a vertical scroll, or a slow horizontal
-               * swipe on a row (APP-2119 upstream), so require more travel
-               * before claiming on Android.
-               */
-              activeOffsetX: IS_ANDROID ? 20 : 5,
-            }
-          }
+        if (isDrawerOpen) {
+          return {...handler, activeOffsetX: [-1, 1]}
         } else {
           /*
            * Fail the gesture immediately and skip the edge peek on touch-down.

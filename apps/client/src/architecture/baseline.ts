@@ -13,6 +13,7 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/components/forms/SegmentedControl.tsx': 1,
     'apps/client/src/components/groups/GroupAvatar.tsx': 14,
     'apps/client/src/components/icons/ChartPie.tsx': 2,
+    'apps/client/src/components/icons/ContactRound.tsx': 2, // the mask's black: cut-outs, not a theme colour (owner 216)
     'apps/client/src/components/icons/HomeOpen.tsx': 1,
     'apps/client/src/components/icons/Settings.tsx': 1,
     'apps/client/src/components/icons/UserCircle.tsx': 3,
@@ -99,7 +100,6 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/screens/Invites/Invite.tsx': 1,
     'apps/client/src/screens/Person/index.tsx': 1,
     'apps/client/src/screens/Profile/index.tsx': 1,
-    'apps/client/src/screens/Settings/index.tsx': 1,
   },
   externalHandOff: {},
   demoStaticImport: {},

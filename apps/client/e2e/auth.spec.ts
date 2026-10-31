@@ -254,9 +254,9 @@ test.describe('a new account', () => {
     await page.getByTestId('newPasswordInput').fill(NEW.password)
     await page.getByTestId('setNewPassword-next').click()
     await signedInShown(page)
-    // Account row in Settings shows the new account.
-    await page.goto('/settings')
-    await expect(page.getByTestId('settings-profile')).toContainText(NEW.email)
+    // Profile shows the new account (owner 216: it is not a Settings row).
+    await page.goto('/profile')
+    await expect(page.getByTestId('profile-email')).toContainText(NEW.email)
   })
 
   test('starting with a phone asks for the email next; the account can then sign in with either', async ({page}) => {
