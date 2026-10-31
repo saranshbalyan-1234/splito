@@ -29,7 +29,7 @@ import {useDialogControl} from '#/components/Dialog'
 import {Button, ButtonIcon} from '#/components/Button'
 import {HITSLOP_10} from '#/lib/constants'
 import {SettingsGear2_Stroke2_Corner0_Rounded as GearIcon} from '#/components/icons/Settings'
-import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
+import {SearchAskButton, SearchAskSpacer} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
@@ -143,14 +143,14 @@ export function PeopleScreen() {
     <TabScreen testID="screen-people">
       <Layout.Header.Outer>
         <HeaderAvatar />
-        {/* Search & Ask and Add friend on the right, so the title stays centred. */}
-        <Layout.Header.Slot />
+        {/* Balances Search & Ask on the right (start tab only, owner 218), so the title stays centred. */}
+        <SearchAskSpacer tab="people" />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>People</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <SearchAskButton />
+        <SearchAskButton tab="people" />
         <Layout.Header.ActionButton
           testID="people-add-friend"
           ref={addFriendRef}

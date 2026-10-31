@@ -1881,6 +1881,10 @@ Splito lessons (add newest last, dated, with PR):
   outline (Lucide `activity` is one open line) cannot show a selected tab; pick a glyph with an area to fill (the bell),
   and `shell.spec` checks the selected bar icon is filled. The pulse redraw went with it, so the `tick` variant and
   `playKey` left `AnimatedIcon`; `react-native-drawer-layout` left the dependencies.
+- 2026-10-31, owner 218: **a header slot that balances an optional button must come and go with it.** Each tab's header
+  kept an empty `Layout.Header.Slot` on the left to balance Search & Ask on the right; once the button showed on the
+  start tab only, every other tab's title sat 20.5 px off centre (`shell.spec` "centred title"). `SearchAskSpacer`
+  renders the left slot only while the button is there.
 
 ## 24. Checklists
 
@@ -2259,9 +2263,11 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   "Remove the sidebar in mobile completely, either sidebar or bottom navigation"; earlier "make notification as
   activity and move to bottom". *Where:* `view/shell/bottom-bar/`, `view/shell/desktop/LeftNav.tsx`.
 - **Search & Ask: one drawer for search and AI.** An AI icon (Lucide `Sparkles`, the widely recognised AI
-  mark; not a magnifier, not `Zap`, which reads as "fast") sits in the header of every top-level page
-  (Home, People, Groups, Analytics, Activity), to the LEFT of that page's action (on Home, its only action, at the far right), on every
-  platform; accessibility label "Search or ask Splito", tooltip on web. Tapping it opens the **Search & Ask
+  mark; not a magnifier, not `Zap`, which reads as "fast") sits **only in the header of the start tab** (owner 218:
+  the tab the app opens on, People by default, whatever Settings > Navigation "Open on" names; the button follows a
+  change; a pushed copy of that tab keeps it, owner 190), to the LEFT of that page's action, on every platform; no
+  other tab or page draws it (Groups, Analytics, Activity, Settings), and Cmd/Ctrl+K and "/" still open the drawer from
+  anywhere on web (`SearchAskButton tab=...`, `state/startTab.ts` `useIsStartTab`); accessibility label "Search or ask Splito", tooltip on web. Tapping it opens the **Search & Ask
   drawer**: a full-height drag-to-close bottom drawer on phones,
   a large centred popup (command-palette style, ~720 px) on rail/desktop. Top: one Bluesky `SearchInput`
   ("Search or ask anything"), autofocused. Empty: recent searches and suggested questions. Typing shows grouped
@@ -2399,18 +2405,17 @@ show what: centre may be page name, right maybe some basic action, and left may 
   phones only; on rail and desktop, where the sidebar already shows the logo, it shows the title "Home". *Why:*
   "on desktop, show home instead of branding as branding is there on left". Person and Group show the entity name with a `SubtitleText` ("Trip · 5
   members"); Expense shows its title. Empty slots keep their width so the title stays centred.
-- **Right:** at most one basic action (exception: top-level pages add the Search & Ask icon to its left, § 26.3) (Bluesky header icon button), optionally followed by a Bluesky "..."
+- **Right:** at most one basic action (exception: the start tab adds the Search & Ask icon to its left, § 26.3, owner 218) (Bluesky header icon button), optionally followed by a Bluesky "..."
   overflow Menu. No bell and no other header icon: anything else lives in the page body (Analytics' chart /
   table toggle sits in its filter row). Body primary actions are not repeated in the header. *Why:* "what's
   the second icon on header left of avatar".
 
   | Screen | Right slot |
   |---|---|
-  | Home | Search & Ask only (owner 153) |
-  | People | Search & Ask + Add friend |
-  | Groups | Search & Ask + Create group |
-  | Analytics | Search & Ask + overflow (Export CSV) |
-  | Activity | Search & Ask + Mark all read |
+  | People | Add friend (+ Search & Ask while it is the start tab, owner 218) |
+  | Groups | Create group (+ Search & Ask while it is the start tab) |
+  | Analytics | overflow (Export CSV) (+ Search & Ask while it is the start tab) |
+  | Activity | Mark all read (+ Search & Ask while it is the start tab) |
   | Person | Settle up + overflow (Remind, Export statement, Edit, Remove friend) |
   | Group | Settle up + overflow (Edit group, Members, Payment rules, Export) |
   | Expense | Edit + overflow (Delete) |
@@ -2942,7 +2947,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   `Activity` pulse, a single line that looked the same selected or not), solid when selected, as Bluesky's
   notifications tab; Bluesky's unread badge on the nav item (bottom bar, sidebar), counting unread items from others. testIDs
   `tab-activity`, `screen-activity`.
-- **Header:** avatar (Back on a pushed copy, § 26.3) | "Activity" | Search & Ask | Filters | "Mark all read".
+- **Header:** avatar (Back on a pushed copy, § 26.3) | "Activity" | (Search & Ask while Activity is the start tab, owner 218) | Filters | "Mark all read".
 - **Body keeps Bluesky's notification list:** day section headers (Today / Yesterday / weekday / date), read/unread
   tint, row menu (mark read, hide, delete expense), swipe actions, hide and undo.
 - **Tabs All / Me / Others** (owner 92; F-1213, built): the shared TabBar; Me = what I did, Others = what other
@@ -3353,7 +3358,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
 *Where:* `components/SearchAsk/`, `lib/ask/`, backend AI endpoint (backend batch).
 
 - **Ask Splito lives inside the Search & Ask drawer (§ 26.3) and is not a tab** (owner 200): it is reached on every
-  platform from the header Search & Ask icon (sparkles) of every top-level page, and from web "/" or Cmd/Ctrl+K.
+  platform from the header Search & Ask icon (sparkles) of the start tab (owner 218), and from web "/" or Cmd/Ctrl+K anywhere.
   It is never an item in the sidebar, rail, drawer list, bottom bar or Settings > Navigation; a saved tab list
   naming `ask` is migrated (dropped). There is no separate Ask page. *Why:* "ask splito is not a tab".
 - **The conversation copies Bluesky's DM conversation layout** inside the drawer (message list, composer bar above the keyboard, day
@@ -3818,6 +3823,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 215 | "Tab ui issue"; "make the navigation selector white again like it was previously" | Bottom bar, sidebar and drawer icons in the text colour (white in dark), active shown by the filled glyph and bold label; never the accent | § 26.5 | Accent-coloured icons (a regression of the c-anim review fix) |
 | 216 | "People tab when selected is not correct"; "Sidebar opens up when swiping"; "Remove profile from settings"; "Swipe doesn't look good to go to last screen" (iPhone screenshots, 2026-10-31) | Selected People glyph is a solid card with the person cut out; no swipe opens the drawer (address only); no Profile row in Settings; Back (Safari's swipe) shows the page at its saved scroll from the first frame, no app gesture at the left edge | § 26.5, § 26.7, § 26.15 | Filled outline (a plain square); edge swipe opened the drawer (201); Settings Account row with Profile |
 | 217 | "Also we need to choose a diff icon for activity, it doesn't make any diff if it's selected or not"; "Remove the sidebar in mobile completely, either sidebar or bottom navigation" | Activity is a Lucide Bell, solid when selected; no side drawer anywhere (phone: bottom bar only; wide: sidebar only); Settings and the start tab cannot leave the bar; old `?drawer=menu` opens the page alone | § 26.3, § 26.7, § 26.14 | Activity pulse icon (unchanged when selected); phone drawer opened by its address (216) |
+| 218 | "Ask splito icon only on Home Screen" | The Search & Ask (sparkles) header button shows only on the start tab (the screen the app opens on, People by default, following Settings > Navigation "Open on"); no other tab or page draws it; Cmd/Ctrl+K and "/" still work everywhere on web | § 26.3, § 26.4, § 26.19 | Search & Ask in every top-level header (73, 74) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

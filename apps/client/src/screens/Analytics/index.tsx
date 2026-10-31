@@ -13,7 +13,7 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
 import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
+import {SearchAskButton, SearchAskSpacer} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
@@ -69,14 +69,14 @@ export function AnalyticsScreen() {
     <TabScreen testID="screen-analytics">
       <Layout.Header.Outer>
         <HeaderAvatar />
-        {/* Balances Search & Ask on the right, so the title stays centred. */}
-        <Layout.Header.Slot />
+        {/* Balances Search & Ask on the right (start tab only, owner 218), so the title stays centred. */}
+        <SearchAskSpacer tab="analytics" />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Analytics</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <SearchAskButton />
+        <SearchAskButton tab="analytics" />
         <Layout.Header.ActionButton
           testID="analytics-export"
           label={l`Export CSV`}

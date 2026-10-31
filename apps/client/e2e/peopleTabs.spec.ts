@@ -189,9 +189,9 @@ test('a main screen opened from a link is its tab with Back in place of the avat
   const groups = page.getByTestId('screen-groups').last()
   await expect(groups.getByTestId('header-back')).toBeVisible()
   await expect(groups.getByTestId('header-avatar')).toHaveCount(0)
-  // Same as the tab: the FAB and every header action (Search & Ask, Create group), the list's Filters.
+  // Same as the tab: the FAB and every header action (Create group; Search & Ask is the start tab's only, owner 218), the list's Filters.
   await expect(groups.getByTestId('fab-add')).toBeVisible()
-  await expect(groups.getByTestId('header-search-ask')).toBeVisible()
+  await expect(groups.getByTestId('header-search-ask')).toHaveCount(0)
   await expect(groups.getByTestId('groups-new')).toBeVisible()
   await expect(groups.getByTestId('list-filters')).toBeVisible()
   // Back returns to where the link was pressed.
@@ -206,7 +206,7 @@ test('a main screen opened from a link is its tab with Back in place of the avat
   await expect(tab.getByTestId('header-back')).toHaveCount(0)
   await expect(tab.getByTestId('fab-add')).toBeVisible()
   // Differs only by Back: the tab has the same actions.
-  await expect(tab.getByTestId('header-search-ask')).toBeVisible()
+  await expect(tab.getByTestId('header-search-ask')).toHaveCount(0)
   await expect(tab.getByTestId('groups-new')).toBeVisible()
   await expect(tab.getByTestId('list-filters')).toBeVisible()
   // The other links: Analytics, then People opened from Groups.
