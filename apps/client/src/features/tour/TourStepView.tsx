@@ -22,6 +22,8 @@ const RETRY_MS = 100
 const SETTLE_MS = 350
 /* The card's height before it has been laid out; it is invisible until then. */
 const CARD_HEIGHT_GUESS = 190
+const FOCUS_TRIES = 20
+const FOCUS_RETRY_MS = 50
 
 /** The words of one step; the sentence follows what the step points at and whether there is anything to show yet. */
 function useStepCopy(step: TourStep): {title: string; body: string} {
@@ -77,7 +79,6 @@ export function TourStepView({
   const isLast = position === count
   const [target, setTarget] = useState<Rect | null>(null)
   const [cardHeight, setCardHeight] = useState<number | null>(null)
-  const card = useRef<React.ComponentRef<typeof View>>(null)
   /* The parent's closures change every render; the effects below must not restart for that. */
   const onSkip = useNonReactiveCallback(onSkipProp)
   const onUnavailable = useNonReactiveCallback(onUnavailableProp)
@@ -115,12 +116,26 @@ export function TourStepView({
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onSkip])
+  /* Focus goes to the caption. It sits in a portal and fades in (Reanimated hides it until the animation starts, and a hidden node cannot take focus), so try until it sticks. */
+  const card = useRef<React.ComponentRef<typeof View> | null>(null)
+  const takeCard = (node: React.ComponentRef<typeof View> | null) => {
+    card.current = node
+  }
   /* The card sits in a portal, so it exists once it has been laid out, not when the target was found. */
   const isCardReady = cardHeight !== null
   useEffect(() => {
     if (!isCardReady) return
-    if (IS_WEB) (card.current as unknown as HTMLElement | null)?.focus({preventScroll: true})
-    else if (IS_NATIVE) AccessibilityInfo.announceForAccessibility(`${stepLabel}. ${title}. ${body}`)
+    let timer: ReturnType<typeof setTimeout> | undefined
+    if (IS_WEB) {
+      let tries = 0
+      const focusCard = () => {
+        const node = card.current as unknown as HTMLElement | null
+        node?.focus({preventScroll: true})
+        if (node && document.activeElement !== node && ++tries < FOCUS_TRIES) timer = setTimeout(focusCard, FOCUS_RETRY_MS)
+      }
+      focusCard()
+    } else if (IS_NATIVE) AccessibilityInfo.announceForAccessibility(`${stepLabel}. ${title}. ${body}`)
+    return () => clearTimeout(timer)
   }, [isCardReady, stepLabel, title, body])
 
   if (!target) return null
@@ -142,11 +157,13 @@ export function TourStepView({
           entering={shouldReduceMotion ? undefined : FadeIn.duration(180)}
           style={[a.absolute, {left: place.x, top: place.y, width}, cardHeight === null && {opacity: 0}]}>
           <View
-            ref={card}
+            ref={takeCard}
             testID="tour-card"
             /* Focusable by script only (web): the caption takes focus when the step appears. */
             {...(IS_WEB ? ({tabIndex: -1} as object) : null)}
-            onLayout={e => setCardHeight(e.nativeEvent.layout.height)}
+            onLayout={e => {
+              setCardHeight(e.nativeEvent.layout.height)
+            }}
             style={[a.p_lg, a.gap_md, a.rounded_md, a.border, t.atoms.bg, t.atoms.border_contrast_medium, web({outlineStyle: 'none'})]}>
             <View style={a.gap_xs}>
               <Text testID="tour-step" style={[a.text_sm, t.atoms.text_contrast_medium]}>
