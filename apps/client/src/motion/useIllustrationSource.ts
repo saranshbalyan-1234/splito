@@ -15,7 +15,12 @@ export function useIllustrationSource(name: IllustrationName, isDark: boolean) {
   /* State holds what arrived, so the hook re-reads after the fetch (the React Compiler would cache a bare read of `loaded`). */
   const [arrived, setArrived] = useState<{key: string; json: LottieJson}>()
   useEffect(() => {
-    if (loaded.has(key)) return
+    // Filled by another instance between this render and this effect: take it, or this one stays blank (review F-260).
+    if (loaded.has(key)) {
+      const json = loaded.get(key)!
+      setArrived(prev => (prev?.key === key ? prev : {key, json}))
+      return
+    }
     let isCurrent = true
     const art = ILLUSTRATIONS[name]
     void (isDark ? art.loadDark() : art.load()).then(m => {

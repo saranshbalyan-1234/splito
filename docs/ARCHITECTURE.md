@@ -1131,6 +1131,14 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
 - **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
   10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
   three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+- **A cache read during render is re-synced in the effect when the cache filled between render and effect.** Two
+  empty states of the same art: the second rendered while the chunk loaded, the first's import filled the module cache
+  before the second's effect ran, and the second returned early, keeping the `undefined` it read and staying blank (the
+  React Compiler caches the read). The effect takes the cached value (`useIllustrationSource`).
+- **Draw and tick icons animate on the event they confirm, never on mount in list rows.** A drawn check on every
+  Accept button re-drew as each Activity row scrolled into view (three worklet hooks and a motion subscription per
+  row, decoration owner 213 rules out); the drawn check is for a confirmed result (Save), and a tab pops only when it
+  becomes active, not when it is left.
 - **Narrow first: a broad token is checked on the rows of a narrow answer, never turned into its full id set.**
   Text and plain numbers are read with a cap (SMALL, 500); one that names more is tested on the rows the narrow
   tokens found, from `termRows` plus the few people, groups and categories its word names (`capped`, `tester` in
@@ -1676,6 +1684,16 @@ Splito lessons (add newest last, dated, with PR):
   (specs with their own viewport sizes; clipboard use outside `lib/sharing.ts`); the remaining duplicates the review
   listed (time-of-day formatting in four files, `dayOf` / `daysAgo` in `activity/feed.ts`, dead `CATEGORY_ICONS`, two
   filter-sheet switches) are cleanup round 2 (BACKLOG F-274).
+- 2026-10-31, merge of c-anim (F-1713, F-260, part of F-275), from its Opus review: **a success state wins over a busy
+  state in the button's render order, and a spec asserts the success UI itself.** The save button rendered
+  `isSaving ? Loader : isSaved ? Check : text`, and the composer, Record payment and Call it even keep `isSaving` set
+  until the sheet closes, so the drawn check never showed; the specs had moved to waiting for the toast, so nothing
+  caught it. The footer now draws Saved first, disables Cancel while saved and clears the sheet's dirty flag, so a drag
+  in the 300 ms before it closes never asks "Discard changes?". Also: (1) an audit finding cannot change an owner rule:
+  the branch swapped the Search & Ask Sparkles for a magnifier citing the UX audit, against decision 74; restored, and
+  the question goes to the owner; (2) an empty state's "Add expense" next to the FAB on phones is a second primary
+  action (owner 213): Group, Person and Activity show it on wide screens only, Settle (no FAB) keeps it unless the
+  group is inactive; (3) the dead `SuccessCheck` went with the change that replaced it (section 1).
 
 ## 24. Checklists
 
@@ -2007,7 +2025,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
     rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
     here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
-  - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. The Groups tab glyph is Lucide `Group` now, since `Users` is People's.
+  - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. Tab glyphs (F-1713): People is Lucide `ContactRound`, Groups is `Users`.
   - **Requests and invites live on their own pages, never on Home** (owner 197): **People** shows friend requests
     (Accept / Decline) and friend invites sent (Resend / Cancel) at the top; **Groups** shows group requests to me
     (Join / Decline), join requests for groups I run (Approve / Decline) and group invites sent, at the top; a
@@ -2015,7 +2033,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     one-line row layout of § 26.18, at most 5 rows, then "See all" into Activity filtered to Friends and invites (and
     the group, owner 195), and hides when empty. *Why:* "all these invites should show on their respective page, not
     on home page, like group and people".
-  - **People** (`/people`, new tab, Lucide `Users`): friend requests and invites sent at the top (owner 197),
+  - **People** (`/people`, new tab, Lucide `ContactRound`): friend requests and invites sent at the top (owner 197),
     then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
     Friends header (search, Filters, gear; it opens Friends and invites; no "Manage" text button, owner 177); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.

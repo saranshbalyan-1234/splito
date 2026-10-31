@@ -16,7 +16,7 @@ import {
   ZERO,
   withoutDisputed,
 } from '@splito/domain'
-import {type Group, type Person} from '@splito/sync'
+import {type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useGroupNets, useMe} from '#/data/hooks'
@@ -460,15 +460,20 @@ export function SettleScreen() {
                 testID="settle-empty"
                 illustration="empty-settle"
                 message={l`Nothing to settle. This group has no expenses yet.`}
-                button={{
-                  testID: 'settle-empty-add-expense',
-                  label: l`Add expense`,
-                  text: l`Add expense`,
-                  icon: PlusIcon,
-                  onPress: () => navigation.navigate('AddExpense', {groupId}),
-                  size: 'small',
-                  color: 'secondary',
-                }}
+                button={
+                  /* An inactive group takes no new expenses. */
+                  group && isGroupInactive(group.data)
+                    ? undefined
+                    : {
+                        testID: 'settle-empty-add-expense',
+                        label: l`Add expense`,
+                        text: l`Add expense`,
+                        icon: PlusIcon,
+                        onPress: () => navigation.navigate('AddExpense', {groupId}),
+                        size: 'small',
+                        color: 'secondary',
+                      }
+                }
               />
             )
           }

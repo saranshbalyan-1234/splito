@@ -229,7 +229,8 @@ export function MorphIcon({
       isFirst.current = false
       return
     }
-    if (isReduced) return
+    // Only the tab being chosen pops; the one being left just changes glyph (review F-1713: no flash on leaving).
+    if (isReduced || !isActive) return
     progress.set(0)
     progress.set(withTiming(1, {duration: 180, easing: Easing.out(Easing.cubic)}))
   }, [isActive, isReduced, progress])
@@ -240,7 +241,7 @@ export function MorphIcon({
   const Glyph = isActive ? Filled : Outline
   return (
     <Animated.View style={[popStyle, props.style as object]}>
-      <Glyph {...props} {...(playKey === undefined ? {} : {playKey})} />
+      <Glyph {...props} style={undefined} {...(playKey === undefined ? {} : {playKey})} />
     </Animated.View>
   )
 }

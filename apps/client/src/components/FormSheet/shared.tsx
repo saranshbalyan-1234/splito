@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Profile/Header/EditProfileDialog.tsx (dirty close: preventDismiss, onBackgroundPress, "Discard changes?" prompt)
-import {createContext, useContext, useState} from 'react'
+import {createContext, useContext, useEffect, useState} from 'react'
 import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -314,9 +314,13 @@ function Actions({
   savedTestID,
 }: FooterProps) {
   const {t: l} = useLingui()
-  const {requestClose} = useFormSheet()
+  const {requestClose, setIsDirty} = useFormSheet()
   const isSheet = useIsSheet()
   const size = isSheet ? 'large' : 'small'
+  // Saved: nothing is at stake any more, so a drag or Cancel in the moment before the sheet closes never asks "Discard changes?".
+  useEffect(() => {
+    if (isSaved) setIsDirty(false)
+  }, [isSaved, setIsDirty])
   return (
     <View
       style={[a.flex_row, a.align_center, a.gap_sm, !isSheet && a.justify_end]}>
@@ -325,6 +329,7 @@ function Actions({
         label={cancelLabel ?? l`Cancel`}
         color="secondary"
         size={size}
+        disabled={isSaved}
         style={[isSheet && a.flex_1]}
         onPress={onCancel ?? requestClose}>
         <ButtonText maxFontSizeMultiplier={2} numberOfLines={1}>
@@ -339,10 +344,11 @@ function Actions({
         disabled={(!canSave && !isSaved) || isSaving}
         style={[isSheet && a.flex_1]}
         onPress={isSaved ? () => {} : onSave}>
-        {isSaving ? (
-          <Loader size="sm" />
-        ) : isSaved ? (
+        {/* Saved wins over saving: the callers keep isSaving set until the sheet closes (F-275 review). */}
+        {isSaved ? (
           <ButtonIcon icon={CheckIcon} />
+        ) : isSaving ? (
+          <Loader size="sm" />
         ) : (
           <ButtonText maxFontSizeMultiplier={2} numberOfLines={1}>{saveLabel}</ButtonText>
         )}

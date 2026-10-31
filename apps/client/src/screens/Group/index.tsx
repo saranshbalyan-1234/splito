@@ -571,9 +571,9 @@ export function GroupScreen() {
       </>
     )
 
-  /* One next step on both empty tabs (owner 213); an inactive group takes no new expenses. */
+  /* One next step on both empty tabs (owner 213); an inactive group takes no new expenses, and on phones the FAB is that step. */
   const addExpenseButton =
-    group && isGroupInactive(group.data)
+    !gtMobile || (group && isGroupInactive(group.data))
       ? undefined
       : {
           label: l`Add expense`,

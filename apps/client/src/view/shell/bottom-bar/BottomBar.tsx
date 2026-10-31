@@ -109,7 +109,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
                   tab !== 'ask' && tab !== 'settings' && isAt[TAB_ROUTE[tab]]
                 }
                 size={iconWidth}
-                badge={activityBadge}
+                badge={tab === 'activity' ? activityBadge : undefined}
               />
             }
             label={

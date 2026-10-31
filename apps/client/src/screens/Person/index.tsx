@@ -602,14 +602,19 @@ export function PersonScreen() {
                     ? l`Nothing with ${person!.data.name} yet. Add an expense you shared and it shows up here.`
                     : l`No direct expenses with ${person!.data.name}. Group expenses are hidden by the filter.`
                 }
-                button={{
-                  label: l`Add expense`,
-                  text: l`Add expense`,
-                  icon: PlusIcon,
-                  onPress: () => navigation.navigate('AddExpense', {personId}),
-                  size: 'small',
-                  color: 'secondary',
-                }}
+                button={
+                  /* On phones the FAB is the next step (owner 213); a deleted friend takes no new expenses. */
+                  gtMobile && !isDeleted
+                    ? {
+                        label: l`Add expense`,
+                        text: l`Add expense`,
+                        icon: PlusIcon,
+                        onPress: () => navigation.navigate('AddExpense', {personId}),
+                        size: 'small',
+                        color: 'secondary',
+                      }
+                    : undefined
+                }
               />
             )
           }
