@@ -1128,8 +1128,11 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   incrementally, automatic searching is bounded (about 10 pages, then "Look further back").
 - **Membership checks use a Set.** `read.includes(id)` per event made Mark all read and every rebuild
   O(events x read); a persisted list of ids is read into a Set once.
-- **Search stays under 50 ms at 10,000 expenses** (`search.test.ts`); the slowest query was `> 1000` (amount
-  range), so amount scans need an index or a bound before the data grows.
+- **Search stays under 50 ms at 10,000 expenses** (`search.test.ts`); on the Mac the slowest query was `> 1000`
+  (amount range), so amount scans need an index or a bound before the data grows. On a 4-core cloud container the
+  same test reads 80-110 ms on `main` itself, and the slowest queries are one- or two-letter prefixes (`d`, `di`),
+  whose `search_terms` range matches thousands of rows: short prefixes need a bound (a minimum length or a capped
+  first page) as much as amount scans do. Judge this limit only on the target hardware it was set on, and say which.
 - **The renders baseline is a median, taken after the data has loaded.** Recording the highest of three noisy
   runs (tabs updates 1,916-3,440) let a doubling pass; the gate waits for an explicit "demo loaded" signal
   before a phase and records the median of three.
@@ -1525,6 +1528,13 @@ Splito lessons (add newest last, dated, with PR):
   outside demo. (6) `components/` may not import `data/`: a one-line `state/me.ts` hook gives them my id. (7) A baseline written by
   a script must keep a phase's `"mounts": 0` (a pruned zero made the gate compare against NaN): only drop zero component counts.
 
+- 2026-10-31, merge of c-personlink, c-refresh, c-joins (cloud session): **`search.test` "every query under 50 ms" fails
+  on a 4-core cloud container on `main` too** (worst 80-110 ms over three runs, load 0.1), so the 50 ms limit encodes the
+  Mac's speed, not a property of the code. The worst queries there were short prefixes (`d`, `di`, `march`), not the
+  amount range the Mac saw. Rule in § 17.1. A red speed test is first re-run on `main` on the same machine before
+  anyone blames the change under test. Also: merging branches that each regenerated the Lingui catalogs is done by
+  taking the union of both `.po` files (no translation is lost), then `intl:extract --clean` and `intl:compile`; never
+  "take one side" of a `.po`, which drops the other side's Hindi strings.
 
 ## 24. Checklists
 
