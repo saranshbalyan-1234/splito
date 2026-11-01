@@ -472,7 +472,7 @@ function evaluateTyped(
    * Optional amount in a row: blank is zero; a bad one is reported against
    * its key. Only adjustments may go below zero (validateExpense refuses a
    * payer or share against the total's sign). Rows have no "Did you mean"
-   * picker and their keypad types no grouping marks, so "5.001" in the
+   * picker and the number keyboard types no grouping marks, so "5.001" in the
    * locale's mark is decimals (F-111 M3).
    */
   const rowAmount = (

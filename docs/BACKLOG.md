@@ -1252,7 +1252,7 @@ Save and add another keeps group, payer, participants, split, currency and date;
 
 ### F-310 Smart amount input
 
-Accepts locale separators, Devanagari / Arabic-Indic / Persian digits, a 000 key, k / L / cr / m suffixes and pasted "₹1,20,000.50"; ambiguous input asks.
+Accepts locale separators, Devanagari / Arabic-Indic / Persian digits, k / L / cr / m suffixes and pasted "₹1,20,000.50"; ambiguous input asks.
 
 - **Effort** S · **Impact** 8 · **Backend** no · **Status** done (built and tested on a feat/b-* branch, unmerged) · **Deps** F-302
 - **Prefs** `numberLocale`, `amount.shorthand`
@@ -1298,7 +1298,7 @@ Editable manual place; optional permission-aware automatic location; place searc
 
 ### F-314 Three-tap add with sentence defaults
 
-The composer opens with the amount keypad focused and context defaults: from a group, its current members, currency and default split; from a person, a direct expense with them; from People, a "With whom?" chip. One sentence chip ("Paid by you, split equally") opens the split editor; the title is optional (category or emoji stands in). Target: FAB, amount, Save.
+The composer opens with the amount focused (system number keyboard, owner 231) and context defaults: from a group, its current members, currency and default split; from a person, a direct expense with them; from People, a "With whom?" chip. One sentence chip ("Paid by you, split equally") opens the split editor; the title is optional (category or emoji stands in). Target: FAB, amount, Save.
 
 - **Effort** M · **Impact** 10 · **Backend** no · **Status** todo · **Deps** F-302
 - **Prefs** `fab.action`, `composer.titleRequired`
@@ -3875,7 +3875,7 @@ Add expense, Scan receipt, Settle up and two dynamic recent groups on long-press
 
 ### F-1909 Quick add from Control Center, Action Button and Quick Settings
 
-iOS ControlWidget and Android TileService open the composer with the keypad focused.
+iOS ControlWidget and Android TileService open the composer with the amount focused.
 
 - **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1906
 - **Prefs** -

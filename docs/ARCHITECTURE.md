@@ -1079,6 +1079,13 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **A controlled field keeps every key typed at a person's pace; a spec types like a person.** Each keystroke in Add
+  expense re-renders the composer, and a key that lands before the previous key's render has committed can be lost (the
+  React Native Web input is controlled). Measured 2026-11-01 (Chromium, 390 px, amount field right after the sheet opened,
+  load under 2): `pressSequentially` with Playwright's default (keys about 5 ms apart) lost 1-2 of 4 keys in 6 of 8 runs;
+  40 ms and 80 ms apart lost none in 8 of 8 runs even at CPU x6. People type 80 ms apart or slower, so specs type with
+  `{delay: 40}`; a fill() does not exercise this. If keys are ever reported lost, make the field hold its own text and
+  report up, rather than slowing the render.
 - **A screen transition on web is an attribute on the arriving screen, never a kept leaving screen or a render.** The
   stack slide (F-277, owner 227) reuses the tab slide's shape: the focus effect sets `data-stack-in` on the screen
   root, CSS keyframes in `index.html` move the root's children (not `[data-fab]`) on the compositor, and the attribute
@@ -2128,6 +2135,12 @@ Splito lessons (add newest last, dated, with PR):
   pencil opened the same edit sheet (name and UPI ID), so the row went with its `/profile/payment` address and the
   `leading` slot `SettingsRows` grew only for it (a prop whose last caller is gone is deleted with it, § 1). Before
   adding a row that opens an existing sheet, check what already opens it.
+
+- 2026-11-01, owner 231 (no amount keypad): **Playwright's default typing is faster than a person, and lost keys in Add
+  expense.** Replacing the keypad test with typed keys first read "120" for "1200": keys 5 ms apart outran the composer's
+  re-render after each key. It is not a regression of the keypad removal (desktop never had the keypad; the older specs
+  used `fill()`), and at 40-80 ms between keys nothing is lost even at CPU x6. Rule in 17.1. The keypad's own code
+  (`AmountKeypad`, `amountKeys`) went with it; the + − × ÷ bar stays because a phone's number pad has no "+".
 
 ## 24. Checklists
 
@@ -3184,6 +3197,13 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 
 ### 26.13 Expenses and itemize
 
+- **Amounts are typed on the system number keyboard, never a keypad of Splito's own** [Built, web; native not run]
+  (owner 231): every amount field (Add expense's total, split rows, payers, items, charges, Record payment, Call it even)
+  opens the platform keyboard in its decimal mode (`keyboardType="decimal-pad"`, `inputMode="decimal"`; a refund field
+  that takes a sign keeps numbers-and-punctuation, § 5). Splito's on-screen keypad (`AmountKeypad`, adapted from
+  Expensify's BigNumberPad) is gone. Because a number pad has no "+", the total keeps the small + − × ÷ bar under it
+  while it is being typed, with "Use the result" for a sum, so sums ("1200 + 300") still work. *Why:* "remove the
+  keyboard from amount, and it should open the native keyboard in number mode; or wherever you show this".
 - **Splito is an expense tracker too** [Built, F-279, web; native not run] (owner 230): an expense with only me on it
   (Split with: You, Paid by: You; no friends or group needed) is a **personal expense**. It saves like any other, moves no
   balance with anyone (People, Groups and their Overviews ignore it), and counts as my own spending everywhere spending is
@@ -4228,6 +4248,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 228 | "think proper about settings and profile screen it doesn't look good as setting has moved to bottom and I have to scroll" | Profile fits one phone screen: compact header row, one stat row, then the Settings rows with Payment details first; Add me leaves Profile (Friends and invites holds the link and QR); Log out last | § 26.15 | Tall Profile header with Payment details and Add me sections above the Settings rows (209, 220) |
 | 229 | "Payment detail on profile and pencil icon on profile open same popup, I guess we can remove payment details then" | Profile drops the Payment details row (and its `/profile/payment` address); the UPI ID is edited in the pencil's sheet | § 26.15 | Payment details as the first Settings row on Profile (228) |
 | 230 | "Should work as expense tracker as well" | An expense with only me on it is a personal expense: no balance, counted as my spending (Analytics, Activity, Search, export), labelled "personal" / "Just you", one `isPersonalExpense` predicate; no separate mode | § 26.13 | Solo expenses worked but read "not involved" and "1 person each" |
+| 231 | "remove the keyboard from amount, and it should open the native keyboard in number mode; or wherever you show this" | No in-app amount keypad anywhere; every amount field opens the system decimal keyboard; the total keeps the + − × ÷ bar for sums | § 26.13 | Splito's own keypad replaced the system keyboard on phones (F-310, Expensify BigNumberPad) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

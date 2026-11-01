@@ -7,8 +7,6 @@ as behaviour descriptions only; no Expensify source, icons or styles were copied
 
 | Splito file | Source | What was taken | Changed |
 |---|---|---|---|
-| `apps/client/src/components/split/AmountKeypad.tsx` | Expensify `src/components/BigNumberPad.tsx` (behaviour) | 4 x 3 phone pad with the decimal key and delete on the bottom row; delete repeats every 100 ms while held; interval cleared on unmount | Built on Bluesky `Button`; added the + − × ÷ column, a 000 key and the Done / "= Use result" key; Lucide `Delete` glyph |
-| `apps/client/src/components/split/amountKeys.ts` | Expensify `NumberWithSymbolForm.tsx` `updateValueNumberPad` + `MoneyRequestUtils.validateAmount` / `addLeadingZero` (behaviour) | Keys insert at the selection; delete removes before the caret or the range; a key that would break the number (second decimal mark, more decimals than the currency) is dropped; "." on an empty number becomes "0." | Operators (Splito's calculator), per-operand decimal checks, locale decimal mark |
 | `apps/client/src/components/split/fields.tsx` `AmountField` | Expensify `NumberWithSymbolForm` (behaviour) | `showSoftInputOnFocus={false}` / `inputMode="none"` while the pad shows; refocus the input from a key | Existing Splito field; keypad only at phone widths and behind `amount.keypad` |
 | `apps/client/src/components/MoneyDirection.tsx` | - (written: Bluesky has no money direction) | - | Follows Bluesky's icon prop API via `createIcon` (Lucide `ArrowDownLeft` / `ArrowUpRight`) |
 | `apps/client/src/components/split/SplitEditor.tsx` `CashRounding` | Bluesky `Toggle.Item` + `Toggle.Platform`, `Button` chips (already in the file) | Switch row and radio chips | Copy and layout only |
@@ -33,3 +31,5 @@ Bluesky search (2026-10-27): `grep -rni "decimal\|parseFloat\|Intl.NumberFormat"
 finds only count formatting (`src/lib/strings/` compact numbers); nothing reads typed money. Expensify's clone is
 still absent at `../upstream/App`; `MoneyRequestUtils.ts` behaviour (strip grouping, one decimal mark) was
 already the reference for F-310 and is unchanged.
+
+Removed 2026-11-01 (owner 231): `AmountKeypad.tsx` and `amountKeys.ts`; the amount field opens the system number keyboard everywhere.

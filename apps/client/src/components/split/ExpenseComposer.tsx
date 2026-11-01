@@ -34,10 +34,9 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {joinList} from '#/locale/joinList'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
-import {useA11y} from '#/state/a11y'
 import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {useResolvableDisputes} from '#/state/disputes'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as FormSheet from '#/components/FormSheet'
 import {ComposerSkeletonBody} from '#/components/split/ComposerSkeleton'
@@ -144,7 +143,6 @@ export function ExpenseComposer({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {gtMobile} = useBreakpoints()
   const store = useStore()
   const ctx = useMutationCtx()
   const navigation = useNavigation<NavigationProp>()
@@ -155,7 +153,6 @@ export function ExpenseComposer({
   const [adjustModes, saveAdjustModes] = usePref('itemizeAdjustmentModes')
   const [roundToUnits = {}, saveRoundToUnits] = usePref('split.roundTo')
   const [, saveRoundCash] = usePref('split.roundCash')
-  const {screenReaderEnabled} = useA11y()
   const unitOf = (currency: string) => roundToFor(roundToUnits, currency)
   /* The round control remembers its choice for the next expense (decision 90): on or off, and the unit per currency. */
   const rememberRounding = (unit: number) => {
@@ -541,7 +538,6 @@ export function ExpenseComposer({
         readings={evaluation.amountReadings}
         reading={form.amountReading}
         onReadingPicked={amountReading => update(f => ({...f, amountReading}))}
-        hasKeypad={!gtMobile && !screenReaderEnabled}
         onPressCurrency={() => currencyControl.open()}
       />
 

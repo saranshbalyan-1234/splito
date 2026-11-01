@@ -75,27 +75,23 @@ test('cash rounding: whole shares, the remainder shown on one person, saved with
   )
 })
 
-test('phones: the keypad replaces the keyboard and works as a calculator', async ({
+test('phones: the amount opens the number keyboard, and the + − × ÷ bar still adds (owner 231)', async ({
   page,
 }) => {
   await openAddExpense(page, PHONE)
-  await page.getByTestId('amount-input').click()
-  await expect(page.getByTestId('amount-keypad')).toBeVisible()
-  await expect(page.getByTestId('amount-input')).toHaveAttribute(
-    'inputmode',
-    'none',
-  )
-  for (const key of ['1', '2', '0', '0', '+', '3', '000', 'mark', '5'])
-    await page.getByTestId(`key-${key}`).click()
-  await expect(page.getByTestId('amount-input')).toHaveValue('1200 + 3000.5')
+  const input = page.getByTestId('amount-input')
+  await input.click()
+  /* No keypad of Splito's own: the system keyboard, in its decimal (number) mode. */
+  await expect(page.getByTestId('amount-keypad')).toHaveCount(0)
+  await expect(input).toHaveAttribute('inputmode', 'decimal')
+  /* A person's pace: keys 5 ms apart (Playwright's default) outrun the composer's render (ARCHITECTURE 17.1). */
+  await input.pressSequentially('1200', {delay: 40})
+  await page.getByTestId('calc-+').click()
+  await input.pressSequentially('3000.5', {delay: 40})
+  await expect(input).toHaveValue('1200 + 3000.5')
   await expect(page.getByTestId('amount-result')).toHaveText('= ₹4,200.50')
-  // A third decimal is refused, as Expensify's pad does.
-  await page.getByTestId('key-5').click()
-  await page.getByTestId('key-5').click()
-  await expect(page.getByTestId('amount-input')).toHaveValue('1200 + 3000.55')
-  await page.getByTestId('key-delete').click()
   await page.getByTestId('calc-equals').click()
-  await expect(page.getByTestId('amount-input')).toHaveValue('4200.50')
+  await expect(input).toHaveValue('4200.50')
 })
 
 test('money direction is never colour alone: arrows and words on balances', async ({
