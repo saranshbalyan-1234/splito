@@ -3306,12 +3306,12 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   last; there is no separate Settings screen. **Profile is a full page about you** (owner
   209), Bluesky profile layout, top to bottom: the header (large avatar you can change, name, email and phone with
   a verified tick, "On Splito since <month year>", Edit profile); a stat row (Friends, Groups, Expenses, You paid
-  this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics; **Your balance**
-  (the net per currency in the owner-161 card style, "Analytics ›"); **Payment details** (your UPI ID and how
-  friends pay you, editable); **Add me** (your friend QR and link, Share); **Your recent activity** (your last 3
-  changes, "See all" -> Activity on Me); and Log out last. Sections hide when empty; each loads after the header
-  (owner 168). *Why:* "move the logout button inside profile"; "remove settings from profile"; "also update
-  profile page, it looks very less".
+  this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics; **Payment details**
+  (your UPI ID and how friends pay you, editable); **Add me** (your friend QR and link, Share); the Settings rows;
+  and Log out last. **No balance and no recent activity on Profile** (owner 225): balances live on People and Groups
+  (their Overviews), your changes in Activity on Me (the Expenses stat opens it). Sections hide when empty; each
+  loads after the header (owner 168). *Why:* "move the logout button inside profile"; "remove settings from
+  profile"; "also update profile page, it looks very less"; "Remove your balance, recent activity from profile".
   *Why:* "move the logout button inside profile"; "remove settings from profile". **Log out erases everything this account left on the
   device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
   database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
@@ -4043,6 +4043,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 222 | "Add a little padding from bottom on navigation bar" | Phone-web bottom bar pads its bottom by the home-indicator inset or at least 8 px; native unchanged | § 26.3 | No bottom padding on the phone-web bar |
 | 223 | Assistant rulings for F-275 (new-user audit, 2026-10-31; owners 212/213 apply) | Add friend with no directory makes a usable local friend (name first, contact optional); one "Report a problem" entry whose first choice is Dispute or Put on hold, "Raised by" only behind "Record this for someone else"; Google and Apple are one muted "come with sync" line, not buttons; the sign-up name is kept | § 26.15, § 26.18, § 26.20 | Request-to-accept sheet with no server to answer; separate Dispute and Put on hold entries with a Raised by picker; dead Google and Apple buttons (138) |
 | 224 | "You take all decisions, don't ask me" | Product calls are settled by the assistant and reported as decided (the Tax/tip/discount row, the statement CSV for the Analytics export and decision 223 stand) | § 26.1, § 26.13 | Reports that asked the owner to confirm product calls |
+| 225 | "Remove your balance, recent activity from profile" | Profile drops Your balance and Your recent activity; balances stay on People and Groups, your changes in Activity on Me | § 26.15 | Profile's Your balance cards and recent activity list (209) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

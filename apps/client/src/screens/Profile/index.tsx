@@ -1,31 +1,21 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx, src/screens/Profile/Header
-import {useState} from 'react'
 import {Pressable, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {
-  balanceTotals,
-  cellTotals,
-  formatAmountCompact,
-  personSummary,
-} from '@splito/domain'
+import {cellTotals, formatAmountCompact} from '@splito/domain'
 import {type Entity, type Group, type Person} from '@splito/sync'
 
 import {activityPath} from '#/lib/links/make'
-import {openLink} from '#/lib/links/open'
 import {type NavigationProp} from '#/lib/routes/types'
 import {
-  useAllEntities,
   useAnalyticsCells,
   useAnalyticsOverview,
-  useBalanceRows,
   useMyExpenseCount,
   useEntities,
   useMe,
   useSortedInviteLinks,
 } from '#/data/hooks'
 import {inviteUrl} from '#/data/friends'
-import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
 import {requestLogOut} from '#/features/account/LogOutPrompt'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useToday} from '#/locale/useDates'
@@ -48,29 +38,20 @@ import {
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {InviteShare} from '#/components/invites/InviteShare'
 import * as Layout from '#/components/Layout'
-import {ActivityItem} from '#/components/activity/ActivityItem'
-import {useActivityActions} from '#/components/activity/useActivityActions'
-import {useActivityFeed} from '#/components/activity/useActivityFeed'
 import {EditFriendDialog} from '#/components/people/EditFriendDialog'
-import {SectionLink} from '#/components/SectionLink'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
-import {SummaryCard} from '#/components/overview/Overview'
-import {overviewColumns} from '#/components/overview/overviewGrid'
-import {analyticsHref} from '#/screens/Analytics/overviewScope'
 import {SectionHeader} from '#/components/SectionHeader'
-import {listedFriends} from '#/screens/People/sort'
 import {SettingsRows} from '#/screens/Settings/components/SettingsRows'
 import {countFriends, countGroups, yearRange} from './stats'
 
 /** The widest the page grows: a column of sections, centred on wide screens (web adapts, phone unchanged). */
 const PAGE_WIDTH = 640
-const RECENT = 3
 
 /*
  * Profile (owner 209), a full page about you in Bluesky's profile layout, top to bottom: the header, a stat row,
- * Your balance, Payment details, Add me, Your recent activity, then every Settings row (owner 220: Settings is part of
+ * Payment details, Add me (owner 225: no balance or recent activity here), then every Settings row (owner 220: Settings is part of
  * Profile, there is no Settings screen or tab), then Log out last (owner 202). Only the header paints at once; every
  * section below mounts after the first frame (owner 168) and hides when it has nothing to show.
  */
@@ -111,10 +92,8 @@ function ProfileBody({me}: {me: Entity<Person>}) {
   return (
     <>
       <ProfileStats me={me} />
-      <ProfileCards />
       <PaymentDetails me={me} />
       <AddMe />
-      <RecentActivity />
       {/* The Settings list, as it was on its own tab (owner 220); `/settings` opens this page. */}
       <View testID="profile-settings">
         <SectionHeader title={l`Settings`} />
@@ -344,54 +323,6 @@ function ProfileStats({me}: {me: Entity<Person>}) {
   )
 }
 
-/** Your balance: what everyone owes you or you owe, per currency, in the Overview's card style (owner 161). */
-function ProfileCards() {
-  const {t: l} = useLingui()
-  const locale = useNumberLocale()
-  const [width, setWidth] = useState(0)
-  /* Tombstones too: a removed friend with an open balance stays counted until it is settled (decision 103). */
-  const people = useAllEntities<Person>('person')
-  const balanceRows = useBalanceRows()
-  const [showHidden] = useShowHidden()
-  const hiddenIds = useHiddenItems()
-  if (!people || !balanceRows) return null
-  const byPerson = new Map(personSummary(balanceRows, {includeGroups: true}).map(s => [s.person, s]))
-  const live = listedFriends(people, byPerson, hiddenIds).filter(f => (showHidden || !f.isHidden) && f.deletedAt === undefined)
-  const totals = balanceTotals(live.flatMap(f => byPerson.get(f.id) ?? []))
-  if (totals.length === 0) return null
-  const columns = overviewColumns(width, totals.length)
-  const cardWidth = width > 0 ? Math.floor((width - 8 * (columns - 1)) / columns) : undefined
-  return (
-    <View testID="profile-cards">
-      <SectionHeader
-        title={l`Your balance`}
-        action={
-          <SectionLink testID="profile-cards-analytics" href={analyticsHref('all')} label={l`Open Analytics`}>
-            <Trans>Analytics</Trans>
-          </SectionLink>
-        }
-      />
-      <View style={[a.px_lg, a.pb_md]}>
-        {/* Measured inside the padding, as the Overview does: the column count follows the width the cards have. */}
-        <View
-          onLayout={e => e.nativeEvent.layout.width > 0 && setWidth(e.nativeEvent.layout.width)}
-          style={[a.flex_row, a.flex_wrap, {gap: 8}]}>
-          {totals.map(total => (
-            <SummaryCard
-              key={total.currency}
-              total={total}
-              locale={locale}
-              caption={undefined}
-              width={cardWidth}
-              onPress={() => openLink(analyticsHref('all', total.currency))}
-            />
-          ))}
-        </View>
-      </View>
-    </View>
-  )
-}
-
 /** Payment details: the UPI ID friends pay me on, edited in the same sheet as the name. */
 function PaymentDetails({me}: {me: Entity<Person>}) {
   const t = useTheme()
@@ -466,40 +397,6 @@ function AddMe() {
           </Button>
         )}
       </View>
-    </View>
-  )
-}
-
-/** Your recent activity: my last changes, then the whole of it in Activity on Me. */
-function RecentActivity() {
-  const {t: l} = useLingui()
-  const locale = useNumberLocale()
-  const feed = useActivityFeed('me')
-  const actions = useActivityActions(feed)
-  const {snapshot, rows, me} = feed
-  const events = rows.flatMap(r => (r.type === 'event' ? [r] : [])).slice(0, RECENT)
-  if (!snapshot || events.length === 0) return null
-  return (
-    <View testID="profile-recent">
-      <SectionHeader
-        title={l`Your recent activity`}
-        action={
-          <SectionLink testID="profile-recent-all" href={activityPath({tab: 'me'})} label={l`See all your activity`}>
-            <Trans>See all</Trans>
-          </SectionLink>
-        }
-      />
-      {events.map(row => (
-        <ActivityItem
-          key={row.key}
-          event={row.event}
-          isRead={row.isRead}
-          snapshot={snapshot}
-          me={me}
-          locale={locale}
-          actions={actions}
-        />
-      ))}
     </View>
   )
 }

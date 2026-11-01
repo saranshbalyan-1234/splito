@@ -47,14 +47,15 @@ for (const [label, viewport] of VIEWPORTS) {
       await expect(page).toHaveURL(/\/profile\/edit$/)
     })
 
-    test('the sections come in order and Log out is last (owners 202, 209)', async ({page}) => {
+    test('the sections come in order, with no balance or recent activity, and Log out is last (owners 202, 209, 225)', async ({page}) => {
       const profile = page.getByTestId('screen-profile')
       await expect(profile.getByTestId('profile-log-out')).toBeVisible()
-      await expect(profile.getByTestId('profile-recent')).toBeVisible()
+      await expect(profile.getByTestId('profile-cards')).toHaveCount(0)
+      await expect(profile.getByTestId('profile-recent')).toHaveCount(0)
       const ids = await profile
         .locator('[data-testid^="profile-"]')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid')!))
-      const order = ['profile-stats', 'profile-cards', 'profile-payment', 'profile-recent', 'profile-sync-note', 'profile-log-out']
+      const order = ['profile-stats', 'profile-payment', 'profile-add-me', 'profile-settings', 'profile-sync-note', 'profile-log-out']
       const at = order.map(id => ids.indexOf(id))
       expect(at.every(i => i >= 0), ids.join()).toBe(true)
       expect(at).toEqual([...at].sort((x, y) => x - y))
@@ -78,19 +79,6 @@ for (const [label, viewport] of VIEWPORTS) {
       }
     })
 
-    test('Your balance shows a card per currency and opens Analytics in it', async ({page}) => {
-      const balance = page.getByTestId('profile-cards')
-      await expect(balance).toBeVisible()
-      const card = balance.locator('[data-testid^="summary-"][data-testid$="-card"]').first()
-      const currency = (await card.getAttribute('data-testid'))!.split('-')[1]!
-      await balance.getByTestId(`summary-${currency}`).click()
-      await expect(page.getByTestId('screen-analytics')).toBeVisible()
-      expect(here(page)).toContain(`currency=${currency}`)
-      await page.goBack()
-      await balance.getByTestId('profile-cards-analytics').click()
-      await expect(page.getByTestId('screen-analytics')).toBeVisible()
-    })
-
     test('Payment details: the UPI ID is added in the edit sheet and then shown', async ({page}) => {
       const payment = page.getByTestId('profile-payment')
       await expect(payment.getByTestId('profile-upi')).not.toHaveText('me@bank')
@@ -112,14 +100,6 @@ for (const [label, viewport] of VIEWPORTS) {
         await expect(addMe.getByTestId('invite-share')).toBeVisible()
         await expect(addMe.getByTestId('invite-url')).toContainText('/invite/')
       }
-    })
-
-    test('Your recent activity shows my last changes, then See all opens Activity on Me', async ({page}) => {
-      const recent = page.getByTestId('profile-recent')
-      await expect(recent).toBeVisible()
-      await recent.getByTestId('profile-recent-all').click()
-      await expect(page.getByTestId('screen-activity')).toBeVisible()
-      expect(here(page)).toMatch(/^\/activity\/me/)
     })
 
     test('the body loads after the header and Log out still asks first', async ({page}) => {
