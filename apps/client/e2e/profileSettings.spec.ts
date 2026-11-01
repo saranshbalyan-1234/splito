@@ -110,7 +110,8 @@ for (const [label, viewport] of VIEWPORTS) {
         .getByTestId('screen-profile')
         .locator('[data-testid^="profile-"]')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-      expect(ids.at(-1)).toBe('profile-log-out')
+      // Log out is the last control; the sync note sits under it in small text (owner 228).
+      expect(ids.slice(-2)).toEqual(['profile-log-out', 'profile-sync-note'])
       await page.getByTestId('profile-log-out').click()
       const prompt = page.getByRole('dialog').filter({hasText: 'Log out?'})
       await expect(prompt).toContainText('This removes all your Splito data from this device')

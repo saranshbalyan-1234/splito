@@ -37,7 +37,7 @@ const DemoModeRows: ReturnType<typeof lazy> | null = lazy(() =>
  * own pages. Account rows (switch account, privacy) arrive with sign-in. Rendered by Profile, between the person's
  * sections and Log out.
  */
-export function SettingsRows() {
+export function SettingsRows({leading}: {leading?: React.ReactNode} = {}) {
   const {t: l} = useLingui()
   const t = useTheme()
   const sections = useSectionInfo()
@@ -45,6 +45,8 @@ export function SettingsRows() {
 
   return (
     <SettingsList.Container>
+      {/* Profile puts Payment details first (owner 228); an absent prop keeps the list as it was. */}
+      {leading}
       <SettingsList.LinkItem
         testID="settings-friends"
         to="/settings/friends"

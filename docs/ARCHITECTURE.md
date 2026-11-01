@@ -2022,6 +2022,13 @@ Splito lessons (add newest last, dated, with PR):
   change, was the same, so the client was at fault; switching the new People Overview off took 5.7 s away. Rule in
   17.1. The remaining 12-13 s against the 8.0 s baseline was measured at load 4-6 and is to be re-read on a quiet
   machine before anything else is changed.
+- 2026-11-01, F-278 (Profile fits one phone screen): **make a list's first row a prop, not a second list.** Payment details
+  had to be the first row of the Settings rows, so `SettingsRows` takes an optional `leading` node rendered first inside
+  its container (absent keeps the list as it was) instead of Profile drawing a section above it with its own spacing;
+  `profile-settings` therefore contains `profile-payment`, and an order spec lists the container before its first row.
+  Also: removing a section means checking where its job lives first (Friends and invites lists every friend link with
+  QR and Copy and "Create invite link"), and `e2e/demo-mode.spec.ts` "seeds the demo database in under 10 s" fails at
+  machine load above about 17 (the seed took over 30 s), so it is not evidence about a Profile change.
 
 ## 24. Checklists
 
@@ -3313,7 +3320,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   203). **Profile holds Settings too** (owner 220, replaces 203/206's separate Settings tab): after the person's
   sections come the Settings rows (Friends and invites, the preference sections, Support, Your data), then Log out
   last; there is no separate Settings screen. **Profile is a full page about you** (owner
-  209), and **it fits on one phone screen** (owner 228, replacing 209's tall header and its Add me section): a
+  209), and **it fits on one phone screen** [Built, F-278, web checked at 390 x 844 and 320 px Hindi; native not run] (owner 228, replacing 209's tall header and its Add me section): a
   compact header row (avatar about 64 px on the left, which you can change; on the right the name, email and phone
   with a verified tick, "On Splito since <month year>"; Edit as an icon button); one stat row (Friends, Groups,
   Expenses, You paid this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics;

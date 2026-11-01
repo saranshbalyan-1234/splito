@@ -754,7 +754,8 @@ instant; desktop instant. Status: building.
 
 Acceptance: at 390 x 844 the header row, the stat row, Payment details and the first Settings rows are visible without
 scrolling; Add me is gone from Profile; Payment details is the first Settings row and opens the existing sheet;
-Log out is last. Status: building.
+Log out is last, the sync note under it. Status: built (web; native not run). Tests: `profilePage.spec` (order, compact
+header, one-screen at 390 x 844, Hindi at 320 px), `profileSettings.spec`, `demo.spec` Profile.
 
 ### F-276 Analytics' list is Activity (owner 226) `spec: ARCHITECTURE 26.16`
 

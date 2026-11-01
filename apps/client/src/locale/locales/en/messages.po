@@ -968,7 +968,7 @@ msgstr "{subject} accepted your friend request"
 msgid "{subject} sent you a friend request"
 msgstr "{subject} sent you a friend request"
 
-#: src/screens/Settings/components/SettingsRows.tsx:133
+#: src/screens/Settings/components/SettingsRows.tsx:135
 msgid "{tabCount, plural, one {# tab} other {# tabs}}"
 msgstr "{tabCount, plural, one {# tab} other {# tabs}}"
 
@@ -1008,7 +1008,7 @@ msgstr "{to} let {from} off"
 msgid "{unsynced, plural, one {# change hasn’t synced yet and will be lost.} other {# changes haven’t synced yet and will be lost.}}"
 msgstr "{unsynced, plural, one {# change hasn’t synced yet and will be lost.} other {# changes haven’t synced yet and will be lost.}}"
 
-#: src/screens/Settings/components/SettingsRows.tsx:136
+#: src/screens/Settings/components/SettingsRows.tsx:138
 msgid "{visible} categories"
 msgstr "{visible} categories"
 
@@ -1134,7 +1134,7 @@ msgstr "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just f
 msgid "= Use result"
 msgstr "= Use result"
 
-#: src/screens/Settings/components/SettingsRows.tsx:136
+#: src/screens/Settings/components/SettingsRows.tsx:138
 msgid "1 category"
 msgstr "1 category"
 
@@ -1376,10 +1376,6 @@ msgstr "Active"
 msgid "Activity"
 msgstr "Activity"
 
-#: src/screens/Profile/index.tsx:355
-msgid "Add"
-msgstr "Add"
-
 #: src/components/split/PeopleDialog.tsx:177
 msgid "Add “{q}”"
 msgstr "Add “{q}”"
@@ -1560,10 +1556,6 @@ msgstr "Add item"
 msgid "Add items first"
 msgstr "Add items first"
 
-#: src/screens/Profile/index.tsx:375
-msgid "Add me"
-msgstr "Add me"
-
 #: src/components/groups/AddMembersDialog.tsx:242
 #: src/screens/CreateGroup.tsx:272
 msgid "Add member"
@@ -1605,17 +1597,13 @@ msgstr "Add this expense"
 msgid "Add to group"
 msgstr "Add to group"
 
-#: src/screens/Profile/index.tsx:350
-msgid "Add UPI ID"
-msgstr "Add UPI ID"
-
 #: src/screens/Login/AddMissingContact.tsx:26
 #: src/screens/Login/index.tsx:158
 msgid "Add your email"
 msgstr "Add your email"
 
-#: src/screens/Profile/index.tsx:177
-#: src/screens/Profile/index.tsx:186
+#: src/screens/Profile/index.tsx:157
+#: src/screens/Profile/index.tsx:175
 msgid "Add your name"
 msgstr "Add your name"
 
@@ -1623,6 +1611,10 @@ msgstr "Add your name"
 #: src/screens/Login/index.tsx:158
 msgid "Add your phone number"
 msgstr "Add your phone number"
+
+#: src/screens/Profile/index.tsx:304
+msgid "Add your UPI ID"
+msgstr "Add your UPI ID"
 
 #: src/screens/Groups/components/GroupRequests.tsx:119
 msgid "Added you to {group} · {when}"
@@ -1862,10 +1854,6 @@ msgstr "Any of"
 #: src/screens/Invites/InviteLinks.tsx:176
 msgid "Anyone who has it can no longer use it. You can always make a new one."
 msgstr "Anyone who has it can no longer use it. You can always make a new one."
-
-#: src/screens/Profile/index.tsx:378
-msgid "Anyone who scans this code or opens the link becomes your friend on Splito."
-msgstr "Anyone who scans this code or opens the link becomes your friend on Splito."
 
 #: src/components/groups/JoinPolicyField.tsx:15
 msgid "Anyone with the link"
@@ -2858,7 +2846,7 @@ msgid "Daily"
 msgstr "Daily"
 
 #: src/components/settings/prefControls.tsx:81
-#: src/screens/Settings/components/SettingsRows.tsx:128
+#: src/screens/Settings/components/SettingsRows.tsx:130
 msgid "Dark"
 msgstr "Dark"
 
@@ -3235,7 +3223,6 @@ msgstr "Earlier years"
 #: src/components/comments/CommentRow.tsx:136
 #: src/components/comments/CommentRow.tsx:291
 #: src/components/comments/CommentRow.tsx:294
-#: src/screens/Profile/index.tsx:355
 msgid "Edit"
 msgstr "Edit"
 
@@ -3286,9 +3273,8 @@ msgid "Edit it"
 msgstr "Edit it"
 
 #: src/components/people/EditFriendDialog.tsx:67
-#: src/screens/Profile/index.tsx:149
-#: src/screens/Profile/index.tsx:215
-#: src/screens/Profile/index.tsx:222
+#: src/screens/Profile/index.tsx:145
+#: src/screens/Profile/index.tsx:175
 msgid "Edit profile"
 msgstr "Edit profile"
 
@@ -3301,10 +3287,6 @@ msgstr "Edit reminder"
 #: src/screens/Settle/index.tsx:447
 msgid "Edit rules"
 msgstr "Edit rules"
-
-#: src/screens/Profile/index.tsx:350
-msgid "Edit UPI ID"
-msgstr "Edit UPI ID"
 
 #: src/screens/Group/index.tsx:881
 #: src/screens/Settle/index.tsx:443
@@ -3556,7 +3538,7 @@ msgstr "Everything in the backup was already here"
 msgid "Everything is saved on this device first, so Splito works without a connection."
 msgstr "Everything is saved on this device first, so Splito works without a connection."
 
-#: src/screens/Profile/index.tsx:106
+#: src/screens/Profile/index.tsx:107
 msgid "Everything is saved on this device. It will sync across your devices once sync arrives."
 msgstr "Everything is saved on this device. It will sync across your devices once sync arrives."
 
@@ -3615,7 +3597,7 @@ msgstr "Expense options"
 #: src/screens/Analytics/index.tsx:190
 #: src/screens/Group/index.tsx:535
 #: src/screens/Group/index.tsx:542
-#: src/screens/Profile/index.tsx:281
+#: src/screens/Profile/index.tsx:239
 msgid "Expenses"
 msgstr "Expenses"
 
@@ -3794,15 +3776,15 @@ msgstr "Friend requests from"
 #: src/screens/FriendsAndInvites/index.tsx:84
 #: src/screens/People/index.tsx:200
 #: src/screens/People/index.tsx:332
-#: src/screens/Profile/index.tsx:276
+#: src/screens/Profile/index.tsx:234
 msgid "Friends"
 msgstr "Friends"
 
 #: src/components/activity/ActivityFilterDialog.tsx:48
 #: src/navigation/Navigation.tsx:75
 #: src/screens/FriendsAndInvites/index.tsx:125
-#: src/screens/Settings/components/SettingsRows.tsx:51
-#: src/screens/Settings/components/SettingsRows.tsx:54
+#: src/screens/Settings/components/SettingsRows.tsx:53
+#: src/screens/Settings/components/SettingsRows.tsx:56
 #: src/screens/Settings/SettingsSection.tsx:180
 #: src/screens/Settings/SettingsSection.tsx:183
 msgid "Friends and invites"
@@ -3813,7 +3795,6 @@ msgid "Friends see this name."
 msgstr "Friends see this name."
 
 #: src/components/people/EditFriendDialog.tsx:143
-#: src/screens/Profile/index.tsx:345
 msgid "Friends use this to pay you in rupees."
 msgstr "Friends use this to pay you in rupees."
 
@@ -3975,7 +3956,7 @@ msgstr "Group updated"
 #: src/screens/Groups/index.tsx:155
 #: src/screens/Groups/index.tsx:172
 #: src/screens/Groups/index.tsx:198
-#: src/screens/Profile/index.tsx:277
+#: src/screens/Profile/index.tsx:235
 msgid "Groups"
 msgstr "Groups"
 
@@ -4537,13 +4518,11 @@ msgstr "Join {group}"
 
 #: src/screens/AddFriend.tsx:441
 #: src/screens/Invites/CreateInvite.tsx:161
-#: src/screens/Profile/index.tsx:383
 msgid "Join me on Splito"
 msgstr "Join me on Splito"
 
 #: src/screens/AddFriend.tsx:442
 #: src/screens/Invites/CreateInvite.tsx:165
-#: src/screens/Profile/index.tsx:384
 msgid "Join me on Splito so we can split expenses:"
 msgstr "Join me on Splito so we can split expenses:"
 
@@ -4670,7 +4649,7 @@ msgid "Let's split it {ways} ways. Add the amount and who is in on it."
 msgstr "Let's split it {ways} ways. Add the amount and who is in on it."
 
 #: src/components/settings/prefControls.tsx:80
-#: src/screens/Settings/components/SettingsRows.tsx:128
+#: src/screens/Settings/components/SettingsRows.tsx:130
 msgid "Light"
 msgstr "Light"
 
@@ -4717,8 +4696,8 @@ msgstr "Location"
 #: src/features/account/LogOutPrompt.tsx:57
 #: src/screens/Login/AddMissingContact.tsx:52
 #: src/screens/Login/AddMissingContact.tsx:54
-#: src/screens/Profile/index.tsx:111
-#: src/screens/Profile/index.tsx:114
+#: src/screens/Profile/index.tsx:96
+#: src/screens/Profile/index.tsx:99
 msgid "Log out"
 msgstr "Log out"
 
@@ -4779,11 +4758,6 @@ msgstr "Make inactive"
 #: src/screens/Group/components/GroupLifecycle.tsx:329
 msgid "Make inactive anyway"
 msgstr "Make inactive anyway"
-
-#: src/screens/Profile/index.tsx:389
-#: src/screens/Profile/index.tsx:395
-msgid "Make my QR code"
-msgstr "Make my QR code"
 
 #: src/features/export/ImportSheet.tsx:254
 msgid "Makes this device match the file. Anything here that the file doesn’t have is removed (its history is kept)."
@@ -5333,10 +5307,6 @@ msgstr "Not now"
 msgid "Not part of this"
 msgstr "Not part of this"
 
-#: src/screens/Profile/index.tsx:342
-msgid "Not set"
-msgstr "Not set"
-
 #: src/components/split/SplitEditor.tsx:216
 #: src/components/split/SplitEditor.tsx:222
 msgid "Not splitting"
@@ -5507,7 +5477,7 @@ msgstr "On hold"
 msgid "On items make the phone bottom bar, the only navigation on a phone. The sidebar on wide screens always lists every item, in this order."
 msgstr "On items make the phone bottom bar, the only navigation on a phone. The sidebar on wide screens always lists every item, in this order."
 
-#: src/screens/Profile/index.tsx:209
+#: src/screens/Profile/index.tsx:169
 msgid "On Splito since {since}"
 msgstr "On Splito since {since}"
 
@@ -5889,9 +5859,17 @@ msgid "Payment deleted"
 msgstr "Payment deleted"
 
 #: src/components/people/PaymentDetailsDialog.tsx:69
-#: src/screens/Profile/index.tsx:334
+#: src/screens/Profile/index.tsx:298
 msgid "Payment details"
 msgstr "Payment details"
+
+#: src/screens/Profile/index.tsx:294
+msgid "Payment details, add your UPI ID"
+msgstr "Payment details, add your UPI ID"
+
+#: src/screens/Profile/index.tsx:294
+msgid "Payment details, UPI ID {upiId}"
+msgstr "Payment details, UPI ID {upiId}"
 
 #: src/components/activity/ActivityItem.tsx:1119
 #: src/components/disputes/words.ts:23
@@ -6068,7 +6046,7 @@ msgstr "Portions for {0}"
 msgid "Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it."
 msgstr "Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it."
 
-#: src/screens/Settings/components/SettingsRows.tsx:59
+#: src/screens/Settings/components/SettingsRows.tsx:61
 msgid "Preferences"
 msgstr "Preferences"
 
@@ -6117,7 +6095,7 @@ msgid "Privacy"
 msgstr "Privacy"
 
 #: src/navigation/Navigation.tsx:72
-#: src/screens/Profile/index.tsx:67
+#: src/screens/Profile/index.tsx:62
 msgid "Profile"
 msgstr "Profile"
 
@@ -7099,7 +7077,6 @@ msgid "Setting up the demo… {0}%"
 msgstr "Setting up the demo… {0}%"
 
 #: src/navigation/Navigation.tsx:73
-#: src/screens/Profile/index.tsx:99
 #: src/screens/Settings/SettingsSection.tsx:94
 msgid "Settings"
 msgstr "Settings"
@@ -7399,10 +7376,6 @@ msgstr "Slide {0} of {SLIDE_COUNT}: {1}"
 msgid "Smaller"
 msgstr "Smaller"
 
-#: src/screens/Profile/index.tsx:201
-msgid "So friends know it’s you."
-msgstr "So friends know it’s you."
-
 #: src/components/split/charges/hooks.ts:20
 msgid "Soft drinks"
 msgstr "Soft drinks"
@@ -7644,8 +7617,8 @@ msgstr "Strong"
 msgid "suggested"
 msgstr "suggested"
 
-#: src/screens/Settings/components/SettingsRows.tsx:89
-#: src/screens/Settings/components/SettingsRows.tsx:92
+#: src/screens/Settings/components/SettingsRows.tsx:91
+#: src/screens/Settings/components/SettingsRows.tsx:94
 #: src/screens/Settings/SettingsSection.tsx:56
 msgid "Support"
 msgstr "Support"
@@ -7686,7 +7659,7 @@ msgstr "Syncing to your other devices."
 
 #: src/components/settings/prefControls.tsx:79
 #: src/features/feedback/FeedbackSheet.tsx:394
-#: src/screens/Settings/components/SettingsRows.tsx:128
+#: src/screens/Settings/components/SettingsRows.tsx:130
 msgid "System"
 msgstr "System"
 
@@ -8413,7 +8386,6 @@ msgstr "UPI {0}"
 
 #: src/components/people/EditFriendDialog.tsx:119
 #: src/components/people/UpiPayDialog.tsx:158
-#: src/screens/Profile/index.tsx:339
 msgid "UPI ID"
 msgstr "UPI ID"
 
@@ -8484,7 +8456,7 @@ msgstr "VAT 10%"
 msgid "VAT 20%"
 msgstr "VAT 20%"
 
-#: src/screens/Profile/index.tsx:239
+#: src/screens/Profile/index.tsx:197
 msgid "Verified"
 msgstr "Verified"
 
@@ -9216,7 +9188,7 @@ msgstr "You paid exactly your share."
 msgid "you paid for others, beyond your share"
 msgstr "you paid for others, beyond your share"
 
-#: src/screens/Profile/index.tsx:287
+#: src/screens/Profile/index.tsx:245
 msgid "You paid this year"
 msgstr "You paid this year"
 
@@ -9307,8 +9279,8 @@ msgid "Your contact book is never uploaded."
 msgstr "Your contact book is never uploaded."
 
 #: src/components/settings/AboutSettings.tsx:41
-#: src/screens/Settings/components/SettingsRows.tsx:98
-#: src/screens/Settings/components/SettingsRows.tsx:101
+#: src/screens/Settings/components/SettingsRows.tsx:100
+#: src/screens/Settings/components/SettingsRows.tsx:103
 #: src/screens/Settings/SettingsSection.tsx:63
 msgid "Your data"
 msgstr "Your data"
