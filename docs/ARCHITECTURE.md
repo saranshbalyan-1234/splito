@@ -2532,6 +2532,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   without one. Supersedes the assistant ruling "a refreshed pushed copy becomes the plain tab". *Why:* "there
   should be some specific set of back for sure, for example if I open Appearance in Settings, the flow is from
   Settings to Appearance".
+- **Pushed pages slide like a native stack** (owner 227). Native: the native stack's own push and pop (iOS slide
+  and edge swipe back, Android). Phone-width web: a push slides the new page in from the right over the old one
+  (about 280 ms, iOS curve) and the app's Back slides the page underneath back in from the left (a short parallax);
+  a Back that came from the browser's own swipe (iOS Safari's left-edge swipe, which already slides its snapshot,
+  owner 216) is not animated again. Compositor only (CSS on the screen root, no JS per frame, no React render), the
+  leaving page is never kept alive for it and no row exit animation runs (§ 17.1); a page's fixed FAB does not move
+  with it; reduced motion or Animations off: instant. Rail and desktop web stay instant, as Bluesky. Main-tab
+  switches keep their own slide (§ 26.9). *Why:* "stacked screens are not there, like if I click on my avatar to go
+  to profile it should animate and go there and then same for swipe back".
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (Home, People, Groups, Analytics, Activity) show the avatar.
   **A main screen opened from a link is the same screen as its tab; the only difference is Back in place of the
@@ -3304,14 +3313,19 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   203). **Profile holds Settings too** (owner 220, replaces 203/206's separate Settings tab): after the person's
   sections come the Settings rows (Friends and invites, the preference sections, Support, Your data), then Log out
   last; there is no separate Settings screen. **Profile is a full page about you** (owner
-  209), Bluesky profile layout, top to bottom: the header (large avatar you can change, name, email and phone with
-  a verified tick, "On Splito since <month year>", Edit profile); a stat row (Friends, Groups, Expenses, You paid
-  this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics; **Payment details**
-  (your UPI ID and how friends pay you, editable); **Add me** (your friend QR and link, Share); the Settings rows;
-  and Log out last. **No balance and no recent activity on Profile** (owner 225): balances live on People and Groups
-  (their Overviews), your changes in Activity on Me (the Expenses stat opens it). Sections hide when empty; each
-  loads after the header (owner 168). *Why:* "move the logout button inside profile"; "remove settings from
-  profile"; "also update profile page, it looks very less"; "Remove your balance, recent activity from profile".
+  209), and **it fits on one phone screen** (owner 228, replacing 209's tall header and its Add me section): a
+  compact header row (avatar about 64 px on the left, which you can change; on the right the name, email and phone
+  with a verified tick, "On Splito since <month year>"; Edit as an icon button); one stat row (Friends, Groups,
+  Expenses, You paid this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics;
+  then the Settings rows straight away with no "Settings" heading: **Payment details** first (its detail is your UPI
+  ID, it opens the same edit sheet), Friends and invites (which holds your friend link and QR: there is no Add me
+  section on Profile), the preference sections, Support and Your data; Log out last, the sync note in small text
+  under it. **No balance and no recent activity on Profile** (owner 225): balances live on People and Groups (their
+  Overviews), your changes in Activity on Me (the Expenses stat opens it). The header paints at once; the rest
+  mounts after the first frame (owner 168). *Why:* "move the logout button inside profile"; "remove settings from
+  profile"; "also update profile page, it looks very less"; "Remove your balance, recent activity from profile";
+  "think proper about settings and profile screen it doesn't look good as setting has moved to bottom and I have to
+  scroll".
   *Why:* "move the logout button inside profile"; "remove settings from profile". **Log out erases everything this account left on the
   device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
   database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
@@ -4054,6 +4068,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 224 | "You take all decisions, don't ask me" | Product calls are settled by the assistant and reported as decided (the Tax/tip/discount row, the statement CSV for the Analytics export and decision 223 stand) | § 26.1, § 26.13 | Reports that asked the owner to confirm product calls |
 | 225 | "Remove your balance, recent activity from profile" | Profile drops Your balance and Your recent activity; balances stay on People and Groups, your changes in Activity on Me | § 26.15 | Profile's Your balance cards and recent activity list (209) |
 | 226 | "Why does analytics has the expense list, for that redirect to activity with other filters" | Analytics drops its expense list and selection chip; "See these expenses" and every chart tap open Activity (pushed, Back) with Type = Expenses plus the period, currency, scope and the tapped bar, category or person as removable filters | § 26.16, § 26.14 | Analytics' own expense list narrowed by chart taps |
+| 227 | "stacked screens are not there, like if I click on my avatar to go to profile it should animate and go there and then same for swipe back" | Pushed pages slide in from the right and Back slides the page underneath back, on phone web as natively; Safari's own swipe back is not animated twice; compositor only, reduced motion instant; desktop stays instant | § 26.3 | Pushed pages appeared instantly on web |
+| 228 | "think proper about settings and profile screen it doesn't look good as setting has moved to bottom and I have to scroll" | Profile fits one phone screen: compact header row, one stat row, then the Settings rows with Payment details first; Add me leaves Profile (Friends and invites holds the link and QR); Log out last | § 26.15 | Tall Profile header with Payment details and Add me sections above the Settings rows (209, 220) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

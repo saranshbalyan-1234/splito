@@ -743,6 +743,19 @@ Audit the whole codebase for code that does the same job twice and merge each se
   2. Consolidation in small non-overlapping slices, each with tests unchanged or improved and no visible regression (screenshots 390/1440 before/after).
   3. An architecture test per consolidated piece where a pattern can be enforced (e.g. no `UserAvatar` with a person id outside PersonLink).
 
+### F-277 Stacked pages slide on phone web (owner 227) `spec: ARCHITECTURE 26.3`
+
+Acceptance: a push (avatar to Profile, a person, a group, an expense, a Settings section) slides in from the right at
+phone width on web; the in-app Back slides the page below back in; Safari's left-edge swipe Back is not animated
+again; no JS per frame and no extra React render (renders gate); no row exit clone; FAB stays put; reduced motion
+instant; desktop instant. Status: building.
+
+### F-278 Profile fits one phone screen (owner 228) `spec: ARCHITECTURE 26.15`
+
+Acceptance: at 390 x 844 the header row, the stat row, Payment details and the first Settings rows are visible without
+scrolling; Add me is gone from Profile; Payment details is the first Settings row and opens the existing sheet;
+Log out is last. Status: building.
+
 ### F-276 Analytics' list is Activity (owner 226) `spec: ARCHITECTURE 26.16`
 
 Acceptance: (1) Analytics renders no expense rows and no selection chip; its data layer no longer reads the 200-row
