@@ -40,6 +40,7 @@ export function storeAskSource(
     async search(query, limit) {
       const session = await openSearch(store, query, search)
       while (session.found().length < limit && !session.isDone()) await session.step()
+      await session.whenCounted()
       const found = session.found()
       const isDone = session.isDone()
       const rows: FoundExpense[] = found.map(e => ({id: e.id, title: e.data.title, date: e.data.date, currency: e.data.currency, total: e.data.total, groupId: e.data.groupId}))

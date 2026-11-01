@@ -3,7 +3,7 @@ import {useNavigation} from '@react-navigation/native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, reportCsv} from '@splito/domain'
+import {formatAmount} from '@splito/domain'
 import {type ListedExpense} from '#/data/analyticsQueries'
 
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -13,14 +13,14 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
 import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
+import {useExportSheet} from '#/features/export/ExportSheet'
+import {SearchAskButton, SearchAskSpacer} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Layout from '#/components/Layout'
 import {TabScreen} from '#/components/TabScreen'
-import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type NavigationProp} from '#/lib/routes/types'
@@ -31,12 +31,11 @@ import {
   ExpenseRowPlaceholder,
 } from '#/screens/Analytics/components/ExpenseRow'
 import {FilterBar} from '#/screens/Analytics/components/FilterBar'
-import {OverviewSection} from '#/screens/Analytics/components/OverviewSection'
 import {
   Summary,
   SummaryPlaceholder,
 } from '#/screens/Analytics/components/Summary'
-import {exportCsv} from '#/screens/Analytics/exportCsv'
+import {useExportPreset} from '#/screens/Analytics/exportPreset'
 import {type Report, useReport} from '#/screens/Analytics/useReport'
 import {seeAllTransactionsPath} from '#/lib/links/make'
 import {SectionHeader} from '#/components/SectionHeader'
@@ -47,7 +46,7 @@ const NO_ROWS: ListedExpense[] = []
 /**
  * Analytics: one filter bar (period, currency, group, Include groups) drives
  * the headline totals, every chart, the list of the expenses behind them and
- * the CSV export, so the numbers agree everywhere. Tapping a bar, slice or
+ * the Export sheet's starting filters, so the numbers agree everywhere. Tapping a bar, slice or
  * row narrows the list to it. Charts switch to tables for screen readers.
  */
 export function AnalyticsScreen() {
@@ -57,7 +56,8 @@ export function AnalyticsScreen() {
   const report = useReport()
   const [view = 'charts', setView] = usePref('analyticsView')
   const isTable = view === 'table'
-  const exportRows = useExportRows()
+  /* The one Export sheet (Settings > Your data opens the same), starting on what Analytics shows (F-275). */
+  const exportSheet = useExportSheet(useExportPreset(report), {isLoading: !report})
   /* The data layer reads 200 rows at once; the web list draws every row it is given (20,000 px of page, a 240 ms commit on each revisit), so draw a page and add the next as the end comes near (usePagedRows, as Activity and Group do). */
   const pageOf = usePagedRows(
     report && `${report.currency}|${report.range.from}|${report.range.to}|${report.selection?.label}|${report.shareOf}`,
@@ -69,30 +69,29 @@ export function AnalyticsScreen() {
     <TabScreen testID="screen-analytics">
       <Layout.Header.Outer>
         <HeaderAvatar />
-        {/* Balances Search & Ask on the right, so the title stays centred. */}
-        <Layout.Header.Slot />
+        {/* Balances Search & Ask on the right (start tab only, owner 218), so the title stays centred. */}
+        <SearchAskSpacer tab="analytics" />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Analytics</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <SearchAskButton />
+        <SearchAskButton tab="analytics" />
         <Layout.Header.ActionButton
           testID="analytics-export"
-          label={l`Export CSV`}
+          label={l`Export`}
           icon={DownloadIcon}
           edge
-          disabled={!report || report.rowCount === 0}
-          onPress={() => report && void exportRows(report)}
+          disabled={!report}
+          onPress={exportSheet.open}
         />
       </Layout.Header.Outer>
+      {exportSheet.element}
       {/* Shell first (owner 152): the header paints at once, a skeleton while the data is missing, the charts and list mount after as a transition. */}
       <Deferred
         when={!!report}
         fallback={
         <>
-        {/* Balances right now do not wait for the report (owner 198): they read their own data. */}
-        <OverviewSection />
         <Shimmer testID="analytics-loading">
           <SummaryPlaceholder />
           <ChartsPlaceholder />
@@ -103,12 +102,11 @@ export function AnalyticsScreen() {
         </>
         }>
         {() => !report ? null : !report.hasExpenses ? (
-        /* No expenses yet, but payments can still leave balances: the Overview shows above the empty state. */
+        /* No expenses yet: the empty state (balances right now live on People and Groups, owner 221). */
         <List
           data={NO_ROWS}
           keyExtractor={(e: ListedExpense) => e.id}
           renderItem={() => null}
-          ListHeaderComponent={<OverviewSection />}
           ListFooterComponent={
             <EmptyState
               testID="analytics-empty"
@@ -154,8 +152,6 @@ export function AnalyticsScreen() {
             )}
             ListHeaderComponent={
               <>
-                {/* Balances right now come first (owner 198), above the filter row they ignore. */}
-                <OverviewSection />
                 <FilterBar
                   report={report}
                   isTable={isTable}
@@ -239,42 +235,4 @@ function ExpensesHeader({report, locale}: {report: Report; locale: string}) {
       )}
     </View>
   )
-}
-
-/** The header's Export CSV: the rows on screen (filters and chart selection applied), as a file. */
-function useExportRows() {
-  const {t: l} = useLingui()
-  return async (report: Report) => {
-    const {currency} = report
-    try {
-      const rows = await report.exportRows()
-      const csv = reportCsv(rows, report.me, {
-        header: [
-          l`Date`,
-          l`Description`,
-          l`Category`,
-          l`Group`,
-          l`Currency`,
-          l`Total`,
-          l`You paid`,
-          l`Your share`,
-          l`Location`,
-        ],
-        categoryName: id => report.category(id).name,
-        groupName: id => (id === null ? '' : report.nameOfGroup(id)),
-        groupLocation: report.locationOfGroup,
-      })
-      const name = `splito-${currency}-${report.range.from}-to-${report.range.to}.csv`
-      if (await exportCsv(name, csv)) {
-        Toast.show(
-          rows.length === 1
-            ? l`Exported 1 expense`
-            : l`Exported ${rows.length} expenses`,
-          {type: 'success'},
-        )
-      }
-    } catch {
-      Toast.show(l`Couldn’t export. Try again.`, {type: 'error'})
-    }
-  }
 }

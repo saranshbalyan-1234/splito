@@ -7,7 +7,7 @@ glyphs, illustrations, logos or `assets/images` are copied. Merge these rows int
 
 | Splito file | Upstream file | Splito changes |
 |---|---|---|
-| `src/screens/Settings/index.tsx` | `src/screens/Settings/Settings.tsx` | One row per preferences-registry group, About, and a confirmed "Reset all settings"; account, moderation, sign-out and developer rows removed (no accounts before sync) |
+| `src/screens/Settings/components/SettingsRows.tsx` | `src/screens/Settings/Settings.tsx` | (Rendered inside Profile, owner 220.) One row per preferences-registry group, About, and a confirmed "Reset all settings"; account, moderation, sign-out and developer rows removed (no accounts before sync) |
 | `src/screens/Settings/SettingsSection.tsx` | `src/screens/Settings/AppearanceSettings.tsx` (screen frame) | One route renders every group page from the registry; About and an honest not-found page |
 | `src/components/settings/PrefSection.tsx` | `src/screens/Settings/AppearanceSettings.tsx` (`AppearanceToggleButtonGroup`) | Title row without the portal trick, plus a Reset action (Bluesky's settings `BadgeButton` style) when the value is not the default |
 | `src/components/settings/controls.tsx` | `src/screens/Settings/ThreadPreferences.tsx` (radio and checkbox groups) | Generic over registry keys; select trigger styled as Bluesky's native `Select.Trigger` |

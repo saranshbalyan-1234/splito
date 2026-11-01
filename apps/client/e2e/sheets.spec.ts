@@ -1,6 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {composeButton} from './composer'
+import {chooseSplitMode, composeButton} from './composer'
 import {openDemo as enterDemo} from './openDemo'
 import {DESKTOP, PHONE} from './viewports'
 
@@ -217,7 +217,7 @@ test('the top bar shows its hairline only while the form is scrolled under it', 
     header.evaluate(el => getComputedStyle(el).borderBottomColor)
   await expect.poll(borderColor).toBe('rgba(0, 0, 0, 0)')
   // Itemize makes the form taller than the sheet; a wheel over the form scrolls it.
-  await page.getByTestId('split-mode-items').click()
+  await chooseSplitMode(page, 'items')
   await page.getByTestId('expense-form').hover()
   await page.mouse.wheel(0, 200)
   await expect.poll(borderColor).not.toBe('rgba(0, 0, 0, 0)')

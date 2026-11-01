@@ -264,7 +264,7 @@ export interface SearchView {
   groups: Entity<Group>[]
   /** The matching payments and write-offs shown: `SEARCH_PAGE` per page loaded so far, newest first. */
   payments: Entity<Repayment | WriteOff>[]
-  /** How many payments and write-offs match in all. */
+  /** How many payments and write-offs match in all (until `isCounted`, the ones read so far). */
   paymentCount: number
   /** More payments than the pages shown: "Show more payments" loads the next page. */
   hasMorePayments: boolean
@@ -282,8 +282,13 @@ export interface SearchView {
   isDone: boolean
   /** The search could not be answered (the index could not be built or read): say so, with Try again. */
   isFailed: boolean
-  /** How many expenses match and their totals per currency (known with the first answer). */
+  /**
+   * How many expenses match and their totals per currency. A broad query's first page comes before them (F-266): until
+   * `isCounted` the count is the rows read so far and the totals are empty.
+   */
   summary: SearchSummary
+  /** The counts and totals are the whole answer's. */
+  isCounted: boolean
   /** The text of the comment a record was found through. */
   commentText(id: string): string | undefined
   loadMore(): void
@@ -308,13 +313,14 @@ const FAILED_VIEW: Omit<SearchView, 'loadMore' | 'loadMorePayments' | 'retry'> =
   isDone: true,
   isFailed: true,
   summary: {count: 0, totals: {}},
+  isCounted: true,
   commentText: () => undefined,
 }
 
 /**
- * Search for `query` (ARCHITECTURE 9.8, 26.19, F-246), paged: the query is resolved from the term keys, so the people,
- * groups, the counts and per-currency totals and the first page of payments and of expenses arrive together whatever
- * the match count, and "Show more" reads the next page of either by id. `categories` are the category names as the
+ * Search for `query` (ARCHITECTURE 9.8, 26.19, F-246, F-266), paged: the people, groups and the first page of payments
+ * and of expenses arrive together whatever the match count, then the counts and per-currency totals (at once for a
+ * narrow query; for a broad one, after its first page), and "Show more" reads the next page of either. `categories` are the category names as the
  * person reads them (the localised stock names and the stored ones). The previous answer stays up while a new one
  * loads, and a commit that touches a record, a person, a group, a comment or a dispute runs the query again. A
  * failure is a view with `isFailed` (never an endless wait). Undefined until the first answer.
@@ -384,15 +390,29 @@ export function useSearch(rawQuery: string, today: string, mark: '.' | ',', cate
         isDone,
         isFailed: false,
         summary: session.summary,
+        isCounted: session.isCounted(),
         commentText: session.commentText,
       })
       return {isExpensesFull: found.length >= wanted || isDone, isPaymentsFull: pays.length >= wantedPayments || isPaysDone}
     }
     void (async () => {
-      // The pages: read until they are full (the first is read already), showing what is found as it comes.
+      // The pages: read until they are full (the first is read already), showing what is found as it comes; then the counts and totals.
       for (;;) {
         const {isExpensesFull, isPaymentsFull} = show()
-        if (isExpensesFull && isPaymentsFull) return
+        if (isExpensesFull && isPaymentsFull) {
+          if (session.isCounted()) return
+          try {
+            // After the first page is painted: the count reads the full key sets, and their callbacks would hold the paint.
+            await new Promise<void>(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)))
+            if (!isCurrent) return
+            await session.whenCounted()
+          } catch {
+            if (isCurrent) setView(FAILED_VIEW)
+            return
+          }
+          if (isCurrent) show()
+          return
+        }
         try {
           await Promise.all([isExpensesFull ? undefined : session.step(), isPaymentsFull ? undefined : session.stepPayments()])
         } catch {

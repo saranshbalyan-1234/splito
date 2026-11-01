@@ -264,23 +264,31 @@ test('this year: totals, every chart label, the list and the CSV agree', async (
     inr(400),
   ])
 
-  /* CSV: same rows, exact decimals, a currency column, the formula defused. */
+  /* Export (F-275): the header icon opens the same sheet as Settings > Your data, already on this year, INR, everything, as CSV. */
+  await page.getByTestId('analytics-export').click()
+  await expect(page.getByTestId('export-sheet')).toBeVisible()
+  await expect(page).toHaveURL(/\/analytics\/export/)
+  await expect(page.getByTestId('export-format-csv')).toBeChecked()
+  await expect(page.getByTestId('export-period')).toContainText('2026')
+  await expect(page.getByTestId('export-group')).toContainText('All groups')
+  await expect(page.getByTestId('export-currency')).toContainText('INR')
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByTestId('analytics-export').click(),
+    page.getByTestId('sheet-save').click(),
   ])
-  expect(download.suggestedFilename()).toBe(
-    'splito-INR-2026-01-01-to-2026-12-31.csv',
-  )
-  expect(readFileSync((await download.path())!, 'utf8')).toBe(
-    '﻿' +
-      'Date,Description,Category,Group,Currency,Total,You paid,Your share,Location\r\n' +
-      `2026-10-22,"'=HYPERLINK(""http://x"")",Other,,INR,200.00,0.00,100.00,\r\n` +
-      '2026-10-20,Hotel,Stay,Goa,INR,6000.00,0.00,3000.00,\r\n' +
-      '2026-10-12,Cab,Transport,Goa,INR,900.00,0.00,300.00,\r\n' +
-      '2026-10-05,Dinner,Food,,INR,1500.00,1500.00,500.00,\r\n' +
-      '2026-09-28,Groceries,Groceries,,INR,800.00,800.00,400.00,\r\n',
-  )
+  expect(download.suggestedFilename()).toBe('splito-statement-all-2026-10-26.csv')
+  const lines = readFileSync((await download.path())!, 'utf8').replace(/^\uFEFF/, '').trim().split('\r\n')
+  /* The exact decimals and a currency column; the formula is defused; the EUR museum is out; the year starts from an opening balance. */
+  expect(lines[0]).toContain('Date,Type,Description,Group,Currency')
+  expect(lines[1]).toMatch(/^2026-01-01,Opening balance,,,INR,/)
+  expect(lines.filter(l => /^2026-\d\d-\d\d,Expense,/.test(l)).map(l => l.split(',').slice(0, 6).join(','))).toEqual([
+    '2026-09-28,Expense,Groceries,Not in a group,INR,800.00',
+    '2026-10-05,Expense,Dinner,Not in a group,INR,1500.00',
+    '2026-10-12,Expense,Cab,Goa,INR,900.00',
+    '2026-10-20,Expense,Hotel,Goa,INR,6000.00',
+    `2026-10-22,Expense,"'=HYPERLINK(""http://x"")",Not in a group,INR,200.00`,
+  ])
+  expect(lines.join('\n')).not.toContain('Museum')
 
   const words = new Set((await page.locator('body').innerText()).split(/\s+/))
   expect(MESSAGE_IDS.filter(id => words.has(id))).toEqual([])
@@ -450,21 +458,38 @@ test('scope: one chip names what is counted; the checklist applies only on Apply
     await expect(chip).toHaveText(label)
   }
 
-  /* The CSV holds only what the scope counts. */
+  /* The Export sheet starts on the scope: one group is the group filter, and the file holds only that group. */
   await applyScope(page, {nonGroup: false, groups: ['Goa']}, GROUPS)
+  await page.getByTestId('analytics-export').click()
+  await expect(page.getByTestId('export-group')).toContainText('Goa')
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByTestId('analytics-export').click(),
+    page.getByTestId('sheet-save').click(),
   ])
   expect(
     readFileSync((await download.path())!, 'utf8')
       .trim()
       .split('\r\n')
-      .slice(1),
+      .filter(l => /^2026-\d\d-\d\d,Expense,/.test(l))
+      .map(l => l.split(',').slice(0, 6).join(',')),
   ).toEqual([
-    '2026-10-20,Hotel,Stay,Goa,INR,6000.00,0.00,3000.00,',
-    '2026-10-12,Cab,Transport,Goa,INR,900.00,0.00,300.00,',
+    '2026-10-12,Expense,Cab,Goa,INR,900.00',
+    '2026-10-20,Expense,Hotel,Goa,INR,6000.00',
   ])
+
+  /* A scope that is not one group (here: non-group only) is named in the Group picker and filters the file the same way. */
+  await applyScope(page, {nonGroup: true, groups: []}, GROUPS)
+  await page.getByTestId('analytics-export').click()
+  await expect(page.getByTestId('export-group')).toContainText('Non-group only')
+  const [other] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByTestId('sheet-save').click(),
+  ])
+  const text = readFileSync((await other.path())!, 'utf8')
+  expect(text).toContain('Dinner')
+  expect(text).not.toContain('Hotel')
+  /* Back on Goa, as the steps below expect. */
+  await applyScope(page, {nonGroup: false, groups: ['Goa']}, GROUPS)
 
   /* Remembered on this device. */
   await page.reload()

@@ -388,7 +388,6 @@ const PAGE_PATHS: Record<string, (ids: Ids, section?: string) => string> = {
   Person: ({person}) => `/people/${person}`,
   Group: ({group}) => `/groups/${group}`,
   Profile: () => '/profile',
-  Settings: () => '/settings',
   SettingsSection: (_ids, section) => `/settings/${section}`,
   CreateGroup: () => '/groups/new',
   AddExpense: () => '/expense/new',

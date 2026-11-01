@@ -100,9 +100,17 @@ function contactWords(value: string): string {
 export function termRows(e: Entity | undefined): Row[] {
   if (!e) return []
   const out = new Map<string, Row>()
-  const add = (kind: TermKind, term: string, type: TermEntity = e.type as TermEntity, id = e.id) => {
+  eachTerm(e, (kind, term, type = e.type as TermEntity, id = e.id) => {
     if (term) out.set(`${kind}\u0000${term}\u0000${type}\u0000${id}`, row(kind, term, type, id))
-  }
+  })
+  return [...out.values()]
+}
+
+/**
+ * Hands each term of an entity to `add`, unstored and possibly twice or empty (`termRows` drops those): what search
+ * checks a row in hand against, with the record a comment's terms find (F-266).
+ */
+export function eachTerm(e: Entity, add: (kind: TermKind, term: string, type?: TermEntity, id?: string) => void): void {
   if (e.type === 'comment') {
     // A comment is found through the record it hangs on; a deleted one has no text left to find.
     const d = e.data as Partial<Comment> | null
@@ -111,7 +119,7 @@ export function termRows(e: Entity | undefined): Row[] {
       for (const word of wordsOf(d.body)) add('n', `${word}\u0000${e.id}`, target as RecordType, d.targetId)
   } else if (e.type === 'expense' || e.type === 'repayment' || e.type === 'writeoff') {
     const d = e.data as Partial<Expense & Repayment> | null
-    if (!d) return []
+    if (!d) return
     const text = [e.type === 'expense' ? d.title : d.note, d.notes]
     if (d.split?.mode === 'items') for (const item of d.split.items) text.push(item.name)
     for (const word of wordsOf(text.filter(Boolean).join(' '))) add('w', word)
@@ -137,7 +145,6 @@ export function termRows(e: Entity | undefined): Row[] {
       for (const word of wordsOf(`${d?.contact ? contactWords(d.contact.value) : ''} ${d?.upiId ?? ''}`)) add('k', word)
     }
   }
-  return [...out.values()]
 }
 
 export const termKey = (r: Row) => [r.kind, r.term, r.entityType, r.entityId] as [string, string, string, string]

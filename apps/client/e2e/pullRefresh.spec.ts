@@ -141,7 +141,6 @@ const ROUTES: Array<[string, Route]> = [
     },
   ],
   ['Profile', '/profile'],
-  ['Settings', '/settings'],
   ['a Settings page', '/settings/regional'],
 ]
 

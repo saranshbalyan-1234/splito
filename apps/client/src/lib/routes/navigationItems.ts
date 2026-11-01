@@ -6,7 +6,6 @@ export const NAV_ITEM_ROUTE = {
   groups: 'Groups',
   analytics: 'Analytics',
   activity: 'Activity',
-  settings: 'Settings',
 } as const satisfies Record<NavItemId, string>
 
 export type NavItemRoute = (typeof NAV_ITEM_ROUTE)[keyof typeof NAV_ITEM_ROUTE]
@@ -17,12 +16,11 @@ export const NAV_ITEM_HREF = {
   groups: '/groups',
   analytics: '/analytics',
   activity: '/activity',
-  settings: '/settings',
 } as const satisfies Record<NavItemId, string>
 
 /**
- * The one list of every item (ARCHITECTURE 26.3, § 3): People, Groups, Analytics, Activity, Settings. No Home (owner
- * 198) and no Ask Splito (owner 200: it lives in the Search & Ask drawer). The bottom bar, sidebar and drawer show
+ * The one list of every item (ARCHITECTURE 26.3, § 3): People, Groups, Analytics, Activity. No Home (owner
+ * 198), no Ask Splito (owner 200: it lives in the Search & Ask drawer) and no Settings (owner 220: it is part of Profile). The bottom bar, sidebar and drawer show
  * it ordered by the `tabs` preference (`splitNavigationItems`).
  */
 export function navigationItems(): NavItemId[] {

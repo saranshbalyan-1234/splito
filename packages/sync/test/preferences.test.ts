@@ -16,7 +16,7 @@ beforeEach(async () => {
 test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
   expect(await getPref(s, 'startTab')).toBe('people')
   expect(await getPref(s, 'peopleSort')).toBe('lastActive')
   expect(await getPref(s, 'groupsSort')).toBe('lastActive')
@@ -44,13 +44,14 @@ test('account pref enqueues an outbox op, device pref does not', async () => {
 })
 
 test('tabs: any number from one item to every item of the shared nav list, no duplicates (26.3, decision 84; owners 198, 200)', async () => {
-  await setPref(s, ctx, 'tabs', ['people', 'settings'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'settings'])
-  // Settings always joins (owner 217: a phone has no drawer, the bar is the only way to it).
+  await setPref(s, ctx, 'tabs', ['people', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'activity'])
   await setPref(s, ctx, 'tabs', ['groups'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'settings'])
-  await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'activity', 'settings'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups'])
+  await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+  // Settings is not an item (owner 220): it lives in Profile, so it cannot be saved in the bar.
+  await expect(setPref(s, ctx, 'tabs', ['people', 'settings'] as never)).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'tabs', [])).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'tabs', ['people', 'groups', 'groups'])).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'tabs', ['people', 'profile'] as never)).rejects.toThrow('INVALID_PREF')
@@ -59,45 +60,49 @@ test('tabs: any number from one item to every item of the shared nav list, no du
   await expect(setPref(s, ctx, 'tabs', ['people', 'ask'] as never)).rejects.toThrow('INVALID_PREF')
 })
 
-test('a saved bar naming home (owner 198) or ask (owner 200) reads without them, in the saved order', async () => {
+test('a saved bar naming home (owner 198), ask (owner 200) or settings (owner 220) reads without them, in the saved order', async () => {
   const stored = (id: string, value: unknown) =>
     s.transaction(async tx => tx.put({type: 'preference', id, data: {value}, version: 1, deleted: false, updatedAt: 1}))
   await stored('tabs', ['home', 'people', 'groups', 'analytics', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
   await stored('tabs', ['home', 'activity', 'ask', 'groups', 'settings'])
   // People takes Home's place (the start tab stays in the bar).
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'activity', 'groups', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'activity', 'groups'])
   await stored('tabs', ['people', 'activity', 'ask', 'groups'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'activity', 'groups', 'settings'])
-  // Nothing left of it (a bar of Home alone, or Ask alone): the default bar.
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'activity', 'groups'])
+  // Nothing left of it (a bar of Home alone, Ask alone or Settings alone): the default bar.
   await stored('tabs', ['home'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
   await stored('tabs', ['ask'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
-  // A list without either keeps its tabs (and gains Settings, owner 217).
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+  await stored('tabs', ['settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+  // A list without any of them keeps its tabs.
   await stored('tabs', ['groups', 'people'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people'])
   // The bell build dropped 'activity' on read only, so the stored value may still name it; Profile left too.
   await stored('tabs', ['groups', 'profile', 'people'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics'])
 })
 
-test('the default bar lost Home and gained Settings (owners 198, 206): the old default bar becomes the new one, any other choice stays', async () => {
+test('Settings left the bar (owner 220): a saved bar naming it loses it on read and never gets it back, any other choice stays', async () => {
   const stored = (id: string, value: unknown) =>
     s.transaction(async tx => tx.put({type: 'preference', id, data: {value}, version: 1, deleted: false, updatedAt: 1}))
-  // Home with the four (the bar before owner 198) was never customised.
+  // The bar before owner 220 (the four plus Settings) was never customised.
+  await stored('tabs', ['people', 'groups', 'analytics', 'activity', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+  // Home with the four (the bar before owner 198) reads as the new default too.
   await stored('tabs', ['home', 'people', 'groups', 'analytics', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
-  // A saved bar without Settings gets it back (owner 217: no drawer on a phone, so the bar is the only way to it).
-  await stored('tabs', ['people', 'groups', 'analytics', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
-  // Customised: another order, fewer tabs or Settings placed elsewhere keep their order (Settings joins if missing).
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+  // Customised: another order or fewer tabs keep their order; Settings is dropped wherever it stood.
   await stored('tabs', ['groups', 'people', 'analytics', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics', 'activity', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics', 'activity'])
   await stored('tabs', ['people', 'groups'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups'])
   await stored('tabs', ['settings', 'people', 'groups', 'analytics', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['settings', 'people', 'groups', 'analytics', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+  await stored('tabs', ['activity', 'settings', 'people'])
+  expect(await getPref(s, 'tabs')).toEqual(['activity', 'people'])
 })
 
 test('the "Open on" tab: People by default; a saved home (owner 198) and the pre-F-256 homeTab key read as People or the tab they named', async () => {
@@ -110,20 +115,18 @@ test('the "Open on" tab: People by default; a saved home (owner 198) and the pre
   // A choice the saved bar no longer holds falls back to the bar's first tab that can be one (never an unlit tab).
   await setPref(s, ctx, 'tabs', ['analytics', 'activity'])
   expect(await getPref(s, 'startTab')).toBe('analytics')
-  await setPref(s, ctx, 'tabs', ['settings'])
-  expect(await getPref(s, 'startTab')).toBe('people')
-  // Settings is a tab but not a place to open on.
-  await expect(setPref(s, ctx, 'startTab', 'settings')).rejects.toThrow('INVALID_PREF')
+  // Settings is no tab and no place to open on (owner 220).
+  await expect(setPref(s, ctx, 'startTab', 'settings' as never)).rejects.toThrow('INVALID_PREF')
   await setPref(s, ctx, 'tabs', ['groups', 'activity'])
   expect(await getPref(s, 'startTab')).toBe('groups')
 })
 
-test('a saved bar that held Home keeps People where Home stood and gains Settings (owners 198, 206)', async () => {
+test('a saved bar that held Home keeps People where Home stood (owner 198)', async () => {
   const stored = (value: unknown) => s.transaction(async tx => tx.put({type: 'preference', id: 'tabs', data: {value}, version: 1, deleted: false, updatedAt: 1}))
   await stored(['home', 'groups', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity'])
   await stored(['groups', 'home', 'people', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'activity', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'activity'])
   expect(await getPref(s, 'startTab')).toBe('people')
 })
 
@@ -168,7 +171,7 @@ test('peopleSort and groupsSort (owner 199): default lastActive, old values migr
 
 test('the start tab must be a visible destination', async () => {
   await setPref(s, ctx, 'startTab', 'groups')
-  await setPref(s, ctx, 'tabs', ['analytics', 'settings'])
+  await setPref(s, ctx, 'tabs', ['analytics', 'activity'])
   expect(await getPref(s, 'startTab')).toBe('analytics')
 })
 
@@ -176,7 +179,7 @@ test('an order saved while Profile was a tab predates the Analytics tab, so Anal
   await s.transaction(async tx =>
     tx.put({type: 'preference', id: 'tabs', data: {value: ['people', 'groups', 'activity', 'profile']}, version: 1, deleted: false, updatedAt: 1}),
   )
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity', 'analytics', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity', 'analytics'])
 })
 
 test('reset restores default', async () => {
@@ -256,7 +259,7 @@ test('prefFrom reads a value from loaded preference rows exactly as getPref read
   await resetPref(s, ctx, 'accent')
   await same()
   // A stored start tab the tab list no longer holds falls back to People.
-  await setPref(s, ctx, 'tabs', ['analytics', 'settings'])
+  await setPref(s, ctx, 'tabs', ['analytics', 'activity'])
   await same()
   expect(prefFrom([], 'defaultCurrency')).toBe('INR')
 })

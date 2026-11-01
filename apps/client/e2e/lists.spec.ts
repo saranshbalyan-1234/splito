@@ -60,14 +60,13 @@ async function seedA04(page: Page) {
   })
 }
 
-test('A04: Include groups reads 150 with groups and 100 without on People; the Overview at the top of Analytics counts everything (scope All)', async ({
+test('A04: Include groups reads 150 with groups and 100 without on People, in the list and its Overview (owners 219, 221)', async ({
   page,
 }) => {
   await seedA04(page)
-  await page.goto('/analytics')
-  await expect(page.getByTestId('screen-analytics').getByTestId('summary-INR-net')).toHaveText('₹150.00')
   await page.goto('/people')
   const people = page.getByTestId('screen-people')
+  await expect(people.getByTestId('people-overview').getByTestId('summary-INR-net')).toHaveText('₹150.00')
   await expect(
     people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
   ).toHaveText('owes you ↙ ₹150.00')
@@ -79,18 +78,15 @@ test('A04: Include groups reads 150 with groups and 100 without on People; the O
     people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
   ).toHaveText('owes you ↙ ₹100.00')
   await expect(people.getByTestId('list-filters-dot')).toBeVisible()
-  // The Overview has its own scope (owner 176): the friends filter never changes it.
-  await page.getByTestId('tab-analytics').click()
-  await expect(page.getByTestId('screen-analytics').getByTestId('summary-INR-net')).toHaveText('₹150.00')
-  await page.getByTestId('screen-analytics').getByTestId('overview-scope-direct').click()
-  await expect(page.getByTestId('screen-analytics').getByTestId('summary-INR-net')).toHaveText('₹100.00')
+  // People's Overview counts as its list does (owner 219): Include groups off, the non-group balance only.
+  await expect(people.getByTestId('people-overview').getByTestId('summary-INR-net')).toHaveText('₹100.00')
 
-  // Back on: the defaults again, so the dot goes.
-  await page.getByTestId('tab-people').click()
+  // Back on: the defaults again, so the dot goes, and the Overview counts the group balance again.
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-include-groups').click()
   await page.getByTestId('sheet-save').click()
   await expect(people.getByTestId('list-filters-dot')).toHaveCount(0)
+  await expect(people.getByTestId('people-overview').getByTestId('summary-INR-net')).toHaveText('₹150.00')
 })
 
 test('search grows from the icon to the row width, Escape folds it, and it combines with filters', async ({

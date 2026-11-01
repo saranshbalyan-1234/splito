@@ -69,3 +69,11 @@ test('payments and write-offs come before the expenses under their own heading, 
   // All of them shown: no Show more.
   expect(shape(2)).toEqual(['payments:2', 'payment-p1#0', 'payment-w1#1', 'expenses:1', 'expense-x1#2'])
 })
+
+test('a payment count still being worked out (a broad query, F-266) is flagged and keeps Show more; nothing found shows nothing', () => {
+  const results = {people: [], groups: [], expenses: [], payments: [e('repayment', 'p1'), e('writeoff', 'w1')]}
+  const rows = searchRows(results, undefined, undefined, {count: 2, isPartial: true})
+  expect(rows[0]).toMatchObject({type: 'header', section: 'payments', count: 2, isPartial: true})
+  expect(rows.map(r => r.key)).toContain('more-payments')
+  expect(searchRows({...results, payments: []}, undefined, undefined, {count: 0, isPartial: true})).toEqual([])
+})

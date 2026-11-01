@@ -49,9 +49,13 @@ export function searchRows(
   expenseCount?: {count: number; isPartial: boolean},
   /** The typed query: puts the "Ask Splito" row first. */
   askQuery?: string,
-  /** Payments and write-offs: how many match in all (the rows given are the pages read). Defaults to the rows given. */
-  paymentCount?: number,
+  /** Payments and write-offs: how many match in all (the rows given are the pages read), or so far. Defaults to the rows given. */
+  paymentCount?: number | {count: number; isPartial: boolean},
 ): SearchRow[] {
+  const payments =
+    typeof paymentCount === 'number'
+      ? {count: paymentCount, isPartial: false}
+      : paymentCount
   const rows: SearchRow[] = []
   let nav = 0
   if (askQuery)
@@ -95,11 +99,10 @@ export function searchRows(
       nav: n,
       payment,
     }),
-    paymentCount === undefined
-      ? undefined
-      : {count: paymentCount, isPartial: false},
+    payments,
   )
-  if (paymentCount !== undefined && (results.payments?.length ?? 0) < paymentCount)
+  const shown = results.payments?.length ?? 0
+  if (payments && shown > 0 && (payments.isPartial || shown < payments.count))
     rows.push({type: 'more', key: 'more-payments', section: 'payments'})
   section(
     'expenses',

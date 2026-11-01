@@ -18,10 +18,12 @@ function background(page: Page, testID: string) {
     .evaluate(el => getComputedStyle(el).backgroundColor)
 }
 
-test('the Settings list has a page for every preference group, plus Support and Your data', async ({
+test('the Settings list sits in Profile and has a page for every preference group, plus Support and Your data (owner 220)', async ({
   page,
 }) => {
-  await open(page, '/settings', 'screen-settings')
+  await open(page, '/settings', 'screen-profile')
+  // /settings is only an address: Profile is the page, and the address bar says so.
+  await expect(page).toHaveURL(/\/profile$/)
   for (const id of [
     'appearance',
     'navigation',
@@ -74,7 +76,7 @@ test('an accent is only previewed until Apply, then tints the app and survives a
   await expect.poll(() => background(page, 'sidebar-add')).toBe(BLUESKY_BLUE)
 })
 
-test('hiding Groups removes it from the phone bar only; the sidebar keeps it; Settings cannot be hidden (owners 155, 217)', async ({
+test('hiding Groups removes it from the phone bar only; the sidebar keeps it (owner 155)', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
@@ -87,12 +89,9 @@ test('hiding Groups removes it from the phone bar only; the sidebar keeps it; Se
   await open(page, '/', 'screen-people')
   await expect(page.getByTestId('tab-people')).toBeVisible()
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
-  // A phone has no drawer (owner 217): the bar is its only navigation, so Settings always stays in it.
+  // A phone has no drawer (owner 217); Settings is in Profile, behind the avatar (owner 220), not a bar item.
   await expect(page.getByTestId('drawer')).toHaveCount(0)
-  await page.getByTestId('tab-settings').click()
-  await expect(page.getByTestId('screen-settings')).toBeVisible()
-  await open(page, '/settings/navigation', 'screen-settings-section')
-  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute('aria-disabled', 'true')
+  await expect(page.getByTestId('tab-settings')).toHaveCount(0)
 
   // Wide screens always list every item: Groups is still on the sidebar, after the items that are on.
   await page.setViewportSize(LAPTOP)
@@ -114,8 +113,8 @@ for (const width of [1440, 860]) {
         .getByRole('navigation')
         .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-    // Default: the five items of the bar (no Home, no Ask Splito: owners 198, 200); never a More.
-    const DEFAULT = ['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-settings']
+    // Default: the four items of the bar (no Home, no Ask Splito, no Settings: owners 198, 200, 220); never a More.
+    const DEFAULT = ['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity']
     await expect.poll(order).toEqual(DEFAULT)
     await expect(page.getByTestId('tab-more')).toHaveCount(0)
 
@@ -124,7 +123,7 @@ for (const width of [1440, 860]) {
     // Off items follow the ones that are on, in the shared order.
     await expect
       .poll(order)
-      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-settings', 'tab-groups'])
+      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-groups'])
 
     // An off item opens like any row and is lit there.
     await page.getByTestId('tab-groups').click()
@@ -138,23 +137,23 @@ for (const width of [1440, 860]) {
     await expect(page.getByTestId('screen-settings-section')).toBeVisible()
     await expect
       .poll(order)
-      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-settings', 'tab-groups'])
+      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-groups'])
     await page.getByTestId('reset-tabs').click()
     await expect.poll(order).toEqual(DEFAULT)
 
-    // Off and on again, the sidebar lists the same five.
+    // Off and on again, the sidebar lists the same four.
     await page.getByTestId('tabs-toggle-groups').click()
     await page.getByTestId('tabs-toggle-groups').click()
     await expect.poll(order).toEqual(DEFAULT)
   })
 }
 
-test('Settings is on the phone bar and cannot go off (owners 206, 217); Reset brings back what went off, with arrows to reorder', async ({
+test('Settings is no item of the list (owner 220); Reset brings back what went off, with arrows to reorder', async ({
   page,
 }) => {
   await page.setViewportSize(LAPTOP)
   await open(page, '/settings/navigation', 'screen-settings-section')
-  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByTestId('tabs-toggle-settings')).toHaveCount(0)
   const top = async (tab: string) =>
     (await page.getByTestId(`tabs-toggle-${tab}`).boundingBox())!.y
   expect(await top('people')).toBeLessThan(await top('groups'))
@@ -170,7 +169,6 @@ test('Settings is on the phone bar and cannot go off (owners 206, 217); Reset br
     .toBe(true)
   await expect(page.getByTestId('tabs-up-analytics')).toBeDisabled()
 
-  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute('aria-disabled', 'true')
   await page.getByTestId('tabs-toggle-activity').click()
   await page.setViewportSize(PHONE)
   // The bar re-renders for the phone width after the resize: poll, a read right after it can still see the old bar.
@@ -181,7 +179,7 @@ test('Settings is on the phone bar and cannot go off (owners 206, 217); Reset br
         .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid'))),
     )
-    .toEqual(['tab-analytics', 'tab-people', 'tab-groups', 'tab-settings'])
+    .toEqual(['tab-analytics', 'tab-people', 'tab-groups'])
 
   await page.setViewportSize(LAPTOP)
   await page.getByTestId('reset-tabs').click()
@@ -191,7 +189,7 @@ test('Settings is on the phone bar and cannot go off (owners 206, 217); Reset br
     .toBe(true)
 })
 
-test('the bar takes any number of tabs, down to the start tab and Settings, which cannot be hidden (owner 217)', async ({
+test('the bar takes any number of tabs, down to the start tab, which cannot be hidden', async ({
   page,
 }) => {
   await open(page, '/settings/navigation', 'screen-settings-section')
@@ -202,14 +200,14 @@ test('the bar takes any number of tabs, down to the start tab and Settings, whic
       'false',
     )
   }
-  // Nothing is locked but the start tab (People) and Settings (a phone's only way there, owner 217).
-  for (const tab of ['people', 'settings'])
-    await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute('aria-disabled', 'true')
+  // Nothing is locked but the start tab (People); Settings is no item (owner 220).
+  await expect(page.getByTestId('tabs-toggle-people')).toHaveAttribute('aria-disabled', 'true')
+  await expect(page.getByTestId('tabs-toggle-settings')).toHaveCount(0)
   await expect(page.getByTestId('tabs-toggle-activity')).not.toHaveAttribute(
     'aria-disabled',
     'true',
   )
-  // The note about sharing the bar only comes above five tabs; every item is five.
+  // The note about sharing the bar only comes above five tabs; every item is four.
   for (const tab of ['groups', 'analytics', 'activity']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute('aria-checked', 'true')
@@ -308,6 +306,6 @@ test('every on/off setting is a switch, on web too, with its label and checked s
   }
   await page.getByTestId('notify.reminders-switch').click()
   await expect(page.getByTestId('notify.reminders-switch')).toHaveAttribute('aria-checked', 'false')
-  await open(page, '/settings', 'screen-settings')
+  await open(page, '/profile', 'screen-profile')
   await expect(page.getByTestId('settings-demo-mode')).toHaveAttribute('role', 'switch')
 })

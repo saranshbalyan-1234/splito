@@ -56,11 +56,12 @@ import {SectionLink} from '#/components/SectionLink'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
-import {SummaryCard} from '#/screens/Analytics/components/Overview'
-import {overviewColumns} from '#/screens/Analytics/overviewGrid'
+import {SummaryCard} from '#/components/overview/Overview'
+import {overviewColumns} from '#/components/overview/overviewGrid'
 import {analyticsHref} from '#/screens/Analytics/overviewScope'
 import {SectionHeader} from '#/components/SectionHeader'
 import {listedFriends} from '#/screens/People/sort'
+import {SettingsRows} from '#/screens/Settings/components/SettingsRows'
 import {countFriends, countGroups, yearRange} from './stats'
 
 /** The widest the page grows: a column of sections, centred on wide screens (web adapts, phone unchanged). */
@@ -69,8 +70,9 @@ const RECENT = 3
 
 /*
  * Profile (owner 209), a full page about you in Bluesky's profile layout, top to bottom: the header, a stat row,
- * Your balance, Payment details, Add me, Your recent activity, then Log out last (owner 202). Only the header paints
- * at once; every section below mounts after the first frame (owner 168) and hides when it has nothing to show.
+ * Your balance, Payment details, Add me, Your recent activity, then every Settings row (owner 220: Settings is part of
+ * Profile, there is no Settings screen or tab), then Log out last (owner 202). Only the header paints at once; every
+ * section below mounts after the first frame (owner 168) and hides when it has nothing to show.
  */
 export function ProfileScreen() {
   const me = useMe()
@@ -113,6 +115,11 @@ function ProfileBody({me}: {me: Entity<Person>}) {
       <PaymentDetails me={me} />
       <AddMe />
       <RecentActivity />
+      {/* The Settings list, as it was on its own tab (owner 220); `/settings` opens this page. */}
+      <View testID="profile-settings">
+        <SectionHeader title={l`Settings`} />
+        <SettingsRows />
+      </View>
       {/* Sign-in is not built yet: say so plainly instead of a dead row. */}
       <View testID="profile-sync-note" style={[a.flex_row, a.align_start, a.gap_sm, a.px_xl, a.pt_xl, a.pb_lg]}>
         <CloudIcon size="sm" fill={t.atoms.text_contrast_medium.color} style={{marginTop: 2}} />

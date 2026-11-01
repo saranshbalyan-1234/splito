@@ -8,7 +8,6 @@ const SECTION: Record<string, string> = {
   PushedGroups: 'Groups',
   PushedAnalytics: 'Analytics',
   PushedActivity: 'Activity',
-  PushedSettings: 'Settings',
   People: 'People',
   Person: 'People',
   AddFriend: 'People',
@@ -22,10 +21,6 @@ const SECTION: Record<string, string> = {
   Settle: 'Groups',
   Analytics: 'Analytics',
   Activity: 'Activity',
-  Settings: 'Settings',
-  SettingsSection: 'Settings',
-  Welcome: 'Settings',
-  FriendsAndInvites: 'Settings',
 }
 
 /**
@@ -36,7 +31,7 @@ const SECTION: Record<string, string> = {
  */
 export function currentSection(
   state: State | undefined,
-  /** Only these items exist (the bottom bar has no Settings): others are skipped. */
+  /** Only these items exist (the bottom bar holds only some): others are skipped. */
   among?: readonly string[],
 ): string {
   const routes = state?.routes ?? []

@@ -1,16 +1,14 @@
 import {expect, test} from 'bun:test'
 
 import {scopeFromParam} from '#/screens/Analytics/urlState'
-import {analyticsHref, overviewParam, readOverviewScope} from './overviewScope'
+import {analyticsHref, overviewScopeParam} from './overviewScope'
 
-test('the Overview scope is read from the address and written only when it differs from stock and saved', () => {
-  expect(readOverviewScope({overview: 'groups'})).toBe('groups')
-  expect(readOverviewScope({overview: 'nope'})).toBeUndefined()
-  expect(readOverviewScope(undefined)).toBeUndefined()
-  expect(overviewParam('all', 'all')).toBeUndefined()
-  expect(overviewParam('groups', 'all')).toBe('groups')
-  // All, while the saved choice is Groups, must be written or the address would fall back to Groups.
-  expect(overviewParam('all', 'groups')).toBe('all')
+test('an old ?overview= link reads as Analytics\' scope (owner 219); anything else is no scope', () => {
+  expect(overviewScopeParam({overview: 'groups'})).toEqual({nonGroup: false, groups: 'all'})
+  expect(overviewScopeParam({overview: 'direct'})).toEqual({nonGroup: true, groups: []})
+  expect(overviewScopeParam({overview: 'all'})).toEqual({nonGroup: true, groups: 'all'})
+  expect(overviewScopeParam({overview: 'nope'})).toBeUndefined()
+  expect(overviewScopeParam(undefined)).toBeUndefined()
 })
 
 test('Analytics carries the same scope: everything, non-group, all groups', () => {

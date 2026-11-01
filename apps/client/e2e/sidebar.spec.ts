@@ -18,9 +18,9 @@ async function openSidebar(page: Page, width: number, lang: 'en' | 'hi') {
   await page.evaluate(async l => {
     const s = (window as any).splito
     await s.setPref('language', l)
-    await s.setPref('tabs', ['people', 'groups', 'analytics', 'activity', 'settings'])
+    await s.setPref('tabs', ['people', 'groups', 'analytics', 'activity'])
   }, lang)
-  await expect(page.getByTestId('tab-settings')).toBeVisible()
+  await expect(page.getByTestId('tab-activity')).toBeVisible()
 }
 
 for (const lang of ['en', 'hi'] as const) {

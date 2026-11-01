@@ -18,8 +18,6 @@ export type TabParams = {
   Analytics: {currency?: string; period?: string; offset?: string; from?: string; to?: string; scope?: string; overview?: string} | undefined
   /** `tab: 'me'` is `/activity/me`; `type` (`transactions`, `comments,groups`, ...) and `group=<id>` narrow it (F-259), `from` is the tab a copy opened from. Disputes is a Type, not a tab. */
   Activity: {tab?: 'all' | 'me' | 'others'; type?: string; group?: string; from?: string} | undefined
-  /** A tab (owner 206); `from` is the tab a copy opened from. */
-  Settings: {from?: string} | undefined
 }
 
 /** Every route in the owner's route table (paths live in `#/routes` and `#/navigation/linking`). */
@@ -29,10 +27,9 @@ export type RootStackParams = {
   PushedGroups: TabParams['Groups']
   PushedAnalytics: TabParams['Analytics']
   PushedActivity: TabParams['Activity']
-  PushedSettings: TabParams['Settings']
   /** Native only: the drawer names a tab through here, since v7 doesn't navigate into children by name. */
   Tabs: NavigatorScreenParams<TabParams> | undefined
-  /** Opened from the avatar's drawer, so it is pushed like Settings. */
+  /** The person's page and every Settings row (owner 220), opened from the header avatar; `/settings` opens it too. */
   Profile: undefined
   /** The old Search page's link: opens the Search & Ask drawer with `q` typed in (`/search?q=dinner`). */
   Search: {q?: string} | undefined
@@ -79,7 +76,7 @@ export type SheetMarker = {
 
 /** Web renders every route in one flat stack, like Bluesky's FlatNavigator. */
 /** The native-only twins of the tab screens; web pushes the tab route itself (owner 179). */
-export type PushedTabRoute = 'PushedPeople' | 'PushedGroups' | 'PushedAnalytics' | 'PushedActivity' | 'PushedSettings'
+export type PushedTabRoute = 'PushedPeople' | 'PushedGroups' | 'PushedAnalytics' | 'PushedActivity'
 
 export type FlatNavigatorParams = TabParams & Omit<RootStackParams, 'Tabs' | PushedTabRoute> & {Sheet: SheetMarker}
 

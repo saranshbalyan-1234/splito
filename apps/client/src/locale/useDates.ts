@@ -126,3 +126,10 @@ export function useFormatTime() {
   const timeZone = useTimeZone()
   return (at: number | Date) => i18n.date(at, {timeStyle: 'short', timeZone})
 }
+
+/** An instant as date and time in the Timezone preference ("31 Oct 2026, 4:15 PM"): the exact-moment tooltip and label. */
+export function useFormatDateTime() {
+  const {i18n} = useLingui()
+  const timeZone = useTimeZone()
+  return (at: number | Date) => i18n.date(at, {dateStyle: 'medium', timeStyle: 'short', timeZone})
+}

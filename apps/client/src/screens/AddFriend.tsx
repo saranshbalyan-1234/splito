@@ -39,6 +39,7 @@ import {
   usePref,
   useStore,
 } from '#/data/hooks'
+import {useDemoMode} from '#/state/demo'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
@@ -86,17 +87,20 @@ type Check =
   | {state: 'friend'; person: Entity<Person>}
   | {state: 'removed'; person: Entity<Person>}
   | {state: 'requested'}
+  | {state: 'local'}
   | {state: 'checking'}
   | {state: Lookup}
 
 /**
- * Add friend (26.18): one "Email or mobile number" field, an optional name
- * and "Choose from contacts". Splito checks the directory as soon as the
- * value is valid: on Splito -> send a friend request (they must accept); not
- * on Splito -> a warning with Send invite and "Add anyway (only for you)";
- * offline -> the request waits in the outbox. A name alone adds a private
- * friend (F-601). One sheet: contacts, the primer and the invite are steps
- * inside it, never a second modal (section 4).
+ * Add friend (26.18). With no directory (no backend yet) it is a plain form:
+ * a required name first, an optional email or number, and "Choose from
+ * contacts"; Add friend makes a normal local friend, usable at once (F-275).
+ * With a directory (demo mode today) it is one "Email or mobile number"
+ * field, an optional name and the contacts button; Splito checks the
+ * directory as soon as the value is valid: on Splito -> send a friend request
+ * (they must accept); not on Splito -> a warning with Send invite and "Add
+ * anyway (only for you)". One sheet: contacts, the primer and the invite are
+ * steps inside it, never a second modal (section 4).
  */
 export function AddFriendScreen() {
   const t = useTheme()
@@ -110,6 +114,7 @@ export function AddFriendScreen() {
   const {outgoing} = usePendingRequests()
   const [inviteExpiry = '7d'] = usePref('invites.defaultExpiry')
   const [region] = useState(deviceRegion)
+  const {hasDirectory: isDirectory} = useDemoMode()
   const [raw, setRaw] = useState('')
   const [name, setName] = useState('')
   const [isBlurred, setIsBlurred] = useState(false)
@@ -139,7 +144,9 @@ export function AddFriendScreen() {
     ? {state: 'empty'}
     : !contact
       ? {state: 'invalid'}
-      : friend
+      : !isDirectory
+        ? {state: 'local'}
+        : friend
         ? {state: isRemovedFriend(friend.data) ? 'removed' : 'friend', person: friend}
         : isRequested
           ? {state: 'requested'}
@@ -317,6 +324,13 @@ export function AddFriendScreen() {
         },
         onSave: close,
       }
+    if (!isDirectory)
+      return {
+        saveLabel: l`Add friend`,
+        canSave: name.trim() !== '' && check.state !== 'invalid',
+        isSaving,
+        onSave: () => void addPrivately(),
+      }
     switch (check.state) {
       case 'empty':
         return {
@@ -366,6 +380,27 @@ export function AddFriendScreen() {
       </Text>
     ) : undefined
 
+  const nameField = (
+    <View>
+      <TextField.LabelText>
+        {isDirectory ? <Trans>Name (optional)</Trans> : <Trans>Name</Trans>}
+      </TextField.LabelText>
+      <TextField.Root>
+        <TextField.Icon icon={PersonIcon} />
+        <TextField.Input
+          testID="add-friend-name"
+          label={l`Name`}
+          value={name}
+          onChangeText={setName}
+          placeholder={l`What you call them, e.g. Riya`}
+          autoCapitalize="words"
+          autoFocus={!isDirectory}
+          maxLength={64}
+        />
+      </TextField.Root>
+    </View>
+  )
+
   return (
     <FormSheet.Screen
       testID="screen-add-friend"
@@ -413,7 +448,11 @@ export function AddFriendScreen() {
             <AvatarPreview name={shownName} type="user" size={56} />
             <View style={[a.flex_1, a.gap_2xs]}>
               <Text style={[a.text_xl, a.font_bold, a.leading_tight]}>
-                <Trans>Add by email or number</Trans>
+                {isDirectory ? (
+                  <Trans>Add by email or number</Trans>
+                ) : (
+                  <Trans>Add a friend</Trans>
+                )}
               </Text>
               <Text
                 style={[
@@ -421,17 +460,30 @@ export function AddFriendScreen() {
                   a.leading_snug,
                   t.atoms.text_contrast_medium,
                 ]}>
-                <Trans>
-                  They get a request to accept. Once they do, you can split
-                  anything together.
-                </Trans>
+                {isDirectory ? (
+                  <Trans>
+                    They get a request to accept. Once they do, you can split
+                    anything together.
+                  </Trans>
+                ) : (
+                  <Trans>
+                    Add their name and split right away. Only you see them for
+                    now.
+                  </Trans>
+                )}
               </Text>
             </View>
           </View>
 
+          {isDirectory ? null : nameField}
+
           <View>
             <TextField.LabelText>
-              <Trans>Email or mobile number</Trans>
+              {isDirectory ? (
+                <Trans>Email or mobile number</Trans>
+              ) : (
+                <Trans>Email or mobile number (optional)</Trans>
+              )}
             </TextField.LabelText>
             <TextField.Root isInvalid={check.state === 'invalid' && isBlurred}>
               <TextField.Icon icon={kind === 'phone' ? PhoneIcon : MailIcon} />
@@ -449,7 +501,7 @@ export function AddFriendScreen() {
                 autoCorrect={false}
                 autoComplete="email"
                 keyboardType="email-address"
-                autoFocus
+                autoFocus={isDirectory}
                 maxLength={254}
                 returnKeyType="next"
               />
@@ -471,65 +523,57 @@ export function AddFriendScreen() {
             ) : null}
           </View>
 
-          <View>
-            <TextField.LabelText>
-              <Trans>Name (optional)</Trans>
-            </TextField.LabelText>
-            <TextField.Root>
-              <TextField.Icon icon={PersonIcon} />
-              <TextField.Input
-                testID="add-friend-name"
-                label={l`Name`}
-                value={name}
-                onChangeText={setName}
-                placeholder={l`What you call them, e.g. Riya`}
-                autoCapitalize="words"
-                maxLength={64}
-              />
-            </TextField.Root>
-          </View>
+          {isDirectory ? nameField : null}
 
           {/* Each new answer fades in and the old one out; neither runs while the sheet itself closes (the exit scope, owner 189). */}
-          <AnimatedListRow
-            key={check.state}
-            testID={`add-friend-status-${check.state}`}>
-            <Status
-              check={check}
-              value={contact ? formatContact(contact) : raw.trim()}
-              isSaving={isSaving}
-              onAddAnyway={() => void addPrivately()}
-              onOpenFriend={personId => {
-                close()
-                navigation.navigate('Person', {personId})
-              }}
-              onAddBack={personId =>
-                void restoreFriend(store, ctx, personId).then(
-                  () => {
-                    haptics.success()
-                    close()
-                    navigation.navigate('Person', {personId})
-                  },
-                  () => Toast.show(l`Couldn’t add them back. Please try again.`, {type: 'error'}),
-                )
-              }
-            />
-          </AnimatedListRow>
+          {isDirectory ? (
+            <AnimatedListRow
+              key={check.state}
+              testID={`add-friend-status-${check.state}`}>
+              <Status
+                check={check}
+                value={contact ? formatContact(contact) : raw.trim()}
+                isSaving={isSaving}
+                onAddAnyway={() => void addPrivately()}
+                onOpenFriend={personId => {
+                  close()
+                  navigation.navigate('Person', {personId})
+                }}
+                onAddBack={personId =>
+                  void restoreFriend(store, ctx, personId).then(
+                    () => {
+                      haptics.success()
+                      close()
+                      navigation.navigate('Person', {personId})
+                    },
+                    () =>
+                      Toast.show(l`Couldn’t add them back. Please try again.`, {
+                        type: 'error',
+                      }),
+                  )
+                }
+              />
+            </AnimatedListRow>
+          ) : null}
 
-          <SettingsList.Container>
-            <SettingsList.PressableItem
-              testID="add-friend-invite-link"
-              label={l`Invite with a link or QR code`}
-              contentContainerStyle={[a.px_0]}
-              onPress={() =>
-                navigation.replace('CreateInvite', {kind: 'friend'})
-              }>
-              <SettingsList.ItemIcon icon={QrIcon} />
-              <SettingsList.ItemText>
-                <Trans>Invite link or QR code</Trans>
-              </SettingsList.ItemText>
-              <SettingsList.Chevron />
-            </SettingsList.PressableItem>
-          </SettingsList.Container>
+          {/* Invite links need the server (they fail closed offline), so they are not offered until there is one. */}
+          {isDirectory ? (
+            <SettingsList.Container>
+              <SettingsList.PressableItem
+                testID="add-friend-invite-link"
+                label={l`Invite with a link or QR code`}
+                contentContainerStyle={[a.px_0]}
+                onPress={() =>
+                  navigation.replace('CreateInvite', {kind: 'friend'})
+                }>
+                <SettingsList.ItemIcon icon={QrIcon} />
+                <SettingsList.ItemText>
+                  <Trans>Invite link or QR code</Trans>
+                </SettingsList.ItemText>
+                <SettingsList.Chevron />
+              </SettingsList.PressableItem>
+            </SettingsList.Container>
+          ) : null}
         </View>
       )}
     </FormSheet.Screen>
@@ -576,6 +620,7 @@ function Status({
         </Text>
       )
     case 'invalid':
+    case 'local':
       return null
     case 'checking':
       return (

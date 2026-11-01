@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {CURRENCIES, type DateRange, periodRange, type StatementFilter, type WeekStart} from '@splito/domain'
+import {CURRENCIES, type DateRange, periodRange, type StatementFilter, type StatementScope, type WeekStart} from '@splito/domain'
 import {createBackup, serializeBackup} from '@splito/sync'
 
 import {saveFile} from '#/lib/export/saveFile'
@@ -40,7 +40,15 @@ export interface ExportPreset {
   groupId?: string
   personId?: string
   currency?: string
+  /** A date range to start on (Analytics' period); shown as a custom range. */
+  range?: DateRange
+  /** Several groups and/or non-group records (Analytics' scope), named by `scopeLabel` in the Group picker. */
+  scope?: StatementScope
+  scopeLabel?: string
 }
+
+/** The Group picker's value for the preset scope (never a real group id). */
+const SCOPE = 'scope'
 
 /**
  * Export centre (F-2007). CSV and PDF statements are built on the device from
@@ -57,8 +65,16 @@ export function ExportSheet({control, preset}: {control: Dialog.DialogControlPro
 }
 
 /** The sheet for an entry point: `open()` and the element to render once. */
-export function useExportSheet(preset?: ExportPreset) {
-  const control = Dialog.useDialogControl({url: 'export'})
+export function useExportSheet(preset?: ExportPreset, options?: {isLoading?: boolean}) {
+  const control = Dialog.useDialogControl({
+    url: 'export',
+    /* A pasted address opens the sheet once the page it is pre-set from has its data. */
+    onUrlOpen: () => {
+      if (options?.isLoading) return 'wait'
+      control.open()
+      return true
+    },
+  })
   return {open: control.open, element: <ExportSheet control={control} preset={preset} />}
 }
 
@@ -83,9 +99,9 @@ function Form({preset}: {preset?: ExportPreset}) {
   const [weekStartPref = 1] = usePref('weekStart')
   const words = useStatementText()
   const [format, setFormat] = useState<Format>(preset?.format ?? 'pdf')
-  const [period, setPeriod] = useState<Period>('all')
-  const [custom, setCustom] = useState<DateRange>()
-  const [groupId, setGroupId] = useState(preset?.groupId ?? '')
+  const [period, setPeriod] = useState<Period>(preset?.range ? 'custom' : 'all')
+  const [custom, setCustom] = useState<DateRange | undefined>(preset?.range)
+  const [groupId, setGroupId] = useState(preset?.scope ? SCOPE : (preset?.groupId ?? ''))
   const [personId, setPersonId] = useState(preset?.personId ?? '')
   const [currency, setCurrency] = useState(preset?.currency ?? '')
   const [isBusy, setIsBusy] = useState(false)
@@ -110,7 +126,8 @@ function Form({preset}: {preset?: ExportPreset}) {
   const groups = (words.groups ?? []).filter(g => !g.deleted)
   const friends = (words.people ?? []).filter(p => !p.deleted && !p.data.isMe)
   const isBackup = format === 'backup'
-  const groupName = groups.find(g => g.id === groupId)?.data.name
+  const isScope = groupId === SCOPE && !!preset?.scope
+  const groupName = isScope ? preset?.scopeLabel : groups.find(g => g.id === groupId)?.data.name
   const personName = friends.find(p => p.id === personId)?.data.name
 
   /* Sharing unavailable or the file could not be made: say so, change nothing, stay open. */
@@ -137,7 +154,7 @@ function Form({preset}: {preset?: ExportPreset}) {
         return
       }
       const r = range()
-      const filter: StatementFilter = {from: r?.from, to: r?.to, groupId: groupId || null, personId: personId || null, currency: currency || null}
+      const filter: StatementFilter = {from: r?.from, to: r?.to, groupId: isScope ? null : groupId || null, scope: isScope ? preset?.scope : null, personId: personId || null, currency: currency || null}
       const statement = await loadStatement(store, ctx.actor, filter, today)
       const subject = personName ? l`With ${personName}` : (groupName ?? l`All activity`)
       const slug = (personName ?? groupName ?? 'all').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'all'
@@ -243,7 +260,7 @@ function Form({preset}: {preset?: ExportPreset}) {
         control={groupControl}
         title={l`Group`}
         searchLabel={l`Search groups`}
-        options={[allOption(l`All groups`), ...groups.map(g => ({value: g.id, label: g.data.name}))]}
+        options={[allOption(l`All groups`), ...(preset?.scope ? [{value: SCOPE, label: preset.scopeLabel ?? l`Selected groups`}] : []), ...groups.map(g => ({value: g.id, label: g.data.name}))]}
         value={groupId}
         onSelect={setGroupId}
       />

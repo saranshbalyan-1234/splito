@@ -82,10 +82,13 @@ describe('the owner bill through the form (F-403 acc 1, 4)', () => {
     expect(r.draft?.split.mode === 'items' && r.draft.split.roundOff).toEqual({minor: 39n, to: 'raj'})
   })
 
-  test('no printed total yet: the editor still gets the computed total', () => {
+  test('no printed total yet: the bill takes the computed total as its own (F-275)', () => {
     const r = evaluateForm(bill({amount: ''}), 'UTC')
     expect(r.itemsTotal).toBe(252161n)
-    expect(r.gap).toBeUndefined()
+    expect(r.isTotalFromItems).toBe(true)
+    expect(r.total).toBe(252161n)
+    expect(r.gap).toBe(0n)
+    expect(r.error).toBeUndefined()
   })
 
   test('a bad rate is reported against its charge and an unknown scope item is dropped', () => {

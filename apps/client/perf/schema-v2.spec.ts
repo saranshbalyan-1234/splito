@@ -16,8 +16,9 @@ import {openDemo} from '../e2e/openDemo'
  * tab to the summary and charts showing figures (default year period, one
  * currency); "search keystroke" from setting the field's text to the first page
  * of results showing the query's matches, however many there are (budget 50 ms,
- * ARCHITECTURE 9.8, 17, 26.10); the per-currency totals of a broad match fill in
- * after that and are timed on their own (`totalsMs`, no budget). "Ask" (owner
+ * ARCHITECTURE 9.8, 17, 26.10); the count and per-currency totals of a broad match
+ * fill in after that (F-266: its first page comes from a newest-first walk) and are
+ * timed on their own (`searchTotalsMs`, no budget). "Ask" (owner
  * decision 107, owner 200): the Search & Ask drawer opened in Ask mode (`/search?mode=ask`) to the chat's composer on screen (`askOpenMs`, one
  * frame) and Enter on "Who owes me the most?" to the answer on screen (`askAnswerMs`,
  * budget 150 ms), with typed text arriving whole in the field. Each is
@@ -95,7 +96,9 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
     analytics.push(await openTab(page, 'tab-analytics', 'analytics-expenses-title'))
   }
   // Search: one keystroke-sized change to the first page of results, for narrow and broad queries (the Search & Ask drawer).
-  await page.getByTestId('header-search-ask').last().click()
+  // Search & Ask is on the start tab (People) only (owner 218).
+  await page.getByTestId('tab-people').click()
+  await page.getByTestId('screen-people').getByTestId('header-search-ask').click()
   await expect(page.getByTestId('search-input')).toBeVisible()
   const searches: Record<string, number> = {}
   const searchTotals: Record<string, number> = {}
@@ -150,7 +153,7 @@ async function openTab(page: Page, tab: string, ready: string) {
 
 /**
  * Types a query into the search field. `first`: until the first result row holds `shows` (the query's own match).
- * `totals`: until the expenses heading has its count and totals (no "Calculating totals…" left).
+ * `totals`: until the expenses heading has its whole count (no "30+" left) and its per-currency totals.
  */
 async function searchFor(page: Page, query: string, shows: string) {
   return page.evaluate(
@@ -168,7 +171,8 @@ async function searchFor(page: Page, query: string, shows: string) {
           // The "Ask Splito" row heads the results and repeats the query, so it is not a match.
           const rows = [...document.querySelectorAll('[data-testid^="search-row-"]')].filter(r => !r.textContent?.includes('Ask Splito'))
           if (first === undefined && rows.some(r => r.textContent?.includes(shows))) first = now - t0
-          if (first !== undefined && document.querySelector('[data-testid="search-section-expenses"]') && !document.querySelector('[data-testid="search-totals-pending"]'))
+          const heading = document.querySelector('[data-testid="search-section-expenses"]')
+          if (first !== undefined && heading && !/\d\+/.test(heading.textContent ?? '') && heading.querySelector('[data-testid="search-totals"]'))
             resolve({first, totals: now - t0})
           else if (now > deadline) reject(new Error(`timed out searching "${query}" for "${shows}"`))
           else requestAnimationFrame(check)
@@ -248,7 +252,9 @@ async function askCase(page: Page) {
   await page.getByTestId('ask-input').pressSequentially(sentence, {delay: 0})
   const typedInChat = await page.getByTestId('ask-input').inputValue()
   await page.keyboard.press('Escape')
-  await page.getByTestId('header-search-ask').last().click()
+  // Search & Ask is on the start tab (People) only (owner 218).
+  await page.getByTestId('tab-people').click()
+  await page.getByTestId('screen-people').getByTestId('header-search-ask').click()
   await page.getByTestId('search-input').pressSequentially(sentence, {delay: 0})
   const typedInSearch = await page.getByTestId('search-input').inputValue()
   await page.keyboard.press('Escape')
