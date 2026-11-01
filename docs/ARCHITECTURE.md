@@ -1079,6 +1079,19 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **A screen transition on web is an attribute on the arriving screen, never a kept leaving screen or a render.** The
+  stack slide (F-277, owner 227) reuses the tab slide's shape: the focus effect sets `data-stack-in` on the screen
+  root, CSS keyframes in `index.html` move the root's children (not `[data-fab]`) on the compositor, and the attribute
+  goes on `animationend` / `animationcancel` or a 500 ms timer. The leaving page is hidden by react-navigation at once
+  and runs no exit (§ 17.1 exits rule). Measured 2026-11-01 in Chromium at 390 px, touch, the large demo, avatar ->
+  Profile and its Back, 7 rounds each, median, load 3-6 (base = the same commit without F-277): tap to the new page's
+  first frame x1 push 38 ms (base 43), Back 38 (45); x6 push 278 (323), Back 269 (340); the slide ends 315 / 283 ms
+  after the tap at x1 (280 / 250 ms of motion). Long tasks over 50 ms: the same set as base (the Profile mount at x6,
+  200-500 ms), none during the motion. React commits per push 11-12 and per Back 5 on both builds; fibers rendered per
+  Back 1,509 on both, per push 4,322 against 4,310 (run-to-run noise: an earlier base run read 4,358). Two traps: the
+  effect's cleanup must not undo the slide (the effect re-runs as a pushed screen settles and cut the push off before
+  its first frame), and the root container is not ready when the first screen focuses, so the screen reads its own
+  `navigation.getState()`, never `navigationRef`.
 - **A keystroke renders the list it filters, not the screen; a search swaps rows without their fades; a closed row menu
   is not mounted; the next page is built as a transition.** (1) The query state lives in the component that renders the
   list (`screens/People/components/FriendsList.tsx`), the rows follow it as `useDeferredValue`, and what the screen
@@ -2094,6 +2107,23 @@ Splito lessons (add newest last, dated, with PR):
   QR and Copy and "Create invite link"), and `e2e/demo-mode.spec.ts` "seeds the demo database in under 10 s" fails at
   machine load above about 17 (the seed took over 30 s), so it is not evidence about a Profile change.
 
+- 2026-11-01, F-277 (stack slide on phone web, owner 227): **two ways a focus-driven animation silently never plays.**
+  (1) `navigationRef.getRootState()` is undefined when the very first screen focuses (the container is not ready), so
+  the "state when the last screen focused" was never recorded and the first push compared against nothing; a screen
+  reads its own `navigation.getState()` (the flat web stack) instead. (2) The tab slide's focus effect undid its
+  attribute in the effect's cleanup; the stack slide copied that, and a pushed screen's focus effect runs a second
+  time as it settles, so the attribute was set and removed in the same task and the push never moved (Back, on an
+  already mounted screen, did). A slide now ends only on its own `animationend` / `animationcancel` (filtered by
+  animation name: a spinner inside the page bubbles its events too) or a timer, with a per-element token so a late
+  timer never ends a newer slide. Also: the e2e observer must disconnect its previous MutationObserver, or every
+  record is counted twice. What could not be built: iOS draws the old page under a push; react-navigation's web stack
+  hides it (`display: none`) and the window scrolls, so drawing it would mean showing a hidden screen fixed at its old
+  offset while a virtualised list follows the window scroll. The push slides over the page background instead. Not
+  verified: real iOS Safari's edge swipe (the heuristic is unit-tested and the e2e sends Chromium touch events) and
+  native (unchanged: the native stack animates itself; the new code returns before it on native). The renders gate is
+  red on this base before the change (806 Activity rows of 1,000; "switching back" lists People content updates) and
+  reads the same with it.
+
 ## 24. Checklists
 
 **Adding a split mode:** domain `SplitInput` union + `computeShares` + `validateExpense` codes + Lingui
@@ -2618,14 +2648,31 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   should be some specific set of back for sure, for example if I open Appearance in Settings, the flow is from
   Settings to Appearance".
 - **Pushed pages slide like a native stack** (owner 227). Native: the native stack's own push and pop (iOS slide
-  and edge swipe back, Android). Phone-width web: a push slides the new page in from the right over the old one
-  (about 280 ms, iOS curve) and the app's Back slides the page underneath back in from the left (a short parallax);
+  and edge swipe back, Android). Phone-width web: a push slides the new page in from the right (about 280 ms, iOS
+  curve) over the page background, not over the old page (react-navigation's web stack hides the old page at once and
+  the window scrolls, so showing it would mean pinning a hidden list at its old offset: assistant's ruling, F-277) and the app's Back slides the page underneath back in from the left (a short parallax);
   a Back that came from the browser's own swipe (iOS Safari's left-edge swipe, which already slides its snapshot,
   owner 216) is not animated again. Compositor only (CSS on the screen root, no JS per frame, no React render), the
   leaving page is never kept alive for it and no row exit animation runs (§ 17.1); a page's fixed FAB does not move
   with it; reduced motion or Animations off: instant. Rail and desktop web stay instant, as Bluesky. Main-tab
   switches keep their own slide (§ 26.9). *Why:* "stacked screens are not there, like if I click on my avatar to go
   to profile it should animate and go there and then same for swipe back".
+  [Built, F-277, web in Chromium at 390 and 1440; real iOS Safari and native not run] `Layout.Screen`'s focus effect
+  (the tab slide's, `components/Layout/index.tsx`) asks `takeStackSlide` (`lib/routes/stackSlide.ts`) how the stack
+  moved since the last screen focused: the focused route is new and the page it came from is still below -> `push`;
+  it was below and the page above it is gone -> `pop` (in-app pushes, `goBack`, a `navigate` down the stack, browser
+  Back and Forward). It then sets `data-stack-in` on the root, and `public/index.html` (inside
+  `max-width: 799.98px`) slides the root's children except `[data-fab]`: push `translate3d(100%)` to none in 280 ms,
+  pop `-28%` to none in 250 ms with a `::after` dim (black 14 %) fading out, both `cubic-bezier(0.2, 0.8, 0.2, 1)`;
+  the root clips sideways while it plays. No slide when: a bar press brought the screen (`takeTabPress`, the tab slide
+  plays instead), the route on either side is an overlay (`OVERLAY_ROUTES`: the composers and `Sheet` markers, pinned
+  to `Navigation.tsx` by a test), the window is 800 px or wider, motion is reduced (OS or Animations, read through
+  `useReadReducedMotion` so the screen does not subscribe), or a browser swipe made the history move: a one-finger
+  touch starting within 24 px of a side that the browser cancelled or that moved over 10 px inward, the move arriving
+  during it or within 700 ms of its end (2 s after a cancel). The page that left is hidden by react-navigation at
+  once, so a push slides in over the page background, not over the old page (keeping the old one drawn would mean
+  showing a hidden, window-scrolled screen at its old offset: not done). Checks: bun `stackSlide.test.ts`, e2e
+  `stackSlide.spec.ts`.
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (Home, People, Groups, Analytics, Activity) show the avatar.
   **A main screen opened from a link is the same screen as its tab; the only difference is Back in place of the

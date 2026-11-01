@@ -450,3 +450,24 @@ expenses + 600 payments, 33 queries, load 32-39): worst first page 24 ms CPU (be
 the wall-clock check (`search.test.ts` speed, first page and counts each under 50 ms) failed on wall time at load 32
 and needs a quiet machine. Web only; native not run.
 
+
+## F-277 Stacked pages slide on phone web (owner 227; web, Chromium, measured 2026-11-01)
+
+Base = the same commit without F-277 (built side by side, same machine, same run order). Probe: avatar -> Profile and
+its Back on the large demo at 390 px with touch, 7 rounds each, median; Chrome accessibility off; machine load 3-6.
+
+| Check | Result |
+|---|---|
+| Tap to the new page's first frame, CPU x1 | push 38 ms (base 43), Back 38 ms (base 45) |
+| Tap to the new page's first frame, CPU x6 | push 278 ms (base 323), Back 269 ms (base 340) |
+| Tap to the end of the slide, x1 / x6 | push 315 / 615 ms, Back 283 / 565 ms (motion 280 / 250 ms; base has none) |
+| Long tasks over 50 ms | same set as base (the Profile mount, 200-500 ms at x6); none during the motion |
+| React commits per push / Back | 11-12 / 5 on both builds |
+| Fibers rendered per push / Back (devtools-hook count) | 4,322 / 1,509 (base 4,310 / 1,509; an earlier base run read 4,358: noise) |
+| Renders gate (Metro on 8391) | red on both builds the same way: 806 of 1,000 Activity rows scrolled, and "switching back" lists the same People updates on every leg (identical text on both); the gate is not this change's to fix |
+| Lint, typecheck, client unit tests | green (797 pass, 5 skip); new `lib/routes/stackSlide.test.ts` (8) |
+| `e2e/stackSlide.spec.ts` | 6 pass: avatar -> Profile sets `push` with `splito-stack-push`, header Back sets `pop` with `splito-stack-pop` on People, the page never wider than 390 px and the FAB at one x on every frame with no animation; browser Back slides; a left-edge touch that the browser cancels, then `history.back()`, slides nothing; a tab switch plays no stack slide; reduced motion (OS) and Animations off play none; 1440 plays none |
+| Neighbouring specs (`shell`, `tabTaps`, `scrollWeb`, `animations`) | at load 20-25 with 2 workers 15 fail on time-outs; the same 17 of 19 failed on base under the same load. Re-run alone with a 150 s limit, all pass except `scrollWeb` "touch scrolling People" (CDP touch scroll does not scroll in this container; known), including `animations` "leaving it fades none out" (no exit clone on a Back) and `scrollWeb` owner 216 (the revealed page at its saved scroll on every frame) |
+
+Not run: real iOS Safari (the edge-swipe heuristic is unit-tested; the e2e sends Chromium touch events) and WebKit
+(none in this container); iOS and Android native (unchanged code path: the effect returns before the slide on native).

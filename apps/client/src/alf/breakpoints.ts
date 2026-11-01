@@ -35,6 +35,10 @@ function minWidth(px: number): MinWidth {
   }
   return q
 }
+/** The same shared answer outside render (an effect starting a CSS animation): no new query, no style flush. */
+export function isMinWidth(px: number): boolean {
+  return minWidth(px).matches()
+}
 function useMinWidth(px: number) {
   const q = minWidth(px)
   return useSyncExternalStore(q.subscribe, q.matches, q.matches)
