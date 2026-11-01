@@ -1079,6 +1079,13 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **A summary beside a list reads what the list already computed; it never subscribes and derives again.** The People
+  Overview (owner 219) subscribed to every person and every balance row itself and ran `personSummary` twice per
+  commit, beside a list that had just done the same: turning demo mode on (about 1,500 commits while People shows) went
+  from about 13.1 s without the Overview to 18.8 s with it (Chromium, alone, load 4-6). It now takes the list's
+  `friends` (each with the summary People computed under its Include groups choice) and only sums them
+  (`balanceTotals`): 12.1-12.8 s over three runs. The sync layer was ruled out first (bun, the large demo: SQLite
+  1.0-1.2 s, fake IndexedDB 7.0-7.3 s on `main`, before and after the search change alike).
 - **An animated row measures nothing while it mounts or updates; its exit reads the box when it starts.** Reanimated
   4.7.1 on web called `saveSnapshot` (`getBoundingClientRect` plus every ancestor's `scrollTop`) in `componentDidMount`
   and `componentDidUpdate` of every component with an `exiting` prop, so each list row forced a style and layout pass
@@ -2009,6 +2016,12 @@ Splito lessons (add newest last, dated, with PR):
   right after sign-in, or a person refreshing) lost the choice for good. The device copy now goes in the write's
   `then`, and a failed write leaves it for the next launch. Same rule as "never `goto` right after a click that
   writes", from the app's side.
+
+- 2026-11-01, full e2e on PR #4: **demo mode went from 8.0 s to 18.8 s to switch on, and the cause was a new summary
+  card, not the store.** Bisect the cheap layer first: the seed timed in bun at `main`, before and after the search
+  change, was the same, so the client was at fault; switching the new People Overview off took 5.7 s away. Rule in
+  17.1. The remaining 12-13 s against the 8.0 s baseline was measured at load 4-6 and is to be re-read on a quiet
+  machine before anything else is changed.
 
 ## 24. Checklists
 
