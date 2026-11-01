@@ -418,6 +418,9 @@ Still over budget: the Activity page's commit (27 rows in one commit, about 150-
 commit measured 53-86 ms (load 11) but slowed reading far back, so it was dropped (ARCHITECTURE 17.1, 23); cheaper rows
 (about 92 renders each) are the next step. Causes and fixes in ARCHITECTURE 17.1 and 23.
 
-Renders gate not re-recorded here (port 8191 is shared, and the gate is red on base for the 806-row scroll and the
-pre-People baseline: the c-perf note above). Its scroll phase will count fewer renders (no closed menus: about 1,000
-fewer mounts and the popper chain's after-mount updates per 27 rows), so the next re-record should take that.
+Renders gate (`pnpm --filter @splito/client renders`, load 5-7): "switching back to a visited tab re-renders none of its
+content" was red on base (every switch to or from People re-rendered PeopleScreen, its Overview, header and all 38 rows,
+through the tour's `useIsFocused`) and passes here (nothing of People renders). The main scenario cannot run on this
+base: the scroll stops at 806 rows (positive control 1,000; the c-perf note above) and, with Search & Ask on the start
+tab only (owner 218), its Ask phase finds no button on Activity; with the target lowered locally to 800 it stops there.
+Baseline not re-recorded; its scroll phase will count fewer renders (no closed row menus), which the next re-record takes.

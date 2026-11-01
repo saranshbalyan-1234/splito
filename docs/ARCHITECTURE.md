@@ -1081,7 +1081,9 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   derives from its projections is memoised on them (the React Compiler had left the People screen's whole
   summary-and-rows chain unmemoised: read the compiled output before trusting it), so each row keeps its object and a
   memoised row (`PersonRow`, `RequestsSection`) skips; anything the screen hands the list's heading (the Overview) is
-  built by the screen, so a key reuses it. (2) Narrowing or widening a list by search is not a change to explain (owner
+  built by the screen, so a key reuses it; a hook that follows focus (`useIsFocused`, the tour's `usePublishPeopleState`)
+  sits in a leaf, or every tab switch re-renders the screen and, with unmemoised rows, all of them (38 rows a switch on
+  base, owner 166). (2) Narrowing or widening a list by search is not a change to explain (owner
   213): `useQuietRows()` (`motion/listAnimations.tsx`) makes the rows a query change removes or adds skip Reanimated's
   exit and enter (on web each exit cloned the row and read `scrollTop` on every node of it); the handler calls
   `hush(query)`, the list `settle(query)` once it shows that query, and a settle for an older query is ignored (a commit's
@@ -1960,12 +1962,16 @@ Splito lessons (add newest last, dated, with PR):
   a commit made every step wait on observers, and four `activity.spec` cases that wheel a year back timed out: a page is
   one transition instead. Two specs read a count once right after the list appeared while the next page was still
   arriving; they now poll. (4) Activity's rows read their animations in `ActivityScreen`, which renders the screen's exit
-  scope and so sits above it; they now use `AnimatedListRow`. Method: `perf/listWork.spec.ts` counts renders from the
+  scope and so sits above it; they now use `AnimatedListRow`. (5) The renders gate's "switching back to a visited tab"
+  test was red on base: People's `usePublishPeopleState` reads `useIsFocused`, so each switch re-rendered the screen and
+  all 38 rows; it is a leaf now and the test passes. Method: `perf/listWork.spec.ts` counts renders from the
   commit hook in the e2e build (`LISTWORK_NAMES=1` against a Metro dev server gives component names, `LISTWORK_PROFILE=1`
   a CPU profile, `LISTWORK_TRACE=1` a timeline summary), interleaving base and after builds; the counts are the gate, and
   timings were taken once the machine fell under load 10. Metro started with `CI=1` does not watch files: a dev server for
   profiling an edit must run without it. A screen whose list moved into `./components/` still counts as scrolling with
-  `List` (`lib/refresh/screens.test.ts` follows those imports). Not run: WebKit, iOS, Android, the renders gate.
+  `List` (`lib/refresh/screens.test.ts` follows those imports). The renders gate's main scenario cannot run on this base
+  (the scroll stops at 806 rows, and with Search & Ask on the start tab only, owner 218, its Ask phase finds no button on
+  Activity), so its counts were not compared. Not run: WebKit, iOS, Android.
 
 ## 24. Checklists
 
