@@ -754,9 +754,11 @@ Fixes from the Opus new-user audit (3 blockers, 19 major, 21 minor). Rulings (as
 - **One entry for problems:** "Report a problem" opens one sheet whose first choice is Dispute or Put on hold (owner 119's two kinds kept, one way in); no "Raised by" picker unless recording for someone else.
 - **Show only what works:** Settings rows and sign-in buttons for features not built (notifications, privacy controls, Google, Apple) are hidden or shown as small "Coming with sync" text, never as primary buttons.
 - **Itemize picks a person on tap** (one tap = assign; a stepper for portions appears only after), charges sit behind one "Tax, tip and discounts" row, and the total is computed from items when not typed. **Done 2026-10-31 (web; native not run)**: a tap assigns or takes off, an untouched Everyone narrows to the person tapped, a portion stepper shows once two or more share an item; charges fold into one row with a one-line summary; `evaluateForm` takes the domain's items total when the amount is empty (`isTotalFromItems`, "Total from the items: X"). Specs: `expense.spec` (new: essentials, derived total, typed total wins), `charges.spec`, `amount.spec`, `many-currency.spec`, `sheets.spec`, `sheetExit.spec`; bun `form.test`, `chargeForm.test`.
-- **One export:** the Analytics icon opens the same Export sheet as Settings, pre-set to the current filters.
+- **One export:** the Analytics icon opens the same Export sheet as Settings, pre-set to the current filters. **Built 2026-10-31** (web; `ExportPreset` range/scope, `analytics-export` opens `/analytics/export`, the Analytics-only CSV writer and `exportRows` are gone; `analytics.spec.ts`, `statement.test.ts`, `exportScope.test.ts`).
 - **Add expense shows essentials first:** amount, title, split with, paid by, group; focus lands on the amount; no duplicate "Add people" button; Itemize and more behind "More options". **Done 2026-10-31 (web; native not run)**: split chips (Itemize and the other modes, "Adjust" renamed "Equal + extra", now wrapping), non-equal split editors, cash rounding and Notes sit behind one "More options" row; the Split list shows only with two or more people; `split-add-people` is gone; the amount takes focus on a new expense.
 - **Sign-up keeps the typed name** (bug) and stays as owners 139-143 decided.
+
+**F-275 progress (builder, 2026-10-31, branch `worktree-agent-a7e9e4be62149a001`):** built and checked on web (native not run): (1) Add friend with no directory = a usable local friend, name first (blocker 2); (2) one "Report a problem" entry replaces Dispute and Put on hold, no "Raised by" unless "Record this for someone else" (audit F-15); (3) the sign-up name is kept (already fixed by `accountName()`; now asserted in `auth.spec`) (F-9, name part only; the shorter sign-up steps are not done); (4) Google and Apple are one muted line, not buttons (F-10); Settings rows for unbuilt features verified hidden (`NOT_BUILT`). Still open in F-275: the other items above.
 
 - **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress, Wave C (overlapping items handed to running builders; the rest after they merge) · **Deps** F-271, F-1713, F-266
 - **Acceptance**
@@ -2855,7 +2857,7 @@ Spending over time, by category, per person and group, paid vs share, filters, C
 - **Acceptance**
   1. One chart per currency, never mixed.
   2. CSV export matches the on-screen filter.
-  3. Charts and a table view, filtered by period, currency and group; the chart / table toggle sits in that filter row, never in the header. The header holds Ask Splito (F-2301) and an overflow with Export CSV. A converted view labels the rate used.
+  3. Charts and a table view, filtered by period, currency and group; the chart / table toggle sits in that filter row, never in the header. The header holds Ask Splito (F-2301) and Export (the shared Export sheet, F-275). A converted view labels the rate used.
   9. Scope is one chip + one "Show expenses from" checklist sheet (All, Non-group expenses, each group); no separate group dropdown or "Include groups" toggle; By-group chart taps narrow the scope; last scope remembered per device (§ 26.16, decision 67).
 
 ### F-1302 My Spending measure everywhere `spec v1 (extended)`
@@ -3958,13 +3960,13 @@ Space used by receipts, attachments and history per group; compress old images, 
 
 ### F-2007 Export centre: CSV and PDF statements `spec: owner § 26.20`
 
-Settings > Data > Export (CSV, PDF statement, full JSON backup via F-2001) with filters, plus Group overflow "Export", Person overflow "Export statement" and Analytics overflow "Export CSV". Generated on the device.
+Settings > Data > Export (CSV, PDF statement, full JSON backup via F-2001) with filters, plus Group overflow "Export", Person overflow "Export statement" and the Analytics header's Export (the same sheet). Generated on the device.
 
 - **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B6; tests: packages/domain/test/statement.test.ts, src/data/exportLedger.test.ts, src/lib/export/statementFormat.test.ts, e2e/backup.spec.ts; native PDF/share not run on a device) · **Deps** F-1301, F-2001
 - **Prefs** -
 - **Acceptance**
   1. Settings > Data > Export offers CSV, PDF statement and full JSON backup, with filters for date range, group, person and currency.
-  2. Group overflow "Export", Person overflow "Export statement" and Analytics overflow "Export CSV" open the same export pre-filtered to that group, that person, or the current Analytics filter.
+  2. Group overflow "Export", Person overflow "Export statement" and the Analytics header Export open the same export pre-filtered to that group, that person, or the current Analytics filter.
   3. Exports are generated on the device and work offline; amounts are exact and labelled per currency, never summed across currencies; CSV cells starting with = + - @ are escaped.
   4. The PDF statement lists every expense and repayment in range with a running balance per currency that matches the on-screen balance.
 

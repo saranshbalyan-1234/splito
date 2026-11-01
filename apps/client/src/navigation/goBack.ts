@@ -40,12 +40,10 @@ const PARENT: {[K in Exclude<keyof AllNavigatorParams, 'Sheet'>]: (params: Param
   PushedGroups: () => home(),
   PushedAnalytics: () => home(),
   PushedActivity: () => home(),
-  PushedSettings: () => home(),
   Profile: () => home(),
-  Settings: p => ({name: fromTab(p.from) ?? startPage()}) as Fallback,
   Search: () => home(),
-  /* The help pages sit under Support (owner 204), so Back from a refreshed one climbs to it, then to Settings. */
-  SettingsSection: p => (SUPPORT_PAGES.includes(p.section ?? '') ? {name: 'SettingsSection', params: {section: 'support'}} : {name: 'Settings'}),
+  /* The help pages sit under Support (owner 204), so Back from a refreshed one climbs to it, then to Profile, which holds Settings (owner 220). */
+  SettingsSection: p => (SUPPORT_PAGES.includes(p.section ?? '') ? {name: 'SettingsSection', params: {section: 'support'}} : {name: 'Profile'}),
   Welcome: () => home(),
   FriendsAndInvites: () => ({name: 'People'}),
   Person: () => ({name: 'People'}),
@@ -101,8 +99,8 @@ export function backChain<R extends {name: string; params?: object}>(route: R): 
 
 /**
  * Back one page, or to `fallback` when this page was opened directly. Every Back and close path uses it. `isWeb` is
- * `IS_WEB`, passed in so this stays testable: a tab fallback is `('Tabs', {screen})` on native, or Back from Profile to
- * Settings (a tab) does nothing there (`navigateArgs`).
+ * `IS_WEB`, passed in so this stays testable: a tab fallback is `('Tabs', {screen})` on native, or Back from a pushed
+ * page to a tab does nothing there (`navigateArgs`).
  */
 export function goBack(navigation: BackNavigation, fallback: Fallback, isWeb: boolean) {
   if (navigation.canGoBack()) navigation.goBack()

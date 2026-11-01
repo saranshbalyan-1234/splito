@@ -135,7 +135,7 @@ test('the Animations preference freezes illustrations without a reload', async (
 test('a balance total counts to its new value and lands exactly on it', async ({
   page,
 }) => {
-  await ready(page, '/analytics', 'summary-INR-net', true)
+  await ready(page, '/people', 'summary-INR-net', true)
   const before = await page.getByTestId('summary-INR-net').innerText()
   const seen = await addExpenseAndWatchTotal(page)
   const after = await page.getByTestId('summary-INR-net').innerText()
@@ -151,7 +151,7 @@ test('a balance total counts to its new value and lands exactly on it', async ({
 })
 
 test('with Animations off a total changes in one step', async ({page}) => {
-  await ready(page, '/analytics', 'summary-INR-net', true)
+  await ready(page, '/people', 'summary-INR-net', true)
   await setMotion(page, 'off')
   const seen = await addExpenseAndWatchTotal(page)
   expect(seen).toHaveLength(1)
@@ -193,7 +193,7 @@ test('skeletons show while the local store loads', async ({page}) => {
     }).observe(document, {subtree: true, childList: true})
   })
   for (const [path, screen] of [
-    ['/analytics', 'summary-INR'],
+    ['/analytics', 'analytics-over-time'],
     ['/people', 'person-Arjun Mehta'],
     ['/groups', 'group-Goa trip'],
     ['/activity', 'screen-activity'],

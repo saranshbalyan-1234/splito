@@ -60,14 +60,13 @@ async function seedA04(page: Page) {
   })
 }
 
-test('A04: Include groups reads 150 with groups and 100 without on People; the Overview at the top of Analytics counts everything (scope All)', async ({
+test('A04: Include groups reads 150 with groups and 100 without on People, in the list and its Overview (owners 219, 221)', async ({
   page,
 }) => {
   await seedA04(page)
-  await page.goto('/analytics')
-  await expect(page.getByTestId('screen-analytics').getByTestId('summary-INR-net')).toHaveText('₹150.00')
   await page.goto('/people')
   const people = page.getByTestId('screen-people')
+  await expect(people.getByTestId('people-overview').getByTestId('summary-INR-net')).toHaveText('₹150.00')
   await expect(
     people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
   ).toHaveText('owes you ↙ ₹150.00')

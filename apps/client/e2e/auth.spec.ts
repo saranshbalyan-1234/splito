@@ -18,7 +18,7 @@ test.describe('signed out, nothing of the app exists', () => {
     test(`${path} shows the Continue screen, renders no screen and opens no database`, async ({page}) => {
       await page.setViewportSize(PHONE)
       await toContinue(page, path)
-      for (const id of ['screen-people', 'screen-groups', 'screen-settings', 'screen-activity', 'screen-analytics', 'screen-person', 'screen-expense', 'bottom-bar', 'sidebar', 'drawer', 'search-drawer'])
+      for (const id of ['screen-people', 'screen-groups', 'screen-profile', 'screen-activity', 'screen-analytics', 'screen-person', 'screen-expense', 'bottom-bar', 'sidebar', 'drawer', 'search-drawer'])
         await expect(page.getByTestId(id)).toHaveCount(0)
       expect(await databases(page)).toEqual([])
       // The page holds the sign-in and no ledger text at all.
@@ -96,17 +96,16 @@ test.describe('the launch screen', () => {
 })
 
 test.describe('the Continue screen', () => {
-  test('Apple and Google first by platform, each saying it arrives with sync; no fake success', async ({page}) => {
+  test('Google and Apple are not buttons that do nothing: one small line says they come with sync (F-275)', async ({page}) => {
     await page.setViewportSize(PHONE)
     await toContinue(page)
-    const google = (await page.getByTestId('continue-google').boundingBox())!
-    const apple = (await page.getByTestId('continue-apple').boundingBox())!
-    // Web: Google first (Apple first on iOS only).
-    expect(google.y).toBeLessThan(apple.y)
-    await page.getByTestId('continue-google').click()
-    await expect(page.getByTestId('auth-social-not-live')).toContainText('arrives with sync')
-    await page.getByTestId('continue-apple').click()
-    await expect(page.getByTestId('continue-form')).toBeVisible()
+    await expect(page.getByTestId('continue-google')).toHaveCount(0)
+    await expect(page.getByTestId('continue-apple')).toHaveCount(0)
+    await expect(page.getByTestId('auth-social-coming')).toHaveText('Google and Apple sign-in come with sync.')
+    // The email or phone field and Continue are the first things on the screen.
+    const field = (await page.getByTestId('continue-input').boundingBox())!
+    const note = (await page.getByTestId('auth-social-coming').boundingBox())!
+    expect(field.y).toBeLessThan(note.y)
     await expect(page.getByTestId('screen-people')).toHaveCount(0)
     expect(await databases(page)).toEqual([])
   })
@@ -257,6 +256,8 @@ test.describe('a new account', () => {
     // Profile shows the new account (owner 216: it is not a Settings row).
     await page.goto('/profile')
     await expect(page.getByTestId('profile-email')).toContainText(NEW.email)
+    // The name typed during sign-up is the account's and "me" person's name, not "Add your name" (F-275).
+    await expect(page.getByTestId('profileHeaderDisplayName')).toHaveText(NEW.name)
   })
 
   test('starting with a phone asks for the email next; the account can then sign in with either', async ({page}) => {
@@ -364,7 +365,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     await create(page, 'Erased Friend')
     // Demo mode is on: its own database goes with the account.
     test.setTimeout(90_000)
@@ -398,7 +399,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     await create(page, 'Stubborn Friend')
     await page.evaluate(() => {
       const w = window as unknown as {__realDelete?: typeof indexedDB.deleteDatabase}
@@ -457,7 +458,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     await create(page, 'Only Dev')
     await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Only Dev')).toBeVisible()
@@ -466,7 +467,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
 
     await createAccount(page, NEW)
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     expect(await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)).not.toBe(devMe)
     await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Only Dev')).toHaveCount(0)
@@ -563,7 +564,7 @@ test.describe('tabs, languages and codes', () => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
+    await page.waitForFunction(() => !!(window as unknown as {splito?: {createPerson?: unknown}}).splito?.createPerson)
     await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('language', 'hi'))
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
     await logOutFromProfile(page)

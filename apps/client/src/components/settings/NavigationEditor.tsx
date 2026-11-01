@@ -32,7 +32,6 @@ export function useNavLabels(): Record<NavItemId, string> {
     groups: _(NAV_LABELS.groups),
     analytics: _(NAV_LABELS.analytics),
     activity: _(NAV_LABELS.activity),
-    settings: _(NAV_LABELS.settings),
   }
 }
 
@@ -127,9 +126,8 @@ export function NavigationEditor() {
           onReorder={next => save(next)}
           renderItem={(row, dragHandle) => {
             const index = rows.indexOf(row)
-            /* The start tab stays on, so the bar always holds the place the app opens on; Settings stays on, as a phone
-               has no other way to it (owner 217: no side drawer). */
-            const isStart = row.tab === startTab || row.tab === 'settings'
+            /* The start tab stays on, so the bar always holds the place the app opens on. */
+            const isStart = row.tab === startTab
             return (
               <TabRow
                 row={row}

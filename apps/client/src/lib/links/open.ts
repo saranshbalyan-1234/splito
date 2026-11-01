@@ -21,7 +21,7 @@ export type OpenOptions = {isDemo?: boolean; isInStore?: (target: LinkTarget) =>
  * and QR links, shares, Ask answers and Search results (F-254). Cold starts and the browser's address bar go
  * through the same resolver in `navigation/linking`. A link only navigates; it never performs an action.
  *
- * A main screen (People, Groups, Analytics, Activity, Settings) named by a link opens as a pushed copy with Back, never
+ * A main screen (People, Groups, Analytics, Activity) named by a link opens as a pushed copy with Back, never
  * as the plain tab (owner 179, `tabLink`); `plain` keeps the plain tab for what is no real link (an unknown address
  * falling back to the start tab) and a global sheet that only needs a page under it.
  */

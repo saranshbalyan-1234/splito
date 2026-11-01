@@ -109,7 +109,7 @@ function MovedPage({to}: {to?: SettingsSectionId}) {
   useEffect(() => {
     if (to) navigation.replace('SettingsSection', {section: to})
     else {
-      const settings = navigateArgs('Settings', undefined, IS_WEB)
+      const settings = navigateArgs('Profile', undefined, IS_WEB)
       ;(navigation.replace as (name: string, params?: object) => void)(settings.name, settings.params)
     }
   }, [navigation, to])
@@ -262,7 +262,7 @@ function NotFound() {
       <Button
         label={l`Go to Settings`}
         onPress={() => {
-          const settings = navigateArgs('Settings', undefined, IS_WEB)
+          const settings = navigateArgs('Profile', undefined, IS_WEB)
           ;(navigation.navigate as (name: string, params?: object) => void)(settings.name, settings.params)
         }}
         size="small"

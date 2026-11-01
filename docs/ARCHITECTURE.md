@@ -158,7 +158,7 @@ Rules:
 - **A platform difference lives behind a `.web` / `.native` (or `.ios` / `.android`) pair in shared code,
   never inline.** Feature code may branch on a *capability* (share sheet, haptics, camera, OTA), never on a
   *style*. A split file comes as a full set, so no platform resolves to nothing (platformGap counter,
-  A-002). [Built] pattern in use (`data/store(.web)`, `exportCsv(.web)`, `env/index(.web)`).
+  A-002). [Built] pattern in use (`data/store(.web)`, `lib/export/saveFile(.web)`, `env/index(.web)`).
 - **Every PR says how iOS, Android and web were each checked.**
 - **A capability the platform lacks is a planned fallback, never a failure**: no Web Share API -> copy the
   link and toast; no camera -> file picker; no haptics -> silent. Each leaves a breadcrumb, never an issue.
@@ -665,9 +665,13 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   place, `a` amount per currency, `m` month, `c` category, `b` / `h` who paid / who is on a record, `G` its group (`-`:
   none), `d` `<date>:<createdAt>` (the list order), `s` `deleted`, `n` a comment's words on the record it hangs on;
   expenses, payments and write-offs carry them, comments contribute `n` only. Each token is a set of record ids from
-  key ranges and the sets are intersected. A narrow answer (at most 500 records) is then read by id and ordered,
-  totalled and status-checked from its rows; a broad one is ordered from the `d` keys and totalled from the `a` keys;
-  only the rows shown are read (30 by id per page, payments and expenses paged apart). No in-memory ledger mirror.
+  key ranges and the sets are intersected. Each token is probed first within a budget of 500 keys: the narrow ones'
+  intersection (at most 500 records) is read by id, the broad tokens are checked on those rows in hand, and order,
+  count and totals come from the rows. When every token is broad, each section's first page comes from a newest-first
+  walk of its store (`byDate`, at most 1,000 rows, given up early when matches are too rare) with every token checked
+  on the row in hand (`eachTerm`, the same terms the keys hold), and the count, the totals (ordered from the `d` keys,
+  totalled from the `a` keys) and later pages come after it (`whenCounted`, F-266); only the rows shown are read (30
+  per page, payments and expenses paged apart). No in-memory ledger mirror.
   Person and group names resolve at query time (to their live ids, then to their records by `h` / `G`; my own name
   never expands, every record is mine), so a rename rewrites no terms. What `search_terms` holds is versioned in
   `meta.searchIndex` (`SEARCH_INDEX_VERSION`, 3); `store.prepareSearch()` runs at idle after the store opens (and the
@@ -1098,6 +1102,13 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   69 ms; Activity first fling (27 rows added): 3,475 -> 2,475 renders, worst frame median 773 -> 154 ms, longest task
   median 721 -> 170 ms (still over 50: the page's one commit; cheaper rows are next). `perf/listWork.spec.ts` gates the
   counts, which hold at any load.
+- **A summary beside a list reads what the list already computed; it never subscribes and derives again.** The People
+  Overview (owner 219) subscribed to every person and every balance row itself and ran `personSummary` twice per
+  commit, beside a list that had just done the same: turning demo mode on (about 1,500 commits while People shows) went
+  from about 13.1 s without the Overview to 18.8 s with it (Chromium, alone, load 4-6). It now takes the list's
+  `friends` (each with the summary People computed under its Include groups choice) and only sums them
+  (`balanceTotals`): 12.1-12.8 s over three runs. The sync layer was ruled out first (bun, the large demo: SQLite
+  1.0-1.2 s, fake IndexedDB 7.0-7.3 s on `main`, before and after the search change alike).
 - **An animated row measures nothing while it mounts or updates; its exit reads the box when it starts.** Reanimated
   4.7.1 on web called `saveSnapshot` (`getBoundingClientRect` plus every ancestor's `scrollTop`) in `componentDidMount`
   and `componentDidUpdate` of every component with an `exiting` prop, so each list row forced a style and layout pass
@@ -1187,13 +1198,13 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   balance status (settled, owed, owe, inactive, hidden) on a narrow answer is checked on the rows instead of listing
   every record in it. Rules: a new searchable field is a term kind, a facet is a key range, a screen never checks rows
   one by one to answer "how many" or "how much" over a broad set, and the cost of a query is bounded by its answer or,
-  for a broad answer, by its keys. Checked by `searchOracle.test.ts` (random changes on both engines; the keys equal
+  for a broad answer, by its keys (its first page by at most 1,000 walked rows, next rule). Checked by `searchOracle.test.ts` (random changes on both engines; the keys equal
   the rows' terms, every query equals a row-by-row reference, narrow and broad both exercised). Measure it as the
-  drawer waits for it (`openSearch`: people, groups, counts, totals and the first pages), not as the whole ledger
-  read out.
+  drawer waits for it (`openSearch` to the first pages, then `whenCounted` to the counts and totals), not as the whole
+  ledger read out.
 - **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
   10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
-  three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+  three at load under 10), to the first pages and again from there to the counts and totals. Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
 - **A tab switch reads no data and draws only the bar and the navigator; what is left is the browser's and
   react-navigation's.** Counted 2026-10-31 (Chromium, 390 px, touch, large demo, load under 2): 0 IndexedDB
   transactions per switch between visited tabs (90 during load); renders: the bar and the navigator shell only.
@@ -1221,14 +1232,27 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   Accept button re-drew as each Activity row scrolled into view (three worklet hooks and a motion subscription per
   row, decoration owner 213 rules out); the drawn check is for a confirmed result (Save), and a tab pops only when it
   becomes active, not when it is left.
-- **Narrow first: a broad token is checked on the rows of a narrow answer, never turned into its full id set.**
-  Text and plain numbers are read with a cap (SMALL, 500); one that names more is tested on the rows the narrow
-  tokens found, from `termRows` plus the few people, groups and categories its word names (`capped`, `tester` in
-  `search.ts`). Measured in Chromium at 10,000 expenses, load under 2: "Bulk expense 9993" first page 350 -> 102 ms
-  (`main`: 63 ms). A query whose every token is broad ("> 90" 279 ms, "Bulk Friend 4" 709 ms; `main` 58 / 73 ms first
-  page, 1.0 / 1.3 s totals) still builds full sets: its first page must come from a newest-first walk with in-memory
-  checks and its count and totals after it (follow-up, F-266). Search speed is judged in the browser
-  (`perf/schema-v2.spec.ts`); bun's IndexedDB numbers are `fake-indexeddb`'s.
+- **Narrow first, and a query with nothing narrow gets its first page from a walk, its count and totals after.**
+  Every token is probed within a budget of 500 keys (each read capped to what is left, one read at a time, so a broad
+  token costs its budget, never its set). The narrow ones' intersection is read by id and the broad tokens are checked
+  on those rows in hand; when every token is broad, each section's first page comes from a newest-first walk of its
+  store (`byDate`, chunks of 60 doubling to 480, at most 1,000 rows) checking every token on the row in hand, and only
+  then, after the page is painted, the full key sets give the count, the totals and the later pages (`whenCounted`). A
+  row check is the keys' own answer: `eachTerm` hands the walk the same terms `termRows` stores, and every token kind
+  has a row test (`testOf`) beside its key read (`resolve`). Three rules came from measuring it: (1) a row costs 15-25
+  keys (SQLite page read plus terms, bun), so the walk gives up after 180 rows when its matches would not fill a page
+  within the bound (rows of one day come in id order and bunch the matches, so never sooner), and a section whose
+  store fits in the bound is walked to its end and answered exactly; (2) a day is certain only once every row of it
+  is read, so the walk stops at a date boundary (119 records a day in the bulk ledger: 180 rows for "> 90"); (3) the
+  count's reads hold the main thread, so the drawer starts them a frame after the first page (`useSearch`): started at
+  once, "> 90" drew its first page in 505 ms instead of 142 ms. Counted in bun on the bulk ledger (10,000 expenses,
+  60 friends): to the first page "> 90" 30,004 keys + 30 rows -> 505 keys + 180 rows, "Bulk Friend 4" 69,345 keys +
+  245 rows -> 1,985 keys + 635 rows, "bulk" 49,812 keys -> 645 keys + 324 rows; "Bulk expense 9993" (narrow) 651
+  keys + 74 rows both. Chromium, 10,000 expenses, median of five, two rounds each at load 27-37 (indicative only):
+  first page "> 90" 1,256 / 1,005 -> 282 / 141 ms, "Bulk Friend 4" 2,751 / 2,084 -> 338 / 289 ms, "Bulk expense
+  9993" 178 / 176 -> 123 / 90 ms; the totals arrive later than before ("> 90" 1,256 / 1,005 -> 1,754 / 823 ms, "Bulk
+  Friend 4" 3,036 / 2,174 -> 3,748 / 2,580 ms) because they now follow the walk and a frame. Search speed is judged in
+  the browser (`perf/schema-v2.spec.ts`); bun's IndexedDB numbers are `fake-indexeddb`'s.
 - **Derived data that may be rebuilt is rebuilt at idle, in chunks, and a failure is forgotten.** The search index
   rebuild first ran inside the first search (during the first keystrokes) as one transaction, and a rejected rebuild
   was kept as a rejected promise, so search spun forever. Start such work at idle after open, run it in chunks of a
@@ -1776,7 +1800,7 @@ Splito lessons (add newest last, dated, with PR):
   support (the statement's "Paid by" column is a plain join, so it reads the same on web and phones); (3) a "nothing
   else does X" claim in this file needs a counter or a grep test: two such claims of the round were already false
   (specs with their own viewport sizes; clipboard use outside `lib/sharing.ts`); the remaining duplicates the review
-  listed (time-of-day formatting in four files, `dayOf` / `daysAgo` in `activity/feed.ts`, dead `CATEGORY_ICONS`, two
+  listed (time-of-day formatting in four files, `dayOf` / `daysAgo` in `activity/feed.ts`, dead `CATEGORY_ICONS` (removed in the round-2 follow-up), two
   filter-sheet switches) are cleanup round 2 (BACKLOG F-274).
 - 2026-10-31, F-274 cleanup round 2 (c-r2): **a clean-up brief that lists files not to touch leaves duplicates behind, so
   record them where the next slice finds them.** (1) Time of day: `useFormatTime()` and a new `useFormatDateTime()`
@@ -1787,7 +1811,7 @@ Splito lessons (add newest last, dated, with PR):
   (`dayOfInstant` / `dayBucket` in `locale/dayLabel.ts` are the one rule; `daysAgo(...) === 0` is `dayBucket(...) === 'today'`).
   (3) `clipboardOutsideSharing` fails `expo-clipboard` or `navigator.clipboard` outside `lib/sharing.ts` (CommentRow's Copy
   link was the last). (4) `IncludeGroupsToggle` is the one "Include groups" row (a `Toggle.SwitchRow`); People's
-  `FriendsFilterDialog` still holds its own copy (screens/People was another builder's). (5) One email check: the sync
+  `FriendsFilterDialog` now uses it too (its own copy went in the orchestrator's follow-up). (5) One email check: the sync
   feedback regex and the unused domain `isEmail` went; `isContactEmail` is the only one. (6) A `plural` macro from
   `@lingui/core/macro` produces the same message id as `<Plural>`, so moving a hand-written "N links" note onto it kept its
   Hindi. Not obvious: builders that share one scratchpad directory overwrite each other's scripts of the same name
@@ -1972,6 +1996,82 @@ Splito lessons (add newest last, dated, with PR):
   `List` (`lib/refresh/screens.test.ts` follows those imports). The renders gate's main scenario cannot run on this base
   (the scroll stops at 806 rows, and with Search & Ask on the start tab only, owner 218, its Ask phase finds no button on
   Activity), so its counts were not compared. Not run: WebKit, iOS, Android.
+- 2026-10-31, F-275 (one export): **a shared label is a hook, not a function that takes `l`.** The Analytics scope chip and
+  the Export sheet's Group picker must name a scope the same way; passing Lingui's `t` into a helper does not extract
+  (the macro only rewrites the tag where it is destructured from `useLingui()`), so the wording lives in
+  `useScopeLabel`, which both call. Also: a header action that duplicated a Settings flow had drifted (INR and the period
+  only, no choice, a different file); an entry point to an existing sheet is a preset, never a second writer.
+- 2026-10-31, process (fan-out of seven builders): **an isolated builder worktree starts from `main`, not from the
+  orchestrator's branch.** Every builder of the round began at the last merged `main`, so each lacked the round's own
+  changes (Home removed, the Overview moved, the Bell icon) and every merge back conflicted on the generated catalogs and
+  on § 23 / BACKLOG. Rules: a builder brief names the base it must merge first (`git merge <orchestrator branch>`) before
+  it edits anything; the orchestrator merges catalogs by taking the union of both `.po` files, its own `messages.ts`,
+  then `intl:extract --clean` and `intl:compile`, and checks there are no conflict markers before staging.
+- 2026-10-31, F-266 (search, broad first page): **a query with nothing narrow paid for its whole answer before its
+  first row.** "> 90" and "Bulk Friend 4" built every token's full id set (30,004 and 69,345 keys at 10,000 expenses),
+  then read every `d`, `a` and `s` key, all before the first page. Now each token is probed within 500 keys and, with
+  nothing narrow, the first page comes from a newest-first walk of the rows with every token checked in hand; the
+  count and totals follow (`SearchSession.whenCounted`, the drawer shows "30+" until then). What it took: (1) a check
+  on a row must give the keys' answer, so the walk reads a record's terms from `eachTerm`, the function `termRows`
+  stores, and every token kind has a row test beside its key read; the oracle compares first pages, then counts and
+  totals, then every row, with the default walk and with one too short to finish (so the walk, a walk read to its end
+  and a walk given up on are all exercised); (2) a walk that finds little is pure loss (a row costs 15-25 keys), so it
+  gives up when its rate cannot fill a page within 1,000 rows, but not before 180 rows, because the first version gave
+  up after 60 rows on "Bulk Friend 4": the rows of a day come in id order, which put no match in the first 60; and when
+  the expenses' walk gives up the payments are not walked (the whole answer gives both); (3) the count's key reads
+  started right after the first page held its paint ("> 90" 505 ms), so the drawer starts them a frame later (142 ms).
+  The totals now arrive later than before (they follow the walk); measured at load 27-37, so indicative. A narrow
+  query's path and cost are unchanged ("Bulk expense 9993": 651 keys + 74 rows before and after).
+
+- 2026-10-31, F-275 (new-user audit, add friend / report a problem / sign-in): three things a "show only what works"
+  change needs. (1) **Decide "does a server exist" in one reactive place.** Add friend branched on the directory,
+  and the first idea (a module function reading the active directory) is not reactive: demo mode swaps the directory
+  while the sheet is open (`demo-mode.spec` "the store swapping under an open Add friend sheet"), so it reads
+  `useDemoMode().hasDirectory`, which `StoreProvider` sets with the swap. (2) **Merging two entries into one keeps
+  both kinds in one sheet, not one mutation:** Dispute and Put on hold stay two mutations (`raise`, `hold`); the sheet
+  holds a `kind` and only the footer, description and fields change, so a note typed for one kind is cleared when the
+  other is picked (a hold's quick reason is not a dispute note). A bus request of kind `report` has no `hold`
+  twin; the old `record-dispute` / `record-hold` / `payment-dispute` / `payment-hold` test ids are gone. (3) **A
+  fix that an earlier commit already made still needs its test:** the sign-up name was kept by `accountName()` since
+  3420360 but nothing asserted it, so the audit's report could not be closed; `auth.spec` now checks Profile shows the
+  typed name. Dead code goes with the entry point it served: `SocialButtons`, `NotLiveYet` and `alf/authBrand.ts`
+  (Google's brand colours, used nowhere else) were deleted.
+
+- 2026-10-31, owner 220 (Settings merged into Profile): **removing a tab is caught by the types only where the route is a typed
+  key.** `TabId`, `TAB_ROUTE`, `TabParams`, `GLYPHS` and `NAV_LABELS` are `Record`s, so deleting `settings` from `TabId` made
+  tsc list every one. It did not list the untyped uses: `navigateArgs('Settings', ...)` in the Settings not-found page and the
+  moved-page redirect, `go('Tabs', {screen: 'Settings'})` in `DevTour`, the e2e/perf test ids (`tab-settings`,
+  `screen-settings`), the Android smoke script and the window-title tests; grep every string spelling of the route name, not
+  only the type. Rules: (1) an address that moves is a `redirectOldPath` rule shared by the resolver and `linking.web.ts`, and it
+  must match the exact path with its optional trailing slash (`/settings`, `/settings/`) so the longer section addresses
+  (`/settings/regional`, `/settings/friends`) keep working; (2) a saved list that names a removed item loses it on read in
+  `readRaw` and a list left empty reads as the default bar, never by a write (`tabs`: `['settings']` alone is the four-item
+  default; the old "add Settings back" rules and the editor's Settings lock went with the tab); (3) a page with no entry in
+  `section.ts` keeps the tab it was opened from lit, so Profile and the Settings sections need none; (4) a screen turned into
+  a component keeps its test ids (`settings-*`), and the page that now hosts it adds one wrapper id (`profile-settings`) for
+  the new tests to anchor on. Not run on a simulator or a device here.
+
+- 2026-10-31, process (orchestrator's e2e on PR #4): **two Playwright runs in one folder break each other, and the port
+  variable is `E2E_PORT`.** A second run started beside the gate's rerun of 82 failures wiped the shared `test-results`
+  folder (the first one died at 49/82 with ENOENT on its own trace files), and its `PORT=` setting did nothing: the
+  config reads `E2E_PORT`, so both runs asked for 8081. Rules: a run beside another one sets `E2E_PORT` and its own
+  `--output` folder; the failures of a run are taken from its log (`file:line` list), not from `--last-failed`, which
+  the next run in that folder overwrites. Also from that run: a spec that writes screenshots writes them under the
+  ignored `qa/`, never over tracked files; and a spec that calls the dev hook waits for the hook itself
+  (`window.splito?.createPerson`), not for the `splito` key, which outlives an account switch.
+
+- 2026-10-31, full e2e on PR #4: **a hand-over between two stores removes the source only after the target has
+  committed.** `LocaleFromPrefs` took the language picked while signed out into the account and deleted the device
+  copy in the same tick; the account write is an IndexedDB transaction, so a reload in that window (the spec's `goto`
+  right after sign-in, or a person refreshing) lost the choice for good. The device copy now goes in the write's
+  `then`, and a failed write leaves it for the next launch. Same rule as "never `goto` right after a click that
+  writes", from the app's side.
+
+- 2026-11-01, full e2e on PR #4: **demo mode went from 8.0 s to 18.8 s to switch on, and the cause was a new summary
+  card, not the store.** Bisect the cheap layer first: the seed timed in bun at `main`, before and after the search
+  change, was the same, so the client was at fault; switching the new People Overview off took 5.7 s away. Rule in
+  17.1. The remaining 12-13 s against the 8.0 s baseline was measured at load 4-6 and is to be re-read on a quiet
+  machine before anything else is changed.
 
 ## 24. Checklists
 
@@ -2005,10 +2105,25 @@ Rules that belong to one feature area rather than a layer.
 **Analytics and export.**
 - The table view pins the name column; figure columns scroll under one horizontal scroller with a fixed row
   height; widths come from one `tableScale` module.
-- [Built] Export CSV: `@splito/domain` `reportCsv`/`csvCell` (RFC 4180, CRLF, formula guard on text that is
-  not a plain number, so a refund's `-12.50` stays a number); web download with a UTF-8 BOM
-  (`screens/Analytics/exportCsv.web.ts`); native hands the text to the share sheet. Metric `export` with
+- [Built] **One export** (F-275, assistant ruling 2026-10-31, after the new-user audit's F-12): there is exactly one
+  Export sheet (`features/export/ExportSheet.tsx`), and every entry opens it: Settings > Your data, the Group and Person
+  overflows and the Analytics header icon (`analytics-export`, label "Export"). An entry only pre-sets it (`ExportPreset`:
+  format, group, friend, currency, a date range, or a scope of several groups): Analytics starts it as a CSV on its
+  current period (as a custom range), currency and scope (`screens/Analytics/exportPreset.ts`; one group is the group
+  filter, Everything is none, any other scope is `StatementFilter.scope` and is named like the scope chip,
+  `useScopeLabel`). The file is the statement CSV (`statementCsv`: RFC 4180, CRLF, formula guard on text that is not a
+  plain number, so a refund's `-12.50` stays a number; web download with a UTF-8 BOM through `lib/export/saveFile`;
+  native hands the text to the share sheet), so Analytics no longer has its own CSV writer; it lists payments and an
+  opening balance too, and ignores a selected chart bar (the old file followed it). `reportCsv`/`csvCell` stay in
+  `@splito/domain` for the report rows. The sheet's address on Analytics is `/analytics/export` (+ pickers, listed in
+  `lib/links/table.ts`); a pasted one waits for the report, then opens pre-set. Metric `export` with
   file and outcome; a cancel is silent; only a failed write or hand-over is an issue.
+  *Reads/writes*: the sheet's own (`loadStatement` by index up to the end date, `loadDisputeMarks`); nothing new.
+  *Cost*: the Analytics screen mounts one closed dialog control (no reads until opened); the old full `readRows` pass
+  and `report.exportRows` are gone; one preset object per report render. *Telemetry*: none added.
+  *Checks*: bun `statement.test.ts` (scope), `exportScope.test.ts`, `table.test.ts`; Playwright `analytics.spec.ts`
+  (header icon opens the shared sheet on the year, INR, everything, then on a group and on Non-group only, with the
+  files checked), `backup.spec.ts` and `settingsTab.spec.ts` for the other entries; web only, iOS and Android not yet.
 - Grouping after a category rename uses a normalised `categoryKey()`; stored ids stay as written.
 
 **Import (backup JSON, v2 Splitwise CSV).** Two steps: parse and preview (schema validation, duplicates,
@@ -2173,9 +2288,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   check it; the wave assemble step re-seeds and re-screenshots. *Why:* "make sure to update the demo data again
   and again, with all the changes".
 - **Don't ask; decide.** The owner has delegated every open choice: make the call, record it (spec decision
-  table or here), deliver the final version, and do not interrupt with questions. *Why:* "don't ask me
-  anything, take your own decisions, give final version"; "do what you want to do, take own decisions, don't
-  disturb me".
+  table or here), deliver the final version, and do not interrupt with questions; reports state what was decided
+  instead of asking the owner to confirm product calls (owner 224). *Why:* "don't ask me anything, take your own
+  decisions, give final version"; "do what you want to do, take own decisions, don't disturb me"; "You take all
+  decisions, don't ask me".
 - **The local preview is always the newest build** (owner 122). http://localhost:8090 serves the newest
   integrated code: a watcher rebuilds it (e2e web build, demo mode available) within a few minutes of every
   commit to the integration branch or the main line, so the owner never looks at an old build; the reply that
@@ -2379,6 +2495,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   bar.
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
+- **The bottom bar keeps a little air under its labels** (owner 222): on phone web the bar pads its bottom by the
+  home-indicator inset, or 8 px when the browser reports none (Safari with its toolbar shown), so the labels never sit
+  on the screen's edge (`BAR_BOTTOM_PAD`, `BottomBarWeb.tsx`); native keeps Bluesky's `clamp(inset, 15, 60)`. Content
+  follows the bar's measured height. *Why:* "Add a little padding from bottom on navigation bar".
 - **Every place has a URL, so a copied link lands on the same screen** (owner 100; F-241, built; Expensify's model, where every side panel and modal is a route). Every page, every in-page tab (Group
   Expenses / Balances / Members, Activity tabs, Analytics views), every sheet and popup (Add / Edit expense,
   Record payment, Settle up, Add friend / Invite people, Create / Edit group, Members, Payment rules, Filters,
@@ -2452,9 +2572,9 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Every page has a fixed parent, so Back always goes somewhere specific** (owner 184): with history, Back
   returns to the page you came from; with none (a refresh, a pasted address, a notification, a new tab), Back
   goes to the page's parent and the parents are stacked under it, so a second Back keeps climbing. The parents:
-  a Settings section (Appearance, Language, Notifications ...) -> Settings; a person -> People; a group ->
+  a Settings section (Appearance, Language, Notifications ...) -> Profile (owner 220: Settings lives in Profile); a person -> People; a group ->
   Groups; an expense or payment -> its group, else the friend it is with, else Home; Edit -> the thing edited;
-  Settle -> its group or friend; Profile -> Settings; Friends and invites -> People; Analytics/Activity
+  Settle -> its group or friend; Profile -> the start tab; Friends and invites -> People; Analytics/Activity
   sub-addresses -> that tab. Back never disappears from a pushed page, refreshed or not. A main tab screen opened
   from a link (owner 179) keeps its Back after a refresh: the address carries its origin as a short `from`
   (`/activity/all?type=transactions&from=home`), and Back returns there; tapping the tab itself drops it. One
@@ -2501,7 +2621,7 @@ show what: centre may be page name, right maybe some basic action, and left may 
   |---|---|
   | People | Add friend (+ Search & Ask while it is the start tab, owner 218) |
   | Groups | Create group (+ Search & Ask while it is the start tab) |
-  | Analytics | overflow (Export CSV) (+ Search & Ask while it is the start tab) |
+  | Analytics | Export (opens the shared Export sheet) (+ Search & Ask while it is the start tab) |
   | Activity | Mark all read (+ Search & Ask while it is the start tab) |
   | Person | Settle up + overflow (Remind, Export statement, Edit, Remove friend) |
   | Group | Settle up + overflow (Edit group, Members, Payment rules, Export) |
@@ -3006,7 +3126,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   tie-break). Bun tests: conservation, 2-of-3 portions, tax pro-rata with weights.
 - **Tax, tip, service charge and discount sit behind one row, "Tax, tip and discounts"** (F-275, assistant's
   ruling 2026-10-31 that narrows owner 40's "it should be there" from always-open controls to one always-visible row;
-  to be confirmed by the owner): collapsed, the row shows a one-line summary when any is set ("Tax ₹30.00 · Discount
+  settled by the assistant under owner 224): collapsed, the row shows a one-line summary when any is set ("Tax ₹30.00 · Discount
   ₹150.00", or "3 charges" for a charge list); it opens by itself on a bill that already has some, and expanding it
   shows the presets, the charge list or the four plain rows. Each plain row has an amount / % toggle (segmented "INR | %"), remembered per kind in the
   `itemizeAdjustmentModes` preference (defaults: tax %, tip %, service %, discount amount). Percentages take up
@@ -3162,7 +3282,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 ### 26.15 Settings, sign in and log out
 
-*Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings`, `state/session.ts`,
+*Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings` (the section pages; the list itself is `screens/Settings/components/SettingsRows.tsx`, rendered inside `screens/Profile`, owner 220), `state/session.ts`,
 `screens/Login/`, `lib/auth/`, `data/account.ts`. **[Built, F-250, front end against the dev AuthClient only]:**
 - **`useSession()`** (`state/session.ts`, Bluesky's hook shape on a module store; the account is in device storage,
   the API token joins it in the credential store, § 11) answers `hasSession`, `currentAccount`, `missingContact` and
@@ -3221,7 +3341,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 - **Signed out, the app is the logged-out flow** (owners 125, 138-140): Bluesky's logged-out look, copied screen
   for screen where it still applies (`view/com/auth/LoggedOut.tsx`, `SplashScreen(.web).tsx` with the logo mark and
   tagline, `screens/Login/FormContainer` and `LoginForm` layout, Bluesky's step indicator and `BackNextButtons`),
-  reduced to one Continue screen: Apple, Google, "Email or phone"; then password (or a one-time code) for an
+  reduced to one Continue screen: "Email or phone" (Apple and Google arrive with the auth API, below); then password (or a one-time code) for an
   existing account, or, for a new one, verify, the missing details, a password and setup (owner 141). No Create
   account, handle or captcha screens. It is the whole app while signed out and cannot be closed. Every
   field is validated. Until the auth backend exists (F-2101..F-2105) the code step shows Bluesky's Admonition
@@ -3276,7 +3396,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 - **One "Continue" screen, no separate sign-up, with a password** (owners 140, 141; replaces the separate Create
   account / Sign in screens). The logged-out flow starts on one screen built from Bluesky's `LoginForm` layout:
-  "Continue with Apple", "Continue with Google", then one "Email or phone" field and Continue. Splito then checks
+  one "Email or phone" field and Continue (the Apple and Google buttons of owner 138 come back with the auth API; until then one muted line, below). Splito then checks
   whether that account exists:
   - **Existing account: password or one-time code, the user's choice** (owner 144): the next step offers both as
     equals, a segmented choice "Password | Code" over the field (Bluesky's password field with "Forgot?", or the
@@ -3291,6 +3411,10 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
     and may set a password later in Settings > Account.
   *Why:* "we can have signup and login as same screen only, no separate screen needed, basically no signup
   needed"; then "password should be there as well".
+- **The name typed while signing up is the account's and "me" person's name** [Built; test `auth.spec` "a new
+  account"]: `createAccount` returns it on the session account and `accountName()` (`state/session.ts`) hands it to
+  `ensureMe` when the account's database opens, so Profile shows it and never "Add your name" (the audit saw "M" and
+  "Add your name" after typing "Asha"). "Me" is used only when an account has no name (a Google or Apple one).
 - **Every account has both an email and a phone number, both verified** (owner 139; F-250 UI, F-2102 server).
   A new account needs name, email and phone (E.164, region default); both email and phone are required and
   each is confirmed with a one-time code before the account is usable (owner 140: collected in the one Continue
@@ -3300,16 +3424,17 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   other action is Log out. Offline the step says it needs a connection. The directory lookup (§ 26.18) uses both.
   *Why:* "on signup, make email and phone both mandatory; if logged in via email only and no phone is there, ask
   to update phone first".
-- **Sign in with Google and Apple** (owner 138; UI with F-250 in Wave C, real with F-2102). The Continue
-  screen (owner 140) offers "Continue with Apple" and "Continue with Google" above the email or phone
-  option, on every platform (Apple first on iOS, Google first on Android and web; the platforms' own button
-  styles: Apple's black/white button, Google's branded button). Native: `expo-apple-authentication` and Google
-  Sign-In; web: Sign in with Apple JS and Google Identity Services. The server verifies the ID token, creates or
-  finds the account and links by verified email (never merges silently on an unverified one; asks); Apple's
-  "Hide my email" relay works. A new account from Google/Apple still goes through setup (F-211). Until the auth
-  API exists, the buttons are shown in dev/e2e builds but say "Sign-in with Google and Apple arrives with
-  sync" (no fake success); the dev account stays the only working path there. *Why:* "on login, sign in with
-  google and apple as well".
+- **Sign in with Google and Apple** (owner 138; real with F-2102). Once the auth API exists the Continue screen
+  (owner 140) offers "Continue with Apple" and "Continue with Google" above the email or phone option, on every
+  platform (Apple first on iOS, Google first on Android and web; the platforms' own button styles: Apple's
+  black/white button, Google's branded button). Native: `expo-apple-authentication` and Google Sign-In; web: Sign
+  in with Apple JS and Google Identity Services. The server verifies the ID token, creates or finds the account and
+  links by verified email (never merges silently on an unverified one; asks); Apple's "Hide my email" relay works.
+  A new account from Google/Apple still goes through setup (F-211). **Until then they are not buttons** [Built,
+  F-275, assistant's ruling 2026-10-31; § 0 rule 6, owner 212]: the two biggest buttons on the first screen did
+  nothing, so the Continue screen shows the email or phone field first and, under the form, one small muted line,
+  "Google and Apple sign-in come with sync." (`SocialComing`); the button code was deleted (git history has it).
+  *Why:* "on login, sign in with google and apple as well".
 - **Sign-in is required: without an account nothing of the app is visible** (owner 125; replaces "signing in
   is optional" and F-211's zero-signup start; F-250, Wave C, right after the welcome tour). Signed out, the app
   shows only: the welcome tour (owner 123), Bluesky's logged-out flow (splash, Sign in, Create account, Forgot
@@ -3353,7 +3478,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   analytics everything changes according to filters it should not have something which is not affected by these".
 - **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
-  Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
+  Export (the shared Export sheet, § 25, pre-set to the filters on screen). One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
   graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
 - **All Analytics filters sit on one line** (owner 171): currency, scope, period (‹ 2026 ›) and the Charts/Table
   switch in one row that scrolls sideways on narrow screens rather than wrapping. *Why:* "all filters to be in one
@@ -3395,8 +3520,15 @@ if they are not on splito (we should check before)"; "if they are not there show
 add anyway (only for you)"; "also i should be able to select from contacts". *Where:* `components/people/AddFriend*`,
 `screens/Invites/`, `packages/sync` (friend requests, invite links), backend directory + invites API.
 
-- **Add friend asks for an email or mobile number** (one field, auto-detects which; phone in E.164 with the
-  user's region as default), plus an optional display name. A "Choose from contacts" button sits in the same
+- **With no directory (no backend yet) Add friend makes a normal local friend** [Built, F-275, assistant's ruling
+  2026-10-31; fixes audit blocker 2]: the sheet is a plain form with the **name first and required** (focused), an
+  optional "Email or mobile number (optional)" and "Choose from contacts"; **Add friend** creates the "only for you"
+  friend below at once, usable in any expense or group, and keeps the contact for a later invite. No lookup, no
+  "request to accept" or "when you're online" copy (§ 0 rule 6), no invite-link row (it fails closed offline). The
+  request flow below starts only when a directory answers (`useDemoMode().hasDirectory`: demo mode today, the
+  backend later).
+- **Add friend asks for an email or mobile number** (with a directory: one field, auto-detects which; phone in
+  E.164 with the user's region as default), plus an optional display name. A "Choose from contacts" button sits in the same
   sheet: native contacts picker (expo-contacts, permission primer first, § F-216); on web the Contact Picker API
   where the browser has it, otherwise the button is hidden. Picking a contact with several numbers/emails asks
   which one.
@@ -3410,8 +3542,9 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     (SMS / email / share sheet with a personal invite link) and **"Add anyway (only for you)"**, which creates a
     private friend (F-601) visible and usable only on your side. When that person later joins and accepts, the
     private friend is linked to their account (history merges, F-616).
-  - **Offline / check unavailable:** "We'll check when you're online"; the request is queued in the outbox, and
-    "Add anyway (only for you)" is still offered.
+  - **Directory unavailable (offline while a directory exists):** "We'll check when you're online"; the request is
+    queued in the outbox, and "Add anyway (only for you)" is still offered. With no directory at all see the first
+    bullet: no request is made.
 - **Pending people are not selectable** in expenses or groups until they accept (they show greyed with
   "Waiting for <name> to accept"); a private "only for you" friend is selectable at once.
 - **Request and invite rows share one layout:** avatar, name, status line, and the actions on the right of the
@@ -3544,12 +3677,15 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   *Reads/writes:* reads term ranges (`store.terms`), `getMany` for a narrow answer (at most 500 records) and for the
   30 rows of a page, the people / groups / balances projections for the statuses, `listOpenDisputes` for *disputed*;
   `store.prepareSearch()` once per open at idle; writes up to 12 term rows per expense, payment or write-off, none
-  for a comment beyond its words. *Cost:* a narrow query touches its tokens' keys plus its rows; a broad one (over 500
-  records) also the `d` and `a` ranges (about 1 us a key); a stale index is rebuilt once, at idle, in 500-row chunks.
+  for a comment beyond its words. *Cost:* a narrow query touches its tokens' keys (each probe at most 500) plus its
+  rows; a broad one's first page costs at most 500 keys per token plus at most 1,000 walked rows per section, and its
+  count and totals (after the first page is painted) its full key sets and the `d` and `a` ranges (about 1 us a key);
+  a stale index is rebuilt once, at idle, in 500-row chunks.
   *Telemetry:* none added (a failed index build is a `StoreProvider.prepareSearch` error log). *Checks:*
   `search.test.ts` (parser, per-field, paging, speed on both engines at 10,000, IndexedDB rebuild), `searchFields.test.ts`
   (every field on SQLite and IndexedDB, contacts, weekStart, localised categories, >30 payments, mixed-version writer,
-  failed rebuild), `searchOracle.test.ts` (property test on both engines), `searchQuery.test.ts` (table of 107
+  failed rebuild), `searchOracle.test.ts` (property test on both engines: first pages on open, then counts and totals,
+  then every row, with the walk, a walk read to its end and a walk given up on), `searchQuery.test.ts` (table of 107
   queries), `searchMatch.test.ts`, `e2e/search.spec.ts` at 390 and 1440; web verified, native not run.
 - **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
   shows exactly what data is sent; nothing is sent for on-device answers.
@@ -3570,7 +3706,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   Gentle limits: one in-app reminder per person per 3 days; every reminder is logged in Activity.
 - **Export:** Settings > Data > Export (CSV, PDF statement, full JSON backup; filters: date range, group,
   person, currency) with Import (JSON backup restore); plus Group overflow "Export", Person overflow "Export
-  statement", Analytics overflow "Export CSV". Exports are generated on the device; amounts exact, per
+  statement", the Analytics header's Export icon (one shared sheet, pre-set to its period, currency and scope; § 25). Exports are generated on the device; amounts exact, per
   currency.
 
 - **Disputes and holds** (owner 119; F-1210, Wave C after comments merge). Anyone in a shared record can say
@@ -3586,6 +3722,13 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   - **Hold is the light version** (Expensify's hold): "Put on hold" with a required reason ("waiting for the
     refund", "need the receipt") pauses a record that is not wrong yet; any participant may release it in one
     tap. Disputes and holds share the badge, the sub-total and the settle rule below.
+  - **One entry: "Report a problem"** [Built, F-275, assistant's ruling 2026-10-31; keeps both of owner 119's kinds,
+    replaces the separate Dispute and Put on hold menu items and buttons, audit F-15]: the expense and payment "..."
+    menus, a history row's menu and the payment details have one item, "Report a problem" (`record-report`,
+    `payment-report`), which opens one sheet. Its first choice is **Dispute** (chosen) or **Put on hold**, then the
+    reason chips (or the hold reason) as before. It is raised as me: no "Raised by" picker is shown; a small
+    secondary button, "Record this for someone else", reveals it (before the backend, below). One item of an itemised
+    bill keeps its own "Dispute my portion" (a hold applies to the whole record).
   - **States:** Open, then exactly one of Accepted (the fix was applied: one tap applies the proposed fix as a
     normal edit with history, or the resolver edits by hand; **one tap only when the fix keeps the record's split mode:** an
     amount fix scales an equal, percent, shares or adjusted split, a share fix needs an exact split, a payer fix never touches
@@ -3623,8 +3766,9 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     `byTarget` and `byStatus`; every change a sync mutation with history and an outbox op; the
     "of which disputed" figures come from a projection kept in the same transaction as `balances`, never a scan.
     Permission checks (`canDispute`, `canResolveDispute`) live in `domain/permissions.ts`; the server re-checks.
-  - **Before the backend** every record is mine, so a dispute raised on this device records "raised by" a chosen
-    participant (default me, labelled "recorded by you", like recording a payment for others); it becomes
+  - **Before the backend** every record is mine, so a dispute raised on this device is raised by me, and only
+    after "Record this for someone else" does it record "raised by" a chosen participant (labelled "recorded by
+    you", like recording a payment for others); it becomes
     two-sided with sync (F-2208). Demo data carries every state (owner 109).
   *Why:* "add an option for disputes as well, think about it properly"; "should we calculate disputed expense
   or wait until they are resolved".
@@ -3641,7 +3785,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     only records that the resolver agreed. A deleted record closes its open disputes as Gone in the deleting transaction
     (`write()` does it for every path, a group delete included).
   - Where it shows: Expense and Payment pages (badge, panel, thread lines), history rows (badge; right-click, long-press or a
-    "..." button on wide screens opens Dispute / Put on hold), an itemised bill's items ("Dispute my portion"), Person and Group
+    "..." button on wide screens opens Report a problem), an itemised bill's items ("Dispute my portion"), Person and Group
     balances ("of which ₹400 disputed", per currency, pointing the way the balance does and never above it), Settle up (disputed
     and held amounts left out by default with the amount stated, "Include disputed" remembered per group in
     `group:settleIncludeDisputed`, a new plan hash on every raise, accept and release), the edit prompt "Does this resolve
@@ -3946,6 +4090,9 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 219 | "On the analytics tab, all group and direct filter is at top already, it shows up again in filter"; "overview section to be on people and groups as well, think about it properly" | Analytics' Overview loses its All / Groups / Direct chips and follows the filter row's one scope; People gets an Overview of balances with friends that follows its Include groups filter; Groups gets an Overview of my balances in groups (inactive and hidden counted); cards open Analytics in that currency and scope | § 26.3, § 26.12, § 26.16 | Overview only on Analytics with its own scope chips (176, 198) |
 | 220 | "Remove settings from navigation and merge with profile"; "Fanout max" | Settings leaves the bottom bar and the sidebar; Profile (the avatar, `/profile`) holds the person then every Settings row, Log out last; `/settings` opens Profile, sections keep their addresses with Back to Profile; a saved bar loses `settings`; builders fan out as wide as the independent work allows | § 26.3, § 26.4, § 26.7, § 26.15 | Settings as its own tab and nav item, Profile without Settings (203, 206, 217's locked Settings) |
 | 221 | "Make sure analytics everything changes according to filters it should not have something which is not affected by these" | Every figure on Analytics follows its period, currency and scope; the balances-right-now Overview leaves Analytics (it stays on People and Groups); old `?overview=` links map to Analytics' scope | § 26.12, § 26.16 | Analytics Overview of balances right now that ignored period and currency (198, 219) |
+| 222 | "Add a little padding from bottom on navigation bar" | Phone-web bottom bar pads its bottom by the home-indicator inset or at least 8 px; native unchanged | § 26.3 | No bottom padding on the phone-web bar |
+| 223 | Assistant rulings for F-275 (new-user audit, 2026-10-31; owners 212/213 apply) | Add friend with no directory makes a usable local friend (name first, contact optional); one "Report a problem" entry whose first choice is Dispute or Put on hold, "Raised by" only behind "Record this for someone else"; Google and Apple are one muted "come with sync" line, not buttons; the sign-up name is kept | § 26.15, § 26.18, § 26.20 | Request-to-accept sheet with no server to answer; separate Dispute and Put on hold entries with a Raised by picker; dead Google and Apple buttons (138) |
+| 224 | "You take all decisions, don't ask me" | Product calls are settled by the assistant and reported as decided (the Tax/tip/discount row, the statement CSV for the Analytics export and decision 223 stand) | § 26.1, § 26.13 | Reports that asked the owner to confirm product calls |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

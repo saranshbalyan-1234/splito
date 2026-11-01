@@ -35,7 +35,7 @@ for (const {name, size} of WIDTHS) {
     await expect(where).toHaveValue('  Goa ')
     if (name === '390')
       await page.screenshot({
-        path: process.env.TRIP_SHOT ?? 'trip-new-group-390.png',
+        path: process.env.TRIP_SHOT ?? 'qa/tripLocation/new-group-390.png',
       })
     await page.getByTestId('sheet-save').click()
 
@@ -50,7 +50,7 @@ for (const {name, size} of WIDTHS) {
         'Trip · Goa · 1 member',
       )
       await page.screenshot({
-        path: process.env.TRIP_HEADER_SHOT ?? 'trip-group-header-390.png',
+        path: process.env.TRIP_HEADER_SHOT ?? 'qa/tripLocation/group-header-390.png',
       })
     }
 

@@ -371,7 +371,7 @@ async function onSettings(c: Ctx) {
   const toggle = c.page.locator(`${T('settings-demo-mode')}:visible`)
   /* A switch made a moment ago may still send the app home after the page loads: try again until Settings stays. */
   for (let i = 0; i < 4 && !(await toggle.count()); i++) {
-    await c.page.goto('/settings')
+    await c.page.goto('/profile')
     await toggle.first().waitFor({timeout: 15_000}).catch(() => {})
     await c.page.waitForTimeout(2000)
   }
@@ -495,7 +495,7 @@ function scrolling(screen: string, start: Flow['start']): Flow {
 
 /*
  * The main tabs are the link table's tab routes (`ROUTE_PATHS`), so a tab that is added or removed (F-271 removed Home,
- * made Settings a tab) changes the sweep with it; each names the rows that mean "its content is on screen". A tab route
+ * Settings left the tabs: owner 220) changes the sweep with it; each names the rows that mean "its content is on screen". A tab route
  * missing here fails the coverage test.
  */
 const TAB_ROWS: Record<string, string> = {
@@ -503,7 +503,6 @@ const TAB_ROWS: Record<string, string> = {
   Groups: P('group-'),
   Analytics: P('analytics-over-time-chart'),
   Activity: P('activity-'),
-  Settings: P('settings-'),
 }
 const TABS = Object.keys(ROUTE_PATHS).filter(r => r in TAB_ROWS)
 /** Any tab on screen with its rows: the first load and the demo switch land on the start tab, whichever it is. */
@@ -553,7 +552,7 @@ const FLOWS: Flow[] = [
   ...SETTINGS_SECTIONS.map(
     (section): Flow => ({
       name: `Settings ${section}`,
-      start: '/settings',
+      start: '/profile',
       steps: [
         openPage(`SettingsSection ${section}`, 'settings-section', tid(`settings-${section}`)),
         back(`SettingsSection ${section}`, 'settings-section'),
@@ -562,7 +561,7 @@ const FLOWS: Flow[] = [
   ),
   {
     name: 'FriendsAndInvites',
-    start: '/settings',
+    start: '/profile',
     steps: [openPage('FriendsAndInvites', 'friends-invites', tid('settings-friends')), back('FriendsAndInvites', 'friends-invites')],
   },
   {
@@ -765,7 +764,8 @@ const FLOWS: Flow[] = [
   ...TABS.map(r => scrolling(r, (ROUTE_PATHS as Record<string, string>)[r]!)),
   scrolling('Group', c => `/groups/${idsOf(c).group}`),
   scrolling('Person', c => `/people/${idsOf(c).person}`),
-  scrolling('Settings', '/settings'),
+  /* Profile now holds the whole Settings list (owner 220): the longest page of the app. */
+  scrolling('Profile', '/profile'),
   scrolling('FriendsAndInvites', '/settings/friends'),
   scrolling('Expense', c => `/expense/${idsOf(c).expense}`),
   /* ---- writes */
@@ -843,7 +843,7 @@ const FLOWS: Flow[] = [
   /* ---- demo mode */
   {
     name: 'Demo mode switch',
-    start: '/settings',
+    start: '/profile',
     before: async c => {
       /* The first switch on seeds a year of data and is a job of its own; the sweep measures the switches after it. */
       await c.page.evaluate(async () => {
@@ -855,13 +855,13 @@ const FLOWS: Flow[] = [
       await onSettings(c)
     },
     steps: [
-      {screen: 'Settings', action: 'demo mode off', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {any: START_READY}]}, settle: 2500},
+      {screen: 'Profile', action: 'demo mode off', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {any: START_READY}]}, settle: 2500},
       /*
        * On seeds a fresh year of data (off erased it, owner 136). Feedback is the progress pill; content is the demo
        * showing, within a few seconds, and the app must stay usable meanwhile: no main-thread block over 50 ms.
        */
       {
-        screen: 'Settings',
+        screen: 'Profile',
         action: 'demo mode on (seed)',
         prepare: onSettings,
         tap: tid('settings-demo-mode'),

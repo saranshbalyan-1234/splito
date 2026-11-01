@@ -31,11 +31,11 @@ export interface PrefDef<T> {
  * The tab destinations (routes of their own). Activity was briefly a header
  * bell; lists stored before then still name 'activity' and read back unchanged.
  */
-export type TabId = 'people' | 'groups' | 'analytics' | 'activity' | 'settings'
+export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
 /**
  * Every item of the shared sidebar / drawer list (ARCHITECTURE 26.3), in its
  * order; the phone bottom bar shows any number of them. There is no Home (owner 198), Ask Splito is
- * not an item (owner 200) and Settings is a tab (owner 206).
+ * not an item (owner 200) and Settings is not an item either: it is part of Profile (owner 220).
  */
 export type NavItemId = TabId
 /** How People and Groups order their rows (owner 199): the newest change, by name, the biggest balance, the newest record. */
@@ -69,12 +69,11 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
-/** The shared list's order: People, Groups, Analytics, Activity, Settings. */
-export const NAV_ITEM_IDS: readonly NavItemId[] = ['people', 'groups', 'analytics', 'activity', 'settings']
-/** The tabs that hold the user's data: what the app can open on (Settings cannot be the start tab). */
+/** The shared list's order: People, Groups, Analytics, Activity. */
+export const NAV_ITEM_IDS: readonly NavItemId[] = ['people', 'groups', 'analytics', 'activity']
 /** The tabs the app can open on (owner 198: no Home). */
 export const START_TAB_IDS = ['people', 'groups', 'analytics', 'activity'] as const satisfies readonly TabId[]
-/** The default bar before owners 198 and 206 (it had Home and no Settings): a saved list that is exactly this was never customised, so it reads as the new default. */
+/** The default bar before owner 198 (it had Home): a saved list that is exactly this was never customised, so it reads as the new default. */
 const OLD_DEFAULT_BAR = 'home,people,groups,analytics,activity'
 /** What Activity can be filtered by (owner 173): "transactions" in an address is `expenses` and `payments` together. */
 export const ACTIVITY_TYPE_IDS = ['expenses', 'payments', 'comments', 'groups', 'friends', 'reminders', 'disputes'] as const
@@ -285,22 +284,18 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
     // Orders saved while Profile was a tab predate the Analytics tab, so it joins them.
     const isPreAnalytics = value.includes('profile')
     const isOldDefault = value.join() === OLD_DEFAULT_BAR
-    // Profile, Home (owner 198) and Ask Splito (owner 200) are not items now: a saved list loses them and keeps the order of the rest.
+    // Profile, Home (owner 198), Ask Splito (owner 200) and Settings (owner 220) are not items now: a saved list loses them and keeps the order of the rest.
     const saved = value as string[]
     const kept = saved.filter((t): t is NavItemId => (NAV_ITEM_IDS as readonly string[]).includes(t))
-    // Home was always in the bar: a bar that held it (and more) keeps what it guaranteed, People (the start tab) where Home stood and Settings (owner 206, reachable from no other row on phones).
+    // Home was always in the bar: a bar that held it (and more) keeps what it guaranteed, People (the start tab) where Home stood.
     if (saved.includes('home') && kept.length > 0) {
       const isItem = (t: string) => (NAV_ITEM_IDS as readonly string[]).includes(t)
       if (!kept.includes('people')) kept.splice(saved.slice(0, saved.indexOf('home')).filter(isItem).length, 0, 'people')
-      if (!kept.includes('settings')) kept.push('settings')
     }
     value = isPreAnalytics && !kept.includes('analytics') ? [...kept, 'analytics'] : kept
-    // The default bar lost Home and gained Settings (owners 198, 206): a saved bar that is exactly the old default never was customised, so it becomes the new one; any other choice keeps its tabs.
+    // The default bar lost Home (owner 198): a saved bar that is exactly the old default never was customised, so it becomes the new one; any other choice keeps its tabs.
+    // A list with nothing left (Settings alone) stays empty, so it fails validation and reads as the default bar.
     if (isOldDefault) value = [...NAV_ITEM_IDS]
-    // A phone has no side drawer (owner 217), so the bar is the only way to Settings: a saved bar always holds it.
-    // An empty list is left empty, so it fails validation and reads as the default bar.
-    const bar = value as NavItemId[]
-    if (bar.length > 0 && !bar.includes('settings')) value = [...bar, 'settings']
   }
   // The "Open on" tab was the `homeTab` key before F-256: read that old row once when there is no new one. A saved 'home' fails validation and reads as People.
   if (key === 'startTab' && value === undefined) {

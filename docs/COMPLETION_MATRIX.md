@@ -42,7 +42,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Settle up | Call it even: forgive or write off | F-1113 | in progress (built and tested on feat/b-*, unmerged) |
 | Activity | Feed, read/unread, All / From others, actor avatar, day headers, lent/borrowed rows, swipe, hide, undo | F-1201 | in progress (built and tested on the unmerged UI line) |
 | Activity | Deleted items stay in their lists, struck through, forever; Restore; Hide and Show hidden (no Recently deleted bin) | F-1203 | done on feat/wB-B3x (unmerged; pnpm check green, full web e2e 241 passed, 1 skipped (UPI test, opens an external app), the "large demo under 10 s" timing test passes alone, incl. `deletedInPlace.spec.ts` (18 tests) on phone and desktop; perf on the 10,000-expense ledger: Home cold open 46 ms (5 runs 44 to 56), write + UI 16 ms, Analytics open 18 ms, search keystroke 19 to 41 ms; large demo set 1,569 expenses: cold open 48 ms, write + UI 16 ms; native long-press not yet run) |
-| Analytics | Charts + table, period / currency / group filters, Export CSV in the header overflow | F-1301 | in progress (built and tested on the unmerged UI line) |
+| Analytics | Charts + table, period / currency / group filters, Export in the header (the shared Export sheet, pre-set to the filters) | F-1301 | in progress (built and tested on the unmerged UI line) |
 | Settings | Prune to 7 pages, 47 registry keys (16 retired, `notify.expense` folded into Payments, Comments added), 7 merges write their key where they act, switches for every on/off setting, no demo banner, " - Demo" in header titles | F-251 | done on integrate/wB 2026-10-29 (sync `preferences.test` incl. retired-key and notify-fold tests; e2e `settings`, `friends`, `remind`, `demo-mode`, `many-currency`; web verified, native not run). Perf `pnpm perf` web Chrome vs the earlier row: large demo set (1,615 expenses) Home cold open 55 ms (was 56), write + UI 16 ms (16), Analytics 36 ms (35); 10,000 expenses cold open 50 ms (49), write + UI 16 ms (16), Analytics 22 ms (22); 500-expense save 13 ms (13). No regression over 10%. Screenshots: apps/client/qa/settings/ |
 | Settings | Every preference incl. Dim / Black dark style, accent, timezone | F-1701 | in progress (built and tested on the unmerged UI line) |
 | Settings | Account section: Sign in / Create account (Bluesky LoggedOut, Login, Signup copied; honest until sync; Log out ships with F-2102) | F-225 | done (feat/wA-30b; backend submit answers "arrives with sync" until F-2102) |
@@ -374,6 +374,11 @@ Demo mode on (seed a year, `demo-mode.spec` "under 10 s", alone): 9,058 ms base 
 people and group activity writes), and the app stays usable behind the pill meanwhile. With two workers it read 13.4 s (the
 spec's 10 s bound is a timing test; run it alone).
 
+Demo mode on, PR #4 (owners 218-222 merged; Chromium, alone, load 4-6): 18.8 s with the People Overview reading its own
+data, 13.1 s with it off, 12.1 / 12.7 / 12.8 s after it takes the list's figures (17.1). The sync seed in bun is
+unchanged (SQLite 1.0-1.2 s, fake IndexedDB 7.0-7.3 s on `main` and on this branch). Over the 10 s bound until
+re-read on a quiet machine.
+
 Still over budget at x6 (owner 189 sweep, not fixed here): every main-tab switch (236-441 ms highlight, budget 100), Friends
 and invites open (1.1 s, its 45-row list mounts in one task), Add expense body (881 ms), People search typing (1.1 s worst key,
 one long task per keystroke), Activity's first fling (1.1 s, the first page of rows mounting). At x1 the remaining misses are
@@ -424,3 +429,24 @@ through the tour's `useIsFocused`) and passes here (nothing of People renders). 
 base: the scroll stops at 806 rows (positive control 1,000; the c-perf note above) and, with Search & Ask on the start
 tab only (owner 218), its Ask phase finds no button on Activity; with the target lowered locally to 800 it stops there.
 Baseline not re-recorded; its scroll phase will count fewer renders (no closed row menus), which the next re-record takes.
+## F-266 search: a broad query's first page from a newest-first walk (ARCHITECTURE 17.1 "Narrow first", measured 2026-10-31)
+
+Machine load 27-40 from other builders for the whole session, so every wall-clock number below is indicative only (the
+rule counts numbers at load under 10); the key and row counts are exact and are the proof.
+
+| Query (bulk ledger, 10,000 expenses, 60 friends) | Keys + rows to the first page, before | After | Keys to counts and totals, after |
+|---|---|---|---|
+| "Bulk expense 9993" (narrow) | 651 + 74 | 651 + 74 | (same, known at once) |
+| "> 90" | 30,004 + 30 | 505 + 180 | 30,505 |
+| "Bulk Friend 4" | 69,345 + 245 | 1,985 + 635 | 69,489 |
+| "bulk" | 49,812 + 174 | 645 + 324 | 49,884 |
+
+Chromium (`perf/schema-v2.spec.ts`, 10,000 expenses, CPU x1, median of five, base build `dist-base` vs this branch,
+alternated, two rounds each, load 27-37): first page "> 90" 1,256 / 1,005 -> 282 / 141 ms; "Bulk Friend 4" 2,751 /
+2,084 -> 338 / 289 ms; "Bulk expense 9993" 178 / 176 -> 123 / 90 ms; "perf write" 120 / 224 -> 62 / 127 ms. Counts and
+totals (no budget) arrive later than before: "> 90" 1,256 / 1,005 -> 1,754 / 823 ms, "Bulk Friend 4" 3,036 / 2,174 ->
+3,748 / 2,580 ms. The 50 ms budget failed on both builds at this load. bun SQLite, the speed test's ledger (10,000
+expenses + 600 payments, 33 queries, load 32-39): worst first page 24 ms CPU (before, the whole answer: 51 ms CPU);
+the wall-clock check (`search.test.ts` speed, first page and counts each under 50 ms) failed on wall time at load 32
+and needs a quiet machine. Web only; native not run.
+

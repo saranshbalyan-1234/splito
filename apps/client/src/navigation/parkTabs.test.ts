@@ -3,7 +3,7 @@ import {StackRouter} from '@react-navigation/routers'
 
 import {isPushedCopy, parkTabs, tabId} from '#/navigation/parkTabs'
 
-const routeNames = ['People', 'Groups', 'Analytics', 'Activity', 'Group', 'Settings']
+const routeNames = ['People', 'Groups', 'Analytics', 'Activity', 'Group', 'Profile']
 const getIds = {People: tabId, Groups: tabId, Analytics: tabId, Activity: tabId}
 
 // oxlint-disable-next-line typescript/no-explicit-any -- the router's state and action types are generic in tests
@@ -92,7 +92,7 @@ describe('parkTabs', () => {
   test('a replace drops a tab for good, and a reset adopts the parked tree for the plain tab', () => {
     let s = go(start(), tab('Groups'))
     const groupsKey = s.routes[1].key
-    s = go(s, {type: 'REPLACE', payload: {name: 'Settings'}})
+    s = go(s, {type: 'REPLACE', payload: {name: 'Profile'}})
     expect(s.preloadedRoutes).toEqual([])
     s = go(start(), tab('Groups'))
     const parkedKey = s.routes[1].key

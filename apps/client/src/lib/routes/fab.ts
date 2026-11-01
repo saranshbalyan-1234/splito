@@ -4,7 +4,7 @@ const TAB_ROUTES = ['People', 'Groups', 'Analytics', 'Activity']
 /**
  * The params of the Add expense the FAB opens on this route, or null when the route has no FAB. Shown: the five main
  * screens and their pushed copies (the same screen with Back, so the same FAB), the Person page (pre-selects that
- * friend) and the Group page (that group). Everything else, Settings and its sections, Profile, Expense and payment
+ * friend) and the Group page (that group). Everything else, Profile (which holds Settings, owner 220) and the Settings sections, Expense and payment
  * detail, forms and the composer, has none. One list, read by `RouteFAB` in the screen scaffold; no screen decides alone.
  */
 export function fabParams(route: {name: string; params?: object}): {personId?: string; groupId?: string} | null {

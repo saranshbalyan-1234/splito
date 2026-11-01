@@ -52,7 +52,6 @@ export function BottomBar({navigation}: BottomTabBarProps) {
     Groups: tabState.isAtGroups,
     Analytics: tabState.isAtAnalytics,
     Activity: tabState.isAtActivity,
-    Settings: tabState.isAtSettings,
   }
 
   const onPressTab = useCallback(

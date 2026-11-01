@@ -28,9 +28,9 @@ test('the e2e build never registers a service worker', async ({page}) => {
   expect(count).toBe(0)
 })
 
-test('Settings offers Install app once the browser says the app is installable', async ({page}) => {
-  await page.goto('/settings')
-  await expect(page.getByTestId('screen-settings')).toBeVisible()
+test('the Settings list in Profile offers Install app once the browser says the app is installable', async ({page}) => {
+  await page.goto('/profile')
+  await expect(page.getByTestId('screen-profile')).toBeVisible()
   await expect(page.getByTestId('settings-install')).toHaveCount(0)
   await offerInstall(page)
   await expect(page.getByTestId('settings-install')).toBeVisible()
@@ -89,7 +89,7 @@ test.describe('on an iPhone', () => {
   test.use({userAgent: IPHONE_UA, viewport: {width: 390, height: 844}, hasTouch: true})
 
   test('Install app shows the Add to Home Screen steps', async ({page}) => {
-    await page.goto('/settings')
+    await page.goto('/profile')
     await expect(page.getByTestId('settings-install')).toBeVisible()
     await page.getByTestId('settings-install').click()
     const sheet = page.getByTestId('install-help-sheet')

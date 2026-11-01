@@ -18,6 +18,7 @@ import {useDisputeAccess, useDisputeActions} from '#/state/disputes'
 import {useEntity, useGroupHistory, useRecentTransactions} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {atoms as a, useTheme} from '#/alf'
+import {Button, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import * as TextField from '#/components/forms/TextField'
@@ -28,15 +29,19 @@ import {useAvatarName, useDisplayName, useErrorText} from '#/components/split/sh
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 
-type Raise = Extract<DisputeRequest, {kind: 'raise' | 'hold'}>
+type Raise = Extract<DisputeRequest, {kind: 'raise' | 'report'}>
+
+type Kind = 'dispute' | 'hold'
 
 /** Quick reasons for a hold; the field is free text (required). */
 const HOLD_SUGGESTIONS = ['Waiting for the refund', 'Need the receipt', 'Checking the amount'] as const
 
 /**
- * "Dispute" or "Put on hold" on an expense, one item of a bill, a payment or a write-off (F-1210, 26.20). A reason
- * chip, an optional note (required for Other and for a hold), a proposed fix for amount, share, payer and
- * duplicate so the answer can be one tap, and (before the backend) who it is raised as. The record keeps counting.
+ * "Report a problem" on an expense, a payment or a write-off, and "Dispute" on one item of a bill (F-1210, F-275,
+ * 26.20). The first choice is Dispute or Put on hold (Dispute is chosen); then a reason chip, an optional note
+ * (required for Other and for a hold) and a proposed fix for amount, share, payer and duplicate so the answer can be
+ * one tap. It is raised as me; "Record this for someone else" (before the backend) reveals the people picker. The
+ * record keeps counting.
  */
 export function RaiseSheet({control, request, onClosed}: {control: Dialog.DialogControlProps; request: Raise; /** After it has closed (the host lets it go). */ onClosed?: () => void}) {
   return (
@@ -58,7 +63,7 @@ function Form({request}: {request: Raise}) {
   const avatarName = useAvatarName()
   const actions = useDisputeActions()
   const {targetType, targetId} = request
-  const isHold = request.kind === 'hold'
+  const isReport = request.kind === 'report'
   const itemId = request.kind === 'raise' ? request.itemId : undefined
   const record = useEntity<Expense & Repayment>(targetType, targetId)
   const access = useDisputeAccess(targetType, targetId)
@@ -67,12 +72,15 @@ function Form({request}: {request: Raise}) {
   const item = targetType === 'expense' && itemId !== undefined && d?.split.mode === 'items' ? d.split.items.find(i => i.id === itemId) : undefined
   const participants = access.record?.participants ?? []
 
+  const [kind, setKind] = useState<Kind>('dispute')
+  const isHold = kind === 'hold'
   const [reason, setReason] = useState<DisputeReason | null>(null)
   const [note, setNote] = useState('')
   const [amountText, setAmountText] = useState('')
   const [payerId, setPayerId] = useState<string | null>(null)
   const [duplicateOf, setDuplicateOf] = useState<string | null>(null)
   const [raisedBy, setRaisedBy] = useState<string | null>(null)
+  const [isForOther, setIsForOther] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
   /* The live group's members, as the mutation reads them (a deleted group has none). */
@@ -80,7 +88,7 @@ function Form({request}: {request: Raise}) {
   /* Who it can be raised as: the people on the record; a group member who is not on it may only say they were left out. */
   const candidates = reason === 'left_out' ? [...new Set([...members.filter(m => !participants.includes(m))])] : participants
   const defaultWho = candidates.includes(access.me) ? access.me : (candidates[0] ?? access.me)
-  const who = raisedBy && candidates.includes(raisedBy) ? raisedBy : defaultWho
+  const who = isForOther && raisedBy && candidates.includes(raisedBy) ? raisedBy : defaultWho
 
   const shown = isHold ? [] : reasonsFor(targetType, item !== undefined)
   const typed = (() => {
@@ -120,7 +128,7 @@ function Form({request}: {request: Raise}) {
   }
 
   const itemName = item?.name || l`this item`
-  const title = isHold ? l`Put on hold` : item ? l`Dispute ${itemName}` : l`Dispute`
+  const title = isReport ? l`Report a problem` : item ? l`Dispute ${itemName}` : l`Dispute`
   const money = d ? formatAmount(targetType === 'expense' ? d.total : d.amount, currency, locale) : ''
   const subject = item ? `${item.name || l`Item`} · ${formatAmount(item.amount, currency, locale)}` : targetType === 'expense' ? (d?.title ?? '') : money
   const totalText = money
@@ -154,24 +162,20 @@ function Form({request}: {request: Raise}) {
           <Text style={[a.text_sm, t.atoms.text_contrast_medium, {fontVariant: ['tabular-nums']}]}>{item ? l`Your portion of the bill` : totalText}</Text>
         </View>
 
-        {candidates.length > 1 && (
-          <View style={[a.gap_xs]}>
-            <TextField.LabelText>
-              <Trans>Raised by</Trans>
-            </TextField.LabelText>
-            <ChoiceChips
-              gap="sm"
-              label={l`Raised by`}
-              value={who}
-              onChange={setRaisedBy}
-              options={candidates.map(id => ({value: id, label: name(id), testID: `dispute-by-${avatarName(id)}`}))}
-            />
-            {who !== access.me && (
-              <Text testID="dispute-recorded-by" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-                <Trans>Recorded by you. It becomes two-sided once people share this.</Trans>
-              </Text>
-            )}
-          </View>
+        {isReport && (
+          <ChoiceChips
+            gap="sm"
+            label={l`What do you want to do?`}
+            value={kind}
+            onChange={next => {
+              setKind(next)
+              setNote('')
+            }}
+            options={[
+              {value: 'dispute' as const, label: l`Dispute`, testID: 'report-kind-dispute'},
+              {value: 'hold' as const, label: l`Put on hold`, testID: 'report-kind-hold'},
+            ]}
+          />
         )}
 
         {isHold ? (
@@ -258,6 +262,40 @@ function Form({request}: {request: Raise}) {
             />
           </TextField.Root>
         </View>
+
+        {candidates.length > 1 && (
+          <View style={[a.gap_xs]}>
+            <Button
+              testID="dispute-for-other"
+              label={isForOther ? l`Record this as me` : l`Record this for someone else`}
+              size="small"
+              color="secondary"
+              variant="ghost"
+              style={[a.self_start, {marginLeft: -8}]}
+              onPress={() => {
+                setIsForOther(!isForOther)
+                setRaisedBy(null)
+              }}>
+              <ButtonText>{isForOther ? <Trans>Record this as me</Trans> : <Trans>Record this for someone else</Trans>}</ButtonText>
+            </Button>
+            {isForOther && (
+              <>
+                <ChoiceChips
+                  gap="sm"
+                  label={l`Raised by`}
+                  value={who}
+                  onChange={setRaisedBy}
+                  options={candidates.map(id => ({value: id, label: name(id), testID: `dispute-by-${avatarName(id)}`}))}
+                />
+                {who !== access.me && (
+                  <Text testID="dispute-recorded-by" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+                    <Trans>Recorded by you. It becomes two-sided once people share this.</Trans>
+                  </Text>
+                )}
+              </>
+            )}
+          </View>
+        )}
       </View>
     </FormSheet.Inner>
   )

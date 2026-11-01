@@ -27,7 +27,7 @@ export type TabbedPage = keyof typeof PAGE_TABS
 export const SHEETS = {
   People: ['filters'],
   Groups: ['filters'],
-  Analytics: ['scope', 'range'],
+  Analytics: ['scope', 'range', 'export', 'export/period', 'export/range', 'export/group', 'export/person', 'export/currency'],
   Activity: ['filters'],
   Person: [
     'filters',
@@ -122,7 +122,6 @@ export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
   /* `type=transactions` (Recent transactions' "See all", owners 173, 179), `group=<id>` from a Group's "See all" (F-259); `from` is the tab a pushed copy opened from. */
   Activity: ['type', 'group', 'person', 'from'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
-  Settings: ['from'],
   SettingsSection: ['note'],
   FriendsAndInvites: ['section'],
   CreateInvite: ['kind', 'groupId'],

@@ -1,13 +1,13 @@
 import {useState} from 'react'
 import {View} from 'react-native'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 
 import {ShowHiddenToggle} from '#/features/hidden/ShowHidden'
 import {ShowSettledToggle} from '#/components/ShowSettledToggle'
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
-import * as Toggle from '#/components/forms/Toggle'
+import {IncludeGroupsToggle} from '#/components/IncludeGroupsToggle'
 import * as FormSheet from '#/components/FormSheet'
 import {Text} from '#/components/Typography'
 import {type FriendFilter} from '../sort'
@@ -59,7 +59,6 @@ function Form({
   currencies: string[]
   onFiltersApplied: (filters: PeopleFilters) => void
 }) {
-  const t = useTheme()
   const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
   const [draft, setDraft] = useState(filters)
@@ -76,27 +75,7 @@ function Form({
         onSave: () => control.close(() => onFiltersApplied(draft)),
       }}>
       <View style={[a.gap_lg]}>
-        <Toggle.Item type="switch"
-          testID="filter-include-groups"
-          name="includeGroups"
-          label={l`Include groups`}
-          value={draft.includeGroups}
-          onChange={includeGroups => set({includeGroups})}
-          style={[a.w_full]}>
-          <View style={[a.flex_1, a.gap_2xs, a.pr_md]}>
-            <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
-              <Trans>Include groups</Trans>
-            </Toggle.LabelText>
-            <Text
-              style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-              <Trans>
-                Count balances from groups you share with each friend. Off shows
-                only what is between you and them.
-              </Trans>
-            </Text>
-          </View>
-          <Toggle.Switch />
-        </Toggle.Item>
+        <IncludeGroupsToggle value={draft.includeGroups} onChange={includeGroups => set({includeGroups})} />
 
         <ShowSettledToggle value={draft.showSettled} onChange={showSettled => set({showSettled})} />
         <ShowHiddenToggle value={draft.showHidden} onChange={showHidden => set({showHidden})} />

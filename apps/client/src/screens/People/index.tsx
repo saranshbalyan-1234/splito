@@ -174,7 +174,8 @@ export function PeopleScreen() {
               <FriendsOverview
                 testID="people-overview"
                 titleTestID="people-overview-title"
-                countsRow={groupId => includeGroups || groupId === null}
+                friends={friends}
+                showHidden={showHidden}
                 onCurrencyPress={currency => openLink(analyticsHref(includeGroups ? 'all' : 'direct', currency))}
               />
             }
