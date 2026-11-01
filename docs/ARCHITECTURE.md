@@ -2097,8 +2097,8 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-11-01, full e2e on PR #4: **demo mode went from 8.0 s to 18.8 s to switch on, and the cause was a new summary
   card, not the store.** Bisect the cheap layer first: the seed timed in bun at `main`, before and after the search
   change, was the same, so the client was at fault; switching the new People Overview off took 5.7 s away. Rule in
-  17.1. The remaining 12-13 s against the 8.0 s baseline was measured at load 4-6 and is to be re-read on a quiet
-  machine before anything else is changed.
+  17.1. Re-read later at load 4-6 with the round's other changes merged: 7.1-7.6 s (three runs), under the 8.0 s
+  baseline, so the 12-19 s readings in between were load; a timing bound is only judged at low load.
 - 2026-11-01, F-278 (Profile fits one phone screen): **make a list's first row a prop, not a second list.** Payment details
   had to be the first row of the Settings rows, so `SettingsRows` takes an optional `leading` node rendered first inside
   its container (absent keeps the list as it was) instead of Profile drawing a section above it with its own spacing;

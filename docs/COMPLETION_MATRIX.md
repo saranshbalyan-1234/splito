@@ -378,6 +378,8 @@ Demo mode on, PR #4 (owners 218-222 merged; Chromium, alone, load 4-6): 18.8 s w
 data, 13.1 s with it off, 12.1 / 12.7 / 12.8 s after it takes the list's figures (17.1). The sync seed in bun is
 unchanged (SQLite 1.0-1.2 s, fake IndexedDB 7.0-7.3 s on `main` and on this branch). Over the 10 s bound until
 re-read on a quiet machine.
+Re-read 2026-11-01 on PR #5 (People search perf, F-276, F-277, F-278 merged; alone, load 4-6): 7.6 / 7.1 / 7.3 s, under the
+10 s bound and under the 8.0 s baseline. The 12-19 s readings were machine load on top of the Overview cost fixed above.
 
 Still over budget at x6 (owner 189 sweep, not fixed here): every main-tab switch (236-441 ms highlight, budget 100), Friends
 and invites open (1.1 s, its 45-row list mounts in one task), Add expense body (881 ms), People search typing (1.1 s worst key,
