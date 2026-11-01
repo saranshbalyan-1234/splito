@@ -748,7 +748,7 @@ Audit the whole codebase for code that does the same job twice and merge each se
 Acceptance: a push (avatar to Profile, a person, a group, an expense, a Settings section) slides in from the right at
 phone width on web; the in-app Back slides the page below back in; Safari's left-edge swipe Back is not animated
 again; no JS per frame and no extra React render (renders gate); no row exit clone; FAB stays put; reduced motion
-instant; desktop instant. Status: building.
+instant; desktop instant. Status: built (web, Chromium at 390 and 1440, 2026-11-01; real iOS Safari and native not run). ARCHITECTURE 26.3 [Built] note, 17.1 rule, 23 lesson, COMPLETION_MATRIX "F-277".
 
 ### F-278 Profile fits one phone screen (owner 228) `spec: ARCHITECTURE 26.15`
 

@@ -31,6 +31,11 @@ function useResponsiveWidth() {
   return containerWidth ?? width
 }
 
+/** Outside render: is the window at least this wide (the web twin reads its shared media list). */
+export function isMinWidth(px: number): boolean {
+  return getWindowWidth() >= px
+}
+
 export function useBreakpoints() {
   return getBreakpoints(useResponsiveWidth())
 }

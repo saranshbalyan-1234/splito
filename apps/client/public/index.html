@@ -33,9 +33,18 @@
       @keyframes splito-tab-in-l { from { transform: translate3d(-32px, 0, 0); opacity: 0.4; } to { transform: none; opacity: 1; } }
       [data-screen][data-tab-in="r"] > :not([data-fab]) { animation: splito-tab-in-r 200ms cubic-bezier(0.2, 0.8, 0.2, 1); }
       [data-screen][data-tab-in="l"] > :not([data-fab]) { animation: splito-tab-in-l 200ms cubic-bezier(0.2, 0.8, 0.2, 1); }
-      /* Content shifted right must not widen the page (the fixed bar would slip, tabTaps.spec): clip sideways on the screen only, never on html or body (that stops the window scrolling). */
-      [data-screen][data-tab-in] { overflow-x: clip; }
-      @media (prefers-reduced-motion: reduce) { [data-screen][data-tab-in] > * { animation: none; } }
+      /* The stack slide on phones (owner 227, src/lib/routes/stackSlide.ts): a push comes in from the right, a Back brings the page underneath back from the left with a short parallax and a dim that lifts. Content only (never the fixed FAB); the page that left is already hidden, so nothing is kept for an exit. */
+      @keyframes splito-stack-push { from { transform: translate3d(100%, 0, 0); } to { transform: none; } }
+      @keyframes splito-stack-pop { from { transform: translate3d(-28%, 0, 0); } to { transform: none; } }
+      @keyframes splito-stack-dim { from { opacity: 1; } to { opacity: 0; } }
+      @media (max-width: 799.98px) {
+        [data-screen][data-stack-in="push"] > :not([data-fab]) { animation: splito-stack-push 280ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+        [data-screen][data-stack-in="pop"] > :not([data-fab]) { animation: splito-stack-pop 250ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+        [data-screen][data-stack-in="pop"]::after { content: ''; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.14); pointer-events: none; animation: splito-stack-dim 250ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+      }
+      /* Content shifted sideways must not widen the page (the fixed bar would slip, tabTaps.spec): clip sideways on the screen only, never on html or body (that stops the window scrolling). */
+      [data-screen][data-tab-in], [data-screen][data-stack-in] { overflow-x: clip; }
+      @media (prefers-reduced-motion: reduce) { [data-screen][data-tab-in] > *, [data-screen][data-stack-in] > * { animation: none; } [data-screen][data-stack-in]::after { display: none; } }
       button, input, textarea { font: inherit; line-height: inherit; }
       /* As Bluesky's src/style.css: fields draw their own focus state. */
       textarea:focus, input:focus { outline: 0; }

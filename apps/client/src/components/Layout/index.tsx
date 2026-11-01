@@ -12,14 +12,15 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
-import {useFocusEffect} from '@react-navigation/native'
+import {useFocusEffect, useNavigation} from '@react-navigation/native'
 
 import {RouteFAB} from '#/components/RouteFAB'
 
 import {useEnableMinimalShellModeForScreen} from '#/state/shell'
 import {useShowShell} from '#/state/shell/minimal-mode'
 import {useShellLayout} from '#/state/shell/shell-layout'
-import {takeTabSlide} from '#/lib/routes/tabSlide'
+import {takeStackSlide} from '#/lib/routes/stackSlide'
+import {takeTabPress} from '#/lib/routes/tabSlide'
 import {OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {useScreenOpened} from '#/lib/hooks/useScreenOpened'
 import {usePullToRefresh} from '#/lib/refresh/usePullToRefresh'
@@ -27,11 +28,12 @@ import {useRefreshControl} from '#/lib/refresh/useRefreshControl'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {
   atoms as a,
+  isMinWidth,
   useBreakpoints,
   useTheme,
   web,
 } from '#/alf'
-import {shouldCenterNativeTabletContent} from '#/alf/breakpoints.shared'
+import {BREAKPOINTS, shouldCenterNativeTabletContent} from '#/alf/breakpoints.shared'
 import {useDialogContext} from '#/components/Dialog'
 import {
   CENTER_COLUMN_WIDTH,
@@ -43,6 +45,7 @@ import {
 } from '#/components/Layout/MainScrollProvider'
 import {IS_IPAD, IS_WEB} from '#/env'
 import {ScreenExitingProvider, useScreenExitScope} from '#/motion/listAnimations'
+import {useReadReducedMotion} from '#/motion/useShouldReduceMotion'
 
 export * from '#/components/Layout/const'
 export * as Header from '#/components/Layout/Header'
@@ -76,21 +79,31 @@ export const Screen = memo(function Screen({
   const exiting = useScreenExitScope()
   /* A tab switch or a page opening shows the header, bottom bar and FAB again (ARCHITECTURE 26.4). */
   const showShell = useShowShell()
-  /* Web: a bar tap's slide plays on the screen it opens (owner 174; CSS on `data-tab-in`, no render, tabSlide.ts). */
+  /*
+   * Web: a bar tap's slide plays on the screen it opens (owner 174; `data-tab-in`, tabSlide.ts), and on a phone a push
+   * or a Back slides like a native stack (owner 227; `data-stack-in`, stackSlide.ts). Both are CSS in index.html, run
+   * by the compositor: an attribute on this node, no render.
+   */
   const rootRef = useRef<HTMLDivElement>(null)
+  const readReducedMotion = useReadReducedMotion()
+  /* The same navigation object useFocusEffect reads; its stack's state is read when the screen gains focus (the root
+   * container is not ready yet when the first screen focuses, so it is not asked). */
+  const navigation = useNavigation()
   useFocusEffect(
     useCallback(() => {
       showShell()
       if (!IS_WEB) return
-      const direction = takeTabSlide()
+      const tab = takeTabPress()
+      const stack = takeStackSlide({
+        state: navigation.getState(),
+        isTabSwitch: tab !== undefined,
+        isPhoneWidth: !isMinWidth(BREAKPOINTS.mobile),
+      })
       const el = rootRef.current
-      if (!direction || !el) return
-      el.dataset.tabIn = direction
-      const clear = () => delete el.dataset.tabIn
-      el.addEventListener('animationend', clear, {once: true})
-      const net = setTimeout(clear, 400)
-      return () => clearTimeout(net)
-    }, [showShell]),
+      if (!el) return
+      if (tab?.direction) playSlide(el, 'tabIn', tab.direction, 400)
+      else if (stack && !readReducedMotion()) playSlide(el, 'stackIn', stack, 500)
+    }, [showShell, readReducedMotion, navigation]),
   )
 
   /*
@@ -123,6 +136,36 @@ export const Screen = memo(function Screen({
     </View>
   )
 })
+
+/* The slide each screen root is playing, so a late timer of an older one never ends a newer one. */
+const playing = new WeakMap<HTMLElement, object>()
+
+/**
+ * Sets a slide's attribute until its animation ends, is cancelled (the screen was hidden first) or a safety timer
+ * runs out (it never started). The focus effect's cleanup does not undo it: that effect runs again as a pushed
+ * screen settles (its first commit), and undoing there cut the push slide off before its first frame.
+ */
+function playSlide(el: HTMLElement, key: 'tabIn' | 'stackIn', value: string, netMs: number) {
+  const token = {}
+  playing.set(el, token)
+  delete el.dataset.tabIn
+  delete el.dataset.stackIn
+  el.dataset[key] = value
+  const clear = () => {
+    el.removeEventListener('animationend', onEnd)
+    el.removeEventListener('animationcancel', onEnd)
+    if (playing.get(el) !== token) return
+    playing.delete(el)
+    delete el.dataset[key]
+  }
+  /* Only our own slide: a spinner or shimmer inside the page bubbles its animation events here too. */
+  const onEnd = (e: AnimationEvent) => {
+    if (e.animationName.startsWith('splito-tab-in') || e.animationName.startsWith('splito-stack')) clear()
+  }
+  el.addEventListener('animationend', onEnd)
+  el.addEventListener('animationcancel', onEnd)
+  setTimeout(clear, netMs)
+}
 
 export type ContentProps = AnimatedScrollViewProps & {
   style?: StyleProp<ViewStyle>
