@@ -2124,6 +2124,11 @@ Splito lessons (add newest last, dated, with PR):
   red on this base before the change (806 Activity rows of 1,000; "switching back" lists People content updates) and
   reads the same with it.
 
+- 2026-11-01, owner 229: **two entries to one sheet is one too many.** Profile's Payment details row and the header's
+  pencil opened the same edit sheet (name and UPI ID), so the row went with its `/profile/payment` address and the
+  `leading` slot `SettingsRows` grew only for it (a prop whose last caller is gone is deleted with it, § 1). Before
+  adding a row that opens an existing sheet, check what already opens it.
+
 ## 24. Checklists
 
 **Adding a split mode:** domain `SplitInput` union + `computeShares` + `validateExpense` codes + Lingui
@@ -3455,15 +3460,17 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   compact header row (avatar about 64 px on the left, which you can change; on the right the name, email and phone
   with a verified tick, "On Splito since <month year>"; Edit as an icon button); one stat row (Friends, Groups,
   Expenses, You paid this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics;
-  then the Settings rows straight away with no "Settings" heading: **Payment details** first (its detail is your UPI
-  ID, it opens the same edit sheet), Friends and invites (which holds your friend link and QR: there is no Add me
-  section on Profile), the preference sections, Support and Your data; Log out last, the sync note in small text
+  then the Settings rows straight away with no "Settings" heading: Friends and invites (which holds your friend link
+  and QR: there is no Add me section on Profile), the preference sections, Support and Your data; **no Payment details
+  row** (owner 229): your UPI ID is edited in the same sheet the pencil opens (`/profile/edit`, name and UPI ID), so a
+  second entry to it is not shown; Log out last, the sync note in small text
   under it. **No balance and no recent activity on Profile** (owner 225): balances live on People and Groups (their
   Overviews), your changes in Activity on Me (the Expenses stat opens it). The header paints at once; the rest
   mounts after the first frame (owner 168). *Why:* "move the logout button inside profile"; "remove settings from
   profile"; "also update profile page, it looks very less"; "Remove your balance, recent activity from profile";
   "think proper about settings and profile screen it doesn't look good as setting has moved to bottom and I have to
-  scroll".
+  scroll"; "Payment detail on profile and pencil icon on profile open same popup, I guess we can remove payment details
+  then".
   *Why:* "move the logout button inside profile"; "remove settings from profile". **Log out erases everything this account left on the
   device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
   database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
@@ -4209,6 +4216,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 226 | "Why does analytics has the expense list, for that redirect to activity with other filters" | Analytics drops its expense list and selection chip; "See these expenses" and every chart tap open Activity (pushed, Back) with Type = Expenses plus the period, currency, scope and the tapped bar, category or person as removable filters | § 26.16, § 26.14 | Analytics' own expense list narrowed by chart taps |
 | 227 | "stacked screens are not there, like if I click on my avatar to go to profile it should animate and go there and then same for swipe back" | Pushed pages slide in from the right and Back slides the page underneath back, on phone web as natively; Safari's own swipe back is not animated twice; compositor only, reduced motion instant; desktop stays instant | § 26.3 | Pushed pages appeared instantly on web |
 | 228 | "think proper about settings and profile screen it doesn't look good as setting has moved to bottom and I have to scroll" | Profile fits one phone screen: compact header row, one stat row, then the Settings rows with Payment details first; Add me leaves Profile (Friends and invites holds the link and QR); Log out last | § 26.15 | Tall Profile header with Payment details and Add me sections above the Settings rows (209, 220) |
+| 229 | "Payment detail on profile and pencil icon on profile open same popup, I guess we can remove payment details then" | Profile drops the Payment details row (and its `/profile/payment` address); the UPI ID is edited in the pencil's sheet | § 26.15 | Payment details as the first Settings row on Profile (228) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

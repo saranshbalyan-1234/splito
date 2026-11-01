@@ -752,8 +752,8 @@ instant; desktop instant. Status: built (web, Chromium at 390 and 1440, 2026-11-
 
 ### F-278 Profile fits one phone screen (owner 228) `spec: ARCHITECTURE 26.15`
 
-Acceptance: at 390 x 844 the header row, the stat row, Payment details and the first Settings rows are visible without
-scrolling; Add me is gone from Profile; Payment details is the first Settings row and opens the existing sheet;
+Acceptance: at 390 x 844 the header row, the stat row and the first Settings rows are visible without
+scrolling; Add me is gone from Profile; no Payment details row (owner 229: the pencil's sheet edits the UPI ID);
 Log out is last, the sync note under it. Status: built (web; native not run). Tests: `profilePage.spec` (order, compact
 header, one-screen at 390 x 844, Hindi at 320 px), `profileSettings.spec`, `demo.spec` Profile.
 
