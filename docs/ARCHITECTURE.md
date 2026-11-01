@@ -1219,7 +1219,8 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   again re-lays out and restyles its whole tree: Analytics drew all 200 report rows the data layer read (about 4,700
   layout objects), so a switch to it cost 540-930 ms at CPU x6 (one 187 ms layout of 5,878 objects, 428 ms of style).
   Drawing a page at a time (`usePagedRows`, from c-perf) cut it to 209-466 ms (1,960 objects, longest task 727 -> 345
-  ms). Measured 2026-10-31 in Chromium at 390 px, touch, the large demo, rapid taps between visited tabs (scratch
+  ms); since F-276 (owner 226) Analytics draws no expense rows at all, so the kept tab holds only the summary and charts
+  (not re-measured; `perf/schema-v2.spec.ts` now waits for the "See these expenses" link as its "figures are on screen" mark). Measured 2026-10-31 in Chromium at 390 px, touch, the large demo, rapid taps between visited tabs (scratch
   spec, load under 4). The other tabs (600-1,250 objects) take 165-400 ms at x6: about 150 ms style, layout and paint,
   65 ms the navigation commit in the bar's animation frame, 60-90 ms touch handling; React re-renders only the bar
   and the navigator shell (the renders gate's "switching back" legs), but `propagateParentContextChanges` still walks
@@ -2001,6 +2002,19 @@ Splito lessons (add newest last, dated, with PR):
   (the macro only rewrites the tag where it is destructured from `useLingui()`), so the wording lives in
   `useScopeLabel`, which both call. Also: a header action that duplicated a Settings flow had drifted (INR and the period
   only, no choice, a different file); an entry point to an existing sheet is a preset, never a second writer.
+- 2026-11-01, F-276 (Analytics' list is Activity): four things. (1) **A URL key can already mean something else on the
+  page it is added to.** The spec wrote the period as `from` / `to`, but on web a pushed copy of a main screen carries
+  `from=<origin tab>` (owners 179, 184: `tabLink` overwrites any `from` and `isPushedTabRoute` reads it), so a date there
+  would be replaced and the page would not be a pushed copy at all (Analytics has the same clash for its custom range,
+  where it is harmless because Analytics is rarely pushed). The record filters use `since` / `until`; before adding a
+  query key to a page, grep `FROM_PARAM`, `QUERY_KEYS` and the page's own reader. (2) **Code that two layers need goes
+  down a layer, not into a re-export:** `components/activity` may not import `screens/`, so the scope helpers, their
+  address encoding and the chip wording moved to `lib/` and every import was rewritten (no shim). (3) **A filter on a
+  history list filters the record each change carries, not the change's time:** an Activity event holds the record as
+  it was written (a delete keeps the full data), so `since` / `until` / `currency` / `category` / `scope` read
+  `event.data`; a record made, edited and deleted is listed once per change. (4) **A shared chart gains an optional
+  prop, not a fork:** the bar, donut and bar-list charts got `selectHint` (the screen-reader hint of a press), unset
+  everywhere else.
 - 2026-10-31, process (fan-out of seven builders): **an isolated builder worktree starts from `main`, not from the
   orchestrator's branch.** Every builder of the round began at the last merged `main`, so each lacked the round's own
   changes (Home removed, the Overview moved, the Bell icon) and every merge back conflicted on the generated catalogs and
@@ -2131,6 +2145,20 @@ Rules that belong to one feature area rather than a layer.
   *Checks*: bun `statement.test.ts` (scope), `exportScope.test.ts`, `table.test.ts`; Playwright `analytics.spec.ts`
   (header icon opens the shared sheet on the year, INR, everything, then on a group and on Non-group only, with the
   files checked), `backup.spec.ts` and `settingsTab.spec.ts` for the other entries; web only, iOS and Android not yet.
+- [Built] **Analytics lists no expenses** (F-276, owner 226): the page is the filter bar, the Summary and the charts,
+  then one "See these expenses" link (`analytics-see-expenses`, `screens/Analytics/expensesPath.ts`) that opens Activity
+  (pushed, Back) on All with Type = Expenses and the page's period, currency and scope as filters (§ 26.14 record
+  filters); a bar, a category slice and a person row open the same list narrowed to the bar's days, the `category` or the
+  `person`. The scope helpers (`Scope`, `inScope`, `scopeToParam`, `scopeFromParam`, `sortScopeGroups`) and the chip
+  wording (`useScopeLabel`) live in `lib/scope.ts` / `lib/useScopeLabel.ts`, used by Analytics, the Export sheet and
+  Activity. *Reads/writes*: none new; the 200-row expense read (`rowsQuery` / `readRows` / `useAnalyticsRows`) and
+  the selection state are gone, Analytics now reads only the month sums, the date-index cells and the bounds. *Cost*:
+  one `ActivityLink` (no store read); a chart tap is one navigation; Activity pays the list (already paged by cursor,
+  searching back at most about ten pages for a narrowed list); Analytics draws no rows, so a revisit of its kept tab
+  holds only the summary and charts. *Telemetry*: none. *Checks*: bun `lib/scope.test.ts`, `feed.test.ts` (record
+  filters), `components/activity/urlState.test.ts`, `lib/links/resolve.test.ts`, `screens/Analytics/expensesPath.test.ts`;
+  Playwright `analytics.spec.ts` ("Activity is the list behind Analytics" at 390 and 1440 px); web only, iOS and Android
+  not yet.
 - Grouping after a category rename uses a normalised `categoryKey()`; stored ids stay as written.
 
 **Import (backup JSON, v2 Splitwise CSV).** Two steps: parse and preview (schema validation, duplicates,
@@ -3222,7 +3250,13 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   narrowed by a type or a group that holds fewer than a screenful searches back **at most about ten pages (1,000
   changes) by itself**, five pages a step, under a same-size skeleton and never "nothing matches"; past that the
   empty state says "Nothing matches in the latest changes" with **"Look further back"** (five more pages a tap), and
-  scrolling (`onEndReached`) keeps reading. A tab alone (Me, Others) never searches by itself. **Disputes get no tab
+  scrolling (`onEndReached`) keeps reading. A tab alone (Me, Others) never searches by itself. **Record filters**
+  (owner 226, F-276, built): Analytics' links also carry `?since=<day>&until=<day>&currency=<CODE>&category=<id>&scope=<0:g1,g2>`
+  (`readActivityParams`, bad values dropped; Everything is no scope); the list then keeps only changes to an expense,
+  payment or write-off whose own record matches every one that is set (its `date` within the days, its currency, its
+  category (expenses only) and its group in the scope; `matchesFilter` in `components/activity/feed.ts`), each shown as a
+  removable chip like `group` and `person`, searching back like a type does, and "Show everything" removes them all. The
+  dates are `since` / `until` because `from` names the tab a pushed copy opened from (owners 179, 184). **Disputes get no tab
   of their own** (ruling 2026-10-31): the tabs stay All / Me / Others, Disputes is a Type, and its empty text is the
   disputes copy ("No disputes or holds..."). **Every "disputed" link opens Activity filtered to disputed
   transactions** (owner 192): tapping a disputed amount or count anywhere (a person's or group's "of which ₹X
@@ -3504,11 +3538,12 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 - **Analytics has no expense list; Activity is the list behind it** (owner 226, applying owner 194 to Analytics;
   F-276). Analytics shows the filter bar, the summary and the charts only. One link under the charts, "See these
   expenses", opens Activity as a pushed copy with Back (owners 179, 190) on All with Type = Expenses and the page's
-  filters carried over: the period as `from` / `to` (the records' own dates), `currency`, and the scope (`scope`, the
-  Analytics encoding, `0:g1,g2`). Tapping a chart's bar, slice or row opens the same list narrowed to it (a bar's days,
-  a `category`, a `person`), instead of narrowing a list on Analytics; there is no selection chip. In Activity each
-  carried filter is a removable chip, like `group` and `person` (§ 26.14), and a record filter (`from`, `to`,
-  `currency`, `category`, `scope`) keeps only expenses, payments and write-offs that match it. *Why:* "Why does
+  filters carried over: the period as `since` / `until` (the records' own dates; not `from` / `to`, which on a pushed
+  copy name the tab it opened from), `currency`, and the scope (`scope`, the Analytics encoding, `0:g1,g2`). Tapping a
+  chart's bar, slice or row opens the same list narrowed to it (a bar's days, a `category`, a `person`), instead of
+  narrowing a list on Analytics; there is no selection chip. In Activity each carried filter is a removable chip, like
+  `group` and `person` (§ 26.14), and a record filter (`since`, `until`, `currency`, `category`, `scope`) keeps only
+  expenses, payments and write-offs that match it. The table view's rows stay plain (they never selected). *Why:* "Why does
   analytics has the expense list, for that redirect to activity with other filters".
 - **All Analytics filters sit on one line** (owner 171): currency, scope, period (‹ 2026 ›) and the Charts/Table
   switch in one row that scrolls sideways on narrow screens rather than wrapping. *Why:* "all filters to be in one

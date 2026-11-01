@@ -3,9 +3,11 @@ import {expect, test} from 'bun:test'
 import {
   EVERYTHING,
   inScope,
+  scopeFromParam,
   scopeFromPref,
   scopeFromTicks,
   scopeSummary,
+  scopeToParam,
   scopeToPref,
   ticksOf,
 } from './scope'
@@ -126,4 +128,13 @@ test('the chip names what is counted', () => {
   expect(
     scopeSummary({nonGroup: true, groups: ['flat', 'goa']}, GROUPS),
   ).toEqual({kind: 'nonGroupPlus', groupId: 'goa', count: 2})
+})
+
+test('scope round-trips and everything prints nothing', () => {
+  expect(scopeToParam({nonGroup: true, groups: 'all'})).toBeUndefined()
+  expect(scopeToParam({nonGroup: false, groups: ['g1', 'g2']})).toBe('0:g1,g2')
+  expect(scopeFromParam('0:g1,g2')).toEqual({nonGroup: false, groups: ['g1', 'g2']})
+  expect(scopeFromParam('1:all')).toEqual({nonGroup: true, groups: 'all'})
+  expect(scopeFromParam('0:')).toEqual({nonGroup: true, groups: 'all'})
+  expect(scopeFromParam('junk')).toBeUndefined()
 })

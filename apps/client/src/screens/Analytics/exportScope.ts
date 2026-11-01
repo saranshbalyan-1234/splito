@@ -1,6 +1,6 @@
 import {type StatementScope} from '@splito/domain'
 
-import {isEverything, type Scope} from '#/screens/Analytics/scope'
+import {isEverything, type Scope} from '#/lib/scope'
 
 /**
  * Analytics' scope as the Export sheet's group filter: Everything is no filter, exactly one group (and no

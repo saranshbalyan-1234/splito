@@ -4,11 +4,15 @@ import {View} from 'react-native'
 import Animated, {LayoutAnimationConfig, ZoomIn, ZoomOut} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
-import {type ActivityTypeId} from '@splito/sync'
+import {type ActivityTypeId, isGroupInactive} from '@splito/sync'
 
 import {type Params, param} from '#/lib/links/listState'
 
+import {EVERYTHING, sortScopeGroups} from '#/lib/scope'
+import {useScopeLabel} from '#/lib/useScopeLabel'
 import {useNumberLocale} from '#/locale/numberLocale'
+import {useSpanLabel} from '#/locale/useDates'
+import {useCategoryLookup} from '#/components/split/shared'
 import {Deferred} from '#/components/Deferred'
 import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {useDialogControl} from '#/components/Dialog'
@@ -21,7 +25,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {GroupRequestActions} from '#/screens/Groups/components/GroupRequests'
 import {OutgoingActions} from '#/screens/People/components/RequestsSection'
 import {ActivityItem} from '#/components/activity/ActivityItem'
-import {activityEmptyArt, type ActivityTab, type FeedRow} from '#/components/activity/feed'
+import {activityEmptyArt, type ActivityTab, type FeedRow, hasRecordFilter, isNarrowedFilter} from '#/components/activity/feed'
 import {LoadingSkeleton} from '#/components/activity/LoadingSkeleton'
 import {
   getBorderColor,
@@ -34,7 +38,7 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {SearchAskButton, SearchAskSpacer} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {ActivityFilterDialog} from '#/components/activity/ActivityFilterDialog'
-import {ACTIVITY_TABS, readActivityParams, activityParams, typesToParam} from '#/components/activity/urlState'
+import {ACTIVITY_TABS, readActivityParams, activityParams, recordToParams, typesToParam} from '#/components/activity/urlState'
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as ClearIcon} from '#/components/icons/Times'
@@ -80,6 +84,8 @@ export function ActivityScreen() {
   const types = fromAddress.types ?? savedTypes ?? NO_TYPES
   const group = fromAddress.group
   const person = fromAddress.person
+  /* The record filters Analytics' links carry (owner 226): each a removable chip, none in the Filters sheet. */
+  const {from, to, currency, category, scope} = fromAddress
   const tab = ACTIVITY_TABS.indexOf(tabName)
   /* The saved choices load a moment after the screen: until they are known (and the address names nothing), no tab is lit and the body waits, so nothing flashes the wrong tab (owners 166, 168). */
   const isChoiceKnown = (fromAddress.tab !== undefined || savedTab !== undefined) && (fromAddress.types !== undefined || savedTypes !== undefined)
@@ -101,16 +107,43 @@ export function ActivityScreen() {
   }
   const clearGroup = () => navigation.setParams({group: undefined})
   const clearPerson = () => navigation.setParams({person: undefined})
+  const clearPeriod = () => navigation.setParams({since: undefined, until: undefined})
+  const clearCurrency = () => navigation.setParams({currency: undefined})
+  const clearCategory = () => navigation.setParams({category: undefined})
+  const clearScope = () => navigation.setParams({scope: undefined})
+  const clearRecord = () => navigation.setParams({since: undefined, until: undefined, currency: undefined, category: undefined, scope: undefined})
   const shouldReduceMotion = useShouldReduceMotion()
   /* The tab bar follows the tap at once; the list behind it re-renders as a transition (owner 151). */
   const bodyTab = useDeferredValue(tabName)
   /* Deferred as a string: the types are a new array each render, which a deferred value would chase forever. */
   const bodyTypesKey = useDeferredValue(typesToParam(types))
   const bodyTypes = useMemo(() => readActivityParams({type: bodyTypesKey}).types ?? NO_TYPES, [bodyTypesKey])
-  const feed = useActivityFeed(bodyTab, bodyTypes, group, person)
+  /* The record filters follow the same way, as their address form. */
+  const bodyRecordKey = useDeferredValue(JSON.stringify(recordToParams(fromAddress)))
+  const bodyRecord = useMemo(() => {
+    const {from, to, currency, category, scope} = readActivityParams(JSON.parse(bodyRecordKey))
+    return {from, to, currency, category, scope}
+  }, [bodyRecordKey])
+  const feed = useActivityFeed(bodyTab, bodyTypes, group, person, bodyRecord)
   const actions = useActivityActions(feed)
   const {snapshot, rows, hiddenCount, unreadCount, me} = feed
-  const {shown, onEndReached: showMore} = usePagedRows(`${bodyTab}|${bodyTypesKey}|${group}|${person}`)(rows)
+  /* One removable chip per narrowing the address carries; the group and friend chips name what the list is scoped to. */
+  const spanLabel = useSpanLabel()
+  const categoryOf = useCategoryLookup()
+  const groupOptions = sortScopeGroups([...(snapshot?.groups.values() ?? [])].filter(g => !g.deleted).map(g => ({id: g.id, name: g.data.name, isInactive: isGroupInactive(g.data)})))
+  const scopeLabel = useScopeLabel(scope ?? EVERYTHING, groupOptions.map(g => g.id), id => snapshot?.groups.get(id)?.data.name ?? '')
+  const personName = person ? (snapshot?.people.get(person)?.data.name ?? undefined) : undefined
+  const groupName = group ? (snapshot?.groups.get(group)?.data.name ?? undefined) : undefined
+  const chipOf = (testID: string, text: string, onClear: () => void) => ({testID, text, label: l`Remove filter: ${text}`, onClear})
+  const chips = [
+    ...(person ? [{testID: 'activity-person-chip', text: personName ?? l`This friend`, label: l`Only ${personName ?? l`this friend`}. Show everything`, onClear: clearPerson}] : []),
+    ...(group ? [{testID: 'activity-group-chip', text: groupName ?? l`This group`, label: l`Only ${groupName ?? l`this group`}. Show everything`, onClear: clearGroup}] : []),
+    ...(from || to ? [chipOf('activity-period-chip', spanLabel(from, to), clearPeriod)] : []),
+    ...(currency ? [chipOf('activity-currency-chip', currency, clearCurrency)] : []),
+    ...(category ? [chipOf('activity-category-chip', categoryOf(category).name, clearCategory)] : []),
+    ...(scope ? [chipOf('activity-scope-chip', scopeLabel, clearScope)] : []),
+  ]
+  const {shown, onEndReached: showMore} = usePagedRows(`${bodyTab}|${bodyTypesKey}|${group}|${person}|${bodyRecordKey}`)(rows)
   /* Rows already loaded appear a page at a time; past the last one, older history is read by cursor. */
   const onEndReached = () => {
     if (shown.length < rows.length) showMore()
@@ -126,18 +159,19 @@ export function ActivityScreen() {
   const eventCount = rows.length - rows.filter(r => r.type === 'section').length
   const windowSize = snapshot?.events.length ?? 0
   const canLookFurther = !feed.isDone && !!feed.loadMore
-  const isSearchingOlder = canLookFurther && eventCount < MIN_LISTED && (bodyTypes.length > 0 || !!group || !!person) && windowSize < AUTO_SEARCH_EVENTS
+  const isSearchingOlder = canLookFurther && eventCount < MIN_LISTED && isNarrowedFilter({tab: bodyTab, types: bodyTypes, group, person, ...bodyRecord}) && windowSize < AUTO_SEARCH_EVENTS
   const loadMore = feed.loadMore
   useEffect(() => {
     if (isSearchingOlder) loadMore?.(5)
   }, [isSearchingOlder, snapshot, loadMore])
 
   /* The empty state follows the tab and the filters (owner 173): it says what is missing, and a narrowed list offers the way out. */
-  const isNarrowedView = bodyTypes.length > 0 || !!group || !!person
+  const isNarrowedView = isNarrowedFilter({tab: bodyTab, types: bodyTypes, group, person, ...bodyRecord})
+  const isBodyRecordFiltered = hasRecordFilter(bodyRecord)
   const emptyMessage = () => {
     if (hiddenCount > 0) return l`You've hidden everything here. New expenses, payments and group changes will show up as they happen.`
     if (canLookFurther && (isNarrowedView || bodyTab !== 'all')) return l`Nothing matches in the latest changes.`
-    if (bodyTypes.length === 1 && bodyTypes[0] === 'disputes' && !group && !person) return l`No disputes or holds. When someone questions an expense or puts it on hold, it shows up here.`
+    if (bodyTypes.length === 1 && bodyTypes[0] === 'disputes' && !group && !person && !isBodyRecordFiltered) return l`No disputes or holds. When someone questions an expense or puts it on hold, it shows up here.`
     if (isNarrowedView) return l`Nothing matches these filters yet.`
     if (bodyTab === 'me') return l`Nothing from you yet. What you add or change shows up here.`
     if (bodyTab === 'others') return l`Nothing from other people yet. When someone else adds or changes something you share, it shows up here.`
@@ -145,7 +179,9 @@ export function ActivityScreen() {
   }
   /* "Show every type" clears the types and keeps a group; with only a group narrowing, "Show everything" clears it. */
   const clearButton = isNarrowedView
-    ? bodyTypes.length > 0
+    ? isBodyRecordFiltered
+      ? {testID: 'activity-clear-filters', label: l`Show everything`, text: l`Show everything`, onPress: () => (clearRecord(), clearGroup(), clearPerson()), size: 'small' as const, color: 'secondary' as const}
+      : bodyTypes.length > 0
       ? {testID: 'activity-clear-filters', label: l`Show every type`, text: l`Show every type`, onPress: () => applyTypes([]), size: 'small' as const, color: 'secondary' as const}
       : {testID: 'activity-clear-filters', label: l`Show everything`, text: l`Show everything`, onPress: () => (group ? clearGroup() : clearPerson()), size: 'small' as const, color: 'secondary' as const}
     : undefined
@@ -249,30 +285,14 @@ export function ActivityScreen() {
           items={[l`All`, l`Me`, l`Others`]}
           onSelect={setTab}
         />
-        {group || person ? (
+        {chips.length > 0 ? (
           <View style={[a.flex_row, a.flex_wrap, a.gap_sm, a.px_lg, a.py_sm]}>
-            {person ? (
-              <Button
-                testID="activity-person-chip"
-                label={l`Only ${feed.snapshot?.people.get(person)?.data.name ?? l`this friend`}. Show everything`}
-                size="tiny"
-                color="secondary"
-                onPress={clearPerson}>
-                <ButtonText>{feed.snapshot?.people.get(person)?.data.name ?? l`This friend`}</ButtonText>
+            {chips.map(chip => (
+              <Button key={chip.testID} testID={chip.testID} label={chip.label} size="tiny" color="secondary" onPress={chip.onClear}>
+                <ButtonText>{chip.text}</ButtonText>
                 <ButtonIcon icon={ClearIcon} />
               </Button>
-            ) : null}
-            {group ? (
-            <Button
-              testID="activity-group-chip"
-              label={l`Only ${feed.snapshot?.groups.get(group)?.data.name ?? l`this group`}. Show everything`}
-              size="tiny"
-              color="secondary"
-              onPress={clearGroup}>
-              <ButtonText>{feed.snapshot?.groups.get(group)?.data.name ?? l`This group`}</ButtonText>
-              <ButtonIcon icon={ClearIcon} />
-            </Button>
-            ) : null}
+            ))}
           </View>
         ) : null}
       </Layout.Header.Sticky>
@@ -302,7 +322,7 @@ export function ActivityScreen() {
               ) : (
               <EmptyState
                 testID="activity-empty"
-                illustration={activityEmptyArt({tab: bodyTab, types: bodyTypes, group, person}, {hiddenCount, canLookFurther})}
+                illustration={activityEmptyArt({tab: bodyTab, types: bodyTypes, group, person, ...bodyRecord}, {hiddenCount, canLookFurther})}
                 message={emptyMessage()}
                 button={lookFurtherButton ?? clearButton ?? nextStepButton}
                 secondaryButton={lookFurtherButton ? clearButton : undefined}

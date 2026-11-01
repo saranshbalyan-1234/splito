@@ -1,7 +1,7 @@
 import {type ExportPreset} from '#/features/export/ExportSheet'
 import {scopeToExportGroup} from '#/screens/Analytics/exportScope'
 import {type Report} from '#/screens/Analytics/useReport'
-import {useScopeLabel} from '#/screens/Analytics/useScopeLabel'
+import {useScopeLabel} from '#/lib/useScopeLabel'
 
 /** The Export sheet's starting filters for what Analytics shows: its period, currency and scope, as a CSV. */
 export function exportPresetOf(report: Report, scopeLabel: string): ExportPreset {

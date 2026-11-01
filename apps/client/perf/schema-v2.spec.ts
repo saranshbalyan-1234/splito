@@ -93,7 +93,7 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
   for (let i = 0; i < RUNS; i++) {
     await page.getByTestId('tab-people').click()
     await expect(page.getByTestId('screen-people')).toBeVisible()
-    analytics.push(await openTab(page, 'tab-analytics', 'analytics-expenses-title'))
+    analytics.push(await openTab(page, 'tab-analytics', 'analytics-see-expenses'))
   }
   // Search: one keystroke-sized change to the first page of results, for narrow and broad queries (the Search & Ask drawer).
   // Search & Ask is on the start tab (People) only (owner 218).

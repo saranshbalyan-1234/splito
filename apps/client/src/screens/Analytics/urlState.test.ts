@@ -1,15 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import {MAX_OFFSET, readAnalyticsParams, readOffset, scopeFromParam, scopeToParam} from './urlState'
-
-test('scope round-trips and everything prints nothing', () => {
-  expect(scopeToParam({nonGroup: true, groups: 'all'})).toBeUndefined()
-  expect(scopeToParam({nonGroup: false, groups: ['g1', 'g2']})).toBe('0:g1,g2')
-  expect(scopeFromParam('0:g1,g2')).toEqual({nonGroup: false, groups: ['g1', 'g2']})
-  expect(scopeFromParam('1:all')).toEqual({nonGroup: true, groups: 'all'})
-  expect(scopeFromParam('0:')).toEqual({nonGroup: true, groups: 'all'})
-  expect(scopeFromParam('junk')).toBeUndefined()
-})
+import {MAX_OFFSET, readAnalyticsParams, readOffset} from './urlState'
 
 test('only valid params are read', () => {
   expect(readAnalyticsParams({period: 'month', offset: '-2', currency: 'EUR'})).toMatchObject({period: 'month', offset: -2, currency: 'EUR'})

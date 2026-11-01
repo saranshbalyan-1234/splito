@@ -1,53 +1,44 @@
-import {View} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount} from '@splito/domain'
-import {type ListedExpense} from '#/data/analyticsQueries'
 
 import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
+import {ActivityLink} from '#/components/ActivityLink'
 import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useExportSheet} from '#/features/export/ExportSheet'
 import {SearchAskButton, SearchAskSpacer} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
+import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
-import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Layout from '#/components/Layout'
 import {TabScreen} from '#/components/TabScreen'
 import {Text} from '#/components/Typography'
-import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type NavigationProp} from '#/lib/routes/types'
 import {Shimmer} from '#/motion/Shimmer'
 import {Charts, ChartsPlaceholder} from '#/screens/Analytics/components/Charts'
-import {
-  ExpenseRow,
-  ExpenseRowPlaceholder,
-} from '#/screens/Analytics/components/ExpenseRow'
 import {FilterBar} from '#/screens/Analytics/components/FilterBar'
 import {
   Summary,
   SummaryPlaceholder,
 } from '#/screens/Analytics/components/Summary'
+import {expensesPath} from '#/screens/Analytics/expensesPath'
 import {useExportPreset} from '#/screens/Analytics/exportPreset'
 import {type Report, useReport} from '#/screens/Analytics/useReport'
-import {seeAllTransactionsPath} from '#/lib/links/make'
-import {SectionHeader} from '#/components/SectionHeader'
 
-const PLACEHOLDER_ROWS = 4
-const NO_ROWS: ListedExpense[] = []
+/* The page scrolls as the one `List` every tab uses (pull to refresh, the header that hides, the FAB inset); it has no rows. */
+const NO_ROWS: string[] = []
 
 /**
  * Analytics: one filter bar (period, currency, group, Include groups) drives
- * the headline totals, every chart, the list of the expenses behind them and
- * the Export sheet's starting filters, so the numbers agree everywhere. Tapping a bar, slice or
- * row narrows the list to it. Charts switch to tables for screen readers.
+ * the headline totals, every chart and the Export sheet's starting filters, so the numbers agree
+ * everywhere. It lists no expenses (owner 226): "See these expenses" and a tap on a bar, slice or
+ * row open Activity on the expenses behind it. Charts switch to tables for screen readers.
  */
 export function AnalyticsScreen() {
   const {t: l} = useLingui()
@@ -58,12 +49,6 @@ export function AnalyticsScreen() {
   const isTable = view === 'table'
   /* The one Export sheet (Settings > Your data opens the same), starting on what Analytics shows (F-275). */
   const exportSheet = useExportSheet(useExportPreset(report), {isLoading: !report})
-  /* The data layer reads 200 rows at once; the web list draws every row it is given (20,000 px of page, a 240 ms commit on each revisit), so draw a page and add the next as the end comes near (usePagedRows, as Activity and Group do). */
-  const pageOf = usePagedRows(
-    report && `${report.currency}|${report.range.from}|${report.range.to}|${report.selection?.label}|${report.shareOf}`,
-  )
-  const {shown, onEndReached: showMore} = pageOf(report?.rows ?? [])
-  
 
   return (
     <TabScreen testID="screen-analytics">
@@ -95,9 +80,6 @@ export function AnalyticsScreen() {
         <Shimmer testID="analytics-loading">
           <SummaryPlaceholder />
           <ChartsPlaceholder />
-          {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
-            <ExpenseRowPlaceholder key={i} />
-          ))}
         </Shimmer>
         </>
         }>
@@ -105,7 +87,7 @@ export function AnalyticsScreen() {
         /* No expenses yet: the empty state (balances right now live on People and Groups, owner 221). */
         <List
           data={NO_ROWS}
-          keyExtractor={(e: ListedExpense) => e.id}
+          keyExtractor={(id: string) => id}
           renderItem={() => null}
           ListFooterComponent={
             <EmptyState
@@ -128,28 +110,9 @@ export function AnalyticsScreen() {
       ) : (
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
-            data={shown}
-            onEndReached={() => {
-              showMore()
-              if (shown.length >= report.rows.length && !report.isRowsDone) report.loadMoreRows()
-            }}
-            keyExtractor={(e: ListedExpense) => e.id}
-            renderItem={({item}: {item: ListedExpense}) => (
-              <ExpenseRow
-                expense={item}
-                shareOf={report.shareOf}
-                shareLabel={
-                  report.shareOf === report.me
-                    ? l`Your share`
-                    : l`${report.nameOfPerson(report.shareOf)}’s share`
-                }
-                category={report.category(item.category ?? 'other')}
-                groupName={
-                  item.groupId ? report.nameOfGroup(item.groupId) : null
-                }
-                locale={locale}
-              />
-            )}
+            data={NO_ROWS}
+            keyExtractor={(id: string) => id}
+            renderItem={() => null}
             ListHeaderComponent={
               <>
                 <FilterBar
@@ -164,9 +127,7 @@ export function AnalyticsScreen() {
                 <Deferred sameSize={!isTable} fallback={<ChartsPlaceholder />}>
                   <Charts report={report} locale={locale} isTable={isTable} />
                 </Deferred>
-                {report.totals.count > 0 && (
-                  <ExpensesHeader report={report} locale={locale} />
-                )}
+                {report.totals.count > 0 && <SeeExpensesLink report={report} />}
               </>
             }
             ListFooterComponent={<AddExpenseFABInset />}
@@ -178,61 +139,20 @@ export function AnalyticsScreen() {
   )
 }
 
-/* "Expenses", and the active chart selection as a clearable chip. */
-function ExpensesHeader({report, locale}: {report: Report; locale: string}) {
+/* The one way into the expenses behind the figures: Activity, pushed with Back, carrying the page's period, currency and scope (owner 226). */
+function SeeExpensesLink({report}: {report: Report}) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {selection, rowCount, currency} = report
-
   return (
-    <View>
-      <SectionHeader
-        title={l`Expenses`}
-        count={rowCount}
-        testID="analytics-expenses-title"
-        href={seeAllTransactionsPath()}
-        hrefLabel={l`See all transactions`}
-      />
-      {selection && (
-        <View
-          style={[
-            a.flex_row,
-            a.flex_wrap,
-            a.align_center,
-            a.gap_sm,
-            a.px_lg,
-            a.pb_md,
-          ]}>
-          <Button
-            testID="analytics-selection"
-            label={l`Clear filter: ${selection.label}`}
-            size="small"
-            color="primary_subtle"
-            onPress={() => report.select(null)}>
-            <ButtonText>{selection.label}</ButtonText>
-            <ButtonIcon icon={XIcon} />
-          </Button>
-          <Text
-            testID="analytics-selection-total"
-            style={[a.text_sm, t.atoms.text_contrast_medium]}>
-            {report.shareOf === report.me ? (
-              <Trans>
-                Your share{' '}
-                <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text]}>
-                  {formatAmount(report.rowsTotal, currency, locale)}
-                </Text>
-              </Trans>
-            ) : (
-              <Trans>
-                {report.nameOfPerson(report.shareOf)}’s share{' '}
-                <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text]}>
-                  {formatAmount(report.rowsTotal, currency, locale)}
-                </Text>
-              </Trans>
-            )}
-          </Text>
-        </View>
-      )}
-    </View>
+    <ActivityLink
+      testID="analytics-see-expenses"
+      href={expensesPath(report)}
+      label={l`See these expenses`}
+      style={[a.mx_lg, a.mb_md, a.justify_between]}>
+      <Text style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
+        <Trans>See these expenses</Trans>
+      </Text>
+      <ChevronRightIcon style={{width: 16, height: 16}} fill={t.atoms.text_contrast_medium.color} />
+    </ActivityLink>
   )
 }

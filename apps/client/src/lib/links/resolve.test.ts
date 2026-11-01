@@ -216,6 +216,19 @@ test('every "See all" is Activity on All: transactions, disputed, requests, scop
   expect(resolveLink('/activity?person=nope').target.params).toEqual({})
 })
 
+test("Analytics' record filters (owner 226) survive the resolver; `from` stays the origin tab, so the dates are since/until", async () => {
+  const {activityPath} = await import('./make')
+  const path = activityPath({types: ['expenses'], from: '2026-01-01', to: '2026-03-31', currency: 'EUR', category: 'food', scope: {nonGroup: false, groups: ['g1', 'g2']}})
+  expect(path).toBe('/activity?tab=all&type=expenses&since=2026-01-01&until=2026-03-31&currency=EUR&category=food&scope=0%3Ag1%2Cg2')
+  const r = resolveLink(path)
+  expect(r.target.params).toEqual({tab: 'all', type: 'expenses', since: '2026-01-01', until: '2026-03-31', currency: 'EUR', category: 'food', scope: '0:g1,g2'})
+  expect(resolveLink(buildPath(r.target)).target.params).toEqual(r.target.params)
+  // Everything is no scope; a missing option writes nothing.
+  expect(activityPath({types: ['expenses'], scope: {nonGroup: true, groups: 'all'}})).toBe('/activity?tab=all&type=expenses')
+  // Keys of another page do not survive.
+  expect(resolveLink('/activity?since=2026-01-01&period=month&offset=2').target.params).toEqual({since: '2026-01-01'})
+})
+
 test('Support and Your data are Settings section pages; Export and Import are sheets of Your data (owners 204, 205)', () => {
   expect(resolveLink('/settings/support').target).toEqual({name: 'SettingsSection', params: {section: 'support'}, sheets: [], query: {}})
   expect(resolveLink('/settings/data').target).toEqual({name: 'SettingsSection', params: {section: 'data'}, sheets: [], query: {}})

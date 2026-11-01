@@ -1,6 +1,7 @@
 import {type LocalDate} from '@splito/domain'
 import {type ActivityEvent, type ActivityTypeId} from '@splito/sync'
 
+import {inScope, type Scope} from '#/lib/scope'
 import {dayOfInstant} from '#/locale/dayLabel'
 import {type IllustrationName} from '#/motion/illustrations'
 
@@ -101,8 +102,34 @@ export type FeedRow =
 /** Activity's tabs (owner 92): everything, what I did, what other people did. */
 export type ActivityTab = 'all' | 'me' | 'others'
 
-/** What the list shows: the tab, the types (empty is every type, owner 173) and, from a Group's "See all", one group. */
-export type FeedFilter = {tab: ActivityTab; types: readonly ActivityTypeId[]; group?: string; /** One friend (owner 194): events involving them. */ person?: string}
+/**
+ * What the list shows: the tab, the types (empty is every type, owner 173) and, from a Group's "See all", one group.
+ * The record filters (owner 226, Analytics' "See these expenses" and chart taps) keep only changes to an expense, payment
+ * or write-off whose own record matches every one that is set: its `date` within `from`..`to` (inclusive local days), its
+ * `currency`, its `category` (expenses only: a payment or write-off has none, so it never matches) and its group in `scope`.
+ */
+export type FeedFilter = {
+  tab: ActivityTab
+  types: readonly ActivityTypeId[]
+  group?: string
+  /** One friend (owner 194): events involving them. */
+  person?: string
+  from?: LocalDate
+  to?: LocalDate
+  currency?: string
+  category?: string
+  scope?: Scope
+}
+
+/** Whether a filter carries any of the record filters (they narrow the list like a type or a group does). */
+export function hasRecordFilter(f: Pick<FeedFilter, 'from' | 'to' | 'currency' | 'category' | 'scope'>): boolean {
+  return !!(f.from || f.to || f.currency || f.category || f.scope)
+}
+
+/** Whether a filter narrows the list at all, apart from its tab. */
+export function isNarrowedFilter(f: FeedFilter): boolean {
+  return f.types.length > 0 || !!f.group || !!f.person || hasRecordFilter(f)
+}
 
 /** The art of an empty Activity narrowed to one type (F-260): each is about what that type holds. */
 export const ACTIVITY_TYPE_ART = {
@@ -123,10 +150,10 @@ export function activityEmptyArt(
   f: FeedFilter,
   {hiddenCount, canLookFurther}: {hiddenCount: number; canLookFurther: boolean},
 ): IllustrationName {
-  const isNarrowed = f.types.length > 0 || !!f.group || !!f.person
+  const isNarrowed = isNarrowedFilter(f)
   if (hiddenCount > 0) return 'empty-activity'
   if (canLookFurther && (isNarrowed || f.tab !== 'all')) return 'empty-search'
-  if (!f.group && !f.person) {
+  if (!f.group && !f.person && !hasRecordFilter(f)) {
     if (f.types.length === 1) return ACTIVITY_TYPE_ART[f.types[0]!]
     /* "Transactions" (every See all of Recent transactions) is expenses and payments: money moving, so the receipt. */
     if (f.types.length === 2 && f.types.includes('expenses') && f.types.includes('payments')) return ACTIVITY_TYPE_ART.expenses
@@ -209,6 +236,20 @@ function groupOf(e: ActivityEvent, groupOfTarget?: GroupOfTarget): string | null
   }
 }
 
+/**
+ * Whether a change to a money record is about a record the filter keeps. Write-offs carry the same `date`, `currency` and
+ * group as payments; only expenses carry a category. Any other kind of change has no such record, so it never matches.
+ */
+function matchesRecord(e: ActivityEvent, f: FeedFilter): boolean {
+  if (e.entityType !== 'expense' && e.entityType !== 'repayment' && e.entityType !== 'writeoff') return false
+  const r = e.data
+  if (f.from && r.date < f.from) return false
+  if (f.to && r.date > f.to) return false
+  if (f.currency && r.currency !== f.currency) return false
+  if (f.category && (e.entityType !== 'expense' || (e.data.category || 'other') !== f.category)) return false
+  return !f.scope || inScope(r.groupId ?? null, f.scope)
+}
+
 /** Whether `event` is in the list for `filter`. */
 export function matchesFilter(event: ActivityEvent, filter: FeedFilter, me: string, groupOfTarget?: GroupOfTarget, partiesOfTarget?: PartiesOfTarget): boolean {
   if (filter.tab === 'others' && event.actor === me) return false
@@ -218,6 +259,7 @@ export function matchesFilter(event: ActivityEvent, filter: FeedFilter, me: stri
     if (!type || !filter.types.includes(type)) return false
   }
   if (filter.person && !involves(event, filter.person, partiesOfTarget)) return false
+  if (hasRecordFilter(filter) && !matchesRecord(event, filter)) return false
   return !filter.group || groupOf(event, groupOfTarget) === filter.group
 }
 

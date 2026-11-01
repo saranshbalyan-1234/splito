@@ -1,5 +1,5 @@
 /// <reference types="bun" />
-import {expect, test} from 'bun:test'
+import {describe, expect, test} from 'bun:test'
 import {type ActivityEvent} from '@splito/sync'
 
 import {
@@ -13,6 +13,8 @@ import {
   isRead,
   markAllRead,
   markRows,
+  hasRecordFilter,
+  isNarrowedFilter,
   matchesFilter,
   setHidden,
   setRead,
@@ -218,4 +220,75 @@ test('an empty Activity shows art about what is missing (F-260)', () => {
   expect(art({types: ['comments', 'payments']})).toBe('empty-filter')
   expect(art({types: ['expenses'], group: 'g1'})).toBe('empty-filter')
   expect(art({person: 'p1'})).toBe('empty-filter')
+})
+
+describe('record filters (owner 226)', () => {
+  const money = (kind: string, id: string, entityType: string, data: Record<string, unknown>) => ({id, at: at(20, 9), actor: 'riya', kind, entityType, entityId: id, version: 1, data}) as unknown as ActivityEvent
+  const expense = (id: string, o: Record<string, unknown> = {}) => money('expense.created', id, 'expense', {date: '2026-03-10', currency: 'EUR', category: 'food', groupId: 'g1', ...o})
+  const payment = money('repayment.recorded', 'pay', 'repayment', {date: '2026-03-10', currency: 'EUR', groupId: 'g1'})
+  const writeOff = money('writeoff.recorded', 'wo', 'writeoff', {date: '2026-03-10', currency: 'EUR', groupId: null})
+  const comment = money('comment.added', 'c', 'comment', {targetType: 'expense', targetId: 'e1', mentions: [], authorId: 'riya'})
+  const keeps = (e: ActivityEvent, f: Partial<FeedFilter>) => matchesFilter(e, {...ALL_ACTIVITY, ...f}, 'me')
+
+  test('a date range keeps the record dates inside it, ends included, and compares days as strings', () => {
+    const e = expense('e')
+    expect(keeps(e, {from: '2026-03-10', to: '2026-03-10'})).toBe(true)
+    expect(keeps(e, {from: '2026-03-01', to: '2026-03-31'})).toBe(true)
+    expect(keeps(e, {from: '2026-03-11'})).toBe(false)
+    expect(keeps(e, {to: '2026-03-09'})).toBe(false)
+    expect(keeps(e, {from: '2026-03-10'})).toBe(true)
+    // The record's own date counts, not when the change was made (the event is dated October).
+    expect(keeps(expense('old', {date: '2025-12-31'}), {from: '2026-01-01', to: '2026-03-31'})).toBe(false)
+  })
+
+  test('currency, category and scope each narrow; a missing category reads as other', () => {
+    expect(keeps(expense('e'), {currency: 'EUR'})).toBe(true)
+    expect(keeps(expense('e'), {currency: 'INR'})).toBe(false)
+    expect(keeps(expense('e'), {category: 'food'})).toBe(true)
+    expect(keeps(expense('e'), {category: 'travel'})).toBe(false)
+    expect(keeps(expense('e', {category: undefined}), {category: 'other'})).toBe(true)
+    expect(keeps(expense('e', {category: ''}), {category: 'other'})).toBe(true)
+    expect(keeps(expense('e'), {scope: {nonGroup: false, groups: ['g1']}})).toBe(true)
+    expect(keeps(expense('e'), {scope: {nonGroup: false, groups: ['g2']}})).toBe(false)
+    expect(keeps(expense('e'), {scope: {nonGroup: true, groups: []}})).toBe(false)
+    expect(keeps(expense('n', {groupId: null}), {scope: {nonGroup: true, groups: []}})).toBe(true)
+    expect(keeps(expense('n', {groupId: null}), {scope: {nonGroup: false, groups: 'all'}})).toBe(false)
+  })
+
+  test('payments and write-offs carry a date, currency and group but never match a category; other kinds never match a record filter', () => {
+    expect(keeps(payment, {from: '2026-03-01', to: '2026-03-31', currency: 'EUR', scope: {nonGroup: false, groups: ['g1']}})).toBe(true)
+    expect(keeps(payment, {currency: 'INR'})).toBe(false)
+    expect(keeps(writeOff, {currency: 'EUR', scope: {nonGroup: true, groups: []}})).toBe(true)
+    expect(keeps(writeOff, {scope: {nonGroup: false, groups: ['g1']}})).toBe(false)
+    expect(keeps(payment, {category: 'food'})).toBe(false)
+    expect(keeps(writeOff, {category: 'other'})).toBe(false)
+    expect(keeps(comment, {currency: 'EUR'})).toBe(false)
+    expect(keeps(comment, {from: '2026-01-01'})).toBe(false)
+    // No record filter: every kind still shows.
+    expect(keeps(comment, {})).toBe(true)
+  })
+
+  test('they combine with each other and with type, group and tab', () => {
+    const f: Partial<FeedFilter> = {types: ['expenses'], from: '2026-03-01', to: '2026-03-31', currency: 'EUR', category: 'food', scope: {nonGroup: false, groups: ['g1']}}
+    expect(keeps(expense('e'), f)).toBe(true)
+    expect(keeps(expense('e', {date: '2026-04-01'}), f)).toBe(false)
+    expect(keeps(expense('e', {currency: 'INR'}), f)).toBe(false)
+    expect(keeps(expense('e', {category: 'travel'}), f)).toBe(false)
+    expect(keeps(expense('e', {groupId: 'g2'}), f)).toBe(false)
+    expect(keeps(payment, f)).toBe(false)
+    expect(keeps(expense('e'), {...f, group: 'g1'})).toBe(true)
+    expect(keeps(expense('e'), {...f, group: 'g2'})).toBe(false)
+    expect(keeps(expense('e'), {...f, tab: 'me'})).toBe(false)
+    const rows = buildRows([expense('e'), expense('x', {currency: 'INR'}), payment], EMPTY_FEED_STATE, 'me', {...ALL_ACTIVITY, ...f}, 'UTC').rows
+    expect(rows.flatMap(r => (r.type === 'event' ? [r.event.id] : []))).toEqual(['e'])
+  })
+
+  test('a record filter makes the list narrowed and its empty art the filter art', () => {
+    expect(isNarrowedFilter({...ALL_ACTIVITY, currency: 'EUR'})).toBe(true)
+    expect(isNarrowedFilter(ALL_ACTIVITY)).toBe(false)
+    expect(hasRecordFilter({scope: {nonGroup: true, groups: []}})).toBe(true)
+    const none = {hiddenCount: 0, canLookFurther: false}
+    expect(activityEmptyArt({...ALL_ACTIVITY, types: ['expenses'], currency: 'EUR'}, none)).toBe('empty-filter')
+    expect(activityEmptyArt({...ALL_ACTIVITY, types: ['expenses'], currency: 'EUR'}, {...none, canLookFurther: true})).toBe('empty-search')
+  })
 })

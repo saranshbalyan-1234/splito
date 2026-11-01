@@ -4,7 +4,8 @@ import {join} from 'node:path'
 import {expect, type Page, test} from '@playwright/test'
 
 import {type SplitoDevTools} from '../src/data/devTools'
-import {DESKTOP, PHONE} from './viewports'
+import {activityRows, activityScreen} from './activity'
+import {DESKTOP, PHONE, SIZES} from './viewports'
 
 /*
  * A known ledger, seeded through the real mutations (window.splito, E2E
@@ -175,9 +176,6 @@ async function expectTotals(
   await expect(page.getByTestId('analytics-total-paid')).toHaveText(inr(t.paid))
   await expect(page.getByTestId('analytics-total-all')).toHaveText(inr(t.total))
   await expect(page.getByTestId('analytics-count')).toHaveText(String(t.count))
-  await expect(page.getByTestId('analytics-expenses-title')).toHaveText(
-    `Expenses  ${t.count}`,
-  )
 }
 
 test.use({
@@ -254,15 +252,10 @@ test('this year: totals, every chart label, the list and the CSV agree', async (
     `you owe ↗ ${inr(2000)}`,
   )
 
-  /* The list: newest first, with my share of each. */
-  const shares = page.getByTestId('analytics-expense-share')
-  await expect(shares).toHaveText([
-    inr(100),
-    inr(3000),
-    inr(300),
-    inr(500),
-    inr(400),
-  ])
+  /* No expense list here (owner 226): one link under the charts opens Activity on them. */
+  await expect(page.getByTestId('analytics-see-expenses')).toBeVisible()
+  await expect(page.getByTestId('analytics-expenses-title')).toHaveCount(0)
+  await expect(page.getByTestId('analytics-expense-share')).toHaveCount(0)
 
   /* Export (F-275): the header icon opens the same sheet as Settings > Your data, already on this year, INR, everything, as CSV. */
   await page.getByTestId('analytics-export').click()
@@ -517,7 +510,6 @@ test('scope: tapping a group in the By group chart narrows the scope to it', asy
     page.getByTestId('analytics-by-category-chart-stay-amount'),
   ).toHaveText(inr(3000))
   await expect(page.getByTestId('analytics-by-group')).toHaveCount(0)
-  await expect(page.getByTestId('analytics-selection')).toHaveCount(0)
 
   await applyScope(page, {nonGroup: true, groups: ['Goa']})
   await page.getByTestId('analytics-by-group-chart-Non-group').click()
@@ -576,34 +568,96 @@ test.describe('phone', () => {
   })
 })
 
-test('tapping a slice, a bar or a person narrows the list to it, with matching totals', async ({
-  page,
-}) => {
-  await seed(page, LEDGER)
-  const shares = page.getByTestId('analytics-expense-share')
+/** The seeded titles named by the rows of the Activity screen on top, in the ledger's order, once per row (the deleted lunch is listed as made and as deleted). */
+async function listedTitles(page: Page) {
+  const texts = await activityRows(page).allInnerTexts()
+  return ['Groceries', 'Dinner', 'Lunch', 'Cab', 'Museum', 'Hotel'].flatMap(title => texts.filter(t => t.includes(title)).map(() => title))
+}
 
-  await page.getByTestId('analytics-by-category-chart-stay').click()
-  await expect(page.getByTestId('analytics-selection')).toHaveText('Stay')
-  await expect(shares).toHaveText([inr(3000)])
-  await expect(page.getByTestId('analytics-selection-total')).toHaveText(
-    `Your share ${inr(3000)}`,
-  )
-  await page.getByTestId('analytics-selection').click()
-  await expect(shares).toHaveCount(5)
+/* Analytics lists no expenses (owner 226): "See these expenses" and a tap on a bar, slice or row open Activity on them. */
+for (const [name, size] of SIZES) {
+  test.describe(`Activity is the list behind Analytics at ${name}`, () => {
+    test.use({viewport: size})
 
-  await page.getByTestId('analytics-over-time-chart-bar-2026-09-01').click()
-  await expect(page.getByTestId('analytics-selection')).toHaveText(
-    'September 2026',
-  )
-  await expect(shares).toHaveText([inr(400)])
+    test('"See these expenses" carries the period and currency; chips remove them one at a time; Back returns', async ({page}) => {
+      await seed(page, LEDGER)
+      await page.getByTestId('analytics-see-expenses').click()
+      await expect(page).toHaveURL(/\/activity/)
+      await expect(page).toHaveURL(/type=expenses/)
+      await expect(page).toHaveURL(/since=2026-01-01/)
+      await expect(page).toHaveURL(/until=2026-12-31/)
+      await expect(page).toHaveURL(/currency=INR/)
+      await expect(page).not.toHaveURL(/scope=/)
+      const screen = activityScreen(page)
+      await expect(screen.getByTestId('activity-period-chip')).toContainText(/Jan 1.*Dec 31, 2026/)
+      await expect(screen.getByTestId('activity-currency-chip')).toHaveText('INR')
+      await expect(screen.getByTestId('activity-scope-chip')).toHaveCount(0)
+      /* Only the INR expenses of 2026: the euro museum ticket is not listed; the deleted lunch is, as made and as deleted. */
+      await expect.poll(() => listedTitles(page)).toEqual(['Groceries', 'Dinner', 'Lunch', 'Lunch', 'Cab', 'Hotel'])
 
-  /* A person's row lists the expenses they share in, showing their share. */
-  await page.getByTestId('analytics-by-person-chart-Sam Carter').click()
-  await expect(page.getByTestId('analytics-selection-total')).toHaveText(
-    `Sam Carter’s share ${inr(3800)}`,
-  )
-  await expect(shares).toHaveText([inr(3000), inr(300), inr(500)])
-})
+      /* The currency chip comes off alone: the euro ticket appears, the period stays. */
+      await screen.getByTestId('activity-currency-chip').click()
+      await expect(screen.getByTestId('activity-currency-chip')).toHaveCount(0)
+      await expect(screen.getByTestId('activity-period-chip')).toBeVisible()
+      await expect.poll(async () => (await listedTitles(page)).includes('Museum')).toBe(true)
+      await screen.getByTestId('activity-period-chip').click()
+      await expect(page).not.toHaveURL(/since=/)
+      await expect(page).not.toHaveURL(/until=/)
+
+      /* Back is the header's, and returns to Analytics as it was. */
+      await expect(screen.getByTestId('header-back')).toBeVisible()
+      await screen.getByTestId('header-back').click()
+      await expect(page.getByTestId('screen-analytics').last()).toBeVisible()
+      await expect(page.getByTestId('analytics-period-label')).toHaveText('2026')
+      await expect(page.getByTestId('analytics-see-expenses')).toBeVisible()
+    })
+
+    test('a scope other than Everything travels as a chip', async ({page}) => {
+      await seed(page, LEDGER)
+      await applyScope(page, {nonGroup: false, groups: ['Goa']})
+      await page.getByTestId('analytics-see-expenses').click()
+      await expect(page).toHaveURL(/scope=/)
+      const screen = activityScreen(page)
+      await expect(screen.getByTestId('activity-scope-chip')).toHaveText('Goa')
+      await expect.poll(() => listedTitles(page)).toEqual(['Cab', 'Hotel'])
+      await screen.getByTestId('activity-scope-chip').click()
+      await expect(page).not.toHaveURL(/scope=/)
+      await expect.poll(async () => (await listedTitles(page)).includes('Dinner')).toBe(true)
+    })
+
+    test("a category slice, a bar and a person row open Activity narrowed to them, with the page's period and currency", async ({page}) => {
+      await seed(page, LEDGER)
+
+      await page.getByTestId('analytics-by-category-chart-stay').click()
+      let screen = activityScreen(page)
+      await expect(page).toHaveURL(/category=stay/)
+      await expect(screen.getByTestId('activity-category-chip')).toHaveText('Stay')
+      await expect(screen.getByTestId('activity-currency-chip')).toHaveText('INR')
+      await expect.poll(() => listedTitles(page)).toEqual(['Hotel'])
+      /* Taking the chip off widens the list; nothing else changes. */
+      await screen.getByTestId('activity-category-chip').click()
+      await expect(page).not.toHaveURL(/category=/)
+      await expect.poll(async () => (await listedTitles(page)).length).toBeGreaterThan(1)
+      await expect(screen.getByTestId('activity-currency-chip')).toBeVisible()
+      await screen.getByTestId('header-back').click()
+
+      await page.getByTestId('analytics-over-time-chart-bar-2026-09-01').click()
+      screen = activityScreen(page)
+      await expect(page).toHaveURL(/since=2026-09-01/)
+      await expect(page).toHaveURL(/until=2026-09-30/)
+      await expect(screen.getByTestId('activity-period-chip')).toContainText(/Sep 1.*30/)
+      await expect.poll(() => listedTitles(page)).toEqual(['Groceries'])
+      await screen.getByTestId('header-back').click()
+
+      /* A person's row lists the expenses they are in. */
+      await page.getByTestId('analytics-by-person-chart-Sam Carter').click()
+      screen = activityScreen(page)
+      await expect(screen.getByTestId('activity-person-chip')).toHaveText('Sam Carter')
+      await expect(screen.getByTestId('activity-currency-chip')).toHaveText('INR')
+      await expect.poll(() => listedTitles(page)).toEqual(['Dinner', 'Cab', 'Hotel'])
+    })
+  })
+}
 
 test('table view shows the same numbers as the charts', async ({page}) => {
   await seed(page, LEDGER)

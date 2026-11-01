@@ -1,6 +1,7 @@
 import {type ActivityTypeId} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
+import {type Scope, scopeToParam} from '#/lib/scope'
 import {buildPath, type LinkTarget} from './resolve'
 import {webLink} from './hosts'
 
@@ -38,8 +39,32 @@ export function openPerson(navigation: Pick<NavigationProp, 'push' | 'navigate'>
  * (or `openLink`) it lands as a pushed page with Back. The tab is a query here because `Link` matches a bare route
  * pattern (`/activity`); the address bar prints it as `/activity/all`.
  */
-export function activityPath({types = [], groupId, personId, tab = 'all'}: {types?: readonly ActivityTypeId[]; groupId?: string; personId?: string; /** `me` for what I did (Profile's Expenses and recent activity). */ tab?: 'all' | 'me'} = {}) {
-  return `/activity?${new URLSearchParams({tab, ...(types.length > 0 ? {type: types.join() === 'expenses,payments' ? 'transactions' : types.join(',')} : {}), ...(groupId ? {group: groupId} : {}), ...(personId ? {person: personId} : {})})}`
+export function activityPath({types = [], groupId, personId, tab = 'all', from, to, currency, category, scope}: {
+  types?: readonly ActivityTypeId[]
+  groupId?: string
+  personId?: string
+  /** `me` for what I did (Profile's Expenses and recent activity). */
+  tab?: 'all' | 'me'
+  /** Record filters (owner 226): Analytics' "See these expenses" and chart taps. The dates are written `since` / `until` (`from` names the origin tab on a pushed copy). */
+  from?: string
+  to?: string
+  currency?: string
+  category?: string
+  /** Written only when it is not Everything. */
+  scope?: Scope
+} = {}) {
+  const scopeParam = scope ? scopeToParam(scope) : undefined
+  return `/activity?${new URLSearchParams({
+    tab,
+    ...(types.length > 0 ? {type: types.join() === 'expenses,payments' ? 'transactions' : types.join(',')} : {}),
+    ...(groupId ? {group: groupId} : {}),
+    ...(personId ? {person: personId} : {}),
+    ...(from ? {since: from} : {}),
+    ...(to ? {until: to} : {}),
+    ...(currency ? {currency} : {}),
+    ...(category ? {category} : {}),
+    ...(scopeParam ? {scope: scopeParam} : {}),
+  })}`
 }
 
 /** Every transactions heading, count and "See all": Expenses and Payments (owners 173, 193). */
