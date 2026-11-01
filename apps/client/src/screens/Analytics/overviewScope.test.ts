@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import {scopeFromParam} from '#/screens/Analytics/urlState'
+import {scopeFromParam} from '#/lib/scope'
 import {analyticsHref, overviewScopeParam} from './overviewScope'
 
 test('an old ?overview= link reads as Analytics\' scope (owner 219); anything else is no scope', () => {

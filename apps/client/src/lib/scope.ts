@@ -70,6 +70,11 @@ export function ticksOf(s: Scope, groupIds: string[]) {
   }
 }
 
+/** Groups in the order the scope sheet and the chip list them (the chip names the first one chosen): active first, then inactive; by name within each. Sorts in place. */
+export function sortScopeGroups<T extends {name: string; isInactive: boolean}>(groups: T[]): T[] {
+  return groups.sort((x, y) => Number(x.isInactive) - Number(y.isInactive) || x.name.localeCompare(y.name))
+}
+
 export type ScopeSummary =
   | {kind: 'everything'}
   | {kind: 'nonGroup'}
@@ -93,4 +98,22 @@ export function scopeSummary(s: Scope, groupIds: string[]): ScopeSummary {
   return chosen.length <= NAMED_UP_TO
     ? {kind: 'group', groupId: first, more: chosen.length - 1}
     : {kind: 'groups', count: chosen.length}
+}
+
+/**
+ * The scope in an address (`0:g1,g2`: non-group 0/1, then `all` or the chosen group ids), undefined for Everything.
+ * Analytics writes it (`?scope=`) and Activity reads it when a link carries Analytics' scope over (owner 226).
+ */
+export function scopeToParam(scope: Scope): string | undefined {
+  if (isEverything(scope)) return undefined
+  return `${scope.nonGroup ? 1 : 0}:${scope.groups === 'all' ? 'all' : scope.groups.join(',')}`
+}
+
+/** The inverse of `scopeToParam`; undefined for anything else. */
+export function scopeFromParam(value: string): Scope | undefined {
+  const m = /^([01]):(all|[\w,-]*)$/.exec(value)
+  if (!m) return undefined
+  const groups = m[2] === 'all' ? 'all' : m[2]!.split(',').filter(Boolean)
+  const nonGroup = m[1] === '1'
+  return !nonGroup && groups !== 'all' && groups.length === 0 ? EVERYTHING : {nonGroup, groups}
 }

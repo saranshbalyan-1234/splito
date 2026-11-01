@@ -1,8 +1,7 @@
 import {type SummaryScope} from '@splito/domain'
 
 import {oneOf, type Params} from '#/lib/links/listState'
-import {type Scope} from './scope'
-import {scopeFromParam} from './urlState'
+import {type Scope, scopeFromParam} from '#/lib/scope'
 
 export const OVERVIEW_SCOPES = ['all', 'groups', 'direct'] as const satisfies readonly SummaryScope[]
 

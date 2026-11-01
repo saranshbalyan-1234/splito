@@ -120,7 +120,8 @@ export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
   Person: ['groups'],
   Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope', 'overview'],
   /* `type=transactions` (Recent transactions' "See all", owners 173, 179), `group=<id>` from a Group's "See all" (F-259); `from` is the tab a pushed copy opened from. */
-  Activity: ['type', 'group', 'person', 'from'],
+  /* `since`, `until`, `currency`, `category` and `scope` are the record filters Analytics' links carry (owner 226); not `from`/`to`, which name the origin tab here. */
+  Activity: ['type', 'group', 'person', 'from', 'since', 'until', 'currency', 'category', 'scope'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
   SettingsSection: ['note'],
   FriendsAndInvites: ['section'],

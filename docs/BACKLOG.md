@@ -747,11 +747,13 @@ Audit the whole codebase for code that does the same job twice and merge each se
 
 Acceptance: (1) Analytics renders no expense rows and no selection chip; its data layer no longer reads the 200-row
 expense list. (2) A "See these expenses" link under the charts opens Activity (pushed, Back) with
-`type=expenses&from=&to=&currency=` and `scope=` when the scope is not everything. (3) A bar opens it with that bar's
-`from`/`to`, a category slice or row with `category=`, a person row with `person=`. (4) Activity reads `from`, `to`,
-`currency`, `category` and `scope` (sanitised; listed in `QUERY_KEYS`), filters records by their own date, currency,
-category and group, shows each as a removable chip, and the empty state and "Look further back" work under them.
-(5) The scope helpers live in one shared module used by Analytics and Activity. Status: building.
+`type=expenses&since=&until=&currency=` and `scope=` when the scope is not everything. (3) A bar opens it with that
+bar's `since`/`until`, a category slice or row with `category=`, a person row with `person=`. (4) Activity reads
+`since`, `until`, `currency`, `category` and `scope` (sanitised; listed in `QUERY_KEYS`), filters records by their own
+date, currency, category and group, shows each as a removable chip, and the empty state and "Look further back" work
+under them. (5) The scope helpers live in one shared module (`lib/scope.ts`) used by Analytics and Activity.
+Note: the dates are `since` / `until`, not `from` / `to` as first written, because `from` is the origin tab of a pushed
+copy (owners 179, 184; ARCHITECTURE § 23, 2026-11-01). Status: built (web checked; iOS and Android not run).
 
 ### F-275 New-user UX fixes (audit 2026-10-31) `spec: owners 212/213; docs/ux/2026-10-31-new-user-audit.md`
 

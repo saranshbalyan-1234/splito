@@ -19,9 +19,9 @@ import {
   ScopeDialog,
 } from '#/screens/Analytics/components/ScopeDialog'
 import {PeriodControl} from '#/screens/Analytics/components/Summary'
-import {isEverything, scopeSummary} from '#/screens/Analytics/scope'
+import {isEverything, scopeSummary} from '#/lib/scope'
 import {type Report} from '#/screens/Analytics/useReport'
-import {useScopeLabel} from '#/screens/Analytics/useScopeLabel'
+import {useScopeLabel} from '#/lib/useScopeLabel'
 
 /**
  * The one row of filters above everything they scope: currency, the scope

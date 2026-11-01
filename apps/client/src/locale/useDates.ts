@@ -90,6 +90,33 @@ export function useFormatDay() {
 }
 
 /**
+ * A span of days as one label in the Date format preference: "1 Jan – 31 Mar 2026", one date for a single day, "From
+ * 1 Jan 2026" or "Until 31 Mar 2026" when only one end is known (Activity's period chip, owner 226). The year is
+ * written on the first date only when the two ends are in different years.
+ */
+export function useSpanLabel() {
+  const {t: l} = useLingui()
+  const formatDay = useFormatDay()
+  const long: Intl.DateTimeFormatOptions = {day: 'numeric', month: 'short', year: 'numeric'}
+  return (from: LocalDate | undefined, to: LocalDate | undefined): string => {
+    if (from && to && from !== to) {
+      const start = formatDay(from, {intl: from.slice(0, 4) === to.slice(0, 4) ? {day: 'numeric', month: 'short'} : long})
+      return `${start} – ${formatDay(to, {intl: long})}`
+    }
+    if (from && to) return formatDay(from, {intl: long})
+    if (from) {
+      const date = formatDay(from, {intl: long})
+      return l`From ${date}`
+    }
+    if (to) {
+      const date = formatDay(to, {intl: long})
+      return l`Until ${date}`
+    }
+    return ''
+  }
+}
+
+/**
  * The one day label (F-274 finding 6): Today, Yesterday, a weekday within the week, otherwise the date in
  * the Date format preference ("Mon, 5 Oct", the year when it is not this one). Takes a calendar day, or an
  * instant, which is first put on its day in the Timezone preference. Activity's day headers, the

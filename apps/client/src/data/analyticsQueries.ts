@@ -1,27 +1,15 @@
-import {type DateRange, type ReportExpense, type SpendCell, ZERO} from '@splito/domain'
-import {
-  cellsOfEntity,
-  type Entity,
-  type Expense,
-  type Key,
-  type Page,
-  type Repayment,
-  type RowSyncStatus,
-  type Store,
-  toExpenseRecord,
-  touches,
-  type WriteOff,
-} from '@splito/sync'
+import {type DateRange, type SpendCell} from '@splito/domain'
+import {cellsOfEntity, type Expense, type Repayment, type Store, touches, type WriteOff} from '@splito/sync'
 
-import {MORE, type Query} from '#/data/projections'
+import {type Query} from '#/data/projections'
 
 /*
  * What Analytics reads (ARCHITECTURE 9.8, "Analytics and Search never load
  * the ledger"): history-long figures come from the `aggregates` projection
  * (whole months, one row per month, group, category and person); the selected
  * period's edges, and short periods, come from the date indexes
- * (`byDate` ranges); the expense list pages newest first by cursor. Nothing
- * here reads a money store whole.
+ * (`byDate` ranges). Analytics lists no expenses (owner 226: Activity is the list behind it).
+ * Nothing here reads a money store whole.
  */
 
 const isMoney = (c: Parameters<typeof touches>[0]) => touches(c, 'expense') || touches(c, 'repayment') || touches(c, 'writeoff')
@@ -183,91 +171,3 @@ export function boundsQuery(currency: string, scopeKey: string, isIn: (groupId: 
   return q
 }
 const boundQueries = new Map<string, Query<DateRange | null>>()
-
-/* -------------------------------------------------------------------------- */
-/* The expense list                                                           */
-/* -------------------------------------------------------------------------- */
-
-/** Which expenses the list behind the charts shows. */
-export type RowsSpec = {
-  currency: string
-  from: string
-  to: string
-  scopeKey: string
-  isIn: (groupId: string | null) => boolean
-  /** A tapped slice or row narrows the list; a tapped bar narrows `from`/`to` instead. */
-  selection?: {kind: 'category' | 'person'; key: string}
-  me: string
-}
-
-/** A page of the list is this many rows read at a time. */
-const READ = 100
-
-const keepRow = (e: Entity<Expense>, s: RowsSpec) => {
-  const d = e.data
-  if (e.deleted || d.currency !== s.currency || !s.isIn(d.groupId)) return false
-  if (s.selection?.kind === 'category') return (d.shares[s.me] ?? ZERO) !== ZERO && (d.category ?? 'other') === s.selection.key
-  if (s.selection?.kind === 'person') return (d.shares[s.selection.key] ?? ZERO) !== ZERO
-  return true
-}
-
-/** A row of the list behind the charts; `syncStatus` comes with it so the row is drawn lighter while unsynced, with no store read of its own. */
-export type ListedExpense = ReportExpense & {syncStatus?: RowSyncStatus}
-const asRow = (e: Entity<Expense>): ListedExpense => ({...toExpenseRecord(e), category: e.data.category, title: e.data.title, syncStatus: e.syncStatus})
-const sameParts = (a: Record<string, bigint>, b: Record<string, bigint>) => {
-  const ka = Object.keys(a)
-  return ka.length === Object.keys(b).length && ka.every(k => a[k] === b[k])
-}
-const sameRow = (a: ListedExpense, b: ListedExpense) =>
-  a.syncStatus === b.syncStatus && a.id === b.id && a.total === b.total && a.date === b.date && a.title === b.title && a.category === b.category && a.groupId === b.groupId && a.currency === b.currency && sameParts(a.payers, b.payers) && sameParts(a.shares, b.shares)
-const byDateDesc = (x: ReportExpense, y: ReportExpense) => (x.date === y.date ? (x.id < y.id ? -1 : 1) : x.date > y.date ? -1 : 1)
-
-/**
- * The first `want` rows of the list, newest first, read by cursor from the
- * `byDate` index (Infinity: all of them, for the CSV export only).
- * ponytail: a rare currency or a narrow scope reads past rows it drops;
- * `byGroupDate` per chosen group would skip them. Ties on one date are
- * ordered within the rows read.
- */
-export async function readRows(store: Store, spec: RowsSpec, want: number): Promise<{rows: ListedExpense[]; isDone: boolean}> {
-  const rows: ListedExpense[] = []
-  let after: Key | null = null
-  let isDone = false
-  while (rows.length < want && !isDone) {
-    const page: Page<Entity<Expense>> = await store.page<Expense>('expense', {index: 'byDate', min: spec.from, max: spec.to, dir: 'prev', after, limit: READ})
-    after = page.next
-    isDone = !page.next
-    for (const e of page.items) if (keepRow(e, spec)) rows.push(asRow(e))
-  }
-  return {rows: rows.sort(byDateDesc), isDone}
-}
-
-export type RowsPager = {rows: ListedExpense[]; isDone: boolean; loadMore: () => void}
-
-const rowQueries = new Map<string, Query<RowsPager>>()
-
-/** The list behind the charts: a first screenful, `loadMore` for the next. */
-export function rowsQuery(spec: RowsSpec): Query<RowsPager> {
-  const key = `analytics:rows:${JSON.stringify([spec.currency, spec.from, spec.to, spec.scopeKey, spec.selection, spec.me])}`
-  let q = rowQueries.get(key)
-  if (!q) {
-    q = {
-      key,
-      isTouchedBy: c => touches(c, 'expense'),
-      loader: (store, controls) => {
-        let want = 2 * READ
-        const loadMore = () => {
-          want += READ
-          controls.reload(MORE)
-        }
-        return async (_c, prev) => {
-          const {rows, isDone} = await readRows(store, spec, want)
-          const same = prev && prev.isDone === isDone && prev.rows.length === rows.length && prev.rows.every((r, i) => sameRow(r, rows[i]!))
-          return same ? prev : {rows, isDone, loadMore}
-        }
-      },
-    }
-    rowQueries.set(key, q)
-  }
-  return q
-}

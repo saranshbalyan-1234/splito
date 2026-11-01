@@ -42,6 +42,7 @@ export function DonutChart({
   locale,
   selectedKey,
   onSelect,
+  selectHint,
   size = 184,
   isWide = false,
   testID,
@@ -53,6 +54,8 @@ export function DonutChart({
   locale: string
   selectedKey?: string
   onSelect?: (key: string | null) => void
+  /** What pressing a slice or legend row does, for a screen reader ("Show the expenses of Food in Activity"); none by default. */
+  selectHint?: (label: string) => string
   size?: number
   /** Legend beside the ring instead of under it. */
   isWide?: boolean
@@ -155,7 +158,7 @@ export function DonutChart({
               role="listitem"
               accessibilityRole="button"
               accessibilityLabel={`${s.label}: ${formatAmount(s.value, currency, locale)}, ${pct.format(percentOf(s.value, total) / 100)}`}
-              accessibilityHint=""
+              accessibilityHint={selectHint?.(s.label) ?? ''}
               accessibilityState={{selected: isSelected}}
               onPress={() => select(s.key)}
               onHoverIn={() => setHoverKey(s.key)}

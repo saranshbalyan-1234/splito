@@ -208,6 +208,7 @@ export function HitColumns({
   bottom,
   selectedKey,
   describe,
+  selectHint,
   onActive,
   onSelect,
   testID,
@@ -218,6 +219,8 @@ export function HitColumns({
   bottom: number
   selectedKey: string | undefined
   describe: (p: Point) => string
+  /** What a press does, for a screen reader ("Show the expenses of March in Activity"); none by default. */
+  selectHint?: (label: string) => string
   /** The hovered or focused point; a state setter, so leaving one column never clears its neighbour. */
   onActive: React.Dispatch<React.SetStateAction<string | undefined>>
   onSelect?: (key: string | null) => void
@@ -233,7 +236,7 @@ export function HitColumns({
             testID={`${testID}-${p.key}`}
             accessibilityRole={onSelect ? 'button' : 'text'}
             accessibilityLabel={describe(p)}
-            accessibilityHint=""
+            accessibilityHint={onSelect ? (selectHint?.(p.label) ?? '') : ''}
             accessibilityState={onSelect ? {selected: isSelected} : undefined}
             disabled={!onSelect}
             onPress={() => onSelect?.(isSelected ? null : p.key)}
