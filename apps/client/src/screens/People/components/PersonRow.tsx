@@ -1,3 +1,4 @@
+import {memo} from 'react'
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -66,7 +67,7 @@ function ChipTag({name}: {name: string}) {
  * group chips), and on the right - where Bluesky has Follow - the balance
  * per currency in words.
  */
-export function PersonRow({
+function PersonRowImpl({
   row,
   groupNames,
   locale,
@@ -264,6 +265,12 @@ export function PersonRow({
     </Animated.View>
   )
 }
+
+/*
+ * Memoised: Bluesky's web List re-renders a row whenever its index moves (a search narrowing the list moves most of
+ * them), and the row is the cost there, not the wrapper. Same row object, names and locale: nothing to redraw.
+ */
+export const PersonRow = memo(PersonRowImpl)
 
 /** Loading shape of one row. */
 export function PersonRowPlaceholder() {

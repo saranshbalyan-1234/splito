@@ -1079,6 +1079,29 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **A keystroke renders the list it filters, not the screen; a search swaps rows without their fades; a closed row menu
+  is not mounted; the next page is built as a transition.** (1) The query state lives in the component that renders the
+  list (`screens/People/components/FriendsList.tsx`), the rows follow it as `useDeferredValue`, and what the screen
+  derives from its projections is memoised on them (the React Compiler had left the People screen's whole
+  summary-and-rows chain unmemoised: read the compiled output before trusting it), so each row keeps its object and a
+  memoised row (`PersonRow`, `RequestsSection`) skips; anything the screen hands the list's heading (the Overview) is
+  built by the screen, so a key reuses it; a hook that follows focus (`useIsFocused`, the tour's `usePublishPeopleState`)
+  sits in a leaf, or every tab switch re-renders the screen and, with unmemoised rows, all of them (38 rows a switch on
+  base, owner 166). (2) Narrowing or widening a list by search is not a change to explain (owner
+  213): `useQuietRows()` (`motion/listAnimations.tsx`) makes the rows a query change removes or adds skip Reanimated's
+  exit and enter (on web each exit cloned the row and read `scrollTop` on every node of it); the handler calls
+  `hush(query)`, the list `settle(query)` once it shows that query, and a settle for an older query is ignored (a commit's
+  effects can run after the next key's handler). (3) A row's "..." is a plain button until a mouse is over the row, the
+  keyboard is inside it, or it is tapped: Radix's dropdown root, trigger, popper and the phone drawer were about 40 of an
+  Activity row's 130 component renders, plus a second render of the popper chain after mount. (4) `usePagedRows` adds a
+  page inside `startTransition`, so its render yields; growing a page six rows per commit cut the longest task further
+  (53-86 ms) but each step waited on a commit, an effect and the list's resize and intersection observers, so reading a
+  year back fell behind the specs' wheel loop: rejected. Measured 2026-10-31 (Chromium, 390 px, touch, large demo, 42
+  friends, CPU x6, three interleaved runs per build, load 2-10): People search, 16 keys: 211 -> 59-66 React renders a
+  key, 83 -> 2-4 row re-renders, 46 -> 0 exit clones, worst key-to-echo median 987 -> 98 ms, longest task median 536 ->
+  69 ms; Activity first fling (27 rows added): 3,475 -> 2,475 renders, worst frame median 773 -> 154 ms, longest task
+  median 721 -> 170 ms (still over 50: the page's one commit; cheaper rows are next). `perf/listWork.spec.ts` gates the
+  counts, which hold at any load.
 - **A summary beside a list reads what the list already computed; it never subscribes and derives again.** The People
   Overview (owner 219) subscribed to every person and every balance row itself and ran `personSummary` twice per
   commit, beside a list that had just done the same: turning demo mode on (about 1,500 commits while People shows) went
@@ -1946,6 +1969,33 @@ Splito lessons (add newest last, dated, with PR):
   behind a row breaks every spec that clicks it**: the split chips, the charges and the cash-rounding switch now need
   `chooseSplitMode` / `openCharges` / `openMoreOptions` from `e2e/composer.ts` first; use those helpers rather than
   clicking the row inline.
+- 2026-10-31, People search and Activity fling (F-266 sweep misses, owner 189): **the cost was in what the screen
+  re-did, not in the list.** (1) Typing in the friends search set state in `PeopleScreen`, so every key re-rendered the
+  header, the Overview, the requests, the filter sheet and the list (211 renders a key), and because the compiler had
+  not memoised `personSummary` -> `listedFriends` -> `sortFriends` every row got a new object and re-rendered; the rows a
+  key removed each ran Reanimated's web exit (46 clones over 16 keys, each reading `scrollTop` of every node). Fix: the
+  query moved into `FriendsList`, the rows follow a deferred query, the derived rows are memoised on their projections,
+  the rows are `memo`, and a search swaps rows quietly (`useQuietRows`). The first quiet-rows cut settled on any commit
+  that showed the query and let a later key's rows fade (12 clones in one run): React flushes the previous commit's
+  effects before rendering the next key, after its handler, so `settle` now names the query it showed. (2) Activity's
+  first fling added a page of 27 rows in one task of 3,475 renders; each row mounted Radix's closed dropdown and the
+  phone drawer, so the menu mounts on first use. A tap opens it once mounted (a native menu control opens through its
+  sheet's ref, which exists only then); a mouse over the row or keyboard focus inside it mounts it ahead, because
+  swapping the "..." under a focused or pressed button lost Enter (Radix's keyboard open focuses the first item only
+  when its own trigger saw the key: `activity.spec` "hide works from the keyboard" caught it). (3) Growing a page six rows
+  a commit made every step wait on observers, and four `activity.spec` cases that wheel a year back timed out: a page is
+  one transition instead. Two specs read a count once right after the list appeared while the next page was still
+  arriving; they now poll. (4) Activity's rows read their animations in `ActivityScreen`, which renders the screen's exit
+  scope and so sits above it; they now use `AnimatedListRow`. (5) The renders gate's "switching back to a visited tab"
+  test was red on base: People's `usePublishPeopleState` reads `useIsFocused`, so each switch re-rendered the screen and
+  all 38 rows; it is a leaf now and the test passes. Method: `perf/listWork.spec.ts` counts renders from the
+  commit hook in the e2e build (`LISTWORK_NAMES=1` against a Metro dev server gives component names, `LISTWORK_PROFILE=1`
+  a CPU profile, `LISTWORK_TRACE=1` a timeline summary), interleaving base and after builds; the counts are the gate, and
+  timings were taken once the machine fell under load 10. Metro started with `CI=1` does not watch files: a dev server for
+  profiling an edit must run without it. A screen whose list moved into `./components/` still counts as scrolling with
+  `List` (`lib/refresh/screens.test.ts` follows those imports). The renders gate's main scenario cannot run on this base
+  (the scroll stops at 806 rows, and with Search & Ask on the start tab only, owner 218, its Ask phase finds no button on
+  Activity), so its counts were not compared. Not run: WebKit, iOS, Android.
 - 2026-10-31, F-275 (one export): **a shared label is a hook, not a function that takes `l`.** The Analytics scope chip and
   the Export sheet's Group picker must name a scope the same way; passing Lingui's `t` into a helper does not extract
   (the macro only rewrites the tag where it is destructured from `useLingui()`), so the wording lives in

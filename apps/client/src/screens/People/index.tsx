@@ -1,5 +1,4 @@
-import {useEffect, useState} from 'react'
-import {LayoutAnimationConfig} from 'react-native-reanimated'
+import {useEffect, useMemo} from 'react'
 import {Deferred} from '#/components/Deferred'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
@@ -9,7 +8,7 @@ import {type Group, type Person} from '@splito/sync'
 import {type Params, readSort} from '#/lib/links/listState'
 import {perfMark} from '#/lib/perfMark'
 import {type NavigationProp} from '#/lib/routes/types'
-import {usePublishPeopleState, useTourRef} from '#/lib/tour/registry'
+import {type PeopleState, usePublishPeopleState, useTourRef} from '#/lib/tour/registry'
 import {useGroupChipNames} from '#/data/groupVisibility'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -22,37 +21,26 @@ import {
   useMe,
   usePref,
 } from '#/data/hooks'
-import {EmptyState} from '#/view/com/util/EmptyState'
-import {List} from '#/view/com/util/List'
-import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {useDialogControl} from '#/components/Dialog'
-import {Button, ButtonIcon} from '#/components/Button'
-import {HITSLOP_10} from '#/lib/constants'
-import {SettingsGear2_Stroke2_Corner0_Rounded as GearIcon} from '#/components/icons/Settings'
 import {SearchAskButton, SearchAskSpacer} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
 import {TabScreen} from '#/components/TabScreen'
-import {ListToolsHeader} from '#/components/ListToolsHeader'
 import {DEFAULT_LIST_SORT} from '#/components/ListSortMenu'
 import {Shimmer} from '#/motion/Shimmer'
-import {
-  PersonRow,
-  type PersonRowData,
-  PersonRowPlaceholder,
-} from './components/PersonRow'
+import {type PersonRowData, PersonRowPlaceholder} from './components/PersonRow'
+import {FriendsList} from './components/FriendsList'
+import {FriendsOverview} from './components/FriendsOverview'
+import {analyticsHref} from '#/screens/Analytics/overviewScope'
+import {openLink} from '#/lib/links/open'
 import {
   FriendsFilterDialog,
   type PeopleFilters,
 } from './components/FriendsFilterDialog'
-import {RequestsSection} from './components/RequestsSection'
-import {FriendsOverview} from './components/FriendsOverview'
-import {analyticsHref} from '#/screens/Analytics/overviewScope'
-import {openLink} from '#/lib/links/open'
 import {SectionHeader} from '#/components/SectionHeader'
 import {peopleParams, readPeopleParams} from './urlState'
-import {filterFriends, listedFriends, searchFriends, seenByPerson, sortFriends} from './sort'
+import {filterFriends, listedFriends, seenByPerson, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
 
@@ -81,23 +69,22 @@ export function PeopleScreen() {
   const [showHidden, setShowHidden] = useShowHidden()
   const [showSettled = false, setShowSettled] = usePref('people.showSettled')
   const hiddenIds = useHiddenItems()
-  const defaults: PeopleFilters = {
-    includeGroups: includeDefault ?? true,
-    currency: 'all',
-    show: 'all',
-    showHidden: false,
-    showSettled: false,
-  }
-  /* The list's own search (26.12): by name, combined with the filters; not kept after leaving. */
-  const [query, setQuery] = useState('')
   const route = useRoute()
-  /* The filters are the address (`/people?sort=name&show=owesYou`, F-241): a param that is present wins over the saved preference. */
-  const filters: PeopleFilters = {
-    ...defaults,
-    showHidden,
-    showSettled,
-    ...readPeopleParams(route.params as Params),
-  }
+  /*
+   * The filters are the address (`/people?sort=name&show=owesYou`, F-241): a param that is present wins over the saved
+   * preference. Memoised on the values (useRoute hands back a new, equal route on many navigation updates).
+   */
+  const fromAddress = readPeopleParams(route.params as Params)
+  const filters: PeopleFilters = useMemo(
+    () => ({
+      includeGroups: fromAddress.includeGroups ?? includeDefault ?? true,
+      currency: fromAddress.currency ?? 'all',
+      show: fromAddress.show ?? 'all',
+      showHidden: fromAddress.showHidden ?? showHidden,
+      showSettled: fromAddress.showSettled ?? showSettled,
+    }),
+    [fromAddress.includeGroups, fromAddress.currency, fromAddress.show, fromAddress.showHidden, fromAddress.showSettled, includeDefault, showHidden, showSettled],
+  )
   const {includeGroups} = filters
   /* The order is the address (`/people?sort=name`, owner 199): a param that is present wins over the saved preference. */
   const sort = readSort((route.params as Params)?.sort) ?? sortSaved
@@ -113,37 +100,41 @@ export function PeopleScreen() {
   useEffect(() => {
     if (!isLoading) perfMark('splito:people-ready')
   }, [isLoading])
-  const summaries = balanceRows
-    ? personSummary(balanceRows, {includeGroups})
-    : []
-  const byPerson = new Map(summaries.map(s => [s.person, s]))
   const groupNames = useGroupChipNames(groups)
-  const friends = listedFriends(people ?? [], byPerson, hiddenIds)
-  /* Settled currencies stay on offer and filterable (audit m3). */
-  const seenCurrencies = seenByPerson(seen?.people ?? {}, includeGroups)
-  const currencies = [
-    ...new Set([
-      ...summaries.flatMap(s => Object.keys(s.byCurrency)),
-      ...friends.flatMap(f => [...(seenCurrencies.get(f.id) ?? [])]),
-    ]),
-  ].sort()
-  const filtered: PersonRowData[] = sortFriends(
-    filterFriends(friends, filters, seenCurrencies).filter(f => showHidden || !f.isHidden),
-    sort,
-    {
-      currency: filters.currency === 'all' ? currency : filters.currency,
-      activity: lastActivity ?? new Map(),
-    },
-  )
-  /* Settled up friends leave the list only (owner 90, 112): a search still finds them. */
-  const {listed, count: listedCount, total: searchTotal} = searchFriends(filtered, query, filters, seenCurrencies)
+  /*
+   * Memoised by hand on the projections (each keeps its identity while unchanged): the compiler left this chain
+   * unmemoised (measured in the compiled output), so every render of the screen built every friend's summary and row
+   * again and each row re-rendered with a new object (17.1).
+   */
+  const {friends, seenCurrencies, currencies, filtered} = useMemo(() => {
+    const summaries = balanceRows ? personSummary(balanceRows, {includeGroups}) : []
+    const byPerson = new Map(summaries.map(s => [s.person, s]))
+    const friends = listedFriends(people ?? [], byPerson, hiddenIds)
+    /* Settled currencies stay on offer and filterable (audit m3). */
+    const seenCurrencies = seenByPerson(seen?.people ?? {}, includeGroups)
+    const currencies = [
+      ...new Set([
+        ...summaries.flatMap(s => Object.keys(s.byCurrency)),
+        ...friends.flatMap(f => [...(seenCurrencies.get(f.id) ?? [])]),
+      ]),
+    ].sort()
+    const filtered: PersonRowData[] = sortFriends(
+      filterFriends(friends, filters, seenCurrencies).filter(f => showHidden || !f.isHidden),
+      sort,
+      {
+        currency: filters.currency === 'all' ? currency : filters.currency,
+        activity: lastActivity ?? new Map(),
+      },
+    )
+    return {friends, seenCurrencies, currencies, filtered}
+  }, [balanceRows, includeGroups, people, hiddenIds, seen, filters, showHidden, sort, currency, lastActivity])
 
-  /* The guided tour starts here once People has loaded (F-253). */
-  usePublishPeopleState(isLoading ? 'loading' : friends.length === 0 ? 'empty' : 'friends')
   const addFriendRef = useTourRef('add-friend')
 
   return (
     <TabScreen testID="screen-people">
+      {/* The guided tour starts here once People has loaded (F-253). */}
+      <PublishPeopleState state={isLoading ? 'loading' : friends.length === 0 ? 'empty' : 'friends'} />
       <Layout.Header.Outer>
         <HeaderAvatar />
         {/* Balances Search & Ask on the right (start tab only, owner 218), so the title stays centred. */}
@@ -175,137 +166,41 @@ export function PeopleScreen() {
         </Shimmer>
         }>
         {() => (
-        /* Upstream's list idiom: rows already there on mount appear at once; later inserts and removals animate. */
-        <LayoutAnimationConfig skipEntering skipExiting>
-          <List
-            data={listed}
-            keyExtractor={(row: PersonRowData) => row.id}
-            renderItem={({item, index}: {item: PersonRowData; index: number}) => (
-              <PersonRow row={item} groupNames={groupNames} locale={locale} isTourTarget={index === 0} />
-            )}
-            ListHeaderComponent={
-              friends.length > 0 ? (
-                <>
-                  {/* Balances with friends right now (owner 219), counted as the list counts them: Include groups on, every
-                      balance; off, the non-group ones. A card opens Analytics in that currency and scope. */}
-                  <FriendsOverview
-                    testID="people-overview"
-                    titleTestID="people-overview-title"
-                    friends={friends}
-                    showHidden={showHidden}
-                    onCurrencyPress={currency => openLink(analyticsHref(includeGroups ? 'all' : 'direct', currency))}
-                  />
-                  <RequestsSection />
-                  <ListToolsHeader
-                    title={l`Friends`}
-                    titleTestID="people-friends-title"
-                    count={listedCount}
-                    /* "N of M": M is what the search runs over (settled friends included), so N never exceeds it. */
-                    total={searchTotal}
-                    query={query}
-                    onQueryChange={setQuery}
-                    searchLabel={l`Search friends`}
-                    activeFilterCount={activeCount}
-                    onFiltersPress={() => filterControl.open()}
-                    sort={{
-                      value: sort,
-                      onChange: next => {
-                        /* Absent means the saved choice, and the saved choice is now `next`: only a non-stock order is written. */
-                        navigation.setParams({sort: next === DEFAULT_LIST_SORT ? undefined : next} as never)
-                        void setSortSaved(next)
-                      },
-                    }}
-                    endAction={
-                      <Button
-                        testID="people-manage-friends"
-                        label={l`Manage friends and invites`}
-                        size="small"
-                        variant="ghost"
-                        color="secondary"
-                        shape="round"
-                        hitSlop={HITSLOP_10}
-                        onPress={() => navigation.navigate('FriendsAndInvites')}>
-                        <ButtonIcon icon={GearIcon} size="md" />
-                      </Button>
-                    }
-                  />
-                </>
-              ) : (
-                <RequestsSection />
-              )
+          <FriendsList
+            overview={
+              /* Balances with friends right now (owner 219), counted as the list counts them: Include groups on, every
+                 balance; off, the non-group ones. A card opens Analytics in that currency and scope. Built here, so a
+                 search keystroke (which renders only the list) reuses it. */
+              <FriendsOverview
+                testID="people-overview"
+                titleTestID="people-overview-title"
+                friends={friends}
+                showHidden={showHidden}
+                onCurrencyPress={currency => openLink(analyticsHref(includeGroups ? 'all' : 'direct', currency))}
+              />
             }
-            ListEmptyComponent={
-              friends.length > 0 && query.trim() ? (
-                <EmptyState
-                  testID="people-search-empty"
-                  illustration="empty-search"
-                  message={l`No matches for “${query.trim()}”`}
-                  button={{
-                    testID: 'people-search-clear',
-                    label: l`Clear search`,
-                    text: l`Clear search`,
-                    onPress: () => setQuery(''),
-                    size: 'small',
-                    color: 'secondary',
-                  }}
-                />
-              ) : friends.length > 0 ? (
-                filtered.length > 0 && !showSettled ? (
-                  /* Everything that matches is settled up: one button brings it back (it sets the preference). */
-                  <EmptyState
-                    testID="people-all-settled"
-                    illustration="empty-settled"
-                    message={l`All settled up`}
-                    button={{
-                      testID: 'people-show-settled',
-                      label: l`Show settled`,
-                      text: l`Show settled`,
-                      onPress: () => void setShowSettled(true),
-                      size: 'small',
-                      color: 'secondary',
-                    }}
-                  />
-                ) : (
-                <EmptyState
-                  testID="people-filtered-empty"
-                  illustration="empty-filter"
-                  message={l`No friends match these filters.`}
-                  button={{
-                    testID: 'people-clear-filters',
-                    label: l`Clear filters`,
-                    text: l`Clear filters`,
-                    onPress: () => {
-                      navigation.setParams(peopleParams(STOCK as PeopleFilters, STOCK as PeopleFilters) as never)
-                      void setIncludeDefault(true)
-                      void setShowSettled(false)
-                      void setShowHidden(false)
-                    },
-                    size: 'small',
-                    color: 'secondary',
-                  }}
-                />
-                )
-              ) : (
-                <EmptyState
-                  testID="people-empty"
-                  /* Same layout, motion and button as every other screen's empty state (owner 146). */
-                  illustration="empty-people"
-                  message={l`No friends yet. Add a friend, then split any bill with them. They don’t need the app.`}
-                  button={{
-                    testID: 'people-empty-add-friend',
-                    label: l`Add a friend`,
-                    text: l`Add a friend`,
-                    icon: PersonPlusIcon,
-                    onPress: () => navigation.navigate('AddFriend'),
-                    size: 'small',
-                    color: 'secondary',
-                  }}
-                />
-              )
-            }
-            ListFooterComponent={<AddExpenseFABInset />}
+            filtered={filtered}
+            friendsCount={friends.length}
+            filters={filters}
+            seenCurrencies={seenCurrencies}
+            groupNames={groupNames}
+            locale={locale}
+            activeFilterCount={activeCount}
+            onFiltersPress={() => filterControl.open()}
+            sort={sort}
+            onSortChange={next => {
+              /* Absent means the saved choice, and the saved choice is now `next`: only a non-stock order is written. */
+              navigation.setParams({sort: next === DEFAULT_LIST_SORT ? undefined : next} as never)
+              void setSortSaved(next)
+            }}
+            onShowSettled={() => void setShowSettled(true)}
+            onClearFilters={() => {
+              navigation.setParams(peopleParams(STOCK as PeopleFilters, STOCK as PeopleFilters) as never)
+              void setIncludeDefault(true)
+              void setShowSettled(false)
+              void setShowHidden(false)
+            }}
           />
-        </LayoutAnimationConfig>
         )}
       </Deferred>
       <FriendsFilterDialog
@@ -334,4 +229,13 @@ function FriendsHeader({count}: {count: number | undefined}) {
       count={count}
     />
   )
+}
+
+/*
+ * A leaf, so the focus it follows (`useIsFocused`) re-renders only it: in the screen, every switch to or from People
+ * re-rendered the whole screen (owner 166; the renders gate's "switching back" legs caught it).
+ */
+function PublishPeopleState({state}: {state: PeopleState}) {
+  usePublishPeopleState(state)
+  return null
 }

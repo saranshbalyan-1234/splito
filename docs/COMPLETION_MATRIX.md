@@ -396,6 +396,39 @@ branch); the counts above came from a local run with the scroll target lowered t
 Not verified: WebKit (not installed in this container), iOS and Android (native paths unchanged: the Reanimated patch and
 the exit scope touch web code only; `LayoutAnimationConfig skipExiting` still does the native job).
 
+## People search and Activity's first fling (F-266 sweep misses, owner 189; web, measured 2026-10-31)
+
+`perf/listWork.spec.ts` (new): Chromium, 390 x 844, touch, large demo (42 friends), CPU x6, accessibility tree off. Base =
+`claude/repo-status-other-chat-xmr0l3` as merged into this branch, after = this branch, both `e2e:build`, three runs each
+interleaved, 1-minute load 2.3-9.9 (one base run started at 12.6 and fell to 9.9). The counts do not depend on load and
+are what the spec gates; the timings are the method's medians. Run: `E2E_PORT=8933 pnpm perf listWork` (`PERF_DIST` for
+another build).
+
+| People search, "rahul sharma 120" (16 keys) | Base (3 runs) | After (3 runs) |
+|---|---|---|
+| React renders per key | 210.6 (every run) | 59.0 / 64.0 / 65.5 |
+| Person rows re-rendered (whole search) | 83 | 2 / 4 / 4 |
+| Rows cloned out by Reanimated's exit | 46 | 0 |
+| Worst key-to-echo, ms (median) | 1,299 / 987 / 560 (987) | 98 / 248 / 89 (98) |
+| Median key-to-echo, ms | 124 / 74 / 79 | 38 / 45 / 60 |
+| Longest task, ms (median) | 630 / 536 / 513 (536) | 58 / 227 / 69 (69) |
+
+| Activity, first fling (adds 27 rows) | Base | After |
+|---|---|---|
+| React renders | 3,475 | 2,475 |
+| Worst frame gap, ms (median) | 763 / 773 / 884 (773) | 178 / 154 / 40 (154) |
+| Longest task, ms (median) | 721 / 721 / 822 (721) | 170 / 152 / 229 (170) |
+
+Still over budget: the Activity page's commit (27 rows in one commit, about 150-230 ms at x6). Growing a page six rows per
+commit measured 53-86 ms (load 11) but slowed reading far back, so it was dropped (ARCHITECTURE 17.1, 23); cheaper rows
+(about 92 renders each) are the next step. Causes and fixes in ARCHITECTURE 17.1 and 23.
+
+Renders gate (`pnpm --filter @splito/client renders`, load 5-7): "switching back to a visited tab re-renders none of its
+content" was red on base (every switch to or from People re-rendered PeopleScreen, its Overview, header and all 38 rows,
+through the tour's `useIsFocused`) and passes here (nothing of People renders). The main scenario cannot run on this
+base: the scroll stops at 806 rows (positive control 1,000; the c-perf note above) and, with Search & Ask on the start
+tab only (owner 218), its Ask phase finds no button on Activity; with the target lowered locally to 800 it stops there.
+Baseline not re-recorded; its scroll phase will count fewer renders (no closed row menus), which the next re-record takes.
 ## F-266 search: a broad query's first page from a newest-first walk (ARCHITECTURE 17.1 "Narrow first", measured 2026-10-31)
 
 Machine load 27-40 from other builders for the whole session, so every wall-clock number below is indicative only (the
