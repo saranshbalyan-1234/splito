@@ -31,9 +31,10 @@ import {useRowAction} from '#/components/people/useRowAction'
 /**
  * At the top of People (26.3, owners 153, 175, 197): "Requests" waiting for your answer (Accept / Decline), then
  * "Invites sent" (Resend / Cancel), each row on one line as on Friends and invites (F-621). The layout is the one
- * Groups shares (`RequestsBlock`). Hidden when nothing is pending.
+ * Groups shares (`RequestsBlock`). Hidden when nothing is pending. Memoised (it reads its own data): it sits in the
+ * friends list's heading, which every search keystroke redraws.
  */
-export function RequestsSection() {
+export const RequestsSection = memo(function RequestsSection() {
   const {t: l} = useLingui()
   const {incoming, outgoing} = usePendingRequests()
   return (
@@ -49,7 +50,7 @@ export function RequestsSection() {
       ))}
     />
   )
-}
+})
 
 export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
   const {t: l} = useLingui()

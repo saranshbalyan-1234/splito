@@ -44,9 +44,6 @@ import {
   myExpenseCountQuery,
   type Overview,
   overviewQuery,
-  rowsQuery,
-  type RowsPager,
-  type RowsSpec,
 } from '#/data/analyticsQueries'
 import {
   type GroupBalances,
@@ -453,11 +450,6 @@ export function useAnalyticsBounds(
 /** The spending cells of a period (and every earlier cell, for the balance line). */
 export function useAnalyticsCells(request: {currency: string; from: string; to: string; exact: boolean} | null): CellData | undefined {
   return useProjection(request ? cellsQuery(request.currency, {from: request.from, to: request.to}, request.exact) : null)
-}
-
-/** The expense list behind the charts, newest first, a page at a time. */
-export function useAnalyticsRows(spec: RowsSpec | null): RowsPager | undefined {
-  return useProjection(spec ? rowsQuery(spec) : null)
 }
 
 /** How many live expenses I have a share in (stored sums, no ledger read). Undefined while loading. */

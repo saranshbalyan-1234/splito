@@ -23,7 +23,9 @@ import {
   buildRows,
   EMPTY_FEED_STATE,
   type ActivityTab,
+  type FeedFilter,
   type FeedState,
+  isNarrowedFilter,
 } from './feed'
 
 export type ActivitySnapshot = {
@@ -81,6 +83,10 @@ function snapshotOf(state: ActivityState): ActivitySnapshot {
   return snapshot
 }
 
+/** The record filters of the list (owner 226): the part of a `FeedFilter` an Analytics link sets. */
+export type RecordFilter = Pick<FeedFilter, 'from' | 'to' | 'currency' | 'category' | 'scope'>
+const NO_RECORD: RecordFilter = {}
+
 const NO_EVENTS: ActivityEvent[] = []
 const FEED_KEY: ['activityFeed'] = ['activityFeed']
 
@@ -94,7 +100,10 @@ export function useActivityFeed(
   types: readonly ActivityTypeId[] = ALL_ACTIVITY.types,
   group?: string,
   person?: string,
+  record: RecordFilter = NO_RECORD,
 ) {
+  /* The caller keeps `record` (and so its scope object) the same between renders, so the list is rebuilt only when a filter changes. */
+  const {from, to, currency, category, scope} = record
   const {actor: me} = useMutationCtx()
   const tz = useTimeZone()
   const loaded = useActivityState()
@@ -111,7 +120,7 @@ export function useActivityFeed(
         events,
         state,
         me,
-        {tab, types, group, person},
+        {tab, types, group, person, from, to, currency, category, scope},
         tz,
         (type, id) => (type === 'expense' ? snapshot?.expenses : snapshot?.transfers)?.get(id)?.data.groupId,
         (type, id) => {
@@ -123,7 +132,7 @@ export function useActivityFeed(
           return x && [x.from, x.to]
         },
       ),
-    [events, state, me, tab, types, group, person, tz, snapshot],
+    [events, state, me, tab, types, group, person, from, to, currency, category, scope, tz, snapshot],
   )
   return {
     me,
@@ -134,7 +143,7 @@ export function useActivityFeed(
     loadMore: loaded?.loadMore,
     isDone: loaded?.isDone ?? false,
     /** A type or group narrows the list: "Mark all read" then marks only what is listed. */
-    isNarrowed: types.length > 0 || !!group || !!person,
+    isNarrowed: isNarrowedFilter({tab, types, group, person, from, to, currency, category, scope}),
     ...feed,
   }
 }

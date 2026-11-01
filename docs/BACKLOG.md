@@ -743,6 +743,32 @@ Audit the whole codebase for code that does the same job twice and merge each se
   2. Consolidation in small non-overlapping slices, each with tests unchanged or improved and no visible regression (screenshots 390/1440 before/after).
   3. An architecture test per consolidated piece where a pattern can be enforced (e.g. no `UserAvatar` with a person id outside PersonLink).
 
+### F-277 Stacked pages slide on phone web (owner 227) `spec: ARCHITECTURE 26.3`
+
+Acceptance: a push (avatar to Profile, a person, a group, an expense, a Settings section) slides in from the right at
+phone width on web; the in-app Back slides the page below back in; Safari's left-edge swipe Back is not animated
+again; no JS per frame and no extra React render (renders gate); no row exit clone; FAB stays put; reduced motion
+instant; desktop instant. Status: built (web, Chromium at 390 and 1440, 2026-11-01; real iOS Safari and native not run). ARCHITECTURE 26.3 [Built] note, 17.1 rule, 23 lesson, COMPLETION_MATRIX "F-277".
+
+### F-278 Profile fits one phone screen (owner 228) `spec: ARCHITECTURE 26.15`
+
+Acceptance: at 390 x 844 the header row, the stat row, Payment details and the first Settings rows are visible without
+scrolling; Add me is gone from Profile; Payment details is the first Settings row and opens the existing sheet;
+Log out is last, the sync note under it. Status: built (web; native not run). Tests: `profilePage.spec` (order, compact
+header, one-screen at 390 x 844, Hindi at 320 px), `profileSettings.spec`, `demo.spec` Profile.
+
+### F-276 Analytics' list is Activity (owner 226) `spec: ARCHITECTURE 26.16`
+
+Acceptance: (1) Analytics renders no expense rows and no selection chip; its data layer no longer reads the 200-row
+expense list. (2) A "See these expenses" link under the charts opens Activity (pushed, Back) with
+`type=expenses&since=&until=&currency=` and `scope=` when the scope is not everything. (3) A bar opens it with that
+bar's `since`/`until`, a category slice or row with `category=`, a person row with `person=`. (4) Activity reads
+`since`, `until`, `currency`, `category` and `scope` (sanitised; listed in `QUERY_KEYS`), filters records by their own
+date, currency, category and group, shows each as a removable chip, and the empty state and "Look further back" work
+under them. (5) The scope helpers live in one shared module (`lib/scope.ts`) used by Analytics and Activity.
+Note: the dates are `since` / `until`, not `from` / `to` as first written, because `from` is the origin tab of a pushed
+copy (owners 179, 184; ARCHITECTURE § 23, 2026-11-01). Status: built (web checked; iOS and Android not run).
+
 ### F-275 New-user UX fixes (audit 2026-10-31) `spec: owners 212/213; docs/ux/2026-10-31-new-user-audit.md`
 
 Fixes from the Opus new-user audit (3 blockers, 19 major, 21 minor). Rulings (assistant, 2026-10-31) where the audit and owner rules meet:

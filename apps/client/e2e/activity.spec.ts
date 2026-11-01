@@ -50,7 +50,8 @@ test('the demo history reads as a feed grouped by day, in real words', async ({
   await openActivity(page)
   const headers = activityScreen(page).getByRole('heading')
   await expect(headers.first()).toHaveText('Today')
-  expect(await headers.count()).toBeGreaterThan(3)
+  /* The next page of rows lands a few at a time after the first (usePagedRows): wait for it, never read once. */
+  await expect.poll(() => headers.count()).toBeGreaterThan(3)
 
   // An edit shows what changed and what it means for you, in colour-coded words.
   const dinner = row(page, 'expense.edited', 'Dinner at Thalassa')
@@ -91,7 +92,17 @@ test('changes by friends are unread with a badge; mark all read clears them, und
     unreadDot(row(page, 'expense.restored', 'Groceries')),
   ).toHaveCount(0)
   const dots = activityScreen(page).getByTestId('activity-unread-dot')
-  const unread = await dots.count()
+  /* Counted once the rows have stopped arriving (a page lands a few rows at a time, usePagedRows). */
+  let unread = -1
+  await expect
+    .poll(async () => {
+      const before = await dots.count()
+      await page.waitForTimeout(500)
+      const after = await dots.count()
+      unread = after
+      return before === after
+    })
+    .toBe(true)
   expect(unread).toBeGreaterThan(5)
   // The Activity nav item badges the same count: unread changes by other people.
   await page.goto('/')

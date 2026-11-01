@@ -1,6 +1,6 @@
 import {type DateRange} from '@splito/domain'
 
-import {EVERYTHING, isEverything, type Scope} from './scope'
+import {type Scope, scopeFromParam} from '#/lib/scope'
 
 /**
  * Analytics' list state in the address (F-241): `?period=month&offset=-1&currency=EUR&scope=0:g1,g2`, or
@@ -40,17 +40,4 @@ export function readAnalyticsParams(params: Params): AnalyticsUrlState {
     currency: params?.currency && /^[A-Z]{3}$/.test(params.currency) ? params.currency : undefined,
     scope: params?.scope ? scopeFromParam(params.scope) : undefined,
   }
-}
-
-export function scopeToParam(scope: Scope): string | undefined {
-  if (isEverything(scope)) return undefined
-  return `${scope.nonGroup ? 1 : 0}:${scope.groups === 'all' ? 'all' : scope.groups.join(',')}`
-}
-
-export function scopeFromParam(value: string): Scope | undefined {
-  const m = /^([01]):(all|[\w,-]*)$/.exec(value)
-  if (!m) return undefined
-  const groups = m[2] === 'all' ? 'all' : m[2]!.split(',').filter(Boolean)
-  const nonGroup = m[1] === '1'
-  return !nonGroup && groups !== 'all' && groups.length === 0 ? EVERYTHING : {nonGroup, groups}
 }

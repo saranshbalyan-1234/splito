@@ -55,6 +55,7 @@ export function BarChart({
   locale,
   selectedKey,
   onSelect,
+  selectHint,
   height = 220,
   testID,
 }: {
@@ -63,6 +64,8 @@ export function BarChart({
   locale: string
   selectedKey?: string
   onSelect?: (key: string | null) => void
+  /** What pressing a bar does, for a screen reader (see `HitColumns`). */
+  selectHint?: (label: string) => string
   height?: number
   testID: string
 }) {
@@ -157,6 +160,7 @@ export function BarChart({
             describe={p =>
               `${p.label}: ${formatAmount(p.value, currency, locale)}`
             }
+            selectHint={selectHint}
             onActive={setHoverKey}
             onSelect={onSelect}
           />

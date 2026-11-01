@@ -18,10 +18,24 @@ function files(dir: string): string[] {
   })
 }
 
+/* A screen's list may live in its own `./components/X` (People's FriendsList, so a search keystroke renders only the list). */
+const SCROLLS = /util\/List'|Layout\.Content/
+function scrolls(path: string) {
+  const text = readFileSync(path, 'utf8')
+  if (SCROLLS.test(text)) return true
+  return [...text.matchAll(/from '\.\/components\/(\w+)'/g)].some(m => {
+    try {
+      return SCROLLS.test(readFileSync(join(path, '..', 'components', `${m[1]}.tsx`), 'utf8'))
+    } catch {
+      return false
+    }
+  })
+}
+
 test('every full screen scrolls with List or Layout.Content', () => {
   const missing = files(SCREENS)
     .filter(path => /Layout\.Screen|<TabScreen/.test(readFileSync(path, 'utf8')))
-    .filter(path => !/util\/List'|Layout\.Content/.test(readFileSync(path, 'utf8')))
+    .filter(path => !scrolls(path))
     .map(path => path.slice(SCREENS.length + 1))
     .filter(path => !NO_SCROLL.has(path))
   expect(missing).toEqual([])

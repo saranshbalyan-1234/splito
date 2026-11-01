@@ -13,18 +13,15 @@ import {
   granularityFor,
   periodRange,
   type WeekStart,
-  ZERO,
 } from '@splito/domain'
 import {type AnalyticsScope, type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useCategoryLookup} from '#/components/split/shared'
-import {type ListedExpense} from '#/data/analyticsQueries'
 import {
   useAnalyticsBounds,
   useAnalyticsCells,
   useAnalyticsOverview,
-  useAnalyticsRows,
   useEntities,
   useMutationCtx,
   usePref,
@@ -33,19 +30,15 @@ import {
   inScope,
   type Scope,
   scopeFromPref,
+  scopeToParam,
   scopeToPref,
-} from '#/screens/Analytics/scope'
-import {MAX_OFFSET, readAnalyticsParams, scopeToParam} from '#/screens/Analytics/urlState'
+  sortScopeGroups,
+} from '#/lib/scope'
+import {MAX_OFFSET, readAnalyticsParams} from '#/screens/Analytics/urlState'
 import {overviewScopeParam} from '#/screens/Analytics/overviewScope'
 import {type Params} from '#/lib/links/listState'
 
 export type PeriodChoice = 'week' | 'month' | 'year' | 'all' | 'custom'
-
-/** What a tapped bar, slice or row narrows the expense list to. */
-export type Selection =
-  | {kind: 'time'; key: string; from: string; to: string; label: string}
-  | {kind: 'category'; key: string; label: string}
-  | {kind: 'person'; key: string; label: string}
 
 /** The filter bar's own choices; unset fields fall back to the preferences. */
 type FilterState = {
@@ -124,27 +117,19 @@ export function useReport() {
   const urlState = readAnalyticsParams(route.params as Record<string, string | undefined> | undefined)
   const state: FilterState = urlState
   const setParams = (patch: Record<string, string | undefined>) => navigation.setParams(patch as never)
-  const [picked, setPicked] = useState<{
-    filterKey: string
-    selection: Selection
-  }>()
   const [held, setHeld] = useState<View>()
 
   const weekStart = (weekStartPref ?? 1) as WeekStart
 
   /* Active groups first, then inactive; by name within each. Deleted groups are gone from both. */
-  const groupOptions: GroupOption[] = (groups ?? [])
-    .map(g => ({
+  const groupOptions: GroupOption[] = sortScopeGroups(
+    (groups ?? []).map(g => ({
       id: g.id,
       name: g.data.name,
       kind: g.data.kind,
       isInactive: isGroupInactive(g.data),
-    }))
-    .sort(
-      (x, y) =>
-        Number(x.isInactive) - Number(y.isInactive) ||
-        x.name.localeCompare(y.name),
-    )
+    })),
+  )
   const groupIds = groupOptions.map(g => g.id)
   const scope = scopeOf(urlState.scope ?? overviewScopeParam(route.params as Params), scopePref, groupIds)
   const scopeKey = JSON.stringify(scope)
@@ -209,31 +194,6 @@ export function useReport() {
         }
       : held
 
-  /* A selection belongs to the filter it was made under; any filter change clears it. */
-  const shownRange = view?.data.range
-  const shownCurrency = view?.data.currency
-  const filterKey = JSON.stringify([shownCurrency, shownRange, scope])
-  const selection = picked?.filterKey === filterKey ? picked.selection : null
-  const shareOf = selection?.kind === 'person' ? selection.key : me
-
-  /* The list behind the current selection: a bar narrows the dates, a slice or row the expenses. */
-  const listed = useAnalyticsRows(
-    view && shownCurrency
-      ? {
-          currency: shownCurrency,
-          from: selection?.kind === 'time' ? selection.from : view.data.range.from,
-          to: selection?.kind === 'time' ? selection.to : view.data.range.to,
-          scopeKey,
-          isIn,
-          selection:
-            selection?.kind === 'category' || selection?.kind === 'person'
-              ? {kind: selection.kind, key: selection.key}
-              : undefined,
-          me,
-        }
-      : null,
-  )
-
   if (!view || !groups || !people || !overview) return undefined
   const {data} = view
   const shownGranularity = view.granularity
@@ -252,29 +212,6 @@ export function useReport() {
   const trend = data.currency
     ? cellBalanceTrend([...earlier, ...cells], me, shownRangeNow, shownGranularity, weekStart)
     : []
-
-  const select = (s: Selection | null) =>
-    setPicked(s ? {filterKey, selection: s} : undefined)
-
-  /* How many rows the selection holds and whose share they add up to: the cells already say. */
-  const sliceOf = (slices: Array<{key: string | null; share: bigint; count: number}>, key: string) =>
-    slices.find(x => x.key === key)
-  const inBar =
-    selection?.kind === 'time'
-      ? cellTotals(
-          cells.filter(c => c.date >= selection.from && c.date <= selection.to),
-          me,
-        )
-      : undefined
-  const slice =
-    selection?.kind === 'category'
-      ? sliceOf(byCategory, selection.key)
-      : selection?.kind === 'person'
-        ? sliceOf(byPerson, selection.key)
-        : undefined
-  const rowCount = !selection ? totals.count : (inBar?.count ?? slice?.count ?? 0)
-  const rowsTotal = !selection ? totals.share : (inBar?.share ?? slice?.share ?? ZERO)
-  const rows: ListedExpense[] = listed?.rows ?? []
 
   const date = (d: string, o: Intl.DateTimeFormatOptions) =>
     i18n.date(utcDate(d), {...o, timeZone: 'UTC'})
@@ -365,15 +302,6 @@ export function useReport() {
     trend: trend
       .filter(b => b.from <= shownBounds.to)
       .map(b => ({...b, ...bucketLabels(b)})),
-    selection,
-    select,
-    /** The rows loaded so far, newest first; `rowCount` is how many there are in all. */
-    rows,
-    rowCount,
-    isRowsDone: listed?.isDone ?? true,
-    loadMoreRows: listed?.loadMore ?? (() => {}),
-    rowsTotal,
-    shareOf,
     nameOfPerson,
     nameOfGroup,
     locationOfGroup,

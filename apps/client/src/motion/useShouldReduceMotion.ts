@@ -1,4 +1,4 @@
-import {useSyncExternalStore} from 'react'
+import {useCallback, useSyncExternalStore} from 'react'
 import {PREFS, prefFrom, type Store} from '@splito/sync'
 
 import {useA11y} from '#/state/a11y'
@@ -56,4 +56,18 @@ export function useShouldReduceMotion(): boolean {
   const src = store ? motionSource(store) : NO_STORE
   const motion = useSyncExternalStore(src.subscribe, () => src.value)
   return reduceMotionEnabled || motion !== 'full'
+}
+
+/**
+ * The same answer as `useShouldReduceMotion`, read when called: for an effect that starts a CSS animation outside
+ * React (the stack slide), so the screen that holds it neither subscribes to the preference nor re-renders on it.
+ */
+export function useReadReducedMotion(): () => boolean {
+  const {reduceMotionEnabled} = useA11y()
+  const store = useMaybeStore()
+  /* Stable while the inputs hold: a focus effect lists it, and a new function would re-run that effect each render. */
+  return useCallback(
+    () => reduceMotionEnabled || (store ? motionSource(store) : NO_STORE).value !== 'full',
+    [reduceMotionEnabled, store],
+  )
 }

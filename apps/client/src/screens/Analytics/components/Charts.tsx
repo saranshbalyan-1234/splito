@@ -3,6 +3,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, sumMinor, ZERO} from '@splito/domain'
 
 import {useMe} from '#/data/hooks'
+import {openLink} from '#/lib/links/open'
 import {PersonLink} from '#/components/PersonLink'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
@@ -16,6 +17,7 @@ import {LineChart} from '#/components/charts/LineChart'
 import {percentOf} from '#/components/charts/scale'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {expensesPath} from '#/screens/Analytics/expensesPath'
 import {DIRECT_KEY, type Report} from '#/screens/Analytics/useReport'
 
 /** Two half-width cards per row on desktop, one per row below that. */
@@ -24,8 +26,9 @@ const FULL = {flexBasis: '100%' as const}
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
 /**
- * Every chart for the current filter, or their tables when `isTable`. Each
- * chart's bars, slices and rows select what the expense list below shows.
+ * Every chart for the current filter, or their tables when `isTable`. A chart's
+ * bar, slice or row opens Activity on the expenses behind it (owner 226); Analytics
+ * has no expense list of its own.
  */
 export function Charts({
   report,
@@ -40,7 +43,7 @@ export function Charts({
   const t = useTheme()
   const {t: l} = useLingui()
   const {gtTablet} = useBreakpoints()
-  const {currency, totals, selection, select, granularity} = report
+  const {currency, totals, granularity} = report
   const money = (v: bigint) => formatAmount(v, currency, locale)
   const pct = new Intl.NumberFormat(locale, {
     style: 'percent',
@@ -157,20 +160,10 @@ export function Charts({
             points={timePoints}
             currency={currency}
             locale={locale}
-            selectedKey={selection?.kind === 'time' ? selection.key : undefined}
+            selectHint={label => l`Show the expenses of ${label} in Activity`}
             onSelect={key => {
               const b = report.overTime.find(x => x.key === key)
-              select(
-                b
-                  ? {
-                      kind: 'time',
-                      key: b.key,
-                      from: b.from,
-                      to: b.to,
-                      label: b.label,
-                    }
-                  : null,
-              )
+              if (b) openLink(expensesPath(report, {from: b.from, to: b.to}))
             }}
           />
         )}
@@ -205,14 +198,10 @@ export function Charts({
               currency={currency}
               locale={locale}
               isWide={gtTablet}
-              selectedKey={
-                selection?.kind === 'category' ? selection.key : undefined
-              }
+              selectHint={label => l`Show the expenses in ${label} in Activity`}
               onSelect={key => {
                 const s = slices.find(x => x.key === key)
-                select(
-                  s ? {kind: 'category', key: s.key, label: s.label} : null,
-                )
+                if (s) openLink(expensesPath(report, {category: s.key}))
               }}
             />
           )}
@@ -302,12 +291,10 @@ export function Charts({
                   />
                 ),
               }))}
-              selectedKey={
-                selection?.kind === 'person' ? selection.key : undefined
-              }
+              selectHint={label => l`Show the expenses with ${label} in Activity`}
               onSelect={key => {
                 const p = people.find(x => x.key === key)
-                select(p ? {kind: 'person', key: p.key, label: p.label} : null)
+                if (p) openLink(expensesPath(report, {personId: p.key}))
               }}
             />
           )}

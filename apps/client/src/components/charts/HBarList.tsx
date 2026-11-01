@@ -29,6 +29,7 @@ export function HBarList({
   locale,
   selectedKey,
   onSelect,
+  selectHint,
   shareOf,
   testID,
 }: {
@@ -39,6 +40,8 @@ export function HBarList({
   locale: string
   selectedKey?: string
   onSelect?: (key: string | null) => void
+  /** What pressing a row does, for a screen reader ("Show the expenses with Riya in Activity"); none by default. */
+  selectHint?: (label: string) => string
   testID: string
 }) {
   const t = useTheme()
@@ -107,7 +110,7 @@ export function HBarList({
             role="listitem"
             accessibilityRole="button"
             accessibilityLabel={`${b.label}: ${amount}`}
-            accessibilityHint=""
+            accessibilityHint={selectHint?.(b.label) ?? ''}
             accessibilityState={{selected: isSelected}}
             onPress={() => onSelect(isSelected ? null : b.key)}
             style={({hovered, focused}) => [

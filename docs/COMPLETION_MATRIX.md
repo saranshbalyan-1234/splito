@@ -378,6 +378,8 @@ Demo mode on, PR #4 (owners 218-222 merged; Chromium, alone, load 4-6): 18.8 s w
 data, 13.1 s with it off, 12.1 / 12.7 / 12.8 s after it takes the list's figures (17.1). The sync seed in bun is
 unchanged (SQLite 1.0-1.2 s, fake IndexedDB 7.0-7.3 s on `main` and on this branch). Over the 10 s bound until
 re-read on a quiet machine.
+Re-read 2026-11-01 on PR #5 (People search perf, F-276, F-277, F-278 merged; alone, load 4-6): 7.6 / 7.1 / 7.3 s, under the
+10 s bound and under the 8.0 s baseline. The 12-19 s readings were machine load on top of the Overview cost fixed above.
 
 Still over budget at x6 (owner 189 sweep, not fixed here): every main-tab switch (236-441 ms highlight, budget 100), Friends
 and invites open (1.1 s, its 45-row list mounts in one task), Add expense body (881 ms), People search typing (1.1 s worst key,
@@ -396,6 +398,39 @@ branch); the counts above came from a local run with the scroll target lowered t
 Not verified: WebKit (not installed in this container), iOS and Android (native paths unchanged: the Reanimated patch and
 the exit scope touch web code only; `LayoutAnimationConfig skipExiting` still does the native job).
 
+## People search and Activity's first fling (F-266 sweep misses, owner 189; web, measured 2026-10-31)
+
+`perf/listWork.spec.ts` (new): Chromium, 390 x 844, touch, large demo (42 friends), CPU x6, accessibility tree off. Base =
+`claude/repo-status-other-chat-xmr0l3` as merged into this branch, after = this branch, both `e2e:build`, three runs each
+interleaved, 1-minute load 2.3-9.9 (one base run started at 12.6 and fell to 9.9). The counts do not depend on load and
+are what the spec gates; the timings are the method's medians. Run: `E2E_PORT=8933 pnpm perf listWork` (`PERF_DIST` for
+another build).
+
+| People search, "rahul sharma 120" (16 keys) | Base (3 runs) | After (3 runs) |
+|---|---|---|
+| React renders per key | 210.6 (every run) | 59.0 / 64.0 / 65.5 |
+| Person rows re-rendered (whole search) | 83 | 2 / 4 / 4 |
+| Rows cloned out by Reanimated's exit | 46 | 0 |
+| Worst key-to-echo, ms (median) | 1,299 / 987 / 560 (987) | 98 / 248 / 89 (98) |
+| Median key-to-echo, ms | 124 / 74 / 79 | 38 / 45 / 60 |
+| Longest task, ms (median) | 630 / 536 / 513 (536) | 58 / 227 / 69 (69) |
+
+| Activity, first fling (adds 27 rows) | Base | After |
+|---|---|---|
+| React renders | 3,475 | 2,475 |
+| Worst frame gap, ms (median) | 763 / 773 / 884 (773) | 178 / 154 / 40 (154) |
+| Longest task, ms (median) | 721 / 721 / 822 (721) | 170 / 152 / 229 (170) |
+
+Still over budget: the Activity page's commit (27 rows in one commit, about 150-230 ms at x6). Growing a page six rows per
+commit measured 53-86 ms (load 11) but slowed reading far back, so it was dropped (ARCHITECTURE 17.1, 23); cheaper rows
+(about 92 renders each) are the next step. Causes and fixes in ARCHITECTURE 17.1 and 23.
+
+Renders gate (`pnpm --filter @splito/client renders`, load 5-7): "switching back to a visited tab re-renders none of its
+content" was red on base (every switch to or from People re-rendered PeopleScreen, its Overview, header and all 38 rows,
+through the tour's `useIsFocused`) and passes here (nothing of People renders). The main scenario cannot run on this
+base: the scroll stops at 806 rows (positive control 1,000; the c-perf note above) and, with Search & Ask on the start
+tab only (owner 218), its Ask phase finds no button on Activity; with the target lowered locally to 800 it stops there.
+Baseline not re-recorded; its scroll phase will count fewer renders (no closed row menus), which the next re-record takes.
 ## F-266 search: a broad query's first page from a newest-first walk (ARCHITECTURE 17.1 "Narrow first", measured 2026-10-31)
 
 Machine load 27-40 from other builders for the whole session, so every wall-clock number below is indicative only (the
@@ -417,3 +452,24 @@ expenses + 600 payments, 33 queries, load 32-39): worst first page 24 ms CPU (be
 the wall-clock check (`search.test.ts` speed, first page and counts each under 50 ms) failed on wall time at load 32
 and needs a quiet machine. Web only; native not run.
 
+
+## F-277 Stacked pages slide on phone web (owner 227; web, Chromium, measured 2026-11-01)
+
+Base = the same commit without F-277 (built side by side, same machine, same run order). Probe: avatar -> Profile and
+its Back on the large demo at 390 px with touch, 7 rounds each, median; Chrome accessibility off; machine load 3-6.
+
+| Check | Result |
+|---|---|
+| Tap to the new page's first frame, CPU x1 | push 38 ms (base 43), Back 38 ms (base 45) |
+| Tap to the new page's first frame, CPU x6 | push 278 ms (base 323), Back 269 ms (base 340) |
+| Tap to the end of the slide, x1 / x6 | push 315 / 615 ms, Back 283 / 565 ms (motion 280 / 250 ms; base has none) |
+| Long tasks over 50 ms | same set as base (the Profile mount, 200-500 ms at x6); none during the motion |
+| React commits per push / Back | 11-12 / 5 on both builds |
+| Fibers rendered per push / Back (devtools-hook count) | 4,322 / 1,509 (base 4,310 / 1,509; an earlier base run read 4,358: noise) |
+| Renders gate (Metro on 8391) | red on both builds the same way: 806 of 1,000 Activity rows scrolled, and "switching back" lists the same People updates on every leg (identical text on both); the gate is not this change's to fix |
+| Lint, typecheck, client unit tests | green (797 pass, 5 skip); new `lib/routes/stackSlide.test.ts` (8) |
+| `e2e/stackSlide.spec.ts` | 6 pass: avatar -> Profile sets `push` with `splito-stack-push`, header Back sets `pop` with `splito-stack-pop` on People, the page never wider than 390 px and the FAB at one x on every frame with no animation; browser Back slides; a left-edge touch that the browser cancels, then `history.back()`, slides nothing; a tab switch plays no stack slide; reduced motion (OS) and Animations off play none; 1440 plays none |
+| Neighbouring specs (`shell`, `tabTaps`, `scrollWeb`, `animations`) | at load 20-25 with 2 workers 15 fail on time-outs; the same 17 of 19 failed on base under the same load. Re-run alone with a 150 s limit, all pass except `scrollWeb` "touch scrolling People" (CDP touch scroll does not scroll in this container; known), including `animations` "leaving it fades none out" (no exit clone on a Back) and `scrollWeb` owner 216 (the revealed page at its saved scroll on every frame) |
+
+Not run: real iOS Safari (the edge-swipe heuristic is unit-tested; the e2e sends Chromium touch events) and WebKit
+(none in this container); iOS and Android native (unchanged code path: the effect returns before the slide on native).

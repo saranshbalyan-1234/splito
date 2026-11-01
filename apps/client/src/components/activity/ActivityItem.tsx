@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Notifications/components/NotificationItem/Item/Root.tsx (+ Item/Avatar.tsx, Item/text.tsx; actions from src/screens/Messages/components/ChatListItem.tsx)
-import {useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {
   type AccessibilityActionEvent,
   Pressable,
@@ -68,6 +68,7 @@ import {writeOffParties} from './feed'
 import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {type ActivityActions, type RowAction} from './useActivityActions'
 import {openPerson} from '#/lib/links/make'
+import {mergeRefs} from '#/lib/merge-refs'
 import {avatarPersonId} from './avatarPerson'
 import {type ActivitySnapshot} from './useActivityFeed'
 
@@ -182,6 +183,37 @@ export function ActivityItem({
               : undefined
   const tone = useSyncTone(subject?.syncStatus)
   const menuControl = Menu.useMenuControl()
+  /*
+   * The row menu (Radix's dropdown root, trigger and popper, and the phone drawer: about 40 of a row's 130 components,
+   * and a second render of the popper chain after mount) mounts the first time this row is asked for it; at rest the
+   * "..." is a plain button. Mounting it on every row made the first fling's page of 27 rows a 3,496-render task (17.1).
+   * A mouse over the row or keyboard focus inside it mounts it ahead, so a click, Enter and the arrows reach Radix's own
+   * trigger as before; a touch mounts and opens it on the tap.
+   */
+  const [isMenuMounted, setIsMenuMounted] = useState(false)
+  /* Opened once it is mounted: a native menu control opens through its sheet's ref, which exists only then. */
+  const isMenuWanted = useRef(false)
+  /* Keyboard focus that landed on the plain "..." moves to the real trigger that replaces it. */
+  const isTriggerFocusWanted = useRef(false)
+  const triggerRef = useRef<React.ComponentRef<typeof View>>(null)
+  useEffect(() => {
+    if (!isMenuMounted) return
+    if (isTriggerFocusWanted.current) {
+      isTriggerFocusWanted.current = false
+      triggerRef.current?.focus()
+    }
+    if (!isMenuWanted.current) return
+    isMenuWanted.current = false
+    menuControl.open()
+  }, [isMenuMounted, menuControl])
+  const rowMenu = {
+    ...menuControl,
+    open: () => {
+      if (isMenuMounted) return menuControl.open()
+      isMenuWanted.current = true
+      setIsMenuMounted(true)
+    },
+  }
   const [menuAt, setMenuAt] = useState({x: 0, y: 0})
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
@@ -215,7 +247,7 @@ export function ActivityItem({
     content.open?.()
   }
   /* Right-click, the Menu key and a long-press (native and phone-width web) all open the row menu; a request row, which has no "...", hangs it from where the pointer landed. */
-  const trigger = useRowMenuTrigger(menuControl, {onAnchor: setMenuAt})
+  const trigger = useRowMenuTrigger(rowMenu, {onAnchor: setMenuAt})
   const openMenu = trigger.open
   const onAccessibilityAction = (e: AccessibilityActionEvent) => {
     const name = e.nativeEvent.actionName
@@ -236,6 +268,38 @@ export function ActivityItem({
   /* Room kept clear for the buttons, so they never cover the text. */
   const actionsInset =
     ACTIONS_RIGHT + (webQuickActions.length + 1) * (ACTION_BUTTON_SIZE + 4)
+
+  /* Hover / focus quick actions (web with a mouse), beside the "...". */
+  const quickActionButtons = IS_WEB && webQuickActions.length > 0 && (
+    <View
+      testID="activity-quick-actions"
+      style={[
+        a.flex_row,
+        a.align_center,
+        a.gap_xs,
+        {opacity: isShowingActions ? 1 : 0},
+        a.transition_opacity,
+      ]}>
+      {webQuickActions.map(action => {
+        const {label, icon} = actions.info(action, isRead)
+        return (
+          <Button
+            key={action}
+            testID={`activity-action-${action}`}
+            label={label}
+            size="small"
+            shape="round"
+            variant="ghost"
+            color="secondary"
+            // Blends into the unread tint; hover still highlights it.
+            style={a.bg_transparent}
+            onPress={() => run(action)}>
+            <ButtonIcon icon={icon} />
+          </Button>
+        )
+      })}
+    </View>
+  )
 
   const menu = (
     <Menu.Outer>
@@ -268,14 +332,20 @@ export function ActivityItem({
          */
         {...(IS_WEB
           ? {
-              onPointerEnter: () => setIsHovered(true),
+              onPointerEnter: (e: {nativeEvent?: {pointerType?: string}}) => {
+                setIsHovered(true)
+                if (e.nativeEvent?.pointerType === 'mouse') setIsMenuMounted(true)
+              },
               onPointerLeave: () => setIsHovered(false),
-              onFocus: (e: {target?: unknown}) =>
-                setIsFocusWithin(
-                  (e.target as Element | undefined)?.matches?.(
-                    ':focus-visible',
-                  ) ?? true,
-                ),
+              onFocus: (e: {target?: unknown}) => {
+                const isVisible =
+                  (e.target as Element | undefined)?.matches?.(':focus-visible') ?? true
+                setIsFocusWithin(isVisible)
+                if (!isVisible) return
+                if ((e.target as Element | undefined)?.getAttribute?.('data-testid') === 'activity-menu')
+                  isTriggerFocusWanted.current = !isMenuMounted
+                setIsMenuMounted(true)
+              },
               onBlur: () => setIsFocusWithin(false),
             }
           : {})}
@@ -384,6 +454,7 @@ export function ActivityItem({
          * on long-press or right-click.
          */}
         {isRequestRow ? (
+          isMenuMounted ? (
           <Menu.Root control={menuControl}>
             {IS_WEB ? (
               /* An invisible anchor where the right-click landed. */
@@ -403,6 +474,7 @@ export function ActivityItem({
             ) : null}
             {menu}
           </Menu.Root>
+          ) : null
         ) : (
         <View
           testID="activity-actions"
@@ -414,36 +486,8 @@ export function ActivityItem({
             // On the headline's line, so a long row never stacks them oddly.
             {top: rowPaddingTop - 6, right: ACTIONS_RIGHT},
           ]}>
-          {IS_WEB && webQuickActions.length > 0 && (
-            <View
-              testID="activity-quick-actions"
-              style={[
-                a.flex_row,
-                a.align_center,
-                a.gap_xs,
-                {opacity: isShowingActions ? 1 : 0},
-                a.transition_opacity,
-              ]}>
-              {webQuickActions.map(action => {
-                const {label, icon} = actions.info(action, isRead)
-                return (
-                  <Button
-                    key={action}
-                    testID={`activity-action-${action}`}
-                    label={label}
-                    size="small"
-                    shape="round"
-                    variant="ghost"
-                    color="secondary"
-                    // Blends into the unread tint; hover still highlights it.
-                    style={a.bg_transparent}
-                    onPress={() => run(action)}>
-                    <ButtonIcon icon={icon} />
-                  </Button>
-                )
-              })}
-            </View>
-          )}
+          {quickActionButtons}
+          {isMenuMounted ? (
           <Menu.Root control={menuControl}>
             <Menu.Trigger label={l`More actions`}>
               {({props}) => (
@@ -451,6 +495,7 @@ export function ActivityItem({
                   testID="activity-menu"
                   label={props.accessibilityLabel}
                   {...props}
+                  ref={mergeRefs([props.ref, triggerRef])}
                   size="small"
                   shape="round"
                   variant="ghost"
@@ -462,6 +507,19 @@ export function ActivityItem({
             </Menu.Trigger>
             {menu}
           </Menu.Root>
+          ) : (
+            <Button
+              testID="activity-menu"
+              label={l`More actions`}
+              size="small"
+              shape="round"
+              variant="ghost"
+              color="secondary"
+              style={a.bg_transparent}
+              onPress={rowMenu.open}>
+              <ButtonIcon icon={DotsIcon} />
+            </Button>
+          )}
         </View>
         )}
       </View>

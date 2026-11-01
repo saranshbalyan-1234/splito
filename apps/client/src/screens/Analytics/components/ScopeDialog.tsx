@@ -14,7 +14,7 @@ import {createIcon} from '#/components/icons/lucide'
 import {Person_Stroke2_Corner2_Rounded as PersonIcon} from '#/components/icons/Person'
 import {Pressable} from '#/components/Pressable'
 import {Text} from '#/components/Typography'
-import {type Scope, scopeFromTicks, ticksOf} from '#/screens/Analytics/scope'
+import {type Scope, scopeFromTicks, ticksOf} from '#/lib/scope'
 import {type GroupOption} from '#/screens/Analytics/useReport'
 
 /** Everything: non-group expenses and every group. */

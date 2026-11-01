@@ -1,6 +1,6 @@
 import {useLingui} from '@lingui/react/macro'
 
-import {type Scope, scopeSummary} from '#/screens/Analytics/scope'
+import {type Scope, scopeSummary} from '#/lib/scope'
 
 /**
  * What the scope chip says ("Everything", "Non-group only", "Goa trip + 1" ...), so the chip and the Export

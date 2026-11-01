@@ -1079,6 +1079,42 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **A screen transition on web is an attribute on the arriving screen, never a kept leaving screen or a render.** The
+  stack slide (F-277, owner 227) reuses the tab slide's shape: the focus effect sets `data-stack-in` on the screen
+  root, CSS keyframes in `index.html` move the root's children (not `[data-fab]`) on the compositor, and the attribute
+  goes on `animationend` / `animationcancel` or a 500 ms timer. The leaving page is hidden by react-navigation at once
+  and runs no exit (§ 17.1 exits rule). Measured 2026-11-01 in Chromium at 390 px, touch, the large demo, avatar ->
+  Profile and its Back, 7 rounds each, median, load 3-6 (base = the same commit without F-277): tap to the new page's
+  first frame x1 push 38 ms (base 43), Back 38 (45); x6 push 278 (323), Back 269 (340); the slide ends 315 / 283 ms
+  after the tap at x1 (280 / 250 ms of motion). Long tasks over 50 ms: the same set as base (the Profile mount at x6,
+  200-500 ms), none during the motion. React commits per push 11-12 and per Back 5 on both builds; fibers rendered per
+  Back 1,509 on both, per push 4,322 against 4,310 (run-to-run noise: an earlier base run read 4,358). Two traps: the
+  effect's cleanup must not undo the slide (the effect re-runs as a pushed screen settles and cut the push off before
+  its first frame), and the root container is not ready when the first screen focuses, so the screen reads its own
+  `navigation.getState()`, never `navigationRef`.
+- **A keystroke renders the list it filters, not the screen; a search swaps rows without their fades; a closed row menu
+  is not mounted; the next page is built as a transition.** (1) The query state lives in the component that renders the
+  list (`screens/People/components/FriendsList.tsx`), the rows follow it as `useDeferredValue`, and what the screen
+  derives from its projections is memoised on them (the React Compiler had left the People screen's whole
+  summary-and-rows chain unmemoised: read the compiled output before trusting it), so each row keeps its object and a
+  memoised row (`PersonRow`, `RequestsSection`) skips; anything the screen hands the list's heading (the Overview) is
+  built by the screen, so a key reuses it; a hook that follows focus (`useIsFocused`, the tour's `usePublishPeopleState`)
+  sits in a leaf, or every tab switch re-renders the screen and, with unmemoised rows, all of them (38 rows a switch on
+  base, owner 166). (2) Narrowing or widening a list by search is not a change to explain (owner
+  213): `useQuietRows()` (`motion/listAnimations.tsx`) makes the rows a query change removes or adds skip Reanimated's
+  exit and enter (on web each exit cloned the row and read `scrollTop` on every node of it); the handler calls
+  `hush(query)`, the list `settle(query)` once it shows that query, and a settle for an older query is ignored (a commit's
+  effects can run after the next key's handler). (3) A row's "..." is a plain button until a mouse is over the row, the
+  keyboard is inside it, or it is tapped: Radix's dropdown root, trigger, popper and the phone drawer were about 40 of an
+  Activity row's 130 component renders, plus a second render of the popper chain after mount. (4) `usePagedRows` adds a
+  page inside `startTransition`, so its render yields; growing a page six rows per commit cut the longest task further
+  (53-86 ms) but each step waited on a commit, an effect and the list's resize and intersection observers, so reading a
+  year back fell behind the specs' wheel loop: rejected. Measured 2026-10-31 (Chromium, 390 px, touch, large demo, 42
+  friends, CPU x6, three interleaved runs per build, load 2-10): People search, 16 keys: 211 -> 59-66 React renders a
+  key, 83 -> 2-4 row re-renders, 46 -> 0 exit clones, worst key-to-echo median 987 -> 98 ms, longest task median 536 ->
+  69 ms; Activity first fling (27 rows added): 3,475 -> 2,475 renders, worst frame median 773 -> 154 ms, longest task
+  median 721 -> 170 ms (still over 50: the page's one commit; cheaper rows are next). `perf/listWork.spec.ts` gates the
+  counts, which hold at any load.
 - **A summary beside a list reads what the list already computed; it never subscribes and derives again.** The People
   Overview (owner 219) subscribed to every person and every balance row itself and ran `personSummary` twice per
   commit, beside a list that had just done the same: turning demo mode on (about 1,500 commits while People shows) went
@@ -1196,7 +1232,8 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   again re-lays out and restyles its whole tree: Analytics drew all 200 report rows the data layer read (about 4,700
   layout objects), so a switch to it cost 540-930 ms at CPU x6 (one 187 ms layout of 5,878 objects, 428 ms of style).
   Drawing a page at a time (`usePagedRows`, from c-perf) cut it to 209-466 ms (1,960 objects, longest task 727 -> 345
-  ms). Measured 2026-10-31 in Chromium at 390 px, touch, the large demo, rapid taps between visited tabs (scratch
+  ms); since F-276 (owner 226) Analytics draws no expense rows at all, so the kept tab holds only the summary and charts
+  (not re-measured; `perf/schema-v2.spec.ts` now waits for the "See these expenses" link as its "figures are on screen" mark). Measured 2026-10-31 in Chromium at 390 px, touch, the large demo, rapid taps between visited tabs (scratch
   spec, load under 4). The other tabs (600-1,250 objects) take 165-400 ms at x6: about 150 ms style, layout and paint,
   65 ms the navigation commit in the bar's animation frame, 60-90 ms touch handling; React re-renders only the bar
   and the navigator shell (the renders gate's "switching back" legs), but `propagateParentContextChanges` still walks
@@ -1946,11 +1983,51 @@ Splito lessons (add newest last, dated, with PR):
   behind a row breaks every spec that clicks it**: the split chips, the charges and the cash-rounding switch now need
   `chooseSplitMode` / `openCharges` / `openMoreOptions` from `e2e/composer.ts` first; use those helpers rather than
   clicking the row inline.
+- 2026-10-31, People search and Activity fling (F-266 sweep misses, owner 189): **the cost was in what the screen
+  re-did, not in the list.** (1) Typing in the friends search set state in `PeopleScreen`, so every key re-rendered the
+  header, the Overview, the requests, the filter sheet and the list (211 renders a key), and because the compiler had
+  not memoised `personSummary` -> `listedFriends` -> `sortFriends` every row got a new object and re-rendered; the rows a
+  key removed each ran Reanimated's web exit (46 clones over 16 keys, each reading `scrollTop` of every node). Fix: the
+  query moved into `FriendsList`, the rows follow a deferred query, the derived rows are memoised on their projections,
+  the rows are `memo`, and a search swaps rows quietly (`useQuietRows`). The first quiet-rows cut settled on any commit
+  that showed the query and let a later key's rows fade (12 clones in one run): React flushes the previous commit's
+  effects before rendering the next key, after its handler, so `settle` now names the query it showed. (2) Activity's
+  first fling added a page of 27 rows in one task of 3,475 renders; each row mounted Radix's closed dropdown and the
+  phone drawer, so the menu mounts on first use. A tap opens it once mounted (a native menu control opens through its
+  sheet's ref, which exists only then); a mouse over the row or keyboard focus inside it mounts it ahead, because
+  swapping the "..." under a focused or pressed button lost Enter (Radix's keyboard open focuses the first item only
+  when its own trigger saw the key: `activity.spec` "hide works from the keyboard" caught it). (3) Growing a page six rows
+  a commit made every step wait on observers, and four `activity.spec` cases that wheel a year back timed out: a page is
+  one transition instead. Two specs read a count once right after the list appeared while the next page was still
+  arriving; they now poll. (4) Activity's rows read their animations in `ActivityScreen`, which renders the screen's exit
+  scope and so sits above it; they now use `AnimatedListRow`. (5) The renders gate's "switching back to a visited tab"
+  test was red on base: People's `usePublishPeopleState` reads `useIsFocused`, so each switch re-rendered the screen and
+  all 38 rows; it is a leaf now and the test passes. Method: `perf/listWork.spec.ts` counts renders from the
+  commit hook in the e2e build (`LISTWORK_NAMES=1` against a Metro dev server gives component names, `LISTWORK_PROFILE=1`
+  a CPU profile, `LISTWORK_TRACE=1` a timeline summary), interleaving base and after builds; the counts are the gate, and
+  timings were taken once the machine fell under load 10. Metro started with `CI=1` does not watch files: a dev server for
+  profiling an edit must run without it. A screen whose list moved into `./components/` still counts as scrolling with
+  `List` (`lib/refresh/screens.test.ts` follows those imports). The renders gate's main scenario cannot run on this base
+  (the scroll stops at 806 rows, and with Search & Ask on the start tab only, owner 218, its Ask phase finds no button on
+  Activity), so its counts were not compared. Not run: WebKit, iOS, Android.
 - 2026-10-31, F-275 (one export): **a shared label is a hook, not a function that takes `l`.** The Analytics scope chip and
   the Export sheet's Group picker must name a scope the same way; passing Lingui's `t` into a helper does not extract
   (the macro only rewrites the tag where it is destructured from `useLingui()`), so the wording lives in
   `useScopeLabel`, which both call. Also: a header action that duplicated a Settings flow had drifted (INR and the period
   only, no choice, a different file); an entry point to an existing sheet is a preset, never a second writer.
+- 2026-11-01, F-276 (Analytics' list is Activity): four things. (1) **A URL key can already mean something else on the
+  page it is added to.** The spec wrote the period as `from` / `to`, but on web a pushed copy of a main screen carries
+  `from=<origin tab>` (owners 179, 184: `tabLink` overwrites any `from` and `isPushedTabRoute` reads it), so a date there
+  would be replaced and the page would not be a pushed copy at all (Analytics has the same clash for its custom range,
+  where it is harmless because Analytics is rarely pushed). The record filters use `since` / `until`; before adding a
+  query key to a page, grep `FROM_PARAM`, `QUERY_KEYS` and the page's own reader. (2) **Code that two layers need goes
+  down a layer, not into a re-export:** `components/activity` may not import `screens/`, so the scope helpers, their
+  address encoding and the chip wording moved to `lib/` and every import was rewritten (no shim). (3) **A filter on a
+  history list filters the record each change carries, not the change's time:** an Activity event holds the record as
+  it was written (a delete keeps the full data), so `since` / `until` / `currency` / `category` / `scope` read
+  `event.data`; a record made, edited and deleted is listed once per change. (4) **A shared chart gains an optional
+  prop, not a fork:** the bar, donut and bar-list charts got `selectHint` (the screen-reader hint of a press), unset
+  everywhere else.
 - 2026-10-31, process (fan-out of seven builders): **an isolated builder worktree starts from `main`, not from the
   orchestrator's branch.** Every builder of the round began at the last merged `main`, so each lacked the round's own
   changes (Home removed, the Overview moved, the Bell icon) and every merge back conflicted on the generated catalogs and
@@ -2020,8 +2097,32 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-11-01, full e2e on PR #4: **demo mode went from 8.0 s to 18.8 s to switch on, and the cause was a new summary
   card, not the store.** Bisect the cheap layer first: the seed timed in bun at `main`, before and after the search
   change, was the same, so the client was at fault; switching the new People Overview off took 5.7 s away. Rule in
-  17.1. The remaining 12-13 s against the 8.0 s baseline was measured at load 4-6 and is to be re-read on a quiet
-  machine before anything else is changed.
+  17.1. Re-read later at load 4-6 with the round's other changes merged: 7.1-7.6 s (three runs), under the 8.0 s
+  baseline, so the 12-19 s readings in between were load; a timing bound is only judged at low load.
+- 2026-11-01, F-278 (Profile fits one phone screen): **make a list's first row a prop, not a second list.** Payment details
+  had to be the first row of the Settings rows, so `SettingsRows` takes an optional `leading` node rendered first inside
+  its container (absent keeps the list as it was) instead of Profile drawing a section above it with its own spacing;
+  `profile-settings` therefore contains `profile-payment`, and an order spec lists the container before its first row.
+  Also: removing a section means checking where its job lives first (Friends and invites lists every friend link with
+  QR and Copy and "Create invite link"), and `e2e/demo-mode.spec.ts` "seeds the demo database in under 10 s" fails at
+  machine load above about 17 (the seed took over 30 s), so it is not evidence about a Profile change.
+
+- 2026-11-01, F-277 (stack slide on phone web, owner 227): **two ways a focus-driven animation silently never plays.**
+  (1) `navigationRef.getRootState()` is undefined when the very first screen focuses (the container is not ready), so
+  the "state when the last screen focused" was never recorded and the first push compared against nothing; a screen
+  reads its own `navigation.getState()` (the flat web stack) instead. (2) The tab slide's focus effect undid its
+  attribute in the effect's cleanup; the stack slide copied that, and a pushed screen's focus effect runs a second
+  time as it settles, so the attribute was set and removed in the same task and the push never moved (Back, on an
+  already mounted screen, did). A slide now ends only on its own `animationend` / `animationcancel` (filtered by
+  animation name: a spinner inside the page bubbles its events too) or a timer, with a per-element token so a late
+  timer never ends a newer slide. Also: the e2e observer must disconnect its previous MutationObserver, or every
+  record is counted twice. What could not be built: iOS draws the old page under a push; react-navigation's web stack
+  hides it (`display: none`) and the window scrolls, so drawing it would mean showing a hidden screen fixed at its old
+  offset while a virtualised list follows the window scroll. The push slides over the page background instead. Not
+  verified: real iOS Safari's edge swipe (the heuristic is unit-tested and the e2e sends Chromium touch events) and
+  native (unchanged: the native stack animates itself; the new code returns before it on native). The renders gate is
+  red on this base before the change (806 Activity rows of 1,000; "switching back" lists People content updates) and
+  reads the same with it.
 
 ## 24. Checklists
 
@@ -2074,6 +2175,20 @@ Rules that belong to one feature area rather than a layer.
   *Checks*: bun `statement.test.ts` (scope), `exportScope.test.ts`, `table.test.ts`; Playwright `analytics.spec.ts`
   (header icon opens the shared sheet on the year, INR, everything, then on a group and on Non-group only, with the
   files checked), `backup.spec.ts` and `settingsTab.spec.ts` for the other entries; web only, iOS and Android not yet.
+- [Built] **Analytics lists no expenses** (F-276, owner 226): the page is the filter bar, the Summary and the charts,
+  then one "See these expenses" link (`analytics-see-expenses`, `screens/Analytics/expensesPath.ts`) that opens Activity
+  (pushed, Back) on All with Type = Expenses and the page's period, currency and scope as filters (§ 26.14 record
+  filters); a bar, a category slice and a person row open the same list narrowed to the bar's days, the `category` or the
+  `person`. The scope helpers (`Scope`, `inScope`, `scopeToParam`, `scopeFromParam`, `sortScopeGroups`) and the chip
+  wording (`useScopeLabel`) live in `lib/scope.ts` / `lib/useScopeLabel.ts`, used by Analytics, the Export sheet and
+  Activity. *Reads/writes*: none new; the 200-row expense read (`rowsQuery` / `readRows` / `useAnalyticsRows`) and
+  the selection state are gone, Analytics now reads only the month sums, the date-index cells and the bounds. *Cost*:
+  one `ActivityLink` (no store read); a chart tap is one navigation; Activity pays the list (already paged by cursor,
+  searching back at most about ten pages for a narrowed list); Analytics draws no rows, so a revisit of its kept tab
+  holds only the summary and charts. *Telemetry*: none. *Checks*: bun `lib/scope.test.ts`, `feed.test.ts` (record
+  filters), `components/activity/urlState.test.ts`, `lib/links/resolve.test.ts`, `screens/Analytics/expensesPath.test.ts`;
+  Playwright `analytics.spec.ts` ("Activity is the list behind Analytics" at 390 and 1440 px); web only, iOS and Android
+  not yet.
 - Grouping after a category rename uses a normalised `categoryKey()`; stored ids stay as written.
 
 **Import (backup JSON, v2 Splitwise CSV).** Two steps: parse and preview (schema validation, duplicates,
@@ -2532,6 +2647,32 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   without one. Supersedes the assistant ruling "a refreshed pushed copy becomes the plain tab". *Why:* "there
   should be some specific set of back for sure, for example if I open Appearance in Settings, the flow is from
   Settings to Appearance".
+- **Pushed pages slide like a native stack** (owner 227). Native: the native stack's own push and pop (iOS slide
+  and edge swipe back, Android). Phone-width web: a push slides the new page in from the right (about 280 ms, iOS
+  curve) over the page background, not over the old page (react-navigation's web stack hides the old page at once and
+  the window scrolls, so showing it would mean pinning a hidden list at its old offset: assistant's ruling, F-277) and the app's Back slides the page underneath back in from the left (a short parallax);
+  a Back that came from the browser's own swipe (iOS Safari's left-edge swipe, which already slides its snapshot,
+  owner 216) is not animated again. Compositor only (CSS on the screen root, no JS per frame, no React render), the
+  leaving page is never kept alive for it and no row exit animation runs (§ 17.1); a page's fixed FAB does not move
+  with it; reduced motion or Animations off: instant. Rail and desktop web stay instant, as Bluesky. Main-tab
+  switches keep their own slide (§ 26.9). *Why:* "stacked screens are not there, like if I click on my avatar to go
+  to profile it should animate and go there and then same for swipe back".
+  [Built, F-277, web in Chromium at 390 and 1440; real iOS Safari and native not run] `Layout.Screen`'s focus effect
+  (the tab slide's, `components/Layout/index.tsx`) asks `takeStackSlide` (`lib/routes/stackSlide.ts`) how the stack
+  moved since the last screen focused: the focused route is new and the page it came from is still below -> `push`;
+  it was below and the page above it is gone -> `pop` (in-app pushes, `goBack`, a `navigate` down the stack, browser
+  Back and Forward). It then sets `data-stack-in` on the root, and `public/index.html` (inside
+  `max-width: 799.98px`) slides the root's children except `[data-fab]`: push `translate3d(100%)` to none in 280 ms,
+  pop `-28%` to none in 250 ms with a `::after` dim (black 14 %) fading out, both `cubic-bezier(0.2, 0.8, 0.2, 1)`;
+  the root clips sideways while it plays. No slide when: a bar press brought the screen (`takeTabPress`, the tab slide
+  plays instead), the route on either side is an overlay (`OVERLAY_ROUTES`: the composers and `Sheet` markers, pinned
+  to `Navigation.tsx` by a test), the window is 800 px or wider, motion is reduced (OS or Animations, read through
+  `useReadReducedMotion` so the screen does not subscribe), or a browser swipe made the history move: a one-finger
+  touch starting within 24 px of a side that the browser cancelled or that moved over 10 px inward, the move arriving
+  during it or within 700 ms of its end (2 s after a cancel). The page that left is hidden by react-navigation at
+  once, so a push slides in over the page background, not over the old page (keeping the old one drawn would mean
+  showing a hidden, window-scrolled screen at its old offset: not done). Checks: bun `stackSlide.test.ts`, e2e
+  `stackSlide.spec.ts`.
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (Home, People, Groups, Analytics, Activity) show the avatar.
   **A main screen opened from a link is the same screen as its tab; the only difference is Back in place of the
@@ -3156,7 +3297,13 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   narrowed by a type or a group that holds fewer than a screenful searches back **at most about ten pages (1,000
   changes) by itself**, five pages a step, under a same-size skeleton and never "nothing matches"; past that the
   empty state says "Nothing matches in the latest changes" with **"Look further back"** (five more pages a tap), and
-  scrolling (`onEndReached`) keeps reading. A tab alone (Me, Others) never searches by itself. **Disputes get no tab
+  scrolling (`onEndReached`) keeps reading. A tab alone (Me, Others) never searches by itself. **Record filters**
+  (owner 226, F-276, built): Analytics' links also carry `?since=<day>&until=<day>&currency=<CODE>&category=<id>&scope=<0:g1,g2>`
+  (`readActivityParams`, bad values dropped; Everything is no scope); the list then keeps only changes to an expense,
+  payment or write-off whose own record matches every one that is set (its `date` within the days, its currency, its
+  category (expenses only) and its group in the scope; `matchesFilter` in `components/activity/feed.ts`), each shown as a
+  removable chip like `group` and `person`, searching back like a type does, and "Show everything" removes them all. The
+  dates are `since` / `until` because `from` names the tab a pushed copy opened from (owners 179, 184). **Disputes get no tab
   of their own** (ruling 2026-10-31): the tabs stay All / Me / Others, Disputes is a Type, and its empty text is the
   disputes copy ("No disputes or holds..."). **Every "disputed" link opens Activity filtered to disputed
   transactions** (owner 192): tapping a disputed amount or count anywhere (a person's or group's "of which ₹X
@@ -3304,14 +3451,19 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   203). **Profile holds Settings too** (owner 220, replaces 203/206's separate Settings tab): after the person's
   sections come the Settings rows (Friends and invites, the preference sections, Support, Your data), then Log out
   last; there is no separate Settings screen. **Profile is a full page about you** (owner
-  209), Bluesky profile layout, top to bottom: the header (large avatar you can change, name, email and phone with
-  a verified tick, "On Splito since <month year>", Edit profile); a stat row (Friends, Groups, Expenses, You paid
-  this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics; **Your balance**
-  (the net per currency in the owner-161 card style, "Analytics ›"); **Payment details** (your UPI ID and how
-  friends pay you, editable); **Add me** (your friend QR and link, Share); **Your recent activity** (your last 3
-  changes, "See all" -> Activity on Me); and Log out last. Sections hide when empty; each loads after the header
-  (owner 168). *Why:* "move the logout button inside profile"; "remove settings from profile"; "also update
-  profile page, it looks very less".
+  209), and **it fits on one phone screen** [Built, F-278, web checked at 390 x 844 and 320 px Hindi; native not run] (owner 228, replacing 209's tall header and its Add me section): a
+  compact header row (avatar about 64 px on the left, which you can change; on the right the name, email and phone
+  with a verified tick, "On Splito since <month year>"; Edit as an icon button); one stat row (Friends, Groups,
+  Expenses, You paid this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics;
+  then the Settings rows straight away with no "Settings" heading: **Payment details** first (its detail is your UPI
+  ID, it opens the same edit sheet), Friends and invites (which holds your friend link and QR: there is no Add me
+  section on Profile), the preference sections, Support and Your data; Log out last, the sync note in small text
+  under it. **No balance and no recent activity on Profile** (owner 225): balances live on People and Groups (their
+  Overviews), your changes in Activity on Me (the Expenses stat opens it). The header paints at once; the rest
+  mounts after the first frame (owner 168). *Why:* "move the logout button inside profile"; "remove settings from
+  profile"; "also update profile page, it looks very less"; "Remove your balance, recent activity from profile";
+  "think proper about settings and profile screen it doesn't look good as setting has moved to bottom and I have to
+  scroll".
   *Why:* "move the logout button inside profile"; "remove settings from profile". **Log out erases everything this account left on the
   device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
   database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
@@ -3430,6 +3582,16 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export (the shared Export sheet, § 25, pre-set to the filters on screen). One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
   graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
+- **Analytics has no expense list; Activity is the list behind it** (owner 226, applying owner 194 to Analytics;
+  F-276). Analytics shows the filter bar, the summary and the charts only. One link under the charts, "See these
+  expenses", opens Activity as a pushed copy with Back (owners 179, 190) on All with Type = Expenses and the page's
+  filters carried over: the period as `since` / `until` (the records' own dates; not `from` / `to`, which on a pushed
+  copy name the tab it opened from), `currency`, and the scope (`scope`, the Analytics encoding, `0:g1,g2`). Tapping a
+  chart's bar, slice or row opens the same list narrowed to it (a bar's days, a `category`, a `person`), instead of
+  narrowing a list on Analytics; there is no selection chip. In Activity each carried filter is a removable chip, like
+  `group` and `person` (§ 26.14), and a record filter (`since`, `until`, `currency`, `category`, `scope`) keeps only
+  expenses, payments and write-offs that match it. The table view's rows stay plain (they never selected). *Why:* "Why does
+  analytics has the expense list, for that redirect to activity with other filters".
 - **All Analytics filters sit on one line** (owner 171): currency, scope, period (‹ 2026 ›) and the Charts/Table
   switch in one row that scrolls sideways on narrow screens rather than wrapping. *Why:* "all filters to be in one
   line".
@@ -4043,6 +4205,10 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 222 | "Add a little padding from bottom on navigation bar" | Phone-web bottom bar pads its bottom by the home-indicator inset or at least 8 px; native unchanged | § 26.3 | No bottom padding on the phone-web bar |
 | 223 | Assistant rulings for F-275 (new-user audit, 2026-10-31; owners 212/213 apply) | Add friend with no directory makes a usable local friend (name first, contact optional); one "Report a problem" entry whose first choice is Dispute or Put on hold, "Raised by" only behind "Record this for someone else"; Google and Apple are one muted "come with sync" line, not buttons; the sign-up name is kept | § 26.15, § 26.18, § 26.20 | Request-to-accept sheet with no server to answer; separate Dispute and Put on hold entries with a Raised by picker; dead Google and Apple buttons (138) |
 | 224 | "You take all decisions, don't ask me" | Product calls are settled by the assistant and reported as decided (the Tax/tip/discount row, the statement CSV for the Analytics export and decision 223 stand) | § 26.1, § 26.13 | Reports that asked the owner to confirm product calls |
+| 225 | "Remove your balance, recent activity from profile" | Profile drops Your balance and Your recent activity; balances stay on People and Groups, your changes in Activity on Me | § 26.15 | Profile's Your balance cards and recent activity list (209) |
+| 226 | "Why does analytics has the expense list, for that redirect to activity with other filters" | Analytics drops its expense list and selection chip; "See these expenses" and every chart tap open Activity (pushed, Back) with Type = Expenses plus the period, currency, scope and the tapped bar, category or person as removable filters | § 26.16, § 26.14 | Analytics' own expense list narrowed by chart taps |
+| 227 | "stacked screens are not there, like if I click on my avatar to go to profile it should animate and go there and then same for swipe back" | Pushed pages slide in from the right and Back slides the page underneath back, on phone web as natively; Safari's own swipe back is not animated twice; compositor only, reduced motion instant; desktop stays instant | § 26.3 | Pushed pages appeared instantly on web |
+| 228 | "think proper about settings and profile screen it doesn't look good as setting has moved to bottom and I have to scroll" | Profile fits one phone screen: compact header row, one stat row, then the Settings rows with Payment details first; Add me leaves Profile (Friends and invites holds the link and QR); Log out last | § 26.15 | Tall Profile header with Payment details and Add me sections above the Settings rows (209, 220) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
