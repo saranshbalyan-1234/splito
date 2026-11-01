@@ -743,6 +743,16 @@ Audit the whole codebase for code that does the same job twice and merge each se
   2. Consolidation in small non-overlapping slices, each with tests unchanged or improved and no visible regression (screenshots 390/1440 before/after).
   3. An architecture test per consolidated piece where a pattern can be enforced (e.g. no `UserAvatar` with a person id outside PersonLink).
 
+### F-276 Analytics' list is Activity (owner 226) `spec: ARCHITECTURE 26.16`
+
+Acceptance: (1) Analytics renders no expense rows and no selection chip; its data layer no longer reads the 200-row
+expense list. (2) A "See these expenses" link under the charts opens Activity (pushed, Back) with
+`type=expenses&from=&to=&currency=` and `scope=` when the scope is not everything. (3) A bar opens it with that bar's
+`from`/`to`, a category slice or row with `category=`, a person row with `person=`. (4) Activity reads `from`, `to`,
+`currency`, `category` and `scope` (sanitised; listed in `QUERY_KEYS`), filters records by their own date, currency,
+category and group, shows each as a removable chip, and the empty state and "Look further back" work under them.
+(5) The scope helpers live in one shared module used by Analytics and Activity. Status: building.
+
 ### F-275 New-user UX fixes (audit 2026-10-31) `spec: owners 212/213; docs/ux/2026-10-31-new-user-audit.md`
 
 Fixes from the Opus new-user audit (3 blockers, 19 major, 21 minor). Rulings (assistant, 2026-10-31) where the audit and owner rules meet:

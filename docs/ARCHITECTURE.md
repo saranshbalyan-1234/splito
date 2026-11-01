@@ -3430,6 +3430,15 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export (the shared Export sheet, § 25, pre-set to the filters on screen). One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
   graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
+- **Analytics has no expense list; Activity is the list behind it** (owner 226, applying owner 194 to Analytics;
+  F-276). Analytics shows the filter bar, the summary and the charts only. One link under the charts, "See these
+  expenses", opens Activity as a pushed copy with Back (owners 179, 190) on All with Type = Expenses and the page's
+  filters carried over: the period as `from` / `to` (the records' own dates), `currency`, and the scope (`scope`, the
+  Analytics encoding, `0:g1,g2`). Tapping a chart's bar, slice or row opens the same list narrowed to it (a bar's days,
+  a `category`, a `person`), instead of narrowing a list on Analytics; there is no selection chip. In Activity each
+  carried filter is a removable chip, like `group` and `person` (§ 26.14), and a record filter (`from`, `to`,
+  `currency`, `category`, `scope`) keeps only expenses, payments and write-offs that match it. *Why:* "Why does
+  analytics has the expense list, for that redirect to activity with other filters".
 - **All Analytics filters sit on one line** (owner 171): currency, scope, period (‹ 2026 ›) and the Charts/Table
   switch in one row that scrolls sideways on narrow screens rather than wrapping. *Why:* "all filters to be in one
   line".
@@ -4044,6 +4053,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 223 | Assistant rulings for F-275 (new-user audit, 2026-10-31; owners 212/213 apply) | Add friend with no directory makes a usable local friend (name first, contact optional); one "Report a problem" entry whose first choice is Dispute or Put on hold, "Raised by" only behind "Record this for someone else"; Google and Apple are one muted "come with sync" line, not buttons; the sign-up name is kept | § 26.15, § 26.18, § 26.20 | Request-to-accept sheet with no server to answer; separate Dispute and Put on hold entries with a Raised by picker; dead Google and Apple buttons (138) |
 | 224 | "You take all decisions, don't ask me" | Product calls are settled by the assistant and reported as decided (the Tax/tip/discount row, the statement CSV for the Analytics export and decision 223 stand) | § 26.1, § 26.13 | Reports that asked the owner to confirm product calls |
 | 225 | "Remove your balance, recent activity from profile" | Profile drops Your balance and Your recent activity; balances stay on People and Groups, your changes in Activity on Me | § 26.15 | Profile's Your balance cards and recent activity list (209) |
+| 226 | "Why does analytics has the expense list, for that redirect to activity with other filters" | Analytics drops its expense list and selection chip; "See these expenses" and every chart tap open Activity (pushed, Back) with Type = Expenses plus the period, currency, scope and the tapped bar, category or person as removable filters | § 26.16, § 26.14 | Analytics' own expense list narrowed by chart taps |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
