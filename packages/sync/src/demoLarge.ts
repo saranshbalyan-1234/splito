@@ -1331,6 +1331,18 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     ops.push({kind: 'reminder.nudge', at: now - 2 * DAY, actor: me, id: rem('2'), input: {personId: pid('sam'), groupId: null, amounts: {EUR: 900n}, via: 'whatsapp'}})
     ops.push({kind: 'reminder.self', at: now - 1 * DAY, actor: me, id: rem('3'), input: {personId: pid('riya'), groupId: null, dueAt: now + 2 * DAY, repeat: 'monthly'}})
     ops.push({kind: 'reminder.self', at: now - 20 * HOUR, actor: me, id: rem('4'), input: {personId: '', groupId: gidOf('lisbon'), dueAt: now + 5 * DAY, repeat: 'none'}})
+
+    /* Personal expenses (owner 230: an expense tracker too): only I paid and only I share them, so they count in my
+       spending and move no balance. Added last, so no id or random choice above shifts. */
+    for (const [title, category, total, days] of [
+      ['Haircut', 'other', 60_000n, 12],
+      ['Gym membership', 'bills', 250_000n, 34],
+      ['Books', 'shopping', 89_900n, 47],
+    ] as const) {
+      const id = nextId('e')
+      ops.push({kind: 'expense', at: now - days * DAY, actor: me, id, draft: {title, groupId: null, currency: 'INR', total, payers: {[me]: total}, split: {mode: 'equal', participants: [me]}, date: dayAgo(days), tz, category, notes: ''}})
+      counts.expenses++
+    }
   }
 
   // Stable time order: people and groups first (they come first in the list and in time).

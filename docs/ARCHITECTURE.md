@@ -3184,6 +3184,16 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 
 ### 26.13 Expenses and itemize
 
+- **Splito is an expense tracker too** [Built, F-279, web; native not run] (owner 230): an expense with only me on it
+  (Split with: You, Paid by: You; no friends or group needed) is a **personal expense**. It saves like any other, moves no
+  balance with anyone (People, Groups and their Overviews ignore it), and counts as my own spending everywhere spending is
+  shown: Analytics (your share, categories, over time), Activity (Me), Search and the Export statement. It is named as
+  such, never as "not involved": the composer's readout says "Just you · a personal expense", Activity and history rows say
+  "personal", the expense page "Personal expense, just you". One domain predicate decides it,
+  `isPersonalExpense(record, me)` (`packages/domain/src/ledger.ts`: only I paid and only I have a share). People's empty
+  state says an expense can be just for you, and the FAB stays on it. No separate "tracker" mode, tab or setting (owner
+  128): the same Add expense serves both. The demo carries three (`demoLarge.ts`, after every random choice).
+  *Why:* "Should work as expense tracker as well".
 - **Add expense always shows "Paid by", and it starts as me** (owner 207): the Paid by row is visible on every
   Add expense, whatever the entry point (FAB, sidebar pill, a group or person page, Ask Splito's prefill, a
   scanned receipt, a duplicate) and every width; a new expense always starts with me as the payer, never a
@@ -4217,6 +4227,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 227 | "stacked screens are not there, like if I click on my avatar to go to profile it should animate and go there and then same for swipe back" | Pushed pages slide in from the right and Back slides the page underneath back, on phone web as natively; Safari's own swipe back is not animated twice; compositor only, reduced motion instant; desktop stays instant | § 26.3 | Pushed pages appeared instantly on web |
 | 228 | "think proper about settings and profile screen it doesn't look good as setting has moved to bottom and I have to scroll" | Profile fits one phone screen: compact header row, one stat row, then the Settings rows with Payment details first; Add me leaves Profile (Friends and invites holds the link and QR); Log out last | § 26.15 | Tall Profile header with Payment details and Add me sections above the Settings rows (209, 220) |
 | 229 | "Payment detail on profile and pencil icon on profile open same popup, I guess we can remove payment details then" | Profile drops the Payment details row (and its `/profile/payment` address); the UPI ID is edited in the pencil's sheet | § 26.15 | Payment details as the first Settings row on Profile (228) |
+| 230 | "Should work as expense tracker as well" | An expense with only me on it is a personal expense: no balance, counted as my spending (Analytics, Activity, Search, export), labelled "personal" / "Just you", one `isPersonalExpense` predicate; no separate mode | § 26.13 | Solo expenses worked but read "not involved" and "1 person each" |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

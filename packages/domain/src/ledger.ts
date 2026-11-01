@@ -313,6 +313,16 @@ export function expenseNet(e: Pick<ExpenseRecord, 'payers' | 'shares'>, person: 
   return (e.payers[person] ?? 0n) - (e.shares[person] ?? 0n)
 }
 
+/**
+ * A personal expense (owner 230: Splito is an expense tracker too): only `person` paid it and only `person` has a
+ * share, so it moves no balance with anyone and counts only as their own spending. Zero entries are ignored, and an
+ * expense with nobody on it is not personal.
+ */
+export function isPersonalExpense(e: Pick<ExpenseRecord, 'payers' | 'shares'>, person: string): boolean {
+  const others = (m: Record<string, bigint>) => Object.entries(m).some(([id, v]) => id !== person && v !== 0n)
+  return (e.shares[person] ?? 0n) !== 0n && !others(e.payers) && !others(e.shares)
+}
+
 /** Absolute value of a minor-unit amount; screens show direction in words, not signs. */
 export function magnitude(v: bigint): bigint {
   return v < 0n ? -v : v

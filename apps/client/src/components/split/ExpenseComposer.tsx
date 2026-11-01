@@ -12,6 +12,7 @@ import {
   assignedFraction,
   decimalMark,
   formatAmount,
+  isPersonalExpense,
   magnitude,
   ZERO,
 } from '@splito/domain'
@@ -76,6 +77,7 @@ import {
 import {PayersDialog} from './PayersDialog'
 import {PeopleDialog} from './PeopleDialog'
 import {CurrencyDialog} from '#/components/CurrencyDialog'
+import {useMyPersonId} from '#/state/me'
 import {CategoryDialog, GroupDialog} from './pickers'
 import {
   CategoryTile,
@@ -779,6 +781,7 @@ function Readout({
   const t = useTheme()
   const {t: l} = useLingui()
   const errorText = useErrorText()
+  const me = useMyPersonId()
   const {total, remaining, shares} = evaluation
   const fmt = (v: bigint) => formatAmount(v, form.currency, locale)
   const pct = (bp: number) =>
@@ -818,8 +821,12 @@ function Readout({
     const most = values.reduce((x, y) => (y > x ? y : x), ZERO)
     const least = values.reduce((x, y) => (y < x ? y : x), most)
     tone = 'ok'
-    text =
-      form.mode === 'equal'
+    /* Owner 230: only I paid and only I share it, so it is my own spending, not a split. */
+    const isPersonal =
+      form.payerMode === 'single' && isPersonalExpense({payers: {[form.payer]: total}, shares}, me)
+    text = isPersonal
+      ? l`Just you · a personal expense`
+      : form.mode === 'equal'
         ? most === least
           ? l`${fmt(most)} each · ${peopleCount(n)}`
           : l`${fmt(least)}–${fmt(most)} each · ${peopleCount(n)}`

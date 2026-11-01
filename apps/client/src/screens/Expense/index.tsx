@@ -10,6 +10,7 @@ import {
   cashSplit,
   cashUnitWhole,
   expenseNet,
+  isPersonalExpense,
   formatAmount,
   magnitude,
   itemBreakdown,
@@ -435,6 +436,8 @@ function Detail({
               <Trans>You lent {fmt(myNet)}</Trans>
             ) : myNet < ZERO ? (
               <Trans>You borrowed {fmt(magnitude(myNet))}</Trans>
+            ) : isPersonalExpense(e, ctx.actor) ? (
+              <Trans>Personal expense, just you</Trans>
             ) : (
               <Trans>You paid your own share</Trans>
             )}

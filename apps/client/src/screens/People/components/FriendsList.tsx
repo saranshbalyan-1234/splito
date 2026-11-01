@@ -178,7 +178,7 @@ export function FriendsList({
                 testID="people-empty"
                 /* Same layout, motion and button as every other screen's empty state (owner 146). */
                 illustration="empty-people"
-                message={l`No friends yet. Add a friend, then split any bill with them. They don’t need the app.`}
+                message={l`No friends yet. Add a friend to split bills (they don’t need the app), or add an expense just for you to track your spending.`}
                 button={{
                   testID: 'people-empty-add-friend',
                   label: l`Add a friend`,
