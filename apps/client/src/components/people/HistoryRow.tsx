@@ -2,7 +2,7 @@ import {type ReactNode} from 'react'
 import {type StyleProp, View, type ViewStyle} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, magnitude, ZERO} from '@splito/domain'
+import {formatAmount, isPersonalExpense, magnitude, ZERO} from '@splito/domain'
 import {type Entity, type Repayment, type WriteOff} from '@splito/sync'
 
 import {Link} from '#/view/com/util/Link'
@@ -108,6 +108,7 @@ export function HistoryRow({
     ) : (
       <EffectText
         effect={effect}
+        isPersonal={isPersonalExpense(e, me)}
         context={context}
         figure={amount(magnitude(effect))}
       />
@@ -284,23 +285,27 @@ export function HistoryRow({
  */
 function EffectText({
   effect,
+  isPersonal,
   context,
   figure,
 }: {
   effect: bigint
+  /** Only I paid and only I share it (owner 230): my own spending, not a balance. */
+  isPersonal: boolean
   context: 'person' | 'group'
   figure: string
 }) {
   const t = useTheme()
   const money = useMoneyStyle()
-  const label =
-    effect === ZERO ? (
-      context === 'person' ? (
-        <Trans>no balance change</Trans>
-      ) : (
-        <Trans>not involved</Trans>
-      )
-    ) : effect > ZERO ? (
+  const label = isPersonal ? (
+    <Trans>personal</Trans>
+  ) : effect === ZERO ? (
+    context === 'person' ? (
+      <Trans>no balance change</Trans>
+    ) : (
+      <Trans>not involved</Trans>
+    )
+  ) : effect > ZERO ? (
       <Trans>you lent</Trans>
     ) : (
       <Trans>you borrowed</Trans>

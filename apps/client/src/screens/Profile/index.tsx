@@ -29,14 +29,12 @@ import {
   Envelope_Stroke2_Corner0_Rounded as MailIcon,
   Phone_Stroke2_Corner0_Rounded as PhoneIcon,
 } from '#/components/icons/Invite'
-import {Banknote_Stroke2_Corner0_Rounded as PaymentIcon} from '#/components/icons/Money'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import * as Layout from '#/components/Layout'
 import {EditFriendDialog} from '#/components/people/EditFriendDialog'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
-import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {SettingsRows} from '#/screens/Settings/components/SettingsRows'
 import {countFriends, countGroups, yearRange} from './stats'
 
@@ -45,8 +43,8 @@ const PAGE_WIDTH = 640
 
 /*
  * Profile (owners 209, 228), a page about you that fits one phone screen, top to bottom: one compact header row, one
- * stat row, then the Settings rows straight away with Payment details as the first (owner 220: Settings is part of
- * Profile, there is no Settings screen or tab; owner 225: no balance or recent activity; owner 228: no Add me, Friends
+ * stat row, then the Settings rows straight away (owner 229: your UPI ID is edited with the pencil, no row; owner 220:
+ * Settings is part of Profile, there is no Settings screen or tab; owner 225: no balance or recent activity; owner 228: no Add me, Friends
  * and invites holds the friend link and QR), then Log out last (owner 202) with the sync note under it. Only the header
  * paints at once; everything below mounts after the first frame (owner 168).
  */
@@ -87,9 +85,9 @@ function ProfileBody({me}: {me: Entity<Person>}) {
   return (
     <>
       <ProfileStats me={me} />
-      {/* The Settings list, as it was on its own tab (owner 220); `/settings` opens this page. Payment details leads it (owner 228). */}
+      {/* The Settings list, as it was on its own tab (owner 220); `/settings` opens this page. */}
       <View testID="profile-settings">
-        <SettingsRows leading={<PaymentDetails me={me} />} />
+        <SettingsRows />
       </View>
       {/* The last row (owner 202): the same prompt and erase as everywhere (owner 186). */}
       <View style={[a.px_lg, a.pt_md]}>
@@ -277,35 +275,6 @@ function ProfileStats({me}: {me: Entity<Person>}) {
           </Text>
         </Link>
       ))}
-    </View>
-  )
-}
-
-/** Payment details, the first Settings row (owner 228): your UPI ID as its detail, edited in the same sheet as the name. */
-function PaymentDetails({me}: {me: Entity<Person>}) {
-  const t = useTheme()
-  const {t: l} = useLingui()
-  const control = useDialogControl({url: 'payment'})
-  const upiId = me.data.upiId
-  return (
-    <View testID="profile-payment">
-      <SettingsList.PressableItem
-        testID="profile-upi-edit"
-        label={upiId ? l`Payment details, UPI ID ${upiId}` : l`Payment details, add your UPI ID`}
-        onPress={() => control.open()}>
-        <SettingsList.ItemIcon icon={PaymentIcon} />
-        <SettingsList.ItemText>
-          <Trans>Payment details</Trans>
-        </SettingsList.ItemText>
-        <Text
-          testID="profile-upi"
-          numberOfLines={1}
-          style={[a.text_md, a.text_right, a.flex_shrink, t.atoms.text_contrast_medium, {maxWidth: '55%', minWidth: 0}]}>
-          {upiId ?? l`Add your UPI ID`}
-        </Text>
-        <SettingsList.Chevron />
-      </SettingsList.PressableItem>
-      <EditFriendDialog control={control} person={me} />
     </View>
   )
 }

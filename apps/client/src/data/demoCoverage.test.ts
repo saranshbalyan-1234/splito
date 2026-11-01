@@ -32,6 +32,7 @@ import {
   type WriteOff,
 } from '@splito/sync'
 import {bunExecutor} from '@splito/sync/testing'
+import {isPersonalExpense} from '@splito/domain'
 
 import {activityTypeOf} from '#/components/activity/feed'
 import {DEMO_ME, seedDemo} from '#/data/demoSeed'
@@ -94,6 +95,7 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   ['a trip group with dates', d => d.groups.some(g => g.data.kind === 'trip' && g.data.startDate && g.data.endDate)],
   ['every trip group says where it is (owner 182)', d => d.groups.some(g => g.data.kind === 'trip') && d.groups.filter(g => g.data.kind === 'trip').every(g => !!g.data.location)],
   ['a home (flat) group', d => d.groups.some(g => g.data.kind === 'home')],
+  ['a personal expense, only me on it (owner 230)', d => d.live.some(e => isPersonalExpense(e.data, DEMO_ME))],
   ['an other-kind group', d => d.groups.some(g => g.data.kind === 'other')],
   ['a multi-currency group (several currencies in one group, never mixed)', d => d.groups.some(g => currenciesIn(d, g.id).size >= 2)],
   ['a single-currency group', d => d.groups.some(g => currenciesIn(d, g.id).size === 1)],

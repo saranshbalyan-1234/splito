@@ -750,10 +750,19 @@ phone width on web; the in-app Back slides the page below back in; Safari's left
 again; no JS per frame and no extra React render (renders gate); no row exit clone; FAB stays put; reduced motion
 instant; desktop instant. Status: built (web, Chromium at 390 and 1440, 2026-11-01; real iOS Safari and native not run). ARCHITECTURE 26.3 [Built] note, 17.1 rule, 23 lesson, COMPLETION_MATRIX "F-277".
 
+### F-279 Personal expenses: Splito as an expense tracker (owner 230) `spec: ARCHITECTURE 26.13`
+
+Acceptance: a new account with no friends adds an expense just for itself from the FAB / sidebar pill; the composer
+says "Just you · a personal expense"; it saves, People stays empty (no balance), Activity Me lists it as "personal", the
+expense page says "Personal expense, just you", Analytics counts it in your share; history rows in a group say
+"personal"; one domain predicate `isPersonalExpense`; demo has personal expenses (`demoCoverage`). Status: built (web
+checked at 390 and 1440; native not run). Tests: `personNet.test` (predicate), `demoCoverage.test`,
+`expenseTracker.spec`.
+
 ### F-278 Profile fits one phone screen (owner 228) `spec: ARCHITECTURE 26.15`
 
-Acceptance: at 390 x 844 the header row, the stat row, Payment details and the first Settings rows are visible without
-scrolling; Add me is gone from Profile; Payment details is the first Settings row and opens the existing sheet;
+Acceptance: at 390 x 844 the header row, the stat row and the first Settings rows are visible without
+scrolling; Add me is gone from Profile; no Payment details row (owner 229: the pencil's sheet edits the UPI ID);
 Log out is last, the sync note under it. Status: built (web; native not run). Tests: `profilePage.spec` (order, compact
 header, one-screen at 390 x 844, Hindi at 320 px), `profileSettings.spec`, `demo.spec` Profile.
 
@@ -1243,7 +1252,7 @@ Save and add another keeps group, payer, participants, split, currency and date;
 
 ### F-310 Smart amount input
 
-Accepts locale separators, Devanagari / Arabic-Indic / Persian digits, a 000 key, k / L / cr / m suffixes and pasted "₹1,20,000.50"; ambiguous input asks.
+Accepts locale separators, Devanagari / Arabic-Indic / Persian digits, k / L / cr / m suffixes and pasted "₹1,20,000.50"; ambiguous input asks.
 
 - **Effort** S · **Impact** 8 · **Backend** no · **Status** done (built and tested on a feat/b-* branch, unmerged) · **Deps** F-302
 - **Prefs** `numberLocale`, `amount.shorthand`
@@ -1289,7 +1298,7 @@ Editable manual place; optional permission-aware automatic location; place searc
 
 ### F-314 Three-tap add with sentence defaults
 
-The composer opens with the amount keypad focused and context defaults: from a group, its current members, currency and default split; from a person, a direct expense with them; from People, a "With whom?" chip. One sentence chip ("Paid by you, split equally") opens the split editor; the title is optional (category or emoji stands in). Target: FAB, amount, Save.
+The composer opens with the amount focused (system number keyboard, owner 231) and context defaults: from a group, its current members, currency and default split; from a person, a direct expense with them; from People, a "With whom?" chip. One sentence chip ("Paid by you, split equally") opens the split editor; the title is optional (category or emoji stands in). Target: FAB, amount, Save.
 
 - **Effort** M · **Impact** 10 · **Backend** no · **Status** todo · **Deps** F-302
 - **Prefs** `fab.action`, `composer.titleRequired`
@@ -3866,7 +3875,7 @@ Add expense, Scan receipt, Settle up and two dynamic recent groups on long-press
 
 ### F-1909 Quick add from Control Center, Action Button and Quick Settings
 
-iOS ControlWidget and Android TileService open the composer with the keypad focused.
+iOS ControlWidget and Android TileService open the composer with the amount focused.
 
 - **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1906
 - **Prefs** -

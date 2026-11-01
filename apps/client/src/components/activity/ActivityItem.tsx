@@ -12,7 +12,7 @@ import {type I18n} from '@lingui/core'
 import {defineMessage} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
+import {expenseNet, formatAmount, isPersonalExpense, magnitude, ZERO} from '@splito/domain'
 import {type ActivityEvent, type Entity, type FriendRequest, type GroupRequest, requestName} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -652,7 +652,9 @@ function useDescribe(
             {isDeleted ? null : (
               <>
                 <Dot />
-                {net === ZERO ? (
+                {isPersonalExpense(e, me) ? (
+                  <Trans>personal</Trans>
+                ) : net === ZERO ? (
                   <Trans>not involved</Trans>
                 ) : net > ZERO ? (
                   <Trans>you lent {figure}</Trans>

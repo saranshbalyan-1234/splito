@@ -56,7 +56,7 @@ export const SHEETS = {
     'export/person',
     'export/currency',
   ],
-  Profile: ['edit', 'payment'],
+  Profile: ['edit'],
   SettingsSection: ['accent', 'currency', 'timezone', 'category', 'tax-class', 'export', 'export/period', 'export/range', 'export/group', 'export/person', 'export/currency', 'import'],
   CreateGroup: ['currency'],
   AddExpense: ['currency', 'date', 'category', 'group', 'people', 'payers', 'charge', 'tax-class'],

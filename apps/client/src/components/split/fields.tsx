@@ -29,8 +29,6 @@ import {
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
 import {Text} from '#/components/Typography'
-import {AmountKeypad} from './AmountKeypad'
-import {type AmountKey, applyAmountKey, type Selection} from './amountKeys'
 import {ChevronDownIcon} from './icons'
 
 /**
@@ -106,9 +104,9 @@ const PLAIN_NUMBER = /^\d+([.,]\d*)?$/
  * underneath; "=" replaces the sum with its result. It reads shorthand
  * ("1.5L"), other digit scripts and pasted amounts ("₹1,20,000.50": the
  * currency marks are dropped as they arrive), and asks "Did you mean ...?"
- * for an ambiguous "1,234" (F-310). With `hasKeypad` (phones; the
- * system keyboard stays for screen readers) Splito's keypad replaces the system keyboard,
- * as Expensify's amount page does. Parse errors read in plain words.
+ * for an ambiguous "1,234" (F-310). It opens the system's number keyboard on every platform (owner 231: no keypad
+ * of Splito's own); the + − × ÷ bar shows while typing, since a phone's number pad has no "+". Parse errors read in
+ * plain words.
  */
 export function AmountField({
   value,
@@ -120,7 +118,6 @@ export function AmountField({
   readings,
   reading,
   onReadingPicked,
-  hasKeypad = false,
   onPressCurrency,
   autoFocus = false,
   itemsTotalText,
@@ -139,7 +136,6 @@ export function AmountField({
   /** The reading picked for an ambiguous amount; the result line then confirms it. */
   reading?: 'grouped' | 'decimal'
   onReadingPicked?: (reading: 'grouped' | 'decimal') => void
-  hasKeypad?: boolean
   onPressCurrency: () => void
   /** Focus the amount when the form opens (Add expense: the first thing to type). */
   autoFocus?: boolean
@@ -150,14 +146,11 @@ export function AmountField({
   const {t: l} = useLingui()
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null)
-  const selection = useRef<Selection>({start: value.length, end: value.length})
-  const {scale, symbol} = getCurrency(currency)
+  const {symbol} = getCurrency(currency)
   const mark = decimalMark(locale)
   const isSum = isExpression(value)
   const shouldShowResult =
     result !== undefined && (!!reading || !PLAIN_NUMBER.test(value.trim()))
-  /* A keypad key is being pressed: the input's blur is the key taking focus for a moment, not leaving. */
-  const isKeyDown = useRef(false)
   /* Whether the input holds focus right now (the state above lags by the blur delay). */
   const hasFocus = useRef(false)
   /* A placeholder is never a value (ARCHITECTURE 5): the word, never "0.00". */
@@ -166,9 +159,8 @@ export function AmountField({
 
   const changeText = (text: string) => onChangeText(cleanAmountText(text))
 
-  /* Put the caret after a keypad key (native TextInput, or the DOM input on web). */
+  /* Put the caret at the end of a computed result (native TextInput, or the DOM input on web). */
   const moveCaret = (caret: number) => {
-    selection.current = {start: caret, end: caret}
     const input = inputRef.current as unknown as {
       setSelection?: (start: number, end: number) => void
       setSelectionRange?: (start: number, end: number) => void
@@ -179,15 +171,6 @@ export function AmountField({
     })
   }
 
-  const pressKey = (key: AmountKey) => {
-    inputRef.current?.focus()
-    isKeyDown.current = false
-    const next = applyAmountKey(value, selection.current, key, {scale, mark})
-    if (!next) return
-    onChangeText(next.text)
-    moveCaret(next.caret)
-  }
-
   const append = (op: string) => {
     const trimmed = value.replace(/\s*[+\-−xX×*/÷]\s*$/, '')
     if (trimmed) onChangeText(`${trimmed} ${op} `)
@@ -195,7 +178,6 @@ export function AmountField({
   }
 
   const applyResult = () => {
-    isKeyDown.current = false
     inputRef.current?.focus()
     if (result === undefined) return
     const text = amountInputText(result, currency, mark)
@@ -234,9 +216,6 @@ export function AmountField({
             ref={inputRef}
             value={value}
             onChangeText={changeText}
-            onSelectionChange={e => {
-              selection.current = e.nativeEvent.selection
-            }}
             onFocus={() => {
               hasFocus.current = true
               setIsFocused(true)
@@ -250,16 +229,15 @@ export function AmountField({
             onBlur={() => {
               hasFocus.current = false
               setTimeout(() => {
-                if (!hasFocus.current && !isKeyDown.current) setIsFocused(false)
+                if (!hasFocus.current) setIsFocused(false)
               }, 200)
             }}
             placeholder={placeholder}
             autoFocus={autoFocus}
             accessibilityLabel={l`Amount`}
             accessibilityHint={l`You can type a sum, like 1200 + 300, or 2k or 1.5L`}
-            /* The keypad stands in for the system keyboard (Expensify: showSoftInputOnFocus off, inputMode none). */
-            showSoftInputOnFocus={!hasKeypad}
-            inputMode={hasKeypad ? 'none' : 'decimal'}
+            /* The system's number keyboard (owner 231), as every other amount field. */
+            inputMode="decimal"
             keyboardType="decimal-pad"
             style={[
               a.text_4xl,
@@ -332,23 +310,7 @@ export function AmountField({
         </View>
       ) : null}
 
-      {hasKeypad && isFocused ? (
-        <AmountKeypad
-          mark={mark}
-          isExpression={isSum}
-          canUseResult={result !== undefined}
-          onKeyPressed={pressKey}
-          onKeyPressIn={() => {
-            isKeyDown.current = true
-          }}
-          onResultUsed={applyResult}
-          onDone={() => {
-            isKeyDown.current = false
-            inputRef.current?.blur()
-            setIsFocused(false)
-          }}
-        />
-      ) : !hasKeypad && (isFocused || isSum) ? (
+      {isFocused || isSum ? (
         /* The calculator keys show while the amount is being typed, like a keyboard accessory bar. */
         <View
           style={[a.flex_row, a.align_center, a.gap_sm, a.pt_md]}

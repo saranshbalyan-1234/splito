@@ -7,7 +7,7 @@ import {openDemo} from './openDemo'
 
 /*
  * F-278 owners 209, 228 (ARCHITECTURE 26.15): Profile fits one phone screen, top to bottom: a compact header row,
- * the stat row, the Settings rows with Payment details first, Log out, the sync note under it. Run on the demo data
+ * the stat row, the Settings rows, Log out, the sync note under it (owner 229: no Payment details row; the pencil edits the UPI ID). Run on the demo data
  * at 390 and 1440.
  * PROFILE_SHOTS=<dir> also saves the page in light and Dim there.
  */
@@ -48,7 +48,7 @@ for (const [label, viewport] of VIEWPORTS) {
       await expect(page).toHaveURL(/\/profile\/edit$/)
     })
 
-    test('the sections come in order: stats, Settings rows (Payment details first), Log out, the sync note (owners 202, 225, 228)', async ({page}) => {
+    test('the sections come in order: stats, Settings rows, Log out, the sync note (owners 202, 225, 228, 229)', async ({page}) => {
       const profile = page.getByTestId('screen-profile')
       await expect(profile.getByTestId('profile-log-out')).toBeVisible()
       await expect(profile.getByTestId('profile-cards')).toHaveCount(0)
@@ -58,17 +58,15 @@ for (const [label, viewport] of VIEWPORTS) {
       const ids = await profile
         .locator('[data-testid^="profile-"]')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid')!))
-      // The rows' container comes first in the document, then Payment details (its first row) and Friends and invites.
-      const order = ['profile-stats', 'profile-settings', 'profile-payment', 'profile-log-out', 'profile-sync-note']
+      // No Payment details row (owner 229): the pencil's sheet edits the UPI ID.
+      await expect(profile.getByTestId('profile-payment')).toHaveCount(0)
+      const order = ['profile-stats', 'profile-settings', 'profile-log-out', 'profile-sync-note']
       const at = order.map(id => ids.indexOf(id))
       expect(at.every(i => i >= 0), ids.join()).toBe(true)
       expect(at).toEqual([...at].sort((x, y) => x - y))
-      // Payment details is the first row of the list, no "Settings" heading above it.
+      // No "Settings" heading above the rows.
       const list = profile.getByTestId('profile-settings')
       await expect(list.getByText('Settings', {exact: true})).toHaveCount(0)
-      const payment = await profile.getByTestId('profile-payment').boundingBox()
-      const friends = await list.getByTestId('settings-friends').boundingBox()
-      expect(payment!.y).toBeLessThan(friends!.y)
     })
 
     test('each stat opens its page: People, Groups, Activity (Me, transactions) and Analytics', async ({page}) => {
@@ -89,14 +87,13 @@ for (const [label, viewport] of VIEWPORTS) {
       }
     })
 
-    test('Payment details: the UPI ID is added in the edit sheet and then shown', async ({page}) => {
-      const payment = page.getByTestId('profile-payment')
-      await expect(payment.getByTestId('profile-upi')).not.toHaveText('me@bank')
-      await payment.getByTestId('profile-upi-edit').click()
-      await expect(page).toHaveURL(/\/profile\/payment$/)
+    test('the pencil edits the UPI ID too (owner 229)', async ({page}) => {
+      await page.getByTestId('screen-profile').getByTestId('profile-edit').click()
+      await expect(page).toHaveURL(/\/profile\/edit$/)
       await page.getByTestId('friend-upi').fill('me@bank')
       await page.getByRole('button', {name: 'Save'}).click()
-      await expect(payment.getByTestId('profile-upi')).toHaveText('me@bank')
+      await page.getByTestId('screen-profile').getByTestId('profile-edit').click()
+      await expect(page.getByTestId('friend-upi')).toHaveValue('me@bank')
     })
 
     test('Friends and invites holds my friend link and QR, which Profile no longer repeats (owner 228)', async ({page}) => {
@@ -160,11 +157,11 @@ for (const [label, viewport] of VIEWPORTS) {
 test.describe('fits one phone screen (owner 228)', () => {
   test.use({viewport: {width: 390, height: 844}})
 
-  test('the header, stats, Payment details and Friends and invites show without scrolling', async ({page}) => {
+  test('the header, stats and Friends and invites show without scrolling', async ({page}) => {
     await openDemo(page, '/profile')
     const profile = page.getByTestId('screen-profile')
     await expect(profile.getByTestId('profile-log-out')).toBeVisible()
-    for (const id of ['profile-avatar', 'profile-stats', 'profile-payment', 'settings-friends']) {
+    for (const id of ['profile-avatar', 'profile-stats', 'settings-friends']) {
       const box = await profile.getByTestId(id).boundingBox()
       expect(box, id).not.toBeNull()
       expect(box!.y + box!.height, `${id} bottom`).toBeLessThan(844)
